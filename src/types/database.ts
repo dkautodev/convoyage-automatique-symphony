@@ -189,7 +189,7 @@ export interface Database extends GeneratedDatabase {
           updated_at: string;
         };
         Insert: {
-          id?: string;
+          id: string; // Changed from id?: string to id: string as it's required in the Supabase type
           client_id: string;
           vehicle_id: number;
           chauffeur_id?: string | null;
@@ -222,7 +222,7 @@ export interface Database extends GeneratedDatabase {
           completion_date?: string | null;
           notes?: string | null;
           created_at?: string;
-          created_by: string;
+          created_by: string; // This field is required according to Supabase
           updated_at?: string;
         };
         Update: {

@@ -33,6 +33,7 @@ export interface Database extends GeneratedDatabase {
           last_login?: string | null;
           active?: boolean;
         };
+        Relationships: [];
       };
       clients: {
         Row: {
@@ -89,6 +90,15 @@ export interface Database extends GeneratedDatabase {
           phone2?: string | null;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "clients_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       drivers: {
         Row: {
@@ -130,6 +140,15 @@ export interface Database extends GeneratedDatabase {
             timestamp: string;
           } | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "drivers_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       missions: {
         Row: {
@@ -243,6 +262,50 @@ export interface Database extends GeneratedDatabase {
           created_by?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "missions_chauffeur_id_fkey"
+            columns: ["chauffeur_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_contact_delivery_id_fkey"
+            columns: ["contact_delivery_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_contact_pickup_id_fkey"
+            columns: ["contact_pickup_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       contacts: {
         Row: {
@@ -284,6 +347,22 @@ export interface Database extends GeneratedDatabase {
           created_at?: string;
           created_by?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       pricing_grids: {
         Row: {
@@ -325,6 +404,15 @@ export interface Database extends GeneratedDatabase {
           updated_at?: string;
           updated_by?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "pricing_grids_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       documents: {
         Row: {
@@ -354,6 +442,22 @@ export interface Database extends GeneratedDatabase {
           created_at?: string;
           created_by?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       mission_status_history: {
         Row: {
@@ -383,6 +487,22 @@ export interface Database extends GeneratedDatabase {
           changed_by?: string;
           notes?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "mission_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_status_history_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       google_maps_settings: {
         Row: {
@@ -403,6 +523,15 @@ export interface Database extends GeneratedDatabase {
           updated_at?: string;
           updated_by?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "google_maps_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       vat_settings: {
         Row: {
@@ -426,6 +555,15 @@ export interface Database extends GeneratedDatabase {
           created_at?: string;
           modified_by?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "vat_settings_modified_by_fkey"
+            columns: ["modified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       vehicles: {
         Row: {
@@ -464,6 +602,15 @@ export interface Database extends GeneratedDatabase {
           created_at?: string;
           created_by?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
     };
     Views: GeneratedDatabase['public']['Views'];

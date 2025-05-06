@@ -1,18 +1,29 @@
 
-export type UserRole = 'client' | 'driver' | 'admin';
+export type UserRole = 'client' | 'chauffeur' | 'admin';
 
 export interface RegisterFormData {
   email: string;
   password: string;
   companyName: string;
-  billingAddress: string;
+  billingAddress: {
+    street: string;
+    city: string;
+    postal_code: string;
+    country: string;
+    formatted_address?: string;
+    lat?: number;
+    lng?: number;
+  };
   siret: string;
-  tvaNumb?: string;
+  vatNumber?: string;
   phone1: string;
   phone2?: string;
   gdprConsent: boolean;
   role: UserRole;
-  tvaApplicable?: boolean;
+  vatApplicable?: boolean;
+  licenseNumber?: string;
+  vehicleType?: string;
+  fullName?: string;
 }
 
 export interface AddressComponentType {

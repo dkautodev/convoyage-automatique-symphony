@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GoogleAddressSuggestion, GoogleGeocodingResult } from '../types/auth';
 
 declare global {
@@ -79,8 +79,8 @@ export const useGooglePlaces = () => {
             const result = results[0];
             setSelectedAddress(result);
             setMapPosition({
-              lat: result.geometry.location.lat(),
-              lng: result.geometry.location.lng()
+              lat: result.geometry.location.lat,
+              lng: result.geometry.location.lng
             });
             resolve(result);
           } else {

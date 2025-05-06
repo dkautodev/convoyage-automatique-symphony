@@ -55,7 +55,7 @@ export default function Register() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const initialRole = (searchParams.get('role') as UserRole) || 'client';
-  const [selectedTab, setSelectedTab] = useState(initialRole);
+  const [selectedTab, setSelectedTab] = useState<UserRole>(initialRole);
   const [showPassword, setShowPassword] = useState(false);
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number} | null>(null);
   
@@ -79,7 +79,7 @@ export default function Register() {
   
   // When tab changes, update the form's role value and reset TVA applicable if needed
   useEffect(() => {
-    form.setValue('role', selectedTab as UserRole);
+    form.setValue('role', selectedTab);
     
     if (selectedTab === 'driver') {
       form.setValue('tvaApplicable', false);
@@ -163,7 +163,7 @@ export default function Register() {
             </CardHeader>
             
             <CardContent>
-              <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+              <Tabs value={selectedTab} onValueChange={(value: string) => setSelectedTab(value as UserRole)}>
                 <TabsList className="grid grid-cols-2 mb-8">
                   <TabsTrigger value="client" className="flex items-center gap-2">
                     <User className="h-4 w-4" />

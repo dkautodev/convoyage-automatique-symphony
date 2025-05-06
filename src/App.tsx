@@ -9,6 +9,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import RegisterAdmin from "./pages/RegisterAdmin";
+import AdminInvite from "./pages/AdminInvite";
 import NotFound from "./pages/NotFound";
 
 // Layouts
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/home" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/register-admin" element={<RegisterAdmin />} />
+            <Route path="/admin-invite" element={<AdminInvite />} />
             
             {/* Routes du dashboard admin */}
             <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>

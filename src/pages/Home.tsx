@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
@@ -29,7 +29,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
+export default function Home() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   
@@ -79,12 +79,6 @@ export default function Login() {
     <div className="min-h-screen bg-muted/30 flex flex-col">
       <div className="container mx-auto p-4">
         <div className="max-w-md mx-auto my-12">
-          {/* Back link */}
-          <Link to="/" className="inline-flex items-center text-sm mb-6 hover:underline">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Retour à l'accueil
-          </Link>
-          
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">Connexion à votre compte</CardTitle>

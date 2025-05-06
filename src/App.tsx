@@ -8,8 +8,15 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import RegisterAdmin from "./pages/RegisterAdmin";
-import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+
+// Layouts
+import DashboardLayout from "./layouts/DashboardLayout";
+
+// Dashboard pages
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import ClientDashboard from "./pages/dashboard/ClientDashboard";
+import DriverDashboard from "./pages/dashboard/DriverDashboard";
 
 const queryClient = new QueryClient();
 
@@ -20,18 +27,35 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Routes publiques */}
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register-admin" element={<RegisterAdmin />} />
           
-          {/* Routes de tableau de bord avec chemins spécifiques au rôle */}
-          <Route path="/client/dashboard" element={<Dashboard />} />
-          <Route path="/driver/dashboard" element={<Dashboard />} />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
+          {/* Routes du dashboard admin */}
+          <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            {/* D'autres routes admin à venir */}
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
           
-          {/* Redirection de /dashboard vers le tableau de bord approprié */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* Routes du dashboard client */}
+          <Route path="/client" element={<DashboardLayout allowedRoles="client" />}>
+            <Route path="dashboard" element={<ClientDashboard />} />
+            {/* D'autres routes client à venir */}
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
+          
+          {/* Routes du dashboard chauffeur */}
+          <Route path="/driver" element={<DashboardLayout allowedRoles="chauffeur" />}>
+            <Route path="dashboard" element={<DriverDashboard />} />
+            {/* D'autres routes chauffeur à venir */}
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
+          
+          {/* Redirection générique vers le tableau de bord approprié */}
+          <Route path="/dashboard" element={<Navigate to="/client/dashboard" replace />} />
           
           {/* Route de secours */}
           <Route path="*" element={<NotFound />} />

@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
 import { Copy, ShieldCheck } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +34,19 @@ const inviteFormSchema = z.object({
 
 type InviteFormData = z.infer<typeof inviteFormSchema>;
 
+// Fonction utilitaire pour générer un token unique sans dépendance externe
+const generateUniqueToken = (length = 12) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const randomValues = new Uint8Array(length);
+  window.crypto.getRandomValues(randomValues);
+  
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars[randomValues[i] % chars.length];
+  }
+  return result;
+};
+
 export default function AdminInvite() {
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
 
@@ -48,21 +60,24 @@ export default function AdminInvite() {
 
   const onSubmit = async (data: InviteFormData) => {
     try {
-      const token = uuidv4().replace(/-/g, '').substring(0, 12);
+      const token = generateUniqueToken(12);
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + data.expiryDays);
 
-      // Store the token in the database
-      // Note: In a real app, this would be inserted into a proper admin_tokens table
-      // For now, we'll just simulate storing the token
-      console.log("Generated token:", {
-        token,
-        email: data.email,
-        expires_at: expiryDate.toISOString(),
-        used: false
-      });
+      // Enregistrer le token dans la base de données Supabase
+      const { error } = await supabase.from('admin_tokens').insert([
+        { 
+          token,
+          email: data.email,
+          expires_at: expiryDate.toISOString(),
+          used: false
+        },
+      ]);
+
+      if (error) {
+        throw error;
+      }
       
-      // Since we don't have an admin_tokens table yet, we'll just simulate success
       setGeneratedToken(token);
       toast.success("Token d'invitation généré avec succès!");
     } catch (error: any) {

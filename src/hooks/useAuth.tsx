@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { typedSupabase } from '@/types/database';
@@ -18,12 +18,67 @@ export type Profile = {
   active: boolean;
 };
 
+// Type pour le contexte d'authentification
+interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  session: Session | null;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, userData: any, role?: UserRole) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+}
+
+// Création du contexte d'authentification
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Hook personnalisé pour utiliser le contexte d'authentification
 export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
+  }
+  return context;
+}
+
+// Fournisseur du contexte d'authentification
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Récupérer le profil de l'utilisateur
+  const fetchProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error: profileError } = await typedSupabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (profileError) {
+        throw profileError;
+      }
+      
+      if (data) {
+        setProfile(data);
+        // Mettre à jour le timestamp de dernière connexion
+        await typedSupabase
+          .from('profiles')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', userId);
+      }
+    } catch (err: any) {
+      console.error('Erreur lors de la récupération du profil:', err);
+      setError(err.message);
+    }
+  }, []);
 
   // Vérifier la session actuelle au chargement
   useEffect(() => {
@@ -32,27 +87,17 @@ export function useAuth() {
         setLoading(true);
         
         // Récupérer la session actuelle
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           throw sessionError;
         }
 
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Récupérer le profil utilisateur
-          const { data: profileData, error: profileError } = await typedSupabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profileError) {
-            throw profileError;
-          }
-          
-          setProfile(profileData);
+        setSession(currentSession);
+
+        if (currentSession?.user) {
+          setUser(currentSession.user);
+          await fetchProfile(currentSession.user.id);
         }
       } catch (err: any) {
         setError(err.message);
@@ -67,20 +112,17 @@ export function useAuth() {
     // S'abonner aux changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
+        console.log('Événement d\'authentification:', event);
+        
+        if (session) {
+          setSession(session);
           setUser(session.user);
           
-          // Récupérer le profil utilisateur
-          const { data: profileData, error: profileError } = await typedSupabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (!profileError) {
-            setProfile(profileData);
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            await fetchProfile(session.user.id);
           }
-        } else if (event === 'SIGNED_OUT') {
+        } else {
+          setSession(null);
           setUser(null);
           setProfile(null);
         }
@@ -90,12 +132,13 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   // Fonction de connexion
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      setError(null);
       
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
@@ -105,25 +148,14 @@ export function useAuth() {
       
       if (data?.user) {
         setUser(data.user);
+        setSession(data.session);
         
-        // Récupérer le profil utilisateur
-        const { data: profileData, error: profileError } = await typedSupabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        await fetchProfile(data.user.id);
         
-        if (profileError) {
-          throw profileError;
-        }
-        
-        // Vérifier que profileData n'est pas null avant d'accéder à ses propriétés
-        if (profileData) {
-          setProfile(profileData);
-          
+        // Vérifier que le profil a été récupéré avant de rediriger
+        if (profile) {
           // Rediriger vers le tableau de bord approprié
-          redirectToDashboard(profileData.role);
-          
+          redirectToDashboard(profile.role);
           toast.success('Connexion réussie !');
         }
       }
@@ -144,6 +176,7 @@ export function useAuth() {
   ) => {
     try {
       setLoading(true);
+      setError(null);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -160,20 +193,17 @@ export function useAuth() {
       }
       
       if (data?.user) {
-        // Créer le profil utilisateur
-        const { error: profileError } = await typedSupabase
+        // Créer le profil utilisateur (la fonction handle_new_user du trigger va créer le profil de base)
+        // Pour les informations supplémentaires, on met à jour le profil
+        const { error: profileUpdateError } = await typedSupabase
           .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              email,
-              role,
-              full_name: userData.fullName || null
-            }
-          ]);
+          .update({
+            full_name: userData.fullName || null,
+          })
+          .eq('id', data.user.id);
         
-        if (profileError) {
-          throw profileError;
+        if (profileUpdateError) {
+          throw profileUpdateError;
         }
         
         // Créer l'entrée dans la table spécifique au rôle (client, chauffeur)
@@ -228,6 +258,7 @@ export function useAuth() {
   const logout = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       const { error } = await supabase.auth.signOut();
       
@@ -237,11 +268,65 @@ export function useAuth() {
       
       setUser(null);
       setProfile(null);
+      setSession(null);
       navigate('/home');
       toast.success('Déconnexion réussie');
     } catch (err: any) {
       setError(err.message);
       toast.error('Erreur lors de la déconnexion: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour mettre à jour le profil
+  const updateProfile = async (data: Partial<Profile>) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      const { error } = await typedSupabase
+        .from('profiles')
+        .update(data)
+        .eq('id', user.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Mettre à jour le profil localement
+      setProfile(prev => prev ? { ...prev, ...data } : null);
+      toast.success('Profil mis à jour avec succès');
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la mise à jour du profil: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour réinitialiser le mot de passe
+  const resetPassword = async (email: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Un email de réinitialisation de mot de passe a été envoyé');
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la réinitialisation du mot de passe: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -264,13 +349,19 @@ export function useAuth() {
     }
   };
 
-  return {
+  // Contexte à partager
+  const value = {
     user,
     profile,
+    session,
     loading,
     error,
     login,
     register,
-    logout
+    logout,
+    updateProfile,
+    resetPassword,
   };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

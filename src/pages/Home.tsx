@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
@@ -32,6 +33,24 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Home() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const { login, user, profile, loading, error } = useAuth();
+  
+  // Si l'utilisateur est déjà connecté, rediriger vers son tableau de bord
+  useEffect(() => {
+    if (user && profile) {
+      switch (profile.role) {
+        case 'admin':
+          navigate('/admin/dashboard');
+          break;
+        case 'client':
+          navigate('/client/dashboard');
+          break;
+        case 'chauffeur':
+          navigate('/driver/dashboard');
+          break;
+      }
+    }
+  }, [user, profile, navigate]);
   
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -43,37 +62,19 @@ export default function Home() {
   });
   
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      console.log("Tentative de connexion:", data);
-      
-      // This is where you would integrate with Supabase
-      // const { data: authData, error } = await supabase.auth.signInWithPassword({
-      //   email: data.email,
-      //   password: data.password,
-      // });
-      
-      // if (error) throw error;
-      
-      // Check user role and redirect accordingly
-      // const { data: userData } = await supabase.from('users').select('role').eq('id', authData.user.id).single();
-      
-      // For demo, we're simulating the login flow
-      toast.success('Connexion réussie !');
-      
-      // Simulate role detection and redirect
-      const userEmail = data.email.toLowerCase();
-      if (userEmail.includes('admin')) {
-        navigate('/admin/dashboard');
-      } else if (userEmail.includes('driver')) {
-        navigate('/driver/dashboard');
-      } else {
-        navigate('/client/dashboard');
-      }
-    } catch (error) {
-      console.error('Erreur de connexion:', error);
-      toast.error('Email ou mot de passe invalide. Veuillez réessayer.');
-    }
+    await login(data.email, data.password);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="h-12 w-12 border-t-4 border-b-4 border-primary rounded-full animate-spin"></div>
+          <p className="mt-4 text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">

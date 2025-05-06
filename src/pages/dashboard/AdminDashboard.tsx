@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabase } from '@/types/database';
 import { Mission, MissionStatus, missionStatusLabels, missionStatusColors } from '@/types/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart, CreditCard, Package, User, Users, Truck } from 'lucide-react';
+import { BarChart, CreditCard, Package, User, Users, Truck, Building } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const AdminDashboard = () => {
@@ -26,7 +25,7 @@ const AdminDashboard = () => {
         setLoading(true);
         
         // Récupérer les missions récentes
-        const { data: missionsData, error: missionsError } = await supabase
+        const { data: missionsData, error: missionsError } = await typedSupabase
           .from('missions')
           .select('*')
           .order('created_at', { ascending: false })
@@ -38,14 +37,14 @@ const AdminDashboard = () => {
         
         // Récupérer les statistiques
         // 1. Nombre total de missions
-        const { count: totalMissions, error: totalMissionsError } = await supabase
+        const { count: totalMissions, error: totalMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' });
         
         if (totalMissionsError) throw totalMissionsError;
         
         // 2. Nombre de missions actives
-        const { count: activeMissions, error: activeMissionsError } = await supabase
+        const { count: activeMissions, error: activeMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .not('status', 'in', '(termine,annule)');
@@ -53,14 +52,14 @@ const AdminDashboard = () => {
         if (activeMissionsError) throw activeMissionsError;
         
         // 3. Nombre total de clients
-        const { count: totalClients, error: totalClientsError } = await supabase
+        const { count: totalClients, error: totalClientsError } = await typedSupabase
           .from('clients')
           .select('*', { count: 'exact' });
         
         if (totalClientsError) throw totalClientsError;
         
         // 4. Nombre total de chauffeurs
-        const { count: totalDrivers, error: totalDriversError } = await supabase
+        const { count: totalDrivers, error: totalDriversError } = await typedSupabase
           .from('drivers')
           .select('*', { count: 'exact' });
         
@@ -72,7 +71,7 @@ const AdminDashboard = () => {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
         
-        const { data: monthlyData, error: monthlyDataError } = await supabase
+        const { data: monthlyData, error: monthlyDataError } = await typedSupabase
           .from('missions')
           .select('price_ttc')
           .gte('created_at', firstDayOfMonth)

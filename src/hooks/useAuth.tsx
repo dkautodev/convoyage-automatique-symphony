@@ -1,12 +1,25 @@
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Profile, UserRole } from '@/types/supabase';
+import { typedSupabase } from '@/types/database';
+import { supabase } from '@/integrations/supabase/client';
+import { UserRole } from '@/types/supabase';
+import type { Session, User, AuthError } from '@supabase/supabase-js';
+
+// Type pour le profil utilisateur
+export type Profile = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: UserRole;
+  created_at: string;
+  last_login: string | null;
+  active: boolean;
+};
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +42,7 @@ export function useAuth() {
           setUser(session.user);
           
           // Récupérer le profil utilisateur
-          const { data: profileData, error: profileError } = await supabase
+          const { data: profileData, error: profileError } = await typedSupabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
@@ -58,7 +71,7 @@ export function useAuth() {
           setUser(session.user);
           
           // Récupérer le profil utilisateur
-          const { data: profileData, error: profileError } = await supabase
+          const { data: profileData, error: profileError } = await typedSupabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
@@ -94,7 +107,7 @@ export function useAuth() {
         setUser(data.user);
         
         // Récupérer le profil utilisateur
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await typedSupabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
@@ -104,12 +117,15 @@ export function useAuth() {
           throw profileError;
         }
         
-        setProfile(profileData);
-        
-        // Rediriger vers le tableau de bord approprié
-        redirectToDashboard(profileData.role);
-        
-        toast.success('Connexion réussie !');
+        // Vérifier que profileData n'est pas null avant d'accéder à ses propriétés
+        if (profileData) {
+          setProfile(profileData);
+          
+          // Rediriger vers le tableau de bord approprié
+          redirectToDashboard(profileData.role);
+          
+          toast.success('Connexion réussie !');
+        }
       }
     } catch (err: any) {
       setError(err.message);
@@ -145,7 +161,7 @@ export function useAuth() {
       
       if (data?.user) {
         // Créer le profil utilisateur
-        const { error: profileError } = await supabase
+        const { error: profileError } = await typedSupabase
           .from('profiles')
           .insert([
             {
@@ -162,7 +178,7 @@ export function useAuth() {
         
         // Créer l'entrée dans la table spécifique au rôle (client, chauffeur)
         if (role === 'client') {
-          const { error: clientError } = await supabase
+          const { error: clientError } = await typedSupabase
             .from('clients')
             .insert([
               {
@@ -180,7 +196,7 @@ export function useAuth() {
             throw clientError;
           }
         } else if (role === 'chauffeur') {
-          const { error: driverError } = await supabase
+          const { error: driverError } = await typedSupabase
             .from('drivers')
             .insert([
               {

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { Mission, MissionStatus, missionStatusLabels, missionStatusColors } from '@/types/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +27,7 @@ const DriverDashboard = () => {
         setLoading(true);
         
         // Récupérer les missions du chauffeur
-        const { data: missionsData, error: missionsError } = await supabase
+        const { data: missionsData, error: missionsError } = await typedSupabase
           .from('missions')
           .select('*')
           .eq('chauffeur_id', user.id)
@@ -41,7 +40,7 @@ const DriverDashboard = () => {
         
         // Récupérer les statistiques du chauffeur
         // 1. Nombre de missions assignées
-        const { count: assignedMissions, error: assignedMissionsError } = await supabase
+        const { count: assignedMissions, error: assignedMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .eq('chauffeur_id', user.id);
@@ -49,7 +48,7 @@ const DriverDashboard = () => {
         if (assignedMissionsError) throw assignedMissionsError;
         
         // 2. Nombre de missions complétées
-        const { count: completedMissions, error: completedMissionsError } = await supabase
+        const { count: completedMissions, error: completedMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .eq('chauffeur_id', user.id)
@@ -63,7 +62,7 @@ const DriverDashboard = () => {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
         
-        const { data: monthlyData, error: monthlyDataError } = await supabase
+        const { data: monthlyData, error: monthlyDataError } = await typedSupabase
           .from('missions')
           .select('price_ht')
           .eq('chauffeur_id', user.id)
@@ -78,7 +77,7 @@ const DriverDashboard = () => {
         const monthlyEarnings = monthlyData?.reduce((sum, mission) => sum + ((mission.price_ht || 0) * driverCommission), 0) || 0;
         
         // 4. Nombre de missions en cours
-        const { count: inProgressMissions, error: inProgressMissionsError } = await supabase
+        const { count: inProgressMissions, error: inProgressMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .eq('chauffeur_id', user.id)

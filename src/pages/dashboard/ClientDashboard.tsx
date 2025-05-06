@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { Mission, MissionStatus, missionStatusLabels, missionStatusColors } from '@/types/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +27,7 @@ const ClientDashboard = () => {
         setLoading(true);
         
         // Récupérer les missions du client
-        const { data: missionsData, error: missionsError } = await supabase
+        const { data: missionsData, error: missionsError } = await typedSupabase
           .from('missions')
           .select('*')
           .eq('client_id', user.id)
@@ -41,7 +40,7 @@ const ClientDashboard = () => {
         
         // Récupérer les statistiques du client
         // 1. Nombre de missions actives
-        const { count: activeMissions, error: activeMissionsError } = await supabase
+        const { count: activeMissions, error: activeMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .eq('client_id', user.id)
@@ -50,7 +49,7 @@ const ClientDashboard = () => {
         if (activeMissionsError) throw activeMissionsError;
         
         // 2. Nombre de missions complétées
-        const { count: completedMissions, error: completedMissionsError } = await supabase
+        const { count: completedMissions, error: completedMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .eq('client_id', user.id)
@@ -59,7 +58,7 @@ const ClientDashboard = () => {
         if (completedMissionsError) throw completedMissionsError;
         
         // 3. Total des dépenses
-        const { data: allMissions, error: allMissionsError } = await supabase
+        const { data: allMissions, error: allMissionsError } = await typedSupabase
           .from('missions')
           .select('price_ttc')
           .eq('client_id', user.id)
@@ -70,7 +69,7 @@ const ClientDashboard = () => {
         const totalSpent = allMissions?.reduce((sum, mission) => sum + (mission.price_ttc || 0), 0) || 0;
         
         // 4. Nombre de missions en attente
-        const { count: pendingMissions, error: pendingMissionsError } = await supabase
+        const { count: pendingMissions, error: pendingMissionsError } = await typedSupabase
           .from('missions')
           .select('*', { count: 'exact' })
           .eq('client_id', user.id)

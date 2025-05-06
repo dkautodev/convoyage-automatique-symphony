@@ -1,4 +1,3 @@
-
 import { Database as GeneratedDatabase } from '@/integrations/supabase/types';
 
 // Extension de la définition Database générée pour inclure nos tables
@@ -367,7 +366,7 @@ export interface Database extends GeneratedDatabase {
       pricing_grids: {
         Row: {
           id: number;
-          vehicle_category: string;
+          vehicle_category: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3";
           min_distance: number;
           max_distance: number;
           price_ht: number;
@@ -380,7 +379,7 @@ export interface Database extends GeneratedDatabase {
         };
         Insert: {
           id?: number;
-          vehicle_category: string;
+          vehicle_category: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3";
           min_distance: number;
           max_distance: number;
           price_ht: number;
@@ -393,7 +392,7 @@ export interface Database extends GeneratedDatabase {
         };
         Update: {
           id?: number;
-          vehicle_category?: string;
+          vehicle_category?: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3";
           min_distance?: number;
           max_distance?: number;
           price_ht?: number;

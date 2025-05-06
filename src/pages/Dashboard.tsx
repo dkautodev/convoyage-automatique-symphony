@@ -22,13 +22,12 @@ const Dashboard = () => {
   
   const handleLogout = () => {
     // In a real app, this would call supabase.auth.signOut()
-    toast.success('Successfully logged out');
+    toast.success('Déconnexion réussie');
     navigate('/login');
   };
   
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Sidebar and header would be here in a complete implementation */}
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <div className={`w-64 bg-white border-r p-4 flex flex-col ${
@@ -48,18 +47,18 @@ const Dashboard = () => {
           <nav className="space-y-1 flex-1">
             <Button variant="ghost" className="w-full justify-start">
               <Clipboard className="mr-2 h-4 w-4" />
-              Dashboard
+              Tableau de bord
             </Button>
             
             {userRole === 'admin' && (
               <>
                 <Button variant="ghost" className="w-full justify-start">
                   <User className="mr-2 h-4 w-4" />
-                  Users
+                  Utilisateurs
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   <Truck className="mr-2 h-4 w-4" />
-                  Drivers
+                  Chauffeurs
                 </Button>
               </>
             )}
@@ -68,11 +67,11 @@ const Dashboard = () => {
               <>
                 <Button variant="ghost" className="w-full justify-start">
                   <Truck className="mr-2 h-4 w-4" />
-                  Orders
+                  Commandes
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   <Calendar className="mr-2 h-4 w-4" />
-                  Schedule
+                  Planning
                 </Button>
               </>
             )}
@@ -85,21 +84,21 @@ const Dashboard = () => {
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   <MapPin className="mr-2 h-4 w-4" />
-                  Routes
+                  Itinéraires
                 </Button>
               </>
             )}
             
             <Button variant="ghost" className="w-full justify-start">
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              Paramètres
             </Button>
           </nav>
           
           <div className="border-t pt-4 mt-4">
             <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              Déconnexion
             </Button>
           </div>
         </div>
@@ -112,18 +111,18 @@ const Dashboard = () => {
               userRole === 'driver' ? 'text-driver' :
               'text-client'
             }`}>
-              {userRole === 'admin' ? 'Admin Dashboard' :
-               userRole === 'driver' ? 'Driver Dashboard' :
-               'Client Dashboard'}
+              {userRole === 'admin' ? 'Tableau de Bord Admin' :
+               userRole === 'driver' ? 'Tableau de Bord Chauffeur' :
+               'Tableau de Bord Client'}
             </h2>
-            <p className="text-muted-foreground">Welcome back! Here's an overview of your activity.</p>
+            <p className="text-muted-foreground">Bienvenue ! Voici un aperçu de votre activité.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Active Missions</CardTitle>
-                <CardDescription>Current convoys in progress</CardDescription>
+                <CardTitle className="text-lg">Missions Actives</CardTitle>
+                <CardDescription>Convois en cours</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold">
@@ -135,14 +134,14 @@ const Dashboard = () => {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">
-                  {userRole === 'admin' ? 'Total Users' : 
-                   userRole === 'driver' ? 'Completed Missions' : 
-                   'Pending Orders'}
+                  {userRole === 'admin' ? 'Total Utilisateurs' : 
+                   userRole === 'driver' ? 'Missions Terminées' : 
+                   'Commandes en Attente'}
                 </CardTitle>
                 <CardDescription>
-                  {userRole === 'admin' ? 'Active accounts on platform' :
-                   userRole === 'driver' ? 'Successfully delivered' :
-                   'Awaiting processing'}
+                  {userRole === 'admin' ? 'Comptes actifs sur la plateforme' :
+                   userRole === 'driver' ? 'Livraisons effectuées avec succès' :
+                   'En attente de traitement'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -155,17 +154,17 @@ const Dashboard = () => {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">
-                  {userRole === 'admin' ? 'Revenue' : 
-                   userRole === 'driver' ? 'Earnings' : 
-                   'Total Spent'}
+                  {userRole === 'admin' ? 'Revenus' : 
+                   userRole === 'driver' ? 'Gains' : 
+                   'Total Dépensé'}
                 </CardTitle>
-                <CardDescription>Current month</CardDescription>
+                <CardDescription>Mois en cours</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold">
-                  €{userRole === 'admin' ? '24,500' : 
-                     userRole === 'driver' ? '1,840' : 
-                     '3,250'}
+                  €{userRole === 'admin' ? '24 500' : 
+                     userRole === 'driver' ? '1 840' : 
+                     '3 250'}
                 </p>
               </CardContent>
             </Card>
@@ -173,11 +172,11 @@ const Dashboard = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>Activité Récente</CardTitle>
               <CardDescription>
-                Your latest {userRole === 'admin' ? 'platform' : 
-                            userRole === 'driver' ? 'mission' : 
-                            'order'} activity
+                Votre dernière activité {userRole === 'admin' ? 'sur la plateforme' : 
+                                        userRole === 'driver' ? 'de mission' : 
+                                        'de commande'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -185,37 +184,37 @@ const Dashboard = () => {
                 <div className="border-b pb-3 flex items-start justify-between">
                   <div>
                     <p className="font-medium">
-                      {userRole === 'admin' ? 'New client registration' : 
-                       userRole === 'driver' ? 'Mission #CV-2023-156 assigned' : 
-                       'Order #CV-2023-156 placed'}
+                      {userRole === 'admin' ? 'Nouvel enregistrement client' : 
+                       userRole === 'driver' ? 'Mission #CV-2023-156 assignée' : 
+                       'Commande #CV-2023-156 placée'}
                     </p>
-                    <p className="text-sm text-muted-foreground">Today at 10:25 AM</p>
+                    <p className="text-sm text-muted-foreground">Aujourd'hui à 10:25</p>
                   </div>
-                  <Button variant="ghost" size="sm">View</Button>
+                  <Button variant="ghost" size="sm">Voir</Button>
                 </div>
                 
                 <div className="border-b pb-3 flex items-start justify-between">
                   <div>
                     <p className="font-medium">
-                      {userRole === 'admin' ? 'Price configuration updated' : 
-                       userRole === 'driver' ? 'Mission #CV-2023-142 completed' : 
-                       'Invoice #INV-2023-052 paid'}
+                      {userRole === 'admin' ? 'Configuration des tarifs mise à jour' : 
+                       userRole === 'driver' ? 'Mission #CV-2023-142 terminée' : 
+                       'Facture #INV-2023-052 payée'}
                     </p>
-                    <p className="text-sm text-muted-foreground">Yesterday at 4:30 PM</p>
+                    <p className="text-sm text-muted-foreground">Hier à 16:30</p>
                   </div>
-                  <Button variant="ghost" size="sm">View</Button>
+                  <Button variant="ghost" size="sm">Voir</Button>
                 </div>
                 
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-medium">
-                      {userRole === 'admin' ? 'System maintenance completed' : 
-                       userRole === 'driver' ? 'Mission #CV-2023-137 route updated' : 
-                       'Order #CV-2023-137 delivered'}
+                      {userRole === 'admin' ? 'Maintenance système terminée' : 
+                       userRole === 'driver' ? 'Itinéraire de mission #CV-2023-137 mis à jour' : 
+                       'Commande #CV-2023-137 livrée'}
                     </p>
-                    <p className="text-sm text-muted-foreground">May 5, 2025 at 9:15 AM</p>
+                    <p className="text-sm text-muted-foreground">6 mai 2025 à 9:15</p>
                   </div>
-                  <Button variant="ghost" size="sm">View</Button>
+                  <Button variant="ghost" size="sm">Voir</Button>
                 </div>
               </div>
             </CardContent>

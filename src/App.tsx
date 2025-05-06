@@ -26,15 +26,15 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/register-admin" element={<RegisterAdmin />} />
           
-          {/* Dashboard routes with role-specific paths */}
+          {/* Routes de tableau de bord avec chemins spécifiques au rôle */}
           <Route path="/client/dashboard" element={<Dashboard />} />
           <Route path="/driver/dashboard" element={<Dashboard />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
           
-          {/* Redirect from /dashboard to appropriate role dashboard */}
+          {/* Redirection de /dashboard vers le tableau de bord approprié */}
           <Route path="/dashboard" element={<Dashboard />} />
           
-          {/* Catch-all route */}
+          {/* Route de secours */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

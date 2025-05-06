@@ -59,7 +59,7 @@ export const useGooglePlaces = () => {
         }
       );
     } catch (error) {
-      console.error('Error searching places:', error);
+      console.error('Erreur lors de la recherche d\'adresses :', error);
       setLoading(false);
       setPredictions([]);
     }
@@ -84,13 +84,13 @@ export const useGooglePlaces = () => {
             });
             resolve(result);
           } else {
-            reject(new Error('Place not found'));
+            reject(new Error('Lieu non trouvé'));
           }
           setLoading(false);
         });
       });
     } catch (error) {
-      console.error('Error getting place details:', error);
+      console.error('Erreur lors de la récupération des détails du lieu :', error);
       setLoading(false);
       return null;
     }

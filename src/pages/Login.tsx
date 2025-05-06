@@ -22,8 +22,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }),
+  email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
+  password: z.string().min(1, { message: 'Le mot de passe est requis' }),
   rememberMe: z.boolean().default(false),
 });
 
@@ -44,7 +44,7 @@ export default function Login() {
   
   const onSubmit = async (data: LoginFormData) => {
     try {
-      console.log("Login attempt:", data);
+      console.log("Tentative de connexion:", data);
       
       // This is where you would integrate with Supabase
       // const { data: authData, error } = await supabase.auth.signInWithPassword({
@@ -58,7 +58,7 @@ export default function Login() {
       // const { data: userData } = await supabase.from('users').select('role').eq('id', authData.user.id).single();
       
       // For demo, we're simulating the login flow
-      toast.success('Login successful!');
+      toast.success('Connexion réussie !');
       
       // Simulate role detection and redirect
       const userEmail = data.email.toLowerCase();
@@ -70,8 +70,8 @@ export default function Login() {
         navigate('/client/dashboard');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Invalid email or password. Please try again.');
+      console.error('Erreur de connexion:', error);
+      toast.error('Email ou mot de passe invalide. Veuillez réessayer.');
     }
   };
 
@@ -82,14 +82,14 @@ export default function Login() {
           {/* Back link */}
           <Link to="/" className="inline-flex items-center text-sm mb-6 hover:underline">
             <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to home
+            Retour à l'accueil
           </Link>
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Login to your account</CardTitle>
+              <CardTitle className="text-2xl">Connexion à votre compte</CardTitle>
               <CardDescription>
-                Enter your credentials to access your dashboard
+                Entrez vos identifiants pour accéder à votre tableau de bord
               </CardDescription>
             </CardHeader>
             
@@ -104,7 +104,7 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="your@email.com" {...field} />
+                          <Input type="email" placeholder="votre@email.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -117,7 +117,7 @@ export default function Login() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Mot de passe</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input 
@@ -155,7 +155,7 @@ export default function Login() {
                             />
                           </FormControl>
                           <FormLabel className="text-sm font-normal cursor-pointer">
-                            Remember me
+                            Se souvenir de moi
                           </FormLabel>
                         </FormItem>
                       )}
@@ -166,7 +166,7 @@ export default function Login() {
                       to="/forgot-password" 
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      Forgot password?
+                      Mot de passe oublié ?
                     </Link>
                   </div>
                   
@@ -178,10 +178,10 @@ export default function Login() {
                     {form.formState.isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
-                        <span>Signing in...</span>
+                        <span>Connexion en cours...</span>
                       </div>
                     ) : (
-                      'Sign in'
+                      'Se connecter'
                     )}
                   </Button>
                 </form>
@@ -190,9 +190,9 @@ export default function Login() {
             
             <CardFooter className="flex flex-col items-center border-t pt-6">
               <p className="text-sm text-muted-foreground">
-                Don't have an account yet?{' '}
+                Vous n'avez pas encore de compte ?{' '}
                 <Link to="/register" className="text-primary hover:underline">
-                  Register here
+                  Inscrivez-vous ici
                 </Link>
               </p>
             </CardFooter>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -46,7 +45,7 @@ const registerSchema = z.object({
   gdprConsent: z.boolean().refine(val => val === true, {
     message: 'You must agree to the terms and conditions',
   }),
-  role: z.enum(['client', 'driver', 'admin']),
+  role: z.enum(['client', 'chauffeur', 'admin']),
 });
 
 type FormData = z.infer<typeof registerSchema>;
@@ -69,11 +68,11 @@ export default function Register() {
       placeId: '',
       siret: '',
       tvaNumb: '',
-      tvaApplicable: initialRole === 'driver' ? false : undefined,
+      tvaApplicable: initialRole === 'chauffeur' ? false : undefined,
       phone1: '',
       phone2: '',
       gdprConsent: false,
-      role: initialRole as UserRole,
+      role: initialRole,
     },
   });
   
@@ -81,7 +80,7 @@ export default function Register() {
   useEffect(() => {
     form.setValue('role', selectedTab);
     
-    if (selectedTab === 'driver') {
+    if (selectedTab === 'chauffeur') {
       form.setValue('tvaApplicable', false);
     } else {
       form.setValue('tvaApplicable', undefined);
@@ -126,7 +125,7 @@ export default function Register() {
       // Add user metadata to appropriate table based on role
       // if (data.role === 'client') {
       //   await supabase.from('clients').insert({...})
-      // } else if (data.role === 'driver') {
+      // } else if (data.role === 'chauffeur') {
       //   await supabase.from('drivers').insert({...})
       // } ...
       
@@ -142,7 +141,7 @@ export default function Register() {
 
   // Determine if TVA field should be shown
   const showTvaField = selectedTab === 'client' || 
-                      (selectedTab === 'driver' && form.watch('tvaApplicable'));
+                      (selectedTab === 'chauffeur' && form.watch('tvaApplicable'));
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
@@ -169,7 +168,7 @@ export default function Register() {
                     <User className="h-4 w-4" />
                     <span>Client</span>
                   </TabsTrigger>
-                  <TabsTrigger value="driver" className="flex items-center gap-2">
+                  <TabsTrigger value="chauffeur" className="flex items-center gap-2">
                     <UserCog className="h-4 w-4" />
                     <span>Driver</span>
                   </TabsTrigger>
@@ -380,7 +379,7 @@ export default function Register() {
                   </Form>
                 </TabsContent>
                 
-                <TabsContent value="driver">
+                <TabsContent value="chauffeur">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                       <div className="grid md:grid-cols-2 gap-6">

@@ -326,6 +326,145 @@ export interface Database extends GeneratedDatabase {
           updated_by?: string | null;
         };
       };
+      documents: {
+        Row: {
+          id: number;
+          mission_id: string;
+          type: 'devis' | 'facture' | 'fiche_mission';
+          document_number: string;
+          storage_path: string;
+          created_at: string;
+          created_by: string;
+        };
+        Insert: {
+          id?: number;
+          mission_id: string;
+          type: 'devis' | 'facture' | 'fiche_mission';
+          document_number: string;
+          storage_path: string;
+          created_at?: string;
+          created_by: string;
+        };
+        Update: {
+          id?: number;
+          mission_id?: string;
+          type?: 'devis' | 'facture' | 'fiche_mission';
+          document_number?: string;
+          storage_path?: string;
+          created_at?: string;
+          created_by?: string;
+        };
+      };
+      mission_status_history: {
+        Row: {
+          id: number;
+          mission_id: string;
+          old_status: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident' | null;
+          new_status: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
+          changed_at: string;
+          changed_by: string;
+          notes: string | null;
+        };
+        Insert: {
+          id?: number;
+          mission_id: string;
+          old_status?: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident' | null;
+          new_status: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
+          changed_at?: string;
+          changed_by: string;
+          notes?: string | null;
+        };
+        Update: {
+          id?: number;
+          mission_id?: string;
+          old_status?: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident' | null;
+          new_status?: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
+          changed_at?: string;
+          changed_by?: string;
+          notes?: string | null;
+        };
+      };
+      google_maps_settings: {
+        Row: {
+          id: number;
+          api_key: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        Insert: {
+          id?: number;
+          api_key: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          id?: number;
+          api_key?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+      };
+      vat_settings: {
+        Row: {
+          id: number;
+          rate: number;
+          effective_date: string;
+          created_at: string;
+          modified_by: string | null;
+        };
+        Insert: {
+          id?: number;
+          rate: number;
+          effective_date?: string;
+          created_at?: string;
+          modified_by?: string | null;
+        };
+        Update: {
+          id?: number;
+          rate?: number;
+          effective_date?: string;
+          created_at?: string;
+          modified_by?: string | null;
+        };
+      };
+      vehicles: {
+        Row: {
+          id: number;
+          registration_number: string;
+          make: string;
+          model: string;
+          year: number | null;
+          category: string;
+          volume_m3: number | null;
+          notes: string | null;
+          created_at: string;
+          created_by: string;
+        };
+        Insert: {
+          id?: number;
+          registration_number: string;
+          make: string;
+          model: string;
+          year?: number | null;
+          category: string;
+          volume_m3?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          created_by: string;
+        };
+        Update: {
+          id?: number;
+          registration_number?: string;
+          make?: string;
+          model?: string;
+          year?: number | null;
+          category?: string;
+          volume_m3?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          created_by?: string;
+        };
+      };
     };
     Views: GeneratedDatabase['public']['Views'];
     Functions: GeneratedDatabase['public']['Functions'];

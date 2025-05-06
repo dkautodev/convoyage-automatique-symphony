@@ -106,7 +106,7 @@ export interface Database extends GeneratedDatabase {
           license_number: string;
           vat_applicable: boolean;
           vat_number: string | null;
-          vehicle_type: string | null;
+          vehicle_type: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3" | null;
           availability_status: string | null;
           last_location: {
             lat: number;
@@ -119,7 +119,7 @@ export interface Database extends GeneratedDatabase {
           license_number: string;
           vat_applicable?: boolean;
           vat_number?: string | null;
-          vehicle_type?: string | null;
+          vehicle_type?: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3" | null;
           availability_status?: string | null;
           last_location?: {
             lat: number;
@@ -132,7 +132,7 @@ export interface Database extends GeneratedDatabase {
           license_number?: string;
           vat_applicable?: boolean;
           vat_number?: string | null;
-          vehicle_type?: string | null;
+          vehicle_type?: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3" | null;
           availability_status?: string | null;
           last_location?: {
             lat: number;

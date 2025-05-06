@@ -47,7 +47,6 @@ const adminRegisterSchema = z.object({
     message: 'You must agree to the terms and conditions',
   }),
   adminToken: z.string().min(6, { message: 'Valid admin invitation token required' }),
-  enable2FA: z.boolean().default(false),
 });
 
 type AdminFormData = z.infer<typeof adminRegisterSchema>;
@@ -71,7 +70,6 @@ export default function RegisterAdmin() {
       phone2: '',
       gdprConsent: false,
       adminToken: '',
-      enable2FA: true,
     },
   });
 
@@ -116,7 +114,6 @@ export default function RegisterAdmin() {
       //   phone1: data.phone1,
       //   phone2: data.phone2 || null,
       //   role: 'admin',
-      //   two_factor_enabled: data.enable2FA,
       // });
       
       toast.success('Admin registration successful!');
@@ -299,28 +296,6 @@ export default function RegisterAdmin() {
                             <Input placeholder="+33 612345678" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Enable 2FA */}
-                    <FormField
-                      control={form.control}
-                      name="enable2FA"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Enable Two-Factor Authentication</FormLabel>
-                            <FormDescription>
-                              Recommended for enhanced security of administrator accounts.
-                            </FormDescription>
-                          </div>
                         </FormItem>
                       )}
                     />

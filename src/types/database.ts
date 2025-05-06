@@ -571,7 +571,7 @@ export interface Database extends GeneratedDatabase {
           make: string;
           model: string;
           year: number | null;
-          category: string;
+          category: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3";
           volume_m3: number | null;
           notes: string | null;
           created_at: string;
@@ -583,7 +583,7 @@ export interface Database extends GeneratedDatabase {
           make: string;
           model: string;
           year?: number | null;
-          category: string;
+          category: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3";
           volume_m3?: number | null;
           notes?: string | null;
           created_at?: string;
@@ -595,7 +595,7 @@ export interface Database extends GeneratedDatabase {
           make?: string;
           model?: string;
           year?: number | null;
-          category?: string;
+          category?: "citadine" | "berline" | "4x4_suv" | "utilitaire_3_5m3" | "utilitaire_6_12m3" | "utilitaire_12_15m3" | "utilitaire_15_20m3" | "utilitaire_plus_20m3";
           volume_m3?: number | null;
           notes?: string | null;
           created_at?: string;

@@ -139,23 +139,26 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
   return authData;
 };
 
-// Fonction pour compléter le profil client - MODIFIÉE POUR RÉSOUDRE LE PROBLÈME DE RÉCURSION
+// Fonction pour compléter le profil client - CORRECTION DU PROBLÈME DE FONCTION MANQUANTE
 export const completeClientProfileService = async (userId: string, data: ClientProfileFormData) => {
   try {
     console.log("Completing client profile for user:", userId, "with data:", data);
     
-    // Use type assertion to tell TypeScript that this RPC function is valid
-    const { data: updatedProfile, error } = await supabase.rpc('update_client_profile' as any, {
-      p_user_id: userId,
-      p_full_name: data.fullName,
-      p_company_name: data.companyName,
-      p_billing_address: convertAddressToJson(data.billingAddress),
-      p_siret: data.siret,
-      p_tva_number: data.tvaNumb,
-      p_phone_1: data.phone1,
-      p_phone_2: data.phone2,
-      p_profile_completed: true
-    });
+    // Instead of using RPC, directly update the profiles table
+    const { data: updatedProfile, error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: data.fullName,
+        company_name: data.companyName,
+        billing_address: convertAddressToJson(data.billingAddress),
+        siret: data.siret,
+        tva_number: data.tvaNumb,
+        phone_1: data.phone1,
+        phone_2: data.phone2,
+        profile_completed: true
+      })
+      .eq('id', userId)
+      .select();
     
     if (error) {
       console.error("Error completing client profile:", error);
@@ -170,27 +173,30 @@ export const completeClientProfileService = async (userId: string, data: ClientP
   }
 };
 
-// Fonction pour compléter le profil chauffeur - MODIFIÉE POUR RÉSOUDRE LE PROBLÈME DE RÉCURSION
+// Fonction pour compléter le profil chauffeur - CORRECTION DU PROBLÈME DE FONCTION MANQUANTE
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
     console.log("Completing driver profile for user:", userId, "with data:", data);
     
-    // Use type assertion to tell TypeScript that this RPC function is valid
-    const { data: updatedProfile, error } = await supabase.rpc('update_driver_profile' as any, {
-      p_user_id: userId,
-      p_full_name: data.fullName,
-      p_company_name: data.companyName,
-      p_billing_address: convertAddressToJson(data.billingAddress),
-      p_siret: data.siret,
-      p_tva_number: data.tvaNumb,
-      p_tva_applicable: data.tvaApplicable,
-      p_phone_1: data.phone1,
-      p_phone_2: data.phone2,
-      p_driver_license: data.licenseNumber,
-      p_vehicle_type: data.vehicleType,
-      p_vehicle_registration: data.idNumber,
-      p_profile_completed: true
-    });
+    // Instead of using RPC, directly update the profiles table
+    const { data: updatedProfile, error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: data.fullName,
+        company_name: data.companyName,
+        billing_address: convertAddressToJson(data.billingAddress),
+        siret: data.siret,
+        tva_number: data.tvaNumb,
+        tva_applicable: data.tvaApplicable,
+        phone_1: data.phone1,
+        phone_2: data.phone2,
+        driver_license: data.licenseNumber,
+        vehicle_type: data.vehicleType,
+        vehicle_registration: data.idNumber,
+        profile_completed: true
+      })
+      .eq('id', userId)
+      .select();
     
     if (error) {
       console.error("Error completing driver profile:", error);

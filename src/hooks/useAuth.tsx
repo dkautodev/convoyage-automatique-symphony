@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { typedSupabase } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types/supabase';
+import { UserRole, VehicleCategory } from '@/types/supabase';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
 import { RegisterFormData, BasicRegisterFormData, ClientProfileFormData, DriverProfileFormData } from '@/types/auth';
 

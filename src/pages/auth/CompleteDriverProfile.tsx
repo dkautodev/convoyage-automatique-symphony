@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -22,7 +21,7 @@ import AddressAutocomplete from '@/components/AddressAutocomplete';
 import AddressMap from '@/components/AddressMap';
 import { useAuth } from '@/hooks/useAuth';
 import { formatSiret } from '@/utils/validation';
-import { vehicleCategoryLabels } from '@/types/supabase';
+import { vehicleCategoryLabels, VehicleCategory } from '@/types/supabase';
 
 // Définir les types acceptés de fichiers
 const ACCEPTED_FILE_TYPES = {
@@ -179,7 +178,7 @@ export default function CompleteDriverProfile() {
         phone1: data.phone1,
         phone2: data.phone2,
         licenseNumber: data.licenseNumber,
-        vehicleType: data.vehicleType,
+        vehicleType: data.vehicleType as VehicleCategory,
         idNumber: data.idNumber,
         documents: documents as any,
       });

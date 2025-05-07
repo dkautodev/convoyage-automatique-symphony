@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/auth";
 
 import Home from "./pages/Home";
@@ -31,48 +31,46 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Routes publiques */}
-            <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="/home" element={<Home />} />
-            
-            {/* Routes d'inscription - redirection des anciennes routes vers /signup */}
-            <Route path="/register" element={<Navigate to="/signup" replace />} />
-            <Route path="/register-admin" element={<Navigate to="/signup" replace />} />
-            <Route path="/admin-invite" element={<Navigate to="/signup" replace />} />
-            
-            {/* Nouvelles routes d'inscription */}
-            <Route path="/signup" element={<BasicRegister />} />
-            <Route path="/register-confirmation" element={<RegisterConfirmation />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
-            <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
-            
-            {/* Routes du dashboard admin */}
-            <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-            
-            {/* Routes du dashboard client */}
-            <Route path="/client" element={<DashboardLayout allowedRoles="client" />}>
-              <Route path="dashboard" element={<ClientDashboard />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-            
-            {/* Routes du dashboard chauffeur */}
-            <Route path="/driver" element={<DashboardLayout allowedRoles="chauffeur" />}>
-              <Route path="dashboard" element={<DriverDashboard />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-            
-            {/* Route de secours */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Routes publiques */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+          
+          {/* Routes d'inscription - redirection des anciennes routes vers /signup */}
+          <Route path="/register" element={<Navigate to="/signup" replace />} />
+          <Route path="/register-admin" element={<Navigate to="/signup" replace />} />
+          <Route path="/admin-invite" element={<Navigate to="/signup" replace />} />
+          
+          {/* Nouvelles routes d'inscription */}
+          <Route path="/signup" element={<BasicRegister />} />
+          <Route path="/register-confirmation" element={<RegisterConfirmation />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
+          <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
+          
+          {/* Routes du dashboard admin */}
+          <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
+          
+          {/* Routes du dashboard client */}
+          <Route path="/client" element={<DashboardLayout allowedRoles="client" />}>
+            <Route path="dashboard" element={<ClientDashboard />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
+          
+          {/* Routes du dashboard chauffeur */}
+          <Route path="/driver" element={<DashboardLayout allowedRoles="chauffeur" />}>
+            <Route path="dashboard" element={<DriverDashboard />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
+          
+          {/* Route de secours */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

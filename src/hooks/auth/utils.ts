@@ -1,41 +1,43 @@
-
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-// Fonction pour rediriger vers le tableau de bord approprié
-export const redirectToDashboard = (role: UserRole, navigate: NavigateFunction) => {
-  console.log("Redirection selon le rôle:", role);
+// Fonction pour rediriger vers la page de complétion de profil en fonction du rôle
+export const navigateToProfileCompletion = (role: string, navigate: NavigateFunction) => {
+  console.log("Redirection vers la page de complétion pour le rôle:", role);
   switch (role) {
-    case 'admin':
-      navigate('/admin/dashboard');
-      break;
     case 'client':
-      navigate('/client/dashboard');
+      navigate('/complete-client-profile', { replace: true });
       break;
     case 'chauffeur':
-      navigate('/driver/dashboard');
+      navigate('/complete-driver-profile', { replace: true });
+      break;
+    case 'admin':
+      // Les admins n'ont pas de profil à compléter
+      redirectToDashboard('admin', navigate);
       break;
     default:
       navigate('/home');
+      break;
   }
 };
 
-// Fonction pour rediriger vers la page d'achèvement de profil appropriée
-export const navigateToProfileCompletion = (role: UserRole, navigate: NavigateFunction) => {
+// Fonction pour rediriger vers le tableau de bord approprié
+export const redirectToDashboard = (role: string, navigate: NavigateFunction) => {
+  console.log("Redirection vers le tableau de bord pour le rôle:", role);
   switch (role) {
+    case 'admin':
+      navigate('/admin/dashboard', { replace: true });
+      break;
     case 'client':
-      navigate('/complete-client-profile');
+      navigate('/client/dashboard', { replace: true });
       break;
     case 'chauffeur':
-      navigate('/complete-driver-profile');
-      break;
-    case 'admin':
-      // Les admins n'ont pas besoin de compléter leur profil
-      navigate('/admin/dashboard');
+      navigate('/driver/dashboard', { replace: true });
       break;
     default:
       navigate('/home');
+      break;
   }
 };
 

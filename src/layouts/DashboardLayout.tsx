@@ -1,10 +1,11 @@
 
-import React from 'react';
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/dashboard/Sidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { UserRole } from '@/types/supabase';
+import { toast } from 'sonner';
 
 // Fonction pour vérifier si l'utilisateur a le rôle requis pour accéder à une route
 const hasRequiredRole = (requiredRole: UserRole | UserRole[], userRole?: UserRole): boolean => {
@@ -24,8 +25,25 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   console.log("DashboardLayout - État de l'authentification:", { user, profile, loading });
+  
+  // Vérifier si le profil est complet
+  useEffect(() => {
+    if (profile && !profile.profile_completed) {
+      console.log("Profil non complété, redirection vers la page d'achèvement");
+      
+      // Redirection vers la page appropriée selon le rôle
+      if (profile.role === 'client') {
+        navigate('/complete-client-profile');
+        toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
+      } else if (profile.role === 'chauffeur') {
+        navigate('/complete-driver-profile');
+        toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
+      }
+    }
+  }, [profile, navigate]);
   
   // Si l'authentification est en cours, afficher un écran de chargement
   if (loading) {
@@ -36,7 +54,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
     );
   }
   
-  // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
+  // Si l'utilisateur n'est pas connecté, rediriger vers la page d'inscription
   if (!user) {
     console.log("Utilisateur non connecté, redirection vers la page d'inscription");
     return <Navigate to="/signup" state={{ from: location }} replace />;

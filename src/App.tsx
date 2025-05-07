@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,9 +7,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./hooks/auth";
 
 import Home from "./pages/Home";
-import Register from "./pages/Register";
-import RegisterAdmin from "./pages/RegisterAdmin";
-import AdminInvite from "./pages/AdminInvite";
 import NotFound from "./pages/NotFound";
 
 // Nouvelles pages du processus d'inscription
@@ -40,10 +38,10 @@ const App = () => (
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
             
-            {/* Anciennes routes d'inscription (à maintenir pour rétrocompatibilité) */}
-            <Route path="/register" element={<Register />} />
-            <Route path="/register-admin" element={<RegisterAdmin />} />
-            <Route path="/admin-invite" element={<AdminInvite />} />
+            {/* Rediriger les anciennes routes d'inscription vers la nouvelle */}
+            <Route path="/register" element={<Navigate to="/signup" replace />} />
+            <Route path="/register-admin" element={<Navigate to="/signup" replace />} />
+            <Route path="/admin-invite" element={<Navigate to="/signup" replace />} />
             
             {/* Nouvelles routes d'inscription */}
             <Route path="/signup" element={<BasicRegister />} />

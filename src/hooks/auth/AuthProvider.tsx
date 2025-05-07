@@ -141,16 +141,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Récupérer le profil après connexion
         await fetchProfile(data.user.id);
         
-        if (profile) {
+        // Vérifier si le profil a été correctement récupéré
+        console.log("Profil après connexion:", profile);
+        
+        // Rediriger en fonction du profil récupéré par le fetchProfile
+        const currentProfile = await fetchUserProfile(data.user.id);
+        if (currentProfile) {
           // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
-          if (!profile.profile_completed) {
-            console.log("Le profil n'est pas complet, redirection vers la page d'achèvement");
-            navigateToProfileCompletion(profile.role, navigate);
+          if (!currentProfile.profile_completed) {
+            console.log("Le profil n'est pas complet, redirection vers la page d'achèvement", currentProfile.role);
+            navigateToProfileCompletion(currentProfile.role, navigate);
             toast.success('Veuillez compléter votre profil');
           } else {
             // Sinon rediriger vers le tableau de bord approprié
-            console.log("Redirection vers le tableau de bord:", profile.role);
-            redirectToDashboard(profile.role, navigate);
+            console.log("Redirection vers le tableau de bord:", currentProfile.role);
+            redirectToDashboard(currentProfile.role, navigate);
             toast.success('Connexion réussie !');
           }
         } else {

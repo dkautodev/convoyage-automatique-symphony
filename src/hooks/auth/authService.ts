@@ -1,4 +1,3 @@
-
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -99,24 +98,29 @@ export const completeClientProfileService = async (userId: string, data: ClientP
 // Fonction pour compléter le profil chauffeur
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
+    console.log("Completing driver profile for user:", userId, "with data:", data);
+    
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
       .update({
         full_name: data.fullName,
-        driver_license: data.driverLicense,
+        driver_license: data.licenseNumber, // Updated to use licenseNumber
         vehicle_type: data.vehicleType,
-        vehicle_registration: data.vehicleRegistration,
+        vehicle_registration: data.idNumber, // Updated to use idNumber as vehicle registration
         phone_1: data.phone1,
         profile_completed: true
       })
       .eq('id', userId);
     
     if (error) {
+      console.error("Error completing driver profile:", error);
       throw error;
     }
     
+    console.log("Driver profile updated successfully:", updatedProfile);
     return updatedProfile;
   } catch (err) {
+    console.error("Error in completeDriverProfileService:", err);
     throw err;
   }
 };

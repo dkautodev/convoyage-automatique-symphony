@@ -1,4 +1,3 @@
-
 import { UserRole, VehicleCategory } from './supabase';
 
 // Type pour le formulaire initial d'inscription
@@ -47,9 +46,9 @@ export interface DriverProfileFormData {
   tvaNumb?: string;
   phone1: string;
   phone2?: string;
-  licenseNumber: string;
-  vehicleType: VehicleCategory; // Utiliser le type VehicleCategory au lieu de string
-  idNumber: string; // Numéro CNI/Passeport
+  licenseNumber: string; // This is the correct property name
+  vehicleType: VehicleCategory;
+  idNumber: string; // This is the correct property name for ID document
   documents: {
     kbis?: File;
     driverLicenseFront?: File;
@@ -81,7 +80,7 @@ export interface RegisterFormData {
   role: UserRole;
   tvaApplicable?: boolean;
   licenseNumber?: string;
-  vehicleType?: VehicleCategory; // Utiliser le type VehicleCategory au lieu de string
+  vehicleType?: VehicleCategory;
   fullName?: string;
 }
 

@@ -27,12 +27,19 @@ import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 const basicRegisterSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
   password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' }),
+  passwordConfirmation: z.string().min(8, { message: 'La confirmation du mot de passe est requise' }),
   role: z.enum(['client', 'chauffeur', 'admin']),
   adminToken: z.string().optional(),
   gdprConsent: z.boolean().refine(val => val === true, {
     message: 'Vous devez accepter les conditions d\'utilisation',
   }),
-});
+}).refine(
+  (data) => data.password === data.passwordConfirmation,
+  {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["passwordConfirmation"],
+  }
+);
 
 type FormData = z.infer<typeof basicRegisterSchema>;
 
@@ -40,6 +47,7 @@ export default function BasicRegister() {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<UserRole>('client');
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { basicRegister } = useAuth();
   
@@ -48,6 +56,7 @@ export default function BasicRegister() {
     defaultValues: {
       email: '',
       password: '',
+      passwordConfirmation: '',
       role: 'client',
       adminToken: '',
       gdprConsent: false,
@@ -65,6 +74,7 @@ export default function BasicRegister() {
       await basicRegister({
         email: data.email,
         password: data.password,
+        passwordConfirmation: data.passwordConfirmation,
         role: data.role,
         adminToken: data.adminToken
       });
@@ -151,6 +161,36 @@ export default function BasicRegister() {
                             </div>
                           </FormControl>
                           <PasswordStrengthMeter password={field.value} />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Password Confirmation field */}
+                    <FormField
+                      control={form.control}
+                      name="passwordConfirmation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmer le mot de passe</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                type={showPasswordConfirmation ? "text" : "password"} 
+                                placeholder="••••••••" 
+                                {...field} 
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                              >
+                                {showPasswordConfirmation ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </Button>
+                            </div>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

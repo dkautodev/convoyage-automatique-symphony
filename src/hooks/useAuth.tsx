@@ -324,7 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           license_number: data.licenseNumber,
           vat_applicable: data.tvaApplicable,
           vat_number: data.tvaNumb || null,
-          vehicle_type: data.vehicleType,
+          vehicle_type: data.vehicleType, // Maintenant accepté comme string
           phone1: data.phone1,
           phone2: data.phone2 || null
         });

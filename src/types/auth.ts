@@ -5,6 +5,7 @@ import { UserRole } from './supabase';
 export interface BasicRegisterFormData {
   email: string;
   password: string;
+  passwordConfirmation?: string; // Ajout de la confirmation de mot de passe
   role: UserRole;
   adminToken?: string; // Optionnel, utilisé uniquement pour les inscriptions admin
 }
@@ -47,7 +48,7 @@ export interface DriverProfileFormData {
   phone1: string;
   phone2?: string;
   licenseNumber: string;
-  vehicleType: string;
+  vehicleType: string; // Changé en string pour corriger l'erreur TS2769
   idNumber: string; // Numéro CNI/Passeport
   documents: {
     kbis?: File;
@@ -80,7 +81,7 @@ export interface RegisterFormData {
   role: UserRole;
   tvaApplicable?: boolean;
   licenseNumber?: string;
-  vehicleType?: string;
+  vehicleType?: string; // Changé en string pour correspondre au changement dans DriverProfileFormData
   fullName?: string;
 }
 

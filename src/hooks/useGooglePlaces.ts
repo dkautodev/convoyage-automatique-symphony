@@ -106,9 +106,18 @@ export const useGooglePlaces = () => {
               }
             });
             
-            // Fix: Properly handle the lat/lng values
-            const lat = result.geometry.location.lat;
-            const lng = result.geometry.location.lng;
+            // Fix: Get the latitude and longitude correctly
+            let latitude: number;
+            let longitude: number;
+            
+            // Handle different versions of the Google Maps API
+            if (typeof result.geometry.location.lat === 'function') {
+              latitude = result.geometry.location.lat();
+              longitude = result.geometry.location.lng();
+            } else {
+              latitude = result.geometry.location.lat;
+              longitude = result.geometry.location.lng;
+            }
             
             // Améliorer l'objet résultat avec les données extraites
             const enhancedResult = {
@@ -123,8 +132,8 @@ export const useGooglePlaces = () => {
 
             setSelectedAddress(enhancedResult);
             setMapPosition({
-              lat: typeof lat === 'function' ? lat() : lat,
-              lng: typeof lng === 'function' ? lng() : lng
+              lat: latitude,
+              lng: longitude
             });
 
             console.log("Détails de l'adresse récupérés:", enhancedResult);

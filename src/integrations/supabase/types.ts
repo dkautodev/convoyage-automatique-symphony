@@ -44,6 +44,7 @@ export type Database = {
           billing_address: Json
           company_name: string
           created_at: string
+          full_name: string | null
           id: string
           phone1: string
           phone2: string | null
@@ -54,6 +55,7 @@ export type Database = {
           billing_address: Json
           company_name: string
           created_at?: string
+          full_name?: string | null
           id: string
           phone1: string
           phone2?: string | null
@@ -64,6 +66,7 @@ export type Database = {
           billing_address?: Json
           company_name?: string
           created_at?: string
+          full_name?: string | null
           id?: string
           phone1?: string
           phone2?: string | null
@@ -77,6 +80,7 @@ export type Database = {
           billing_address: Json
           company_name: string
           created_at: string
+          full_name: string | null
           id: string
           phone1: string
           phone2: string | null
@@ -87,6 +91,7 @@ export type Database = {
           billing_address: Json
           company_name: string
           created_at?: string
+          full_name?: string | null
           id: string
           phone1: string
           phone2?: string | null
@@ -97,6 +102,7 @@ export type Database = {
           billing_address?: Json
           company_name?: string
           created_at?: string
+          full_name?: string | null
           id?: string
           phone1?: string
           phone2?: string | null
@@ -220,6 +226,7 @@ export type Database = {
           availability_status: string | null
           billing_address: Json | null
           company_name: string | null
+          full_name: string | null
           id: string
           last_location: Json | null
           license_number: string
@@ -233,6 +240,7 @@ export type Database = {
           availability_status?: string | null
           billing_address?: Json | null
           company_name?: string | null
+          full_name?: string | null
           id: string
           last_location?: Json | null
           license_number: string
@@ -246,6 +254,7 @@ export type Database = {
           availability_status?: string | null
           billing_address?: Json | null
           company_name?: string | null
+          full_name?: string | null
           id?: string
           last_location?: Json | null
           license_number?: string

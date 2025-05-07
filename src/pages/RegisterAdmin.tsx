@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -97,7 +98,7 @@ export default function RegisterAdmin() {
       
       // 1. Vérifier si le token d'invitation est valide
       const { data: tokenData, error: tokenError } = await typedSupabase
-        .from('admin_tokens')
+        .from('admin_invitation_tokens')
         .select('*')
         .eq('token', data.adminToken)
         .eq('used', false)
@@ -152,7 +153,7 @@ export default function RegisterAdmin() {
 
       // 3. Marquer le token comme utilisé
       const { error: tokenUpdateError } = await typedSupabase
-        .from('admin_tokens')
+        .from('admin_invitation_tokens')
         .update({
           used: true,
           used_at: new Date().toISOString()

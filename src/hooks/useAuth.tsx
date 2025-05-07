@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -180,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction d'inscription simplifiée qui s'appuie sur le trigger handle_new_user
+  // Fonction d'inscription mise à jour pour inclure tous les champs
   const register = async (data: RegisterFormData) => {
     try {
       setLoading(true);

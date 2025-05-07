@@ -122,6 +122,21 @@ export default function RegisterAdmin() {
         options: {
           data: {
             role: 'admin', // Définir le rôle comme admin dans les métadonnées
+            fullName: data.companyName,  // Utiliser le nom de la société comme nom complet
+            companyName: data.companyName,
+            billingAddress: JSON.stringify({
+              street: data.billingAddress,
+              formatted_address: data.billingAddress,
+              lat: mapCoords?.lat,
+              lng: mapCoords?.lng,
+              city: "", // Ces valeurs seront complétées plus tard
+              postal_code: "",
+              country: ""
+            }),
+            siret: data.siret.replace(/\s/g, ''),
+            vatNumber: data.tvaNumb,
+            phone1: data.phone1,
+            phone2: data.phone2 || null,
           }
         }
       });
@@ -136,9 +151,7 @@ export default function RegisterAdmin() {
         throw new Error("User creation failed");
       }
 
-      // 3. Ajouter les informations supplémentaires de l'administrateur
-      // Note: Notre trigger handle_new_user() crée automatiquement l'entrée dans la table profiles
-      // Nous devons marquer le token comme utilisé
+      // 3. Marquer le token comme utilisé
       const { error: tokenUpdateError } = await typedSupabase
         .from('admin_tokens')
         .update({

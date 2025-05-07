@@ -39,6 +39,39 @@ export type Database = {
         }
         Relationships: []
       }
+      admins: {
+        Row: {
+          billing_address: Json
+          company_name: string
+          created_at: string
+          id: string
+          phone1: string
+          phone2: string | null
+          siret: string
+          vat_number: string | null
+        }
+        Insert: {
+          billing_address: Json
+          company_name: string
+          created_at?: string
+          id: string
+          phone1: string
+          phone2?: string | null
+          siret: string
+          vat_number?: string | null
+        }
+        Update: {
+          billing_address?: Json
+          company_name?: string
+          created_at?: string
+          id?: string
+          phone1?: string
+          phone2?: string | null
+          siret?: string
+          vat_number?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           billing_address: Json
@@ -185,27 +218,39 @@ export type Database = {
       drivers: {
         Row: {
           availability_status: string | null
+          billing_address: Json | null
+          company_name: string | null
           id: string
           last_location: Json | null
           license_number: string
+          phone1: string | null
+          phone2: string | null
           vat_applicable: boolean
           vat_number: string | null
           vehicle_type: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Insert: {
           availability_status?: string | null
+          billing_address?: Json | null
+          company_name?: string | null
           id: string
           last_location?: Json | null
           license_number: string
+          phone1?: string | null
+          phone2?: string | null
           vat_applicable?: boolean
           vat_number?: string | null
           vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Update: {
           availability_status?: string | null
+          billing_address?: Json | null
+          company_name?: string | null
           id?: string
           last_location?: Json | null
           license_number?: string
+          phone1?: string | null
+          phone2?: string | null
           vat_applicable?: boolean
           vat_number?: string | null
           vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null

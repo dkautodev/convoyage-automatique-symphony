@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
 // Import layouts
-import RootLayout from '@/layouts/RootLayout';
-import DashboardLayout from '@/layouts/DashboardLayout';
+import RootLayout from './layouts/RootLayout';
+import DashboardLayout from './layouts/DashboardLayout';
 
 // Import pages
 import Home from '@/pages/Home';
@@ -18,10 +18,7 @@ import NotFound from '@/pages/NotFound';
 
 // Dashboard pages
 import Dashboard from '@/pages/Dashboard';
-import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
-import Clients from '@/pages/dashboard/admin/Clients';
-import Drivers from '@/pages/dashboard/admin/Drivers';
-import Missions from '@/pages/dashboard/admin/Missions';
+import AdminDashboard from '@/pages/dashboard/AdminDashboard';
 
 // Auth Context Provider
 import { AuthProvider } from '@/hooks/useAuth';

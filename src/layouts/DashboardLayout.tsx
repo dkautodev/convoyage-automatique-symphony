@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
+import AdminDashboard from '@/pages/dashboard/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
 import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
 import Clients from '@/pages/dashboard/admin/Clients';

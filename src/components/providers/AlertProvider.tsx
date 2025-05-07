@@ -3,8 +3,11 @@ import React, { createContext, useContext, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { X } from 'lucide-react';
 
+// Définir le type correct pour les variantes d'alerte
+type AlertVariant = 'default' | 'destructive' | 'success';
+
 interface AlertContextType {
-  showAlert: (message: string, type?: 'default' | 'destructive' | 'success', title?: string) => void;
+  showAlert: (message: string, type?: AlertVariant, title?: string) => void;
   hideAlert: () => void;
 }
 
@@ -25,14 +28,14 @@ interface AlertProviderProps {
 export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
   const [alert, setAlert] = useState<{
     message: string;
-    type: 'default' | 'destructive' | 'success';
+    type: AlertVariant;
     title?: string;
     visible: boolean;
   } | null>(null);
 
   const showAlert = (
     message: string,
-    type: 'default' | 'destructive' | 'success' = 'default',
+    type: AlertVariant = 'default',
     title?: string
   ) => {
     setAlert({
@@ -59,7 +62,10 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
       {children}
       {alert && alert.visible && (
         <div className="fixed top-4 right-4 z-50 w-80">
-          <Alert variant={alert.type} className="relative">
+          <Alert 
+            variant={alert.type === 'success' ? 'default' : alert.type}
+            className={`relative ${alert.type === 'success' ? 'border-green-500 bg-green-50 text-green-700' : ''}`}
+          >
             {alert.title && <AlertTitle>{alert.title}</AlertTitle>}
             <AlertDescription>{alert.message}</AlertDescription>
             <button

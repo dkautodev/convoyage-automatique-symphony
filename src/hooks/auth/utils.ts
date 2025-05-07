@@ -1,47 +1,62 @@
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Fonction pour rediriger vers la page de complétion de profil en fonction du rôle
 export const navigateToProfileCompletion = (role: string, navigate: NavigateFunction) => {
   console.log("Redirection vers la page de complétion pour le rôle:", role);
-  switch (role) {
-    case 'client':
-      navigate('/complete-client-profile', { replace: true });
-      break;
-    case 'chauffeur':
-      navigate('/complete-driver-profile', { replace: true });
-      break;
-    case 'admin':
-      // Les admins n'ont pas de profil à compléter
-      redirectToDashboard('admin', navigate);
-      break;
-    default:
-      // En cas de rôle non reconnu, rediriger vers la page d'accueil
-      console.warn("Rôle non reconnu:", role);
-      navigate('/home', { replace: true });
-      break;
+  try {
+    switch (role) {
+      case 'client':
+        navigate('/complete-client-profile', { replace: true });
+        break;
+      case 'chauffeur':
+        navigate('/complete-driver-profile', { replace: true });
+        break;
+      case 'admin':
+        // Les admins n'ont pas de profil à compléter
+        redirectToDashboard('admin', navigate);
+        break;
+      default:
+        // En cas de rôle non reconnu, rediriger vers la page d'accueil avec notification
+        console.warn("Rôle non reconnu:", role);
+        toast.warning(`Rôle non reconnu : ${role}. Redirection vers la page d'accueil.`);
+        navigate('/home', { replace: true });
+        break;
+    }
+  } catch (error) {
+    console.error("Erreur lors de la redirection:", error);
+    toast.error("Une erreur est survenue lors de la navigation");
+    navigate('/home', { replace: true });
   }
 };
 
 // Fonction pour rediriger vers le tableau de bord approprié
 export const redirectToDashboard = (role: string, navigate: NavigateFunction) => {
   console.log("Redirection vers le tableau de bord pour le rôle:", role);
-  switch (role) {
-    case 'admin':
-      navigate('/admin/dashboard', { replace: true });
-      break;
-    case 'client':
-      navigate('/client/dashboard', { replace: true });
-      break;
-    case 'chauffeur':
-      navigate('/driver/dashboard', { replace: true });
-      break;
-    default:
-      // En cas de rôle non reconnu, rediriger vers la page d'accueil
-      console.warn("Rôle non reconnu pour le tableau de bord:", role);
-      navigate('/home', { replace: true });
-      break;
+  try {
+    switch (role) {
+      case 'admin':
+        navigate('/admin/dashboard', { replace: true });
+        break;
+      case 'client':
+        navigate('/client/dashboard', { replace: true });
+        break;
+      case 'chauffeur':
+        navigate('/driver/dashboard', { replace: true });
+        break;
+      default:
+        // En cas de rôle non reconnu, rediriger vers la page d'accueil avec notification
+        console.warn("Rôle non reconnu pour le tableau de bord:", role);
+        toast.warning(`Rôle non reconnu : ${role}. Redirection vers la page d'accueil.`);
+        navigate('/home', { replace: true });
+        break;
+    }
+  } catch (error) {
+    console.error("Erreur lors de la redirection vers le dashboard:", error);
+    toast.error("Une erreur est survenue lors de la navigation");
+    navigate('/home', { replace: true });
   }
 };
 

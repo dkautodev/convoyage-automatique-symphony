@@ -19,8 +19,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
@@ -33,25 +34,43 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Home() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { login, user, profile, loading, error } = useAuth();
   
   console.log("Home - État de l'authentification:", { user, profile, loading, error });
   
   // Si l'utilisateur est déjà connecté et a un profil, rediriger vers son tableau de bord
   useEffect(() => {
-    if (!loading && user && profile) {
-      console.log("Redirection depuis Home vers le tableau de bord:", profile.role);
-      switch (profile.role) {
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'client':
-          navigate('/client/dashboard');
-          break;
-        case 'chauffeur':
-          navigate('/driver/dashboard');
-          break;
+    if (!loading && user) {
+      if (profile && profile.profile_completed) {
+        console.log("Redirection depuis Home vers le tableau de bord:", profile.role);
+        switch (profile.role) {
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          case 'client':
+            navigate('/client/dashboard');
+            break;
+          case 'chauffeur':
+            navigate('/driver/dashboard');
+            break;
+        }
+      } else if (profile) {
+        // Si l'utilisateur a un profil mais qu'il n'est pas complété
+        console.log("Profil non complété, redirection vers la page de complétion");
+        switch (profile.role) {
+          case 'client':
+            navigate('/complete-client-profile');
+            break;
+          case 'chauffeur':
+            navigate('/complete-driver-profile');
+            break;
+          default:
+            navigate('/home');
+            break;
+        }
       }
+      // Si user existe mais pas profile, on reste sur la page Home pour attendre le chargement du profil
     }
   }, [user, profile, navigate, loading]);
   
@@ -65,22 +84,26 @@ export default function Home() {
   });
   
   const onSubmit = async (data: LoginFormData) => {
+    setAuthError(null);
     try {
       await login(data.email, data.password);
       // La redirection se fera dans l'effet useEffect ci-dessus
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erreur lors de la connexion:", err);
+      setAuthError(err.message || "Erreur lors de la connexion. Veuillez vérifier vos identifiants.");
       toast.error("Erreur lors de la connexion. Veuillez vérifier vos identifiants.");
     }
   };
 
-  // Montrer un spinner uniquement si on charge un profil (utilisateur déjà connecté)
-  if (loading && user) {
+  // Montrer un spinner de chargement pendant que l'authentification est en cours
+  if (loading) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="h-12 w-12 border-t-4 border-b-4 border-primary rounded-full animate-spin"></div>
-          <p className="mt-4 text-muted-foreground">Chargement de votre profil...</p>
+          <p className="mt-4 text-muted-foreground">
+            {user ? "Chargement de votre profil..." : "Initialisation..."}
+          </p>
         </div>
       </div>
     );
@@ -99,6 +122,13 @@ export default function Home() {
             </CardHeader>
             
             <CardContent>
+              {authError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+              
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Email field */}

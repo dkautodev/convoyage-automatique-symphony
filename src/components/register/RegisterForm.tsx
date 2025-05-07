@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
-import { UserRole } from '@/types/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +17,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [gdprConsent, setGdprConsent] = useState(false);
-  const [role, setRole] = useState<UserRole>('client');
+  const [role, setRole] = useState<'client' | 'chauffeur' | 'admin'>('client');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -45,8 +44,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
         password,
         options: {
           data: {
-            role: role, // Utiliser directement role ici
-            // Ne pas inclure fullName car il n'est pas demandé dans le formulaire simplifié
+            role: role, // Utiliser directement le rôle sélectionné
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
@@ -114,7 +112,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
             <Label>Type de compte</Label>
             <RadioGroup 
               value={role} 
-              onValueChange={(value) => setRole(value as UserRole)}
+              onValueChange={(value) => setRole(value as 'client' | 'chauffeur' | 'admin')}
               className="flex flex-col space-y-1"
             >
               <div className="flex items-center space-x-2">

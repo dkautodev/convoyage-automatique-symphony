@@ -1,4 +1,3 @@
-
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -140,27 +139,24 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
   return authData;
 };
 
-// Fonction pour compléter le profil client
+// Fonction pour compléter le profil client - MODIFIÉE POUR RÉSOUDRE LE PROBLÈME DE RÉCURSION
 export const completeClientProfileService = async (userId: string, data: ClientProfileFormData) => {
   try {
     console.log("Completing client profile for user:", userId, "with data:", data);
     
-    // Conversion explicite de l'adresse en Json avant l'envoi à Supabase
-    const billingAddressJson = convertAddressToJson(data.billingAddress);
-    
-    const { data: updatedProfile, error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: data.fullName,
-        company_name: data.companyName,
-        billing_address: billingAddressJson,
-        siret: data.siret,
-        tva_number: data.tvaNumb,
-        phone_1: data.phone1,
-        phone_2: data.phone2,
-        profile_completed: true
-      })
-      .eq('id', userId);
+    // Utilisez la fonction directe SQL pour éviter la récursion des politiques RLS
+    // Utiliser l'API Supabase REST avec des paramètres spécifiques
+    const { data: updatedProfile, error } = await supabase.rpc('update_client_profile', {
+      p_user_id: userId,
+      p_full_name: data.fullName,
+      p_company_name: data.companyName,
+      p_billing_address: convertAddressToJson(data.billingAddress),
+      p_siret: data.siret,
+      p_tva_number: data.tvaNumb,
+      p_phone_1: data.phone1,
+      p_phone_2: data.phone2,
+      p_profile_completed: true
+    });
     
     if (error) {
       console.error("Error completing client profile:", error);
@@ -175,31 +171,27 @@ export const completeClientProfileService = async (userId: string, data: ClientP
   }
 };
 
-// Fonction pour compléter le profil chauffeur
+// Fonction pour compléter le profil chauffeur - MODIFIÉE POUR RÉSOUDRE LE PROBLÈME DE RÉCURSION
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
     console.log("Completing driver profile for user:", userId, "with data:", data);
     
-    // Conversion explicite de l'adresse en Json avant l'envoi à Supabase
-    const billingAddressJson = convertAddressToJson(data.billingAddress);
-    
-    const { data: updatedProfile, error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: data.fullName,
-        company_name: data.companyName,
-        billing_address: billingAddressJson,
-        siret: data.siret,
-        tva_number: data.tvaNumb,
-        tva_applicable: data.tvaApplicable,
-        phone_1: data.phone1,
-        phone_2: data.phone2,
-        driver_license: data.licenseNumber,
-        vehicle_type: data.vehicleType,
-        vehicle_registration: data.idNumber,
-        profile_completed: true
-      })
-      .eq('id', userId);
+    // Utilisez la fonction directe SQL pour éviter la récursion des politiques RLS
+    const { data: updatedProfile, error } = await supabase.rpc('update_driver_profile', {
+      p_user_id: userId,
+      p_full_name: data.fullName,
+      p_company_name: data.companyName,
+      p_billing_address: convertAddressToJson(data.billingAddress),
+      p_siret: data.siret,
+      p_tva_number: data.tvaNumb,
+      p_tva_applicable: data.tvaApplicable,
+      p_phone_1: data.phone1,
+      p_phone_2: data.phone2,
+      p_driver_license: data.licenseNumber,
+      p_vehicle_type: data.vehicleType,
+      p_vehicle_registration: data.idNumber,
+      p_profile_completed: true
+    });
     
     if (error) {
       console.error("Error completing driver profile:", error);

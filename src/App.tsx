@@ -1,95 +1,78 @@
+import React, { useState, useEffect } from 'react';
+import { createBrowserRouter, RouterProvider, Route, createRoutesFromElements } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./hooks/auth";
+// Import layouts
+import RootLayout from '@/layouts/RootLayout';
+import DashboardLayout from '@/layouts/DashboardLayout';
 
-import Home from "./pages/Home";
-import NotFound from "./pages/NotFound";
+// Import pages
+import Home from '@/pages/Home';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Pricing from '@/pages/Pricing';
+import Contact from '@/pages/Contact';
+import About from '@/pages/About';
+import NotFound from '@/pages/NotFound';
 
-// Nouvelles pages du processus d'inscription
-import BasicRegister from "./pages/auth/BasicRegister";
-import RegisterConfirmation from "./pages/auth/RegisterConfirmation";
-import AuthCallback from "./pages/auth/AuthCallback";
-import CompleteClientProfile from "./pages/auth/CompleteClientProfile";
-import CompleteDriverProfile from "./pages/auth/CompleteDriverProfile";
-import AdminInvite from "./pages/AdminInvite";
+// Dashboard pages
+import Dashboard from '@/pages/Dashboard';
+import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
+import Clients from '@/pages/dashboard/admin/Clients';
+import Drivers from '@/pages/dashboard/admin/Drivers';
+import Missions from '@/pages/dashboard/admin/Missions';
 
-// Layouts
-import DashboardLayout from "./layouts/DashboardLayout";
-
-// Dashboard pages - Admin
-import AdminDashboard from "./pages/dashboard/AdminDashboard";
-import AdminMissions from "./pages/dashboard/admin/Missions";
-import AdminClients from "./pages/dashboard/admin/Clients";
-import AdminDrivers from "./pages/dashboard/admin/Drivers";
-
-// Dashboard pages - Client
-import ClientDashboard from "./pages/dashboard/ClientDashboard";
-import ClientMissions from "./pages/dashboard/client/Missions";
-
-// Dashboard pages - Driver
-import DriverDashboard from "./pages/dashboard/DriverDashboard";
-import DriverMissions from "./pages/dashboard/driver/Missions";
+// Auth Context Provider
+import { AuthProvider } from '@/hooks/useAuth';
+import { AlertProvider } from '@/components/providers/AlertProvider';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <Routes>
-          {/* Routes publiques */}
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<Home />} />
-          
-          {/* Routes d'inscription - redirection des anciennes routes vers /signup */}
-          <Route path="/register" element={<Navigate to="/signup" replace />} />
-          <Route path="/register-admin" element={<Navigate to="/signup" replace />} />
-          
-          {/* Nouvelles routes d'inscription */}
-          <Route path="/signup" element={<BasicRegister />} />
-          <Route path="/register-confirmation" element={<RegisterConfirmation />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
-          <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
-          
-          {/* Route d'administration */}
-          <Route path="/admin-invite" element={<AdminInvite />} />
-          
-          {/* Routes du dashboard admin */}
-          <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="missions" element={<AdminMissions />} />
-            <Route path="clients" element={<AdminClients />} />
-            <Route path="drivers" element={<AdminDrivers />} />
-            <Route index element={<Navigate to="dashboard" replace />} />
-          </Route>
-          
-          {/* Routes du dashboard client */}
-          <Route path="/client" element={<DashboardLayout allowedRoles="client" />}>
-            <Route path="dashboard" element={<ClientDashboard />} />
-            <Route path="missions" element={<ClientMissions />} />
-            <Route index element={<Navigate to="dashboard" replace />} />
-          </Route>
-          
-          {/* Routes du dashboard chauffeur */}
-          <Route path="/driver" element={<DashboardLayout allowedRoles="chauffeur" />}>
-            <Route path="dashboard" element={<DriverDashboard />} />
-            <Route path="missions" element={<DriverMissions />} />
-            <Route index element={<Navigate to="dashboard" replace />} />
-          </Route>
-          
-          {/* Route de secours */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading delay
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={<RootLayout />}>
+        <Route index element={<Home />} />
+        <Route path="home" element={<Home />} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+        <Route path="pricing" element={<Pricing />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="about" element={<About />} />
+        
+        {/* Dashboard routes - Protected by DashboardLayout */}
+        <Route path=":role" element={<DashboardLayout />}>
+          <Route path="dashboard" element={<Dashboard />} />
+        </Route>
+
+        {/* Not Found Route */}
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    )
+  );
+
+  return (
+    <div className="App">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AlertProvider>
+            <RouterProvider router={router} />
+            <Toaster position="top-right" />
+          </AlertProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </div>
+  );
+}
 
 export default App;

@@ -1,104 +1,63 @@
-
-import React, { useEffect, useState } from 'react';
-import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import Sidebar from '@/components/dashboard/Sidebar';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
+import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
+import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
+import Clients from '@/pages/dashboard/admin/Clients';
+import Drivers from '@/pages/dashboard/admin/Drivers';
+import Missions from '@/pages/dashboard/admin/Missions';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { UserRole } from '@/types/supabase';
-import { toast } from 'sonner';
+import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
 
-// Fonction pour vérifier si l'utilisateur a le rôle requis pour accéder à une route
-const hasRequiredRole = (requiredRole: UserRole | UserRole[], userRole?: UserRole): boolean => {
-  if (!userRole) return false;
-  
-  if (Array.isArray(requiredRole)) {
-    return requiredRole.includes(userRole);
-  }
-  
-  return requiredRole === userRole;
-};
-
-interface DashboardLayoutProps {
-  allowedRoles: UserRole | UserRole[];
-}
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
-  const { user, profile, loading } = useAuth();
+const DashboardLayout = () => {
+  const { profile, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
-  
-  console.log("DashboardLayout - État de l'authentification:", { user, profile, loading });
-  
-  // Vérifier si le profil est complet
-  useEffect(() => {
-    if (!loading && profile) {
-      console.log("Vérification du profil complété:", { profile_completed: profile.profile_completed, role: profile.role });
-      
-      if (!profile.profile_completed) {
-        console.log("Profil non complété, redirection vers la page d'achèvement");
-        
-        // Redirection vers la page appropriée selon le rôle
-        if (profile.role === 'client') {
-          toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
-          navigate('/complete-client-profile', { replace: true });
-        } else if (profile.role === 'chauffeur') {
-          toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
-          navigate('/complete-driver-profile', { replace: true });
-        }
-      }
-      setIsCheckingProfile(false);
-    } else if (!loading) {
-      setIsCheckingProfile(false);
-    }
-  }, [profile, navigate, loading]);
-  
-  // Si l'authentification est en cours, afficher un écran de chargement
-  if (loading || isCheckingProfile) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+
+  // Vérifiez si l'utilisateur est en train de charger ou n'est pas authentifié
+  if (isLoading) {
+    return <div>Chargement...</div>; // Vous pouvez remplacer cela par un spinner
   }
-  
-  // Si l'utilisateur n'est pas connecté, rediriger vers la page d'inscription
-  if (!user) {
-    console.log("Utilisateur non connecté, redirection vers la page d'inscription");
-    return <Navigate to="/signup" state={{ from: location }} replace />;
-  }
-  
-  // Si l'utilisateur n'a pas de profil ou si une erreur s'est produite lors de la récupération du profil
+
   if (!profile) {
-    console.log("Pas de profil disponible, redirection vers la page d'accueil");
+    // Redirigez l'utilisateur vers la page d'accueil s'il n'est pas connecté
     return <Navigate to="/home" state={{ from: location }} replace />;
   }
-  
-  console.log("Vérification du rôle:", { allowedRoles, userRole: profile.role });
-  
-  // Si l'utilisateur n'a pas le rôle requis, rediriger vers son tableau de bord approprié
-  if (!hasRequiredRole(allowedRoles, profile.role)) {
-    console.log("L'utilisateur n'a pas le rôle requis, redirection");
-    switch (profile.role) {
-      case 'admin':
-        return <Navigate to="/admin/dashboard" replace />;
-      case 'client':
-        return <Navigate to="/client/dashboard" replace />;
-      case 'chauffeur':
-        return <Navigate to="/driver/dashboard" replace />;
-      default:
-        return <Navigate to="/home" replace />;
-    }
-  }
-  
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar userRole={profile?.role} />
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader />
-        <main className="flex-1 p-6 overflow-auto">
-          <Outlet />
-        </main>
+    <div className="min-h-screen bg-gray-100">
+      <DashboardHeader />
+      <div className="container mx-auto py-6">
+        <Routes>
+          {/* Routes génériques */}
+          <Route path="/" element={<Navigate to="dashboard" replace />} />
+
+          {/* Routes admin */}
+          {profile?.role === 'admin' && (
+            <>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<div>Page des utilisateurs</div>} />
+              <Route path="clients" element={<Clients />} />
+              <Route path="drivers" element={<Drivers />} />
+              <Route path="missions" element={<Missions />} />
+              <Route path="pricing-grid" element={<PricingGridPage />} />
+            </>
+          )}
+
+          {/* Routes client */}
+          {profile?.role === 'client' && (
+            <Route path="dashboard" element={<ClientDashboard />} />
+          )}
+
+          {/* Routes chauffeur */}
+          {profile?.role === 'chauffeur' && (
+            <Route path="dashboard" element={<DriverDashboard />} />
+          )}
+
+          {/* Route par défaut - redirige vers le tableau de bord */}
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Routes>
       </div>
     </div>
   );

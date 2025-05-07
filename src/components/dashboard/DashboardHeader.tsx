@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/supabase';
-import { Bell, User } from 'lucide-react';
+import { Bell, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,7 +28,7 @@ const DashboardHeader = () => {
     chauffeur: 'Espace Chauffeur'
   }[role];
 
-  // Gestion du clic sur le bouton de déconnexion - version corrigée
+  // Gestion du clic sur le bouton de déconnexion
   const handleLogout = () => {
     console.log("Déconnexion demandée depuis le DashboardHeader");
     logout()
@@ -72,6 +72,7 @@ const DashboardHeader = () => {
             <DropdownMenuItem>Paramètres</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </DropdownMenuItem>
           </DropdownMenuContent>

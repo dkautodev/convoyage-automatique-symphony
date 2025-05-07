@@ -1,7 +1,15 @@
 
 import { Tables } from '@/types/database';
 import { User, Session } from '@supabase/supabase-js';
-import { UserRole } from '@/types/supabase';
+import { UserRole, VehicleCategory } from '@/types/supabase';
+
+// Types réimportés depuis types/auth.ts
+import { 
+  RegisterFormData, 
+  BasicRegisterFormData, 
+  ClientProfileFormData, 
+  DriverProfileFormData 
+} from '@/types/auth';
 
 // Type pour le profil utilisateur
 export type Profile = Tables<'profiles'>;
@@ -25,10 +33,10 @@ export interface AuthContextType {
   uploadDriverDocument: (file: File, type: string) => Promise<string | null>;
 }
 
-// Re-export types from the original auth.ts to avoid breaking imports
+// Re-export des types depuis types/auth.ts
 export type { 
   RegisterFormData, 
   BasicRegisterFormData, 
   ClientProfileFormData, 
   DriverProfileFormData 
-} from '@/types/auth';
+};

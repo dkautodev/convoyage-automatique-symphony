@@ -1,9 +1,9 @@
-
 import { useEffect, useState, useCallback, createContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
+import { AuthContext } from './AuthContext';
 import { AuthContextType, Profile } from './types';
 import { 
   fetchUserProfile, 
@@ -27,9 +27,6 @@ import {
   ClientProfileFormData, 
   DriverProfileFormData 
 } from '@/types/auth';
-
-// Création du contexte d'authentification
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Fournisseur du contexte d'authentification
 export function AuthProvider({ children }: { children: ReactNode }) {

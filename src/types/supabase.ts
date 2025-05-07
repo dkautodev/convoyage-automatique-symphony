@@ -1,10 +1,25 @@
 
+// Import des types de Supabase
+import { Json } from '@/integrations/supabase/types';
+import { convertJsonToType } from './database';
+
 // Types d'énumérations correspondant à ceux de la base de données
 export type UserRole = 'admin' | 'client' | 'chauffeur';
 export type MissionStatus = 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
 export type VehicleCategory = 'citadine' | 'berline' | '4x4_suv' | 'utilitaire_3_5m3' | 'utilitaire_6_12m3' | 'utilitaire_12_15m3' | 'utilitaire_15_20m3' | 'utilitaire_plus_20m3';
 export type DocumentType = 'devis' | 'facture' | 'fiche_mission';
 export type PricingType = 'forfait' | 'km';
+
+// Type pour les adresses
+export interface Address {
+  street: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  formatted_address?: string;
+  lat?: number;
+  lng?: number;
+}
 
 // Interface pour le profil utilisateur
 export interface Profile {
@@ -23,15 +38,7 @@ export interface Client {
   company_name: string;
   siret: string;
   vat_number: string | null;
-  billing_address: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    formatted_address?: string;
-    lat?: number;
-    lng?: number;
-  };
+  billing_address: Address;
   phone1: string;
   phone2: string | null;
   created_at: string;
@@ -81,8 +88,9 @@ export interface Vehicle {
   created_by: string;
 }
 
-// Interface pour les missions
-export interface Mission {
+// Types pour les missions en fonction de leur source (DB ou UI)
+// Type pour les missions telles que reçues de la DB
+export interface MissionFromDB {
   id: string;
   client_id: string;
   vehicle_id: number;
@@ -90,24 +98,8 @@ export interface Mission {
   status: MissionStatus;
   contact_pickup_id: number | null;
   contact_delivery_id: number | null;
-  pickup_address: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    formatted_address?: string;
-    lat?: number;
-    lng?: number;
-  };
-  delivery_address: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    formatted_address?: string;
-    lat?: number;
-    lng?: number;
-  };
+  pickup_address: Json;
+  delivery_address: Json;
   distance_km: number;
   price_ht: number;
   price_ttc: number;
@@ -118,6 +110,38 @@ export interface Mission {
   created_at: string;
   created_by: string;
   updated_at: string;
+}
+
+// Interface pour les missions (utilisée dans l'UI)
+export interface Mission {
+  id: string;
+  client_id: string;
+  vehicle_id: number;
+  chauffeur_id: string | null;
+  status: MissionStatus;
+  contact_pickup_id: number | null;
+  contact_delivery_id: number | null;
+  pickup_address: Address;
+  delivery_address: Address;
+  distance_km: number;
+  price_ht: number;
+  price_ttc: number;
+  vat_rate: number;
+  scheduled_date: string;
+  completion_date: string | null;
+  notes: string | null;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+}
+
+// Fonction utilitaire pour convertir MissionFromDB en Mission
+export function convertMissionFromDB(missionFromDB: MissionFromDB): Mission {
+  return {
+    ...missionFromDB,
+    pickup_address: convertJsonToType<Address>(missionFromDB.pickup_address),
+    delivery_address: convertJsonToType<Address>(missionFromDB.delivery_address)
+  };
 }
 
 // Interface pour l'historique des statuts de mission

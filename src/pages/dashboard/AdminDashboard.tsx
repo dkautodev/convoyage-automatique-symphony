@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
-import { Mission, MissionStatus, missionStatusLabels, missionStatusColors } from '@/types/supabase';
+import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,11 @@ const AdminDashboard = () => {
         
         if (missionsError) throw missionsError;
         
-        setMissions(missionsData || []);
+        // Convertir les données de la DB en missions UI
+        const convertedMissions = (missionsData || []).map(mission => 
+          convertMissionFromDB(mission as unknown as MissionFromDB)
+        );
+        setMissions(convertedMissions);
         
         // Récupérer les statistiques
         // 1. Nombre total de missions

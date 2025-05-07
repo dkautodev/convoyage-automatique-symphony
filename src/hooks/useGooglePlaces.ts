@@ -106,6 +106,10 @@ export const useGooglePlaces = () => {
               }
             });
             
+            // Fix: Properly handle the lat/lng values
+            const lat = result.geometry.location.lat;
+            const lng = result.geometry.location.lng;
+            
             // Améliorer l'objet résultat avec les données extraites
             const enhancedResult = {
               ...result,
@@ -119,8 +123,8 @@ export const useGooglePlaces = () => {
 
             setSelectedAddress(enhancedResult);
             setMapPosition({
-              lat: result.geometry.location.lat(),
-              lng: result.geometry.location.lng()
+              lat: typeof lat === 'function' ? lat() : lat,
+              lng: typeof lng === 'function' ? lng() : lng
             });
 
             console.log("Détails de l'adresse récupérés:", enhancedResult);

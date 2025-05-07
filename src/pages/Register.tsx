@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -28,6 +27,7 @@ import { UserRole } from '@/types/supabase';
 import { formatSiret } from '@/utils/validation';
 import { Eye, EyeOff, ArrowLeft, User, UserCog } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { RegisterFormData } from '@/types/auth';
 
 const registerSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),

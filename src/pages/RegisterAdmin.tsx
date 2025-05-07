@@ -22,9 +22,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 import AddressMap from '@/components/AddressMap';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
-import { formatSiret } from '@/utils/validation';
-import { isAdminEmailAllowed } from '@/utils/validation';
+import { formatSiret, isAdminEmailAllowed } from '@/utils/validation';
 import { ArrowLeft, Eye, EyeOff, Shield } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { typedSupabase } from '@/types/database';
 
 const adminRegisterSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' })
@@ -55,6 +56,7 @@ export default function RegisterAdmin() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number} | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<AdminFormData>({
     resolver: zodResolver(adminRegisterSchema),
@@ -91,38 +93,74 @@ export default function RegisterAdmin() {
 
   const onSubmit = async (data: AdminFormData) => {
     try {
+      setIsSubmitting(true);
       console.log("Admin registration data:", data);
       
-      // In a real app, this would validate the admin token against a database
-      // For demo purposes, we'll accept any token for now
+      // 1. Vérifier si le token d'invitation est valide
+      const { data: tokenData, error: tokenError } = await typedSupabase
+        .from('admin_tokens')
+        .select('*')
+        .eq('token', data.adminToken)
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
       
-      // This is where you would integrate with Supabase
-      // const { user, error } = await supabase.auth.signUp({
-      //   email: data.email,
-      //   password: data.password,
-      // });
+      if (tokenError) {
+        toast.error("Error validating invitation token");
+        throw tokenError;
+      }
       
-      // if (error) throw error;
+      if (!tokenData) {
+        toast.error("Invalid or expired invitation token");
+        throw new Error("Invalid or expired invitation token");
+      }
       
-      // Add admin metadata
-      // await supabase.from('admins').insert({
-      //   user_id: user.id,
-      //   company_name: data.companyName,
-      //   billing_address: data.billingAddress,
-      //   siret: data.siret.replace(/\s/g, ''),
-      //   tva_number: data.tvaNumb,
-      //   phone1: data.phone1,
-      //   phone2: data.phone2 || null,
-      //   role: 'admin',
-      // });
+      // 2. Créer l'utilisateur dans Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            role: 'admin', // Définir le rôle comme admin dans les métadonnées
+          }
+        }
+      });
       
-      toast.success('Admin registration successful!');
+      if (authError) {
+        toast.error("Failed to create admin account: " + authError.message);
+        throw authError;
+      }
       
-      // Navigate to admin dashboard
-      navigate('/admin/dashboard');
-    } catch (error) {
+      if (!authData.user) {
+        toast.error("User creation failed");
+        throw new Error("User creation failed");
+      }
+
+      // 3. Ajouter les informations supplémentaires de l'administrateur
+      // Note: Notre trigger handle_new_user() crée automatiquement l'entrée dans la table profiles
+      // Nous devons marquer le token comme utilisé
+      const { error: tokenUpdateError } = await typedSupabase
+        .from('admin_tokens')
+        .update({
+          used: true,
+          used_at: new Date().toISOString()
+        })
+        .eq('token', data.adminToken);
+      
+      if (tokenUpdateError) {
+        console.error('Error marking token as used:', tokenUpdateError);
+        // On continue malgré cette erreur car le compte a été créé
+      }
+      
+      toast.success('Admin registration successful! Please sign in with your credentials.');
+      
+      // Navigate to login page
+      navigate('/login');
+    } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Admin registration failed. Please check your information and try again.');
+      toast.error('Admin registration failed: ' + (error.message || 'Please check your information and try again'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,7 +215,7 @@ export default function RegisterAdmin() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="admin@entreprise.com" {...field} />
+                            <Input type="email" placeholder="admin@dkautomotive.fr" {...field} />
                           </FormControl>
                           <FormDescription>
                             Must be from an authorized domain.
@@ -358,9 +396,9 @@ export default function RegisterAdmin() {
                   <Button 
                     type="submit" 
                     className="w-full bg-admin hover:bg-admin-dark"
-                    disabled={form.formState.isSubmitting}
+                    disabled={isSubmitting}
                   >
-                    {form.formState.isSubmitting ? (
+                    {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
                         <span>Creating admin account...</span>

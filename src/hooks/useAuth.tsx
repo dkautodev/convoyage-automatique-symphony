@@ -68,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (data) {
         setProfile(data);
+        console.log("Profil récupéré:", data);
+        
         // Mettre à jour le timestamp de dernière connexion
         await typedSupabase
           .from('profiles')
@@ -150,13 +152,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         setSession(data.session);
         
+        // Récupérer le profil après connexion
         await fetchProfile(data.user.id);
         
-        // Vérifier que le profil a été récupéré avant de rediriger
-        if (profile) {
+        // Obtenir le rôle depuis le profil que nous venons de récupérer
+        const { data: profileData } = await typedSupabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileData) {
           // Rediriger vers le tableau de bord approprié
-          redirectToDashboard(profile.role);
+          redirectToDashboard(profileData.role);
           toast.success('Connexion réussie !');
+        } else {
+          // Si aucun profil n'est trouvé, rediriger vers la page d'accueil
+          navigate('/home');
+          toast.error('Profil utilisateur non trouvé');
         }
       }
     } catch (err: any) {
@@ -334,6 +347,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fonction pour rediriger vers le tableau de bord approprié
   const redirectToDashboard = (role: UserRole) => {
+    console.log("Redirection selon le rôle:", role);
     switch (role) {
       case 'admin':
         navigate('/admin/dashboard');

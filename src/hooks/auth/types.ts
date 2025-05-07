@@ -45,3 +45,22 @@ export type AuthState = {
   isLoading: boolean;
   error: string | null;
 };
+
+// Ajout de l'interface AuthContextType
+export interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  session: Session | null;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  basicRegister: (data: BasicRegisterFormData) => Promise<void>;
+  completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
+  completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
+  register: (data: RegisterFormData) => Promise<void>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  verifyAdminToken: (token: string, email: string) => Promise<boolean>;
+  uploadDriverDocument: (file: File, type: string) => Promise<string>;
+}

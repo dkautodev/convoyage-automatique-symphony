@@ -29,6 +29,13 @@ import {
   DriverProfileFormData 
 } from '@/types/auth';
 
+// Étendre l'interface BasicRegisterFormData pour inclure adminToken
+declare module '@/types/auth' {
+  interface BasicRegisterFormData {
+    adminToken?: string;
+  }
+}
+
 // Fournisseur du contexte d'authentification
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

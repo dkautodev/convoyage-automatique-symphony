@@ -8,6 +8,18 @@ import {
   ClientProfileFormData, 
   DriverProfileFormData 
 } from '@/types/auth';
+import { Json } from '@/integrations/supabase/types';
+import { Address } from '@/types/supabase';
+
+// Fonction utilitaire pour convertir une adresse en Json
+const convertAddressToJson = (address: Address): Json => {
+  return address as unknown as Json;
+};
+
+// Fonction utilitaire pour convertir Json en Address
+const convertJsonToAddress = (json: Json): Address => {
+  return json as unknown as Address;
+};
 
 // Fonction pour récupérer le profil utilisateur
 export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
@@ -34,7 +46,12 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
       
       if (data) {
         console.log("Profil récupéré avec succès:", data);
-        return data as Profile;
+        // Conversion des champs Json en types spécifiques
+        const profileData: Profile = {
+          ...data,
+          billing_address: data.billing_address ? convertJsonToAddress(data.billing_address) : undefined
+        };
+        return profileData;
       }
     } catch (recursionErr) {
       // Plan B: récupérer les informations d'utilisateur depuis auth.users via metadata
@@ -114,7 +131,7 @@ export const completeClientProfileService = async (userId: string, data: ClientP
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: convertAddressToJson(data.billingAddress),
         siret: data.siret,
         tva_number: data.tvaNumb,
         phone_1: data.phone1,
@@ -146,7 +163,7 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: convertAddressToJson(data.billingAddress),
         siret: data.siret,
         tva_number: data.tvaNumb,
         tva_applicable: data.tvaApplicable,
@@ -197,9 +214,15 @@ export const registerLegacyUser = async (data: RegisterFormData) => {
 
 // Fonction pour mettre à jour le profil utilisateur
 export const updateUserProfile = async (userId: string, data: Partial<Profile>) => {
+  // Convertir l'adresse si elle existe
+  const updateData = { ...data };
+  if (updateData.billing_address) {
+    updateData.billing_address = convertAddressToJson(updateData.billing_address);
+  }
+  
   const { data: updatedProfile, error } = await supabase
     .from('profiles')
-    .update(data)
+    .update(updateData)
     .eq('id', userId);
   
   if (error) {

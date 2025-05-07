@@ -1,3 +1,4 @@
+
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -106,6 +107,8 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
 // Fonction pour compléter le profil client
 export const completeClientProfileService = async (userId: string, data: ClientProfileFormData) => {
   try {
+    console.log("Completing client profile for user:", userId, "with data:", data);
+    
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
       .update({
@@ -121,11 +124,14 @@ export const completeClientProfileService = async (userId: string, data: ClientP
       .eq('id', userId);
     
     if (error) {
+      console.error("Error completing client profile:", error);
       throw error;
     }
     
+    console.log("Client profile updated successfully:", updatedProfile);
     return updatedProfile;
   } catch (err) {
+    console.error("Error in completeClientProfileService:", err);
     throw err;
   }
 };
@@ -139,10 +145,16 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       .from('profiles')
       .update({
         full_name: data.fullName,
-        driver_license: data.licenseNumber, // Updated to use licenseNumber
-        vehicle_type: data.vehicleType,
-        vehicle_registration: data.idNumber, // Updated to use idNumber as vehicle registration
+        company_name: data.companyName,
+        billing_address: data.billingAddress,
+        siret: data.siret,
+        tva_number: data.tvaNumb,
+        tva_applicable: data.tvaApplicable,
         phone_1: data.phone1,
+        phone_2: data.phone2,
+        driver_license: data.licenseNumber,
+        vehicle_type: data.vehicleType,
+        vehicle_registration: data.idNumber,
         profile_completed: true
       })
       .eq('id', userId);

@@ -1,4 +1,3 @@
-
 // Import des types de Supabase
 import { Json } from '@/integrations/supabase/types';
 import { convertJsonToType } from './database';
@@ -30,6 +29,19 @@ export interface Profile {
   created_at: string;
   last_login: string | null;
   active: boolean;
+  profile_completed?: boolean;
+  
+  // Champs ajoutés
+  company_name?: string;
+  billing_address?: Address;
+  siret?: string;
+  tva_number?: string;
+  tva_applicable?: boolean;
+  phone_1?: string;
+  phone_2?: string;
+  driver_license?: string;
+  vehicle_type?: VehicleCategory;
+  vehicle_registration?: string;
 }
 
 // Interface pour les clients

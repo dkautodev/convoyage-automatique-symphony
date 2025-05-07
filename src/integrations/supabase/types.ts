@@ -417,33 +417,60 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          billing_address: Json | null
+          company_name: string | null
           created_at: string
+          driver_license: string | null
           email: string
           full_name: string | null
           id: string
           last_login: string | null
+          phone_1: string | null
+          phone_2: string | null
           profile_completed: boolean
           role: Database["public"]["Enums"]["user_role"]
+          siret: string | null
+          tva_number: string | null
+          vehicle_registration: string | null
+          vehicle_type: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Insert: {
           active?: boolean
+          billing_address?: Json | null
+          company_name?: string | null
           created_at?: string
+          driver_license?: string | null
           email: string
           full_name?: string | null
           id: string
           last_login?: string | null
+          phone_1?: string | null
+          phone_2?: string | null
           profile_completed?: boolean
           role: Database["public"]["Enums"]["user_role"]
+          siret?: string | null
+          tva_number?: string | null
+          vehicle_registration?: string | null
+          vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Update: {
           active?: boolean
+          billing_address?: Json | null
+          company_name?: string | null
           created_at?: string
+          driver_license?: string | null
           email?: string
           full_name?: string | null
           id?: string
           last_login?: string | null
+          phone_1?: string | null
+          phone_2?: string | null
           profile_completed?: boolean
           role?: Database["public"]["Enums"]["user_role"]
+          siret?: string | null
+          tva_number?: string | null
+          vehicle_registration?: string | null
+          vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Relationships: []
       }

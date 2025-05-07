@@ -1,112 +1,79 @@
-import { UserRole, VehicleCategory } from './supabase';
 
-// Type pour le formulaire initial d'inscription
-export interface BasicRegisterFormData {
-  email: string;
-  password: string;
-  passwordConfirmation?: string; // Ajout de la confirmation de mot de passe
-  role: UserRole;
-  adminToken?: string; // Optionnel, utilisé uniquement pour les inscriptions admin
-}
+import { UserRole, VehicleCategory, Address } from '@/types/supabase';
 
-// Type pour le profil complet du client
-export interface ClientProfileFormData {
-  companyName: string;
-  fullName: string;
-  billingAddress: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    formatted_address?: string;
-    lat?: number;
-    lng?: number;
-  };
-  siret: string;
-  tvaNumb?: string;
-  phone1: string;
-  phone2?: string;
-}
-
-// Type pour le profil complet du chauffeur
-export interface DriverProfileFormData {
-  companyName: string;
-  fullName: string;
-  billingAddress: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    formatted_address?: string;
-    lat?: number;
-    lng?: number;
-  };
-  siret: string;
-  tvaApplicable: boolean;
-  tvaNumb?: string;
-  phone1: string;
-  phone2?: string;
-  licenseNumber: string; // This is the correct property name
-  vehicleType: VehicleCategory;
-  idNumber: string; // This is the correct property name for ID document
-  documents: {
-    kbis?: File;
-    driverLicenseFront?: File;
-    driverLicenseBack?: File;
-    vigilanceAttestation?: File;
-    idDocument?: File;
-  };
-}
-
-// Type pour le formulaire d'inscription complet (pour compatibilité avec le code existant)
-export interface RegisterFormData {
-  email: string;
-  password: string;
-  companyName: string;
-  billingAddress: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string;
-    formatted_address?: string;
-    lat?: number;
-    lng?: number;
-  };
-  siret: string;
-  tvaNumb?: string;
-  phone1: string;
-  phone2?: string;
-  gdprConsent: boolean;
-  role: UserRole;
-  tvaApplicable?: boolean;
-  licenseNumber?: string;
-  vehicleType?: VehicleCategory;
-  fullName?: string;
-}
-
-export interface AddressComponentType {
-  long_name: string;
-  short_name: string;
-  types: string[];
-}
-
-export interface GoogleAddressSuggestion {
-  description: string;
+// Interface pour le résultat du geocoding de Google
+export interface GoogleGeocodingResult {
   place_id: string;
-  structured_formatting: {
+  formatted_address: string;
+  geometry: {
+    location: {
+      lat: () => number | number;
+      lng: () => number | number;
+    };
+  };
+  address_components: {
+    long_name: string;
+    short_name: string;
+    types: string[];
+  }[];
+  extracted_data?: {
+    street: string;
+    city: string;
+    postal_code: string;
+    country: string;
+  };
+}
+
+// Interface pour les suggestions d'adresse de Google
+export interface GoogleAddressSuggestion {
+  place_id: string;
+  description: string;
+  structured_formatting?: {
     main_text: string;
     secondary_text: string;
   };
 }
 
-export interface GoogleGeocodingResult {
-  address_components: AddressComponentType[];
-  formatted_address: string;
-  geometry: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
-  place_id: string;
+// Interface pour les données d'inscription basique
+export interface BasicRegisterFormData {
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+// Interface pour les données d'inscription du client
+export interface ClientProfileFormData {
+  fullName: string;
+  companyName: string;
+  billingAddress: Address;
+  siret: string;
+  tvaNumb?: string;
+  phone1: string;
+  phone2?: string;
+}
+
+// Interface pour les données d'inscription du chauffeur
+export interface DriverProfileFormData {
+  fullName: string;
+  companyName: string;
+  billingAddress: Address;
+  siret: string;
+  tvaApplicable: boolean;
+  tvaNumb?: string;
+  phone1: string;
+  phone2?: string;
+  licenseNumber: string;
+  vehicleType: VehicleCategory;
+  idNumber: string;
+  documents?: Record<string, File>;
+}
+
+// Interface pour les anciennes données d'inscription
+export interface RegisterFormData {
+  email: string;
+  password: string;
+  role: UserRole;
+  fullName: string;
+  companyName?: string;
+  siret?: string;
 }

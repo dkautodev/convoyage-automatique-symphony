@@ -126,12 +126,15 @@ export const completeClientProfileService = async (userId: string, data: ClientP
   try {
     console.log("Completing client profile for user:", userId, "with data:", data);
     
+    // Conversion explicite de l'adresse en Json avant l'envoi à Supabase
+    const billingAddressJson = convertAddressToJson(data.billingAddress);
+    
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: convertAddressToJson(data.billingAddress),
+        billing_address: billingAddressJson,
         siret: data.siret,
         tva_number: data.tvaNumb,
         phone_1: data.phone1,
@@ -158,12 +161,15 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
   try {
     console.log("Completing driver profile for user:", userId, "with data:", data);
     
+    // Conversion explicite de l'adresse en Json avant l'envoi à Supabase
+    const billingAddressJson = convertAddressToJson(data.billingAddress);
+    
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: convertAddressToJson(data.billingAddress),
+        billing_address: billingAddressJson,
         siret: data.siret,
         tva_number: data.tvaNumb,
         tva_applicable: data.tvaApplicable,
@@ -214,8 +220,10 @@ export const registerLegacyUser = async (data: RegisterFormData) => {
 
 // Fonction pour mettre à jour le profil utilisateur
 export const updateUserProfile = async (userId: string, data: Partial<Profile>) => {
-  // Convertir l'adresse si elle existe
-  const updateData = { ...data };
+  // Créer une copie pour éviter de modifier l'objet d'origine
+  const updateData: Record<string, any> = {...data};
+  
+  // Conversion explicite de l'adresse en Json si elle existe
   if (updateData.billing_address) {
     updateData.billing_address = convertAddressToJson(updateData.billing_address);
   }

@@ -106,17 +106,38 @@ export const useGooglePlaces = () => {
               }
             });
             
-            // Fix: Get the latitude and longitude correctly
-            let latitude: number;
-            let longitude: number;
+            // Fix: Handle the latitude and longitude extraction properly
+            let latitude: number = 0;
+            let longitude: number = 0;
             
-            // Handle different versions of the Google Maps API
-            if (typeof result.geometry.location.lat === 'function') {
-              latitude = result.geometry.location.lat();
-              longitude = result.geometry.location.lng();
-            } else {
-              latitude = result.geometry.location.lat;
-              longitude = result.geometry.location.lng;
+            // Access the location object directly to avoid TypeScript errors
+            const location = result.geometry.location;
+            
+            // Check if location has lat and lng as functions or properties
+            if (location) {
+              // Handle location as a direct object with lat/lng properties
+              if (typeof location === 'object') {
+                if ('lat' in location && 'lng' in location) {
+                  // First try using properties directly
+                  if (typeof location.lat === 'number' && typeof location.lng === 'number') {
+                    latitude = location.lat;
+                    longitude = location.lng;
+                  }
+                  // Then try using as functions if properties are functions
+                  else if (typeof location.lat === 'function' && typeof location.lng === 'function') {
+                    try {
+                      // Use type assertion to tell TypeScript these are callable
+                      latitude = (location.lat as Function)();
+                      longitude = (location.lng as Function)();
+                    } catch (e) {
+                      console.error('Error calling lat/lng functions:', e);
+                      // Fallback
+                      latitude = 0;
+                      longitude = 0;
+                    }
+                  }
+                }
+              }
             }
             
             // Améliorer l'objet résultat avec les données extraites

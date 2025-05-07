@@ -1,5 +1,6 @@
 
 // Re-exporter le nouveau système d'authentification modulaire
-export { useAuth, AuthProvider } from './AuthProvider';
+export { AuthProvider } from './AuthProvider';
+export { useAuth } from './useAuth';
 export { setupDatabaseFunctions } from './databaseFunctions';
 export type { Profile, AuthContextType } from './types';

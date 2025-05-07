@@ -5,11 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 export const setupDatabaseFunctions = async () => {
   try {
     // Create update_client_profile function
-    await supabase.rpc('create_update_client_profile_function');
+    // Use type assertion to tell TypeScript that these RPC functions are valid
+    await supabase.rpc('create_update_client_profile_function' as any);
     console.log('Client profile update function created or already exists');
     
     // Create update_driver_profile function
-    await supabase.rpc('create_update_driver_profile_function');
+    await supabase.rpc('create_update_driver_profile_function' as any);
     console.log('Driver profile update function created or already exists');
     
     return true;

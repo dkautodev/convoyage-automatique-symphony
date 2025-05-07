@@ -144,9 +144,8 @@ export const completeClientProfileService = async (userId: string, data: ClientP
   try {
     console.log("Completing client profile for user:", userId, "with data:", data);
     
-    // Utilisez la fonction directe SQL pour éviter la récursion des politiques RLS
-    // Utiliser l'API Supabase REST avec des paramètres spécifiques
-    const { data: updatedProfile, error } = await supabase.rpc('update_client_profile', {
+    // Use type assertion to tell TypeScript that this RPC function is valid
+    const { data: updatedProfile, error } = await supabase.rpc('update_client_profile' as any, {
       p_user_id: userId,
       p_full_name: data.fullName,
       p_company_name: data.companyName,
@@ -176,8 +175,8 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
   try {
     console.log("Completing driver profile for user:", userId, "with data:", data);
     
-    // Utilisez la fonction directe SQL pour éviter la récursion des politiques RLS
-    const { data: updatedProfile, error } = await supabase.rpc('update_driver_profile', {
+    // Use type assertion to tell TypeScript that this RPC function is valid
+    const { data: updatedProfile, error } = await supabase.rpc('update_driver_profile' as any, {
       p_user_id: userId,
       p_full_name: data.fullName,
       p_company_name: data.companyName,

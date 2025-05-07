@@ -28,6 +28,10 @@ import {
   ClientProfileFormData, 
   DriverProfileFormData 
 } from '@/types/auth';
+import { useAuth } from './useAuth';
+
+// Export the useAuth hook for external use
+export { useAuth };
 
 // Étendre l'interface BasicRegisterFormData pour inclure adminToken
 declare module '@/types/auth' {

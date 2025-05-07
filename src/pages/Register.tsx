@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import {
-  Input,
-  Checkbox,
-} from '@material-tailwind/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { UserRole, VehicleCategory } from '@/types/supabase';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface RegisterProps {}
 
@@ -27,6 +30,7 @@ const Register: React.FC<RegisterProps> = () => {
   const [vehicleType, setVehicleType] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleRoleChange = (newRole: UserRole) => {
@@ -126,192 +130,172 @@ const Register: React.FC<RegisterProps> = () => {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Retour à l'accueil
           </Link>
-          <div className="bg-white shadow rounded-lg p-8">
-            <h2 className="text-2xl font-semibold mb-4">Créer votre compte</h2>
-            <p className="text-gray-600 mb-6">
-              Renseignez vos informations pour créer un nouveau compte
-            </p>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  id="email"
-                  placeholder="votre@email.com"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
-                  Mot de passe
-                </label>
-                <Input
-                  type="password"
-                  id="password"
-                  placeholder="********"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="fullName" className="block text-gray-700 text-sm font-bold mb-2">
-                  Nom Complet
-                </label>
-                <Input
-                  type="text"
-                  id="fullName"
-                  placeholder="John Doe"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="companyName" className="block text-gray-700 text-sm font-bold mb-2">
-                  Nom de l'entreprise
-                </label>
-                <Input
-                  type="text"
-                  id="companyName"
-                  placeholder="Votre Société SAS"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="siret" className="block text-gray-700 text-sm font-bold mb-2">
-                  Numéro SIRET
-                </label>
-                <Input
-                  type="text"
-                  id="siret"
-                  placeholder="12345678901234"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={siret}
-                  onChange={(e) => setSiret(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="phone1" className="block text-gray-700 text-sm font-bold mb-2">
-                  Téléphone (principal)
-                </label>
-                <Input
-                  type="text"
-                  id="phone1"
-                  placeholder="+33 612345678"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={phone1}
-                  onChange={(e) => setPhone1(e.target.value)}
-                />
-              </div>
-              <div>
-                <label htmlFor="phone2" className="block text-gray-700 text-sm font-bold mb-2">
-                  Téléphone (secondaire - optionnel)
-                </label>
-                <Input
-                  type="text"
-                  id="phone2"
-                  placeholder="+33 612345679"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={phone2}
-                  onChange={(e) => setPhone2(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="tvaApplicable" className="block text-gray-700 text-sm font-bold mb-2">
-                  TVA Applicable?
-                </label>
-                <Checkbox
-                  id="tvaApplicable"
-                  label="TVA Applicable"
-                  checked={tvaApplicable}
-                  onChange={(e) => setTvaApplicable(e.target.checked)}
-                />
-              </div>
-
-              {tvaApplicable && (
-                <div>
-                  <label htmlFor="tvaNumb" className="block text-gray-700 text-sm font-bold mb-2">
-                    Numéro TVA
-                  </label>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Créer votre compte</CardTitle>
+              <CardDescription>
+                Renseignez vos informations pour créer un nouveau compte
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    type="text"
-                    id="tvaNumb"
-                    placeholder="FR12345678901"
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value={tvaNumb}
-                    onChange={(e) => setTvaNumb(e.target.value)}
+                    type="email"
+                    id="email"
+                    placeholder="votre@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-              )}
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      placeholder="********"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Nom Complet</Label>
+                  <Input
+                    type="text"
+                    id="fullName"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                  <Input
+                    type="text"
+                    id="companyName"
+                    placeholder="Votre Société SAS"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="siret">Numéro SIRET</Label>
+                  <Input
+                    type="text"
+                    id="siret"
+                    placeholder="12345678901234"
+                    value={siret}
+                    onChange={(e) => setSiret(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone1">Téléphone (principal)</Label>
+                  <Input
+                    type="text"
+                    id="phone1"
+                    placeholder="+33 612345678"
+                    value={phone1}
+                    onChange={(e) => setPhone1(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone2">Téléphone (secondaire - optionnel)</Label>
+                  <Input
+                    type="text"
+                    id="phone2"
+                    placeholder="+33 612345679"
+                    value={phone2}
+                    onChange={(e) => setPhone2(e.target.value)}
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="licenseNumber" className="block text-gray-700 text-sm font-bold mb-2">
-                  Numéro de permis de conduire
-                </label>
-                <Input
-                  type="text"
-                  id="licenseNumber"
-                  placeholder="12AB34567890"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={licenseNumber}
-                  onChange={(e) => setLicenseNumber(e.target.value)}
-                />
-              </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="tvaApplicable"
+                    checked={tvaApplicable}
+                    onCheckedChange={(checked) => setTvaApplicable(checked as boolean)}
+                  />
+                  <Label htmlFor="tvaApplicable" className="text-sm">TVA Applicable</Label>
+                </div>
 
-              <div>
-                <label htmlFor="vehicleType" className="block text-gray-700 text-sm font-bold mb-2">
-                  Type de véhicule
-                </label>
-                <Input
-                  type="text"
-                  id="vehicleType"
-                  placeholder="Citadine"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
-                />
-              </div>
+                {tvaApplicable && (
+                  <div className="space-y-2">
+                    <Label htmlFor="tvaNumb">Numéro TVA</Label>
+                    <Input
+                      type="text"
+                      id="tvaNumb"
+                      placeholder="FR12345678901"
+                      value={tvaNumb}
+                      onChange={(e) => setTvaNumb(e.target.value)}
+                    />
+                  </div>
+                )}
 
-              <div>
-                <Checkbox
-                  id="gdprConsent"
-                  label={
-                    <>
-                      J'accepte les <a href="/terms" className="text-blue-500 hover:underline">Conditions d'utilisation</a> et la <a href="/privacy" className="text-blue-500 hover:underline">Politique de confidentialité</a>.
-                    </>
-                  }
-                  checked={gdprConsent}
-                  onChange={(e) => setGdprConsent(e.target.checked)}
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="licenseNumber">Numéro de permis de conduire</Label>
+                  <Input
+                    type="text"
+                    id="licenseNumber"
+                    placeholder="12AB34567890"
+                    value={licenseNumber}
+                    onChange={(e) => setLicenseNumber(e.target.value)}
+                  />
+                </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+                <div className="space-y-2">
+                  <Label htmlFor="vehicleType">Type de véhicule</Label>
+                  <Input
+                    type="text"
+                    id="vehicleType"
+                    placeholder="Citadine"
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                  />
+                </div>
 
-              <button
-                type="submit"
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                disabled={loading}
-              >
-                {loading ? 'Création du compte...' : 'Créer mon compte'}
-              </button>
-            </form>
-            <div className="mt-6 text-center">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="gdprConsent"
+                    checked={gdprConsent}
+                    onCheckedChange={(checked) => setGdprConsent(checked as boolean)}
+                  />
+                  <Label htmlFor="gdprConsent" className="text-sm">
+                    J'accepte les <a href="/terms" className="text-blue-500 hover:underline">Conditions d'utilisation</a> et la <a href="/privacy" className="text-blue-500 hover:underline">Politique de confidentialité</a>.
+                  </Label>
+                </div>
+
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? 'Création du compte...' : 'Créer mon compte'}
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-center">
               <p className="text-sm text-gray-600">
                 Vous avez déjà un compte ?{' '}
                 <Link to="/login" className="text-blue-500 hover:underline">
                   Connectez-vous ici
                 </Link>
               </p>
-            </div>
-          </div>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>

@@ -37,7 +37,7 @@ export const checkPasswordStrength = (password: string): 'weak' | 'medium' | 'st
 export const isAdminEmailAllowed = (email: string): boolean => {
   // Example validation - check if email is from allowed domain
   // In production, this would connect to a database of allowed domains
-  const allowedDomains = ['gmail.com'];
+  const allowedDomains = ['entreprise.com'];
   const domain = email.split('@')[1];
   return allowedDomains.includes(domain);
 };

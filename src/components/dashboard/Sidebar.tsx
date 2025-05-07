@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/supabase';
 import { cn } from '@/lib/utils';
@@ -21,6 +21,7 @@ import {
   Cog,
   LogOut
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   userRole?: UserRole;
@@ -28,12 +29,13 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
   
   // Déterminer la couleur de thème en fonction du rôle
   const themeColor = {
-    admin: 'bg-admin-light/10 text-admin border-admin',
-    client: 'bg-client-light/10 text-client border-client',
-    chauffeur: 'bg-driver-light/10 text-driver border-driver'
+    admin: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+    client: 'bg-neutral-100 text-neutral-800 border-neutral-300',
+    chauffeur: 'bg-neutral-100 text-neutral-800 border-neutral-300'
   }[userRole];
   
   // Liens communs à tous les rôles
@@ -89,6 +91,19 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
   // Tous les liens à afficher
   const links = [...commonLinks.slice(0, 1), ...roleLinks, ...commonLinks.slice(1)];
   
+  // Gestion du clic sur le bouton de déconnexion
+  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    try {
+      await logout();
+      toast.success('Déconnexion réussie');
+      navigate('/home');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      toast.error('Erreur lors de la déconnexion');
+    }
+  };
+  
   return (
     <aside className={`w-64 min-h-screen border-r ${themeColor} transition-all duration-200`}>
       <div className="h-full flex flex-col">
@@ -109,8 +124,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
                     cn(
                       "flex items-center gap-2 px-4 py-2 rounded-md transition-colors",
                       isActive
-                        ? `bg-${userRole === 'admin' ? 'admin' : userRole === 'chauffeur' ? 'driver' : 'client'} text-white`
-                        : "hover:bg-gray-100"
+                        ? `bg-neutral-800 text-white`
+                        : "hover:bg-neutral-200"
                     )
                   }
                 >
@@ -125,8 +140,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
         {/* Bouton de déconnexion */}
         <div className="p-4 border-t">
           <button
-            onClick={logout}
-            className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            onClick={handleLogout}
+            className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-gray-600 hover:bg-neutral-200 transition-colors"
           >
             <LogOut size={18} />
             <span>Déconnexion</span>

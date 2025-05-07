@@ -20,10 +20,19 @@ import AdminInvite from "./pages/AdminInvite";
 // Layouts
 import DashboardLayout from "./layouts/DashboardLayout";
 
-// Dashboard pages
+// Dashboard pages - Admin
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import AdminMissions from "./pages/dashboard/admin/Missions";
+import AdminClients from "./pages/dashboard/admin/Clients";
+import AdminDrivers from "./pages/dashboard/admin/Drivers";
+
+// Dashboard pages - Client
 import ClientDashboard from "./pages/dashboard/ClientDashboard";
+import ClientMissions from "./pages/dashboard/client/Missions";
+
+// Dashboard pages - Driver
 import DriverDashboard from "./pages/dashboard/DriverDashboard";
+import DriverMissions from "./pages/dashboard/driver/Missions";
 
 const queryClient = new QueryClient();
 
@@ -55,18 +64,23 @@ const App = () => (
           {/* Routes du dashboard admin */}
           <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="missions" element={<AdminMissions />} />
+            <Route path="clients" element={<AdminClients />} />
+            <Route path="drivers" element={<AdminDrivers />} />
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
           
           {/* Routes du dashboard client */}
           <Route path="/client" element={<DashboardLayout allowedRoles="client" />}>
             <Route path="dashboard" element={<ClientDashboard />} />
+            <Route path="missions" element={<ClientMissions />} />
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
           
           {/* Routes du dashboard chauffeur */}
           <Route path="/driver" element={<DashboardLayout allowedRoles="chauffeur" />}>
             <Route path="dashboard" element={<DriverDashboard />} />
+            <Route path="missions" element={<DriverMissions />} />
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
           

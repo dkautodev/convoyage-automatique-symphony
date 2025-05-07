@@ -1,12 +1,22 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Truck, User, LogOut } from 'lucide-react';
 
 const Header = () => {
   const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  // Fonction de déconnexion corrigée
+  const handleLogout = () => {
+    console.log("Déconnexion demandée depuis le Header principal");
+    logout()
+      .catch(error => {
+        console.error('Erreur lors de la déconnexion (Header principal):', error);
+      });
+  };
   
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
@@ -34,7 +44,12 @@ const Header = () => {
                   </Link>
                 </Button>
                 
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  type="button"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Déconnexion
                 </Button>

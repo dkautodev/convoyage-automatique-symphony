@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -299,26 +298,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction de déconnexion
+  // Fonction de déconnexion - correction de la gestion des erreurs
   const logout = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const { error } = await supabase.auth.signOut();
+      console.log("Tentative de déconnexion...");
       
-      if (error) {
-        throw error;
-      }
-      
+      // Vider d'abord les états locaux pour éviter les problèmes de synchronisation
       setUser(null);
       setProfile(null);
       setSession(null);
-      navigate('/home');
+      
+      // Ensuite effectuer la déconnexion côté Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Erreur Supabase lors de la déconnexion:", error);
+        throw error;
+      }
+      
+      console.log("Déconnexion réussie côté Supabase");
+      
+      // Rediriger vers la page d'accueil
+      navigate('/home', { replace: true });
       toast.success('Déconnexion réussie');
     } catch (err: any) {
-      setError(err.message);
-      toast.error('Erreur lors de la déconnexion: ' + err.message);
+      console.error("Erreur complète lors de la déconnexion:", err);
+      
+      // Même en cas d'erreur, on s'assure que l'utilisateur est redirigé
+      navigate('/home', { replace: true });
+      
+      // Afficher un message d'erreur mais aussi informer que la session locale est terminée
+      toast.error(`Erreur technique lors de la déconnexion: ${err.message}`);
+      toast.success('Session locale terminée');
     } finally {
       setLoading(false);
     }

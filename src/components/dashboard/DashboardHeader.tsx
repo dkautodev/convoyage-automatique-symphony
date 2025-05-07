@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 
 const DashboardHeader = () => {
   const { user, profile, logout } = useAuth();
@@ -29,16 +28,13 @@ const DashboardHeader = () => {
     chauffeur: 'Espace Chauffeur'
   }[role];
 
-  // Gestion du clic sur le bouton de déconnexion
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success('Déconnexion réussie');
-      navigate('/home');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      toast.error('Erreur lors de la déconnexion');
-    }
+  // Gestion du clic sur le bouton de déconnexion - version corrigée
+  const handleLogout = () => {
+    console.log("Déconnexion demandée depuis le DashboardHeader");
+    logout()
+      .catch(error => {
+        console.error('Erreur lors de la déconnexion (DashboardHeader):', error);
+      });
   };
   
   return (

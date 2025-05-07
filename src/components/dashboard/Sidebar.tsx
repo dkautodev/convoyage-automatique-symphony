@@ -91,17 +91,14 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
   // Tous les liens à afficher
   const links = [...commonLinks.slice(0, 1), ...roleLinks, ...commonLinks.slice(1)];
   
-  // Gestion du clic sur le bouton de déconnexion
-  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  // Gestion du clic sur le bouton de déconnexion - version corrigée
+  const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    try {
-      await logout();
-      toast.success('Déconnexion réussie');
-      navigate('/home');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      toast.error('Erreur lors de la déconnexion');
-    }
+    console.log("Déconnexion demandée depuis la Sidebar");
+    logout()
+      .catch(error => {
+        console.error('Erreur lors de la déconnexion (Sidebar):', error);
+      });
   };
   
   return (
@@ -142,6 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-gray-600 hover:bg-neutral-200 transition-colors"
+            type="button"
           >
             <LogOut size={18} />
             <span>Déconnexion</span>

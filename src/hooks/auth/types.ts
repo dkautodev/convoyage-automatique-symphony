@@ -48,16 +48,16 @@ export type AuthState = {
 
 // Ajout de l'interface AuthContextType
 export interface AuthContextType {
-  user: User | null;
+  user: any | null;
   profile: Profile | null;
-  session: Session | null;
+  session: any | null;
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  basicRegister: (data: BasicRegisterFormData) => Promise<void>;
-  completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
-  completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
-  register: (data: RegisterFormData) => Promise<void>;
+  basicRegister: (data: any) => Promise<void>;
+  completeClientProfile: (data: any) => Promise<void>;
+  completeDriverProfile: (data: any) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;

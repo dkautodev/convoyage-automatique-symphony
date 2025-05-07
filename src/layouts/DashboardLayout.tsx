@@ -25,6 +25,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
   
+  console.log("DashboardLayout - État de l'authentification:", { user, profile, loading });
+  
   // Si l'authentification est en cours, afficher un écran de chargement
   if (loading) {
     return (
@@ -36,6 +38,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
   
   // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
   if (!user) {
+    console.log("Utilisateur non connecté, redirection vers la page d'inscription");
     return <Navigate to="/signup" state={{ from: location }} replace />;
   }
   
@@ -45,8 +48,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
     return <Navigate to="/home" state={{ from: location }} replace />;
   }
   
+  console.log("Vérification du rôle:", { allowedRoles, userRole: profile.role });
+  
   // Si l'utilisateur n'a pas le rôle requis, rediriger vers son tableau de bord approprié
   if (!hasRequiredRole(allowedRoles, profile.role)) {
+    console.log("L'utilisateur n'a pas le rôle requis, redirection");
     switch (profile.role) {
       case 'admin':
         return <Navigate to="/admin/dashboard" replace />;

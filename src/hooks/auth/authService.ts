@@ -1,20 +1,19 @@
 
+// Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
-import { toast } from 'sonner';
 import { 
   RegisterFormData, 
   BasicRegisterFormData, 
   ClientProfileFormData, 
   DriverProfileFormData 
 } from '@/types/auth';
-import { TablesInsert } from '@/types/database';
-import { VehicleCategory } from '@/types/supabase';
-import { uploadDriverDocument } from './utils';
 
-// Récupérer le profil de l'utilisateur
+// Fonction pour récupérer le profil utilisateur
 export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
   try {
+    console.log("Récupération du profil pour l'utilisateur:", userId);
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -26,26 +25,20 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
       throw error;
     }
     
-    if (data) {
-      // Mettre à jour le timestamp de dernière connexion
-      await supabase
-        .from('profiles')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', userId);
-      
-      return data as Profile;
-    }
-    
-    return null;
-  } catch (err: any) {
+    console.log("Profil récupéré:", data);
+    return data as Profile;
+  } catch (err) {
     console.error('Erreur lors de la récupération du profil:', err);
-    return null;
+    throw err;
   }
 };
 
 // Fonction de connexion
 export const loginUser = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
   
   if (error) {
     throw error;
@@ -54,25 +47,22 @@ export const loginUser = async (email: string, password: string) => {
   return data;
 };
 
-// Fonction d'inscription
+// Fonction pour l'inscription simplifiée
 export const registerBasicUser = async (data: BasicRegisterFormData) => {
-  // Préparer les métadonnées utilisateur
-  const userMetadata = {
-    role: data.role,
-  };
+  const { email, password, role } = data;
   
-  // Créer l'utilisateur dans Supabase Auth
   const { data: authData, error } = await supabase.auth.signUp({
-    email: data.email,
-    password: data.password,
+    email,
+    password,
     options: {
-      data: userMetadata,
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      data: {
+        email,
+        role
+      }
     }
   });
   
   if (error) {
-    console.error("Erreur d'inscription:", error);
     throw error;
   }
   
@@ -81,95 +71,82 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
 
 // Fonction pour compléter le profil client
 export const completeClientProfileService = async (userId: string, data: ClientProfileFormData) => {
-  // Mettre à jour le profil utilisateur
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({
-      full_name: data.fullName,
-      profile_completed: true
-    })
-    .eq('id', userId);
+  try {
+    const { data: updatedProfile, error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: data.fullName,
+        company_name: data.companyName,
+        billing_address: data.billingAddress,
+        siret: data.siret,
+        tva_number: data.tvaNumb,
+        phone_1: data.phone1,
+        phone_2: data.phone2,
+        profile_completed: true
+      })
+      .eq('id', userId);
     
-  if (updateError) throw updateError;
-  
-  // Insérer ou mettre à jour les données client
-  const clientData: TablesInsert<'clients'> = {
-    id: userId,
-    company_name: data.companyName,
-    billing_address: data.billingAddress,
-    siret: data.siret,
-    vat_number: data.tvaNumb || null,
-    phone1: data.phone1,
-    phone2: data.phone2 || null,
-    full_name: data.fullName
-  };
-  
-  const { error: clientError } = await supabase
-    .from('clients')
-    .upsert(clientData);
+    if (error) {
+      throw error;
+    }
     
-  if (clientError) throw clientError;
+    return updatedProfile;
+  } catch (err) {
+    throw err;
+  }
 };
 
 // Fonction pour compléter le profil chauffeur
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
-  // Mettre à jour le profil utilisateur
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({
-      full_name: data.fullName,
-      profile_completed: true
-    })
-    .eq('id', userId);
+  try {
+    const { data: updatedProfile, error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: data.fullName,
+        driver_license: data.driverLicense,
+        vehicle_type: data.vehicleType,
+        vehicle_registration: data.vehicleRegistration,
+        phone_1: data.phone1,
+        profile_completed: true
+      })
+      .eq('id', userId);
     
-  if (updateError) throw updateError;
-  
-  // Insérer ou mettre à jour les données chauffeur
-  const driverData: TablesInsert<'drivers'> = {
-    id: userId,
-    full_name: data.fullName,
-    company_name: data.companyName,
-    billing_address: data.billingAddress,
-    license_number: data.licenseNumber,
-    vat_applicable: data.tvaApplicable,
-    vat_number: data.tvaNumb || null,
-    vehicle_type: data.vehicleType as VehicleCategory,
-    phone1: data.phone1,
-    phone2: data.phone2 || null
-  };
-  
-  const { error: driverError } = await supabase
-    .from('drivers')
-    .upsert(driverData);
+    if (error) {
+      throw error;
+    }
     
-  if (driverError) throw driverError;
-  
-  // Télécharger les documents
-  const uploadPromises: Promise<string | null>[] = [];
-  const documents = data.documents;
-  
-  if (documents.kbis) {
-    uploadPromises.push(uploadDriverDocument(documents.kbis, 'kbis', userId));
+    return updatedProfile;
+  } catch (err) {
+    throw err;
   }
-  if (documents.driverLicenseFront) {
-    uploadPromises.push(uploadDriverDocument(documents.driverLicenseFront, 'license_front', userId));
-  }
-  if (documents.driverLicenseBack) {
-    uploadPromises.push(uploadDriverDocument(documents.driverLicenseBack, 'license_back', userId));
-  }
-  if (documents.vigilanceAttestation) {
-    uploadPromises.push(uploadDriverDocument(documents.vigilanceAttestation, 'vigilance_attestation', userId));
-  }
-  if (documents.idDocument) {
-    uploadPromises.push(uploadDriverDocument(documents.idDocument, 'id_document', userId));
-  }
-  
-  await Promise.all(uploadPromises);
 };
 
-// Fonction pour mettre à jour le profil
+// Fonction d'inscription (gardée pour rétrocompatibilité)
+export const registerLegacyUser = async (data: RegisterFormData) => {
+  const { email, password, role } = data;
+  
+  const { data: authData, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        email,
+        role,
+        fullName: data.fullName
+      }
+    }
+  });
+  
+  if (error) {
+    throw error;
+  }
+  
+  return authData;
+};
+
+// Fonction pour mettre à jour le profil utilisateur
 export const updateUserProfile = async (userId: string, data: Partial<Profile>) => {
-  const { error } = await supabase
+  const { data: updatedProfile, error } = await supabase
     .from('profiles')
     .update(data)
     .eq('id', userId);
@@ -177,41 +154,17 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
   if (error) {
     throw error;
   }
+  
+  return updatedProfile;
 };
 
 // Fonction pour réinitialiser le mot de passe
 export const resetUserPassword = async (email: string) => {
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/reset-password',
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
   
   if (error) {
     throw error;
   }
-};
-
-// Fonction d'inscription (gardée pour rétrocompatibilité)
-export const registerLegacyUser = async (data: RegisterFormData) => {
-  // Préparer les métadonnées utilisateur
-  const userMetadata = {
-    role: data.role,
-    fullName: data.fullName || data.companyName,
-  };
-
-  // Créer l'utilisateur dans Supabase Auth avec les métadonnées nécessaires
-  const { data: authData, error } = await supabase.auth.signUp({
-    email: data.email,
-    password: data.password,
-    options: {
-      data: userMetadata,
-      emailRedirectTo: `${window.location.origin}/auth/callback`
-    }
-  });
   
-  if (error) {
-    console.error("Erreur d'inscription:", error);
-    throw error;
-  }
-  
-  return authData;
+  return true;
 };

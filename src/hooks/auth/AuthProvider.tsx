@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, createContext, ReactNode } from 'react';
+
+import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,15 +41,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Récupérer le profil de l'utilisateur
   const fetchProfile = useCallback(async (userId: string) => {
     try {
+      console.log("Démarrage de la récupération du profil pour:", userId);
       const profileData = await fetchUserProfile(userId);
       
       if (profileData) {
+        console.log("Profil récupéré avec succès:", profileData);
         setProfile(profileData);
-        console.log("Profil récupéré:", profileData);
+      } else {
+        console.warn("Aucun profil trouvé pour l'utilisateur:", userId);
+        setProfile(null);
       }
     } catch (err: any) {
       console.error('Erreur lors de la récupération du profil:', err);
-      setError(err.message);
+      
+      // Ne pas définir d'erreur si c'est une erreur de récursion de politique
+      if (err.code !== '42P17') {
+        setError(err.message);
+      } else {
+        console.warn("Erreur de récursion détectée dans la politique, ignorée");
+      }
     }
   }, []);
 
@@ -57,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function getSession() {
       try {
         setLoading(true);
+        console.log("Vérification de la session...");
         
         // Récupérer la session actuelle
         const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
@@ -65,11 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw sessionError;
         }
 
+        console.log("Session récupérée:", currentSession ? "Session valide" : "Pas de session");
         setSession(currentSession);
 
         if (currentSession?.user) {
+          console.log("Utilisateur authentifié:", currentSession.user.email);
           setUser(currentSession.user);
           await fetchProfile(currentSession.user.id);
+        } else {
+          console.log("Aucun utilisateur connecté");
         }
       } catch (err: any) {
         setError(err.message);
@@ -83,20 +99,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // S'abonner aux changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event, newSession) => {
         console.log('Événement d\'authentification:', event);
         
-        if (session) {
-          setSession(session);
-          setUser(session.user);
+        if (newSession) {
+          setSession(newSession);
+          setUser(newSession.user);
           
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            await fetchProfile(session.user.id);
+            console.log("Utilisateur connecté, récupération du profil");
+            await fetchProfile(newSession.user.id);
           }
         } else {
           setSession(null);
           setUser(null);
           setProfile(null);
+          console.log("Session terminée");
         }
       }
     );
@@ -112,9 +130,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
+      console.log("Tentative de connexion pour:", email);
       const data = await loginUser(email, password);
       
       if (data?.user) {
+        console.log("Connexion réussie pour:", email);
         setUser(data.user);
         setSession(data.session);
         
@@ -124,13 +144,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profile) {
           // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
           if (!profile.profile_completed) {
+            console.log("Le profil n'est pas complet, redirection vers la page d'achèvement");
             navigateToProfileCompletion(profile.role, navigate);
             toast.success('Veuillez compléter votre profil');
           } else {
             // Sinon rediriger vers le tableau de bord approprié
+            console.log("Redirection vers le tableau de bord:", profile.role);
             redirectToDashboard(profile.role, navigate);
             toast.success('Connexion réussie !');
           }
+        } else {
+          console.warn("Aucun profil trouvé après connexion");
+          // Redirection vers la page d'accueil si pas de profil
+          navigate('/home');
         }
       }
     } catch (err: any) {

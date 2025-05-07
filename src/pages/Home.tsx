@@ -35,9 +35,12 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, user, profile, loading, error } = useAuth();
   
+  console.log("Home - État de l'authentification:", { user, profile, loading, error });
+  
   // Si l'utilisateur est déjà connecté, rediriger vers son tableau de bord
   useEffect(() => {
     if (user && profile) {
+      console.log("Redirection depuis Home vers le tableau de bord:", profile.role);
       switch (profile.role) {
         case 'admin':
           navigate('/admin/dashboard');
@@ -62,7 +65,12 @@ export default function Home() {
   });
   
   const onSubmit = async (data: LoginFormData) => {
-    await login(data.email, data.password);
+    try {
+      await login(data.email, data.password);
+      // La redirection se fera dans l'effet useEffect ci-dessus
+    } catch (err) {
+      console.error("Erreur lors de la connexion:", err);
+    }
   };
 
   if (loading) {

@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -205,75 +204,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       if (error) {
+        console.error("Erreur d'inscription:", error);
         throw error;
       }
       
       if (data?.user) {
-        console.log("Utilisateur créé dans Auth:", data.user);
-        
-        // Pour les informations supplémentaires, on met à jour le profil
-        const { error: profileUpdateError } = await typedSupabase
-          .from('profiles')
-          .update({
-            full_name: userData.fullName || null,
-          })
-          .eq('id', data.user.id);
-        
-        if (profileUpdateError) {
-          console.error("Erreur mise à jour profil:", profileUpdateError);
-          throw profileUpdateError;
-        }
-        
-        // Créer l'entrée dans la table spécifique au rôle (client, chauffeur)
-        if (role === 'client') {
-          const clientData = {
-            id: data.user.id,
-            company_name: userData.companyName,
-            siret: userData.siret,
-            vat_number: userData.vatNumber || null,
-            billing_address: userData.billingAddress ? 
-              {
-                formatted_address: userData.billingAddress,
-                street: userData.billingAddress,
-                city: "",
-                postal_code: "",
-                country: "France"
-              } : null,
-            phone1: userData.phone1,
-            phone2: userData.phone2 || null
-          };
-          
-          console.log("Création du client avec:", clientData);
-          
-          const { error: clientError } = await typedSupabase
-            .from('clients')
-            .insert([clientData]);
-          
-          if (clientError) {
-            console.error("Erreur création client:", clientError);
-            throw clientError;
-          }
-        } else if (role === 'chauffeur') {
-          const driverData = {
-            id: data.user.id,
-            license_number: userData.licenseNumber,
-            vat_applicable: userData.vatApplicable || false,
-            vat_number: userData.vatApplicable ? userData.vatNumber : null,
-            vehicle_type: userData.vehicleType || null
-          };
-          
-          console.log("Création du chauffeur avec:", driverData);
-          
-          const { error: driverError } = await typedSupabase
-            .from('drivers')
-            .insert([driverData]);
-          
-          if (driverError) {
-            console.error("Erreur création chauffeur:", driverError);
-            throw driverError;
-          }
-        }
-        
         toast.success('Inscription réussie ! Veuillez vous connecter.');
         navigate('/login');
       }

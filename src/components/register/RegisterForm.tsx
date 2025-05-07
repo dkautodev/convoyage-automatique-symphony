@@ -37,32 +37,36 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
     setLoading(true);
 
     try {
-      // Préparer les métadonnées utilisateur
-      const userMetadata = {
-        role: role,
-      };
-
-      // Inscription simpliée avec seulement email, mot de passe et rôle
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
+      console.log('Début inscription avec les données:', { email, role });
+      
+      // Inscription avec email, mot de passe et rôle dans les métadonnées
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
-          data: userMetadata,
+          data: {
+            role: role, // Utiliser directement role ici
+            // Ne pas inclure fullName car il n'est pas demandé dans le formulaire simplifié
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       
-      if (error) {
-        console.error("Erreur d'inscription:", error);
-        throw error;
+      if (signUpError) {
+        console.error("Erreur d'inscription:", signUpError);
+        throw signUpError;
       }
+      
+      console.log('Résultat inscription:', authData);
       
       if (authData?.user) {
         toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
         navigate('/register-confirmation');
+      } else {
+        throw new Error('Échec de création du compte utilisateur');
       }
     } catch (err: any) {
-      console.error("Erreur d'inscription:", err);
+      console.error("Erreur d'inscription détaillée:", err);
       setError(err.message);
       toast.error('Échec de l\'inscription: ' + err.message);
     } finally {

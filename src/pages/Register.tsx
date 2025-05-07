@@ -63,7 +63,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register } = useAuth();
+  const { register: registerUser } = useAuth();
   
   const form = useForm<FormData>({
     resolver: zodResolver(registerSchema),
@@ -124,24 +124,35 @@ export default function Register() {
       setIsSubmitting(true);
       console.log("Registration data:", data);
       
-      // Préparer les données utilisateur selon le rôle
-      const userData = {
-        fullName: data.fullName || `${data.companyName}`,
+      // Préparer les données pour l'inscription
+      const registerData: RegisterFormData = {
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName || undefined,
         companyName: data.companyName,
+        billingAddress: {
+          street: data.billingAddress,
+          city: "", // Ces valeurs seront remplies par l'autocomplétion
+          postal_code: "",
+          country: "",
+          formatted_address: data.billingAddress,
+          lat: mapCoords?.lat,
+          lng: mapCoords?.lng
+        },
         siret: data.siret.replace(/\s/g, ''),
-        vatNumber: data.tvaNumb || null,
-        billingAddress: data.billingAddress,
+        tvaNumb: data.tvaNumb || undefined,
         phone1: data.phone1,
-        phone2: data.phone2 || null,
-        licenseNumber: data.licenseNumber,
-        vatApplicable: data.role === 'chauffeur' ? data.tvaApplicable : true,
-        vehicleType: data.vehicleType,
+        phone2: data.phone2 || undefined,
+        gdprConsent: data.gdprConsent,
+        role: data.role,
+        tvaApplicable: data.role === 'chauffeur' ? data.tvaApplicable : undefined,
+        licenseNumber: data.licenseNumber || undefined,
+        vehicleType: data.vehicleType || undefined
       };
       
       // Appeler la fonction register du contexte d'authentification
-      await register(data.email, data.password, userData, data.role);
+      await registerUser(registerData);
       
-      // La redirection est gérée dans la fonction register
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.error('Registration failed: ' + (error.message || 'Please check your information and try again'));

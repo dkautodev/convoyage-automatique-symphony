@@ -1,5 +1,5 @@
 
-export type UserRole = 'client' | 'chauffeur' | 'admin';
+import { UserRole } from './supabase';
 
 export interface RegisterFormData {
   email: string;
@@ -15,12 +15,12 @@ export interface RegisterFormData {
     lng?: number;
   };
   siret: string;
-  vatNumber?: string;
+  tvaNumb?: string;
   phone1: string;
   phone2?: string;
   gdprConsent: boolean;
   role: UserRole;
-  vatApplicable?: boolean;
+  tvaApplicable?: boolean;
   licenseNumber?: string;
   vehicleType?: string;
   fullName?: string;

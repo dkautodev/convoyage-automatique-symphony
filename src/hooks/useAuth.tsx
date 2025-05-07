@@ -5,6 +5,7 @@ import { typedSupabase } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/supabase';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
+import { RegisterFormData } from '@/types/auth';
 
 // Type pour le profil utilisateur
 export type Profile = {
@@ -25,7 +26,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, userData: any, role?: UserRole) => Promise<void>;
+  register: (data: RegisterFormData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -179,26 +180,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction d'inscription
-  const register = async (
-    email: string, 
-    password: string, 
-    userData: any, 
-    role: UserRole = 'client'
-  ) => {
+  // Fonction d'inscription simplifiée qui s'appuie sur le trigger handle_new_user
+  const register = async (data: RegisterFormData) => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log("Données d'inscription:", { email, userData, role });
+      console.log("Données d'inscription:", data);
       
-      // Créer l'utilisateur dans Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+      // Créer l'utilisateur dans Supabase Auth avec les métadonnées nécessaires
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
         options: {
           data: {
-            role
+            role: data.role,
+            fullName: data.fullName || data.companyName,
+            companyName: data.companyName,
+            billingAddress: JSON.stringify(data.billingAddress), // Convertir l'objet en JSON
+            siret: data.siret.replace(/\s/g, ''),
+            vatNumber: data.tvaNumb || null,
+            vatApplicable: data.role === 'chauffeur' ? data.tvaApplicable : true,
+            licenseNumber: data.licenseNumber,
+            vehicleType: data.vehicleType,
+            phone1: data.phone1,
+            phone2: data.phone2 || null,
           }
         }
       });
@@ -208,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      if (data?.user) {
+      if (authData?.user) {
         toast.success('Inscription réussie ! Veuillez vous connecter.');
         navigate('/login');
       }

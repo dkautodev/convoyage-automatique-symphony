@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -23,9 +24,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 import AddressMap from '@/components/AddressMap';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
-import { UserRole, RegisterFormData } from '@/types/auth';
+import { UserRole } from '@/types/supabase';
 import { formatSiret } from '@/utils/validation';
 import { Eye, EyeOff, ArrowLeft, User, UserCog } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const registerSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -46,6 +48,9 @@ const registerSchema = z.object({
     message: 'You must agree to the terms and conditions',
   }),
   role: z.enum(['client', 'chauffeur', 'admin']),
+  fullName: z.string().optional(),
+  licenseNumber: z.string().optional(),
+  vehicleType: z.string().optional(),
 });
 
 type FormData = z.infer<typeof registerSchema>;
@@ -57,12 +62,15 @@ export default function Register() {
   const [selectedTab, setSelectedTab] = useState<UserRole>(initialRole);
   const [showPassword, setShowPassword] = useState(false);
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number} | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register } = useAuth();
   
   const form = useForm<FormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: '',
       password: '',
+      fullName: '',
       companyName: '',
       billingAddress: '',
       placeId: '',
@@ -73,6 +81,8 @@ export default function Register() {
       phone2: '',
       gdprConsent: false,
       role: initialRole,
+      licenseNumber: '',
+      vehicleType: '',
     },
   });
   
@@ -98,7 +108,6 @@ export default function Register() {
     form.setValue('placeId', placeId);
     
     // Simulate getting coordinates from Google Maps API
-    // In a real implementation, you'd get these from the Places API response
     setMapCoords({
       lat: 48.8566 + Math.random() * 0.01,
       lng: 2.3522 + Math.random() * 0.01,
@@ -112,30 +121,32 @@ export default function Register() {
 
   const onSubmit = async (data: FormData) => {
     try {
+      setIsSubmitting(true);
       console.log("Registration data:", data);
       
-      // This is where you would integrate with Supabase
-      // const { user, error } = await supabase.auth.signUp({
-      //   email: data.email,
-      //   password: data.password,
-      // });
+      // Préparer les données utilisateur selon le rôle
+      const userData = {
+        fullName: data.fullName || `${data.companyName}`,
+        companyName: data.companyName,
+        siret: data.siret.replace(/\s/g, ''),
+        vatNumber: data.tvaNumb || null,
+        billingAddress: data.billingAddress,
+        phone1: data.phone1,
+        phone2: data.phone2 || null,
+        licenseNumber: data.licenseNumber,
+        vatApplicable: data.role === 'chauffeur' ? data.tvaApplicable : true,
+        vehicleType: data.vehicleType,
+      };
       
-      // if (error) throw error;
+      // Appeler la fonction register du contexte d'authentification
+      await register(data.email, data.password, userData, data.role);
       
-      // Add user metadata to appropriate table based on role
-      // if (data.role === 'client') {
-      //   await supabase.from('clients').insert({...})
-      // } else if (data.role === 'chauffeur') {
-      //   await supabase.from('drivers').insert({...})
-      // } ...
-      
-      toast.success(`${data.role.charAt(0).toUpperCase() + data.role.slice(1)} registration successful!`);
-      
-      // Navigate to the appropriate dashboard based on role
-      navigate(`/dashboard`);
-    } catch (error) {
+      // La redirection est gérée dans la fonction register
+    } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      toast.error('Registration failed: ' + (error.message || 'Please check your information and try again'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -219,6 +230,21 @@ export default function Register() {
                                 </div>
                               </FormControl>
                               <PasswordStrengthMeter password={field.value} />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Full Name */}
+                        <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="John Doe" {...field} />
+                              </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -364,9 +390,9 @@ export default function Register() {
                       <Button 
                         type="submit" 
                         className="w-full bg-client hover:bg-client-dark"
-                        disabled={form.formState.isSubmitting}
+                        disabled={isSubmitting}
                       >
-                        {form.formState.isSubmitting ? (
+                        {isSubmitting ? (
                           <div className="flex items-center gap-2">
                             <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
                             <span>Creating account...</span>
@@ -429,6 +455,36 @@ export default function Register() {
                           )}
                         />
                         
+                        {/* Full Name */}
+                        <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="John Doe" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* License Number */}
+                        <FormField
+                          control={form.control}
+                          name="licenseNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>License Number</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your driver license number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
                         {/* Company name */}
                         <FormField
                           control={form.control}
@@ -438,6 +494,21 @@ export default function Register() {
                               <FormLabel>Company Name</FormLabel>
                               <FormControl>
                                 <Input placeholder="Your Company Ltd" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Vehicle Type */}
+                        <FormField
+                          control={form.control}
+                          name="vehicleType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Vehicle Type</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g. berline" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -594,9 +665,9 @@ export default function Register() {
                       <Button 
                         type="submit" 
                         className="w-full bg-driver hover:bg-driver-dark"
-                        disabled={form.formState.isSubmitting}
+                        disabled={isSubmitting}
                       >
-                        {form.formState.isSubmitting ? (
+                        {isSubmitting ? (
                           <div className="flex items-center gap-2">
                             <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
                             <span>Creating account...</span>
@@ -630,5 +701,4 @@ export default function Register() {
         </div>
       </div>
     </div>
-  );
-}
+  

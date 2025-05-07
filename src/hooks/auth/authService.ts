@@ -119,24 +119,34 @@ export const loginUser = async (email: string, password: string) => {
 
 // Fonction pour l'inscription simplifiée
 export const registerBasicUser = async (data: BasicRegisterFormData) => {
-  const { email, password, role } = data;
-  
-  const { data: authData, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        email,
-        role
+  try {
+    const { email, password, role } = data;
+    
+    console.log("Tentative d'inscription avec:", { email, role });
+    
+    const { data: authData, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          // Autres métadonnées si nécessaire
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
+    });
+    
+    if (error) {
+      console.error("Erreur d'inscription:", error);
+      throw error;
     }
-  });
-  
-  if (error) {
-    throw error;
+    
+    console.log("Résultat inscription:", authData);
+    return authData;
+  } catch (err) {
+    console.error("Erreur dans registerBasicUser:", err);
+    throw err;
   }
-  
-  return authData;
 };
 
 // Fonction pour compléter le profil client - CORRECTION DU PROBLÈME DE FONCTION MANQUANTE

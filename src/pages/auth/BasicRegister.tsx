@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +40,12 @@ const basicRegisterSchema = z.object({
     message: "Les mots de passe ne correspondent pas",
     path: ["passwordConfirmation"],
   }
+).refine(
+  (data) => data.role !== 'admin' || (data.role === 'admin' && data.adminToken && data.adminToken.length >= 6),
+  {
+    message: "Un token d'invitation valide est requis pour les comptes admin",
+    path: ["adminToken"],
+  }
 );
 
 type FormData = z.infer<typeof basicRegisterSchema>;
@@ -70,13 +78,19 @@ export default function BasicRegister() {
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
+      console.log("Données d'inscription:", data);
+      
       await basicRegister({
         email: data.email,
         password: data.password,
-        passwordConfirmation: data.passwordConfirmation,
         role: data.role,
         adminToken: data.adminToken
       });
+      
+      // La redirection est gérée par basicRegister
+    } catch (error: any) {
+      console.error("Erreur d'inscription:", error);
+      toast.error(`Erreur lors de l'inscription: ${error.message || "Erreur inconnue"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -207,7 +221,10 @@ export default function BasicRegister() {
                               <Input placeholder="Entrez le token d'invitation admin" {...field} />
                             </FormControl>
                             <FormDescription>
-                              Un token est nécessaire pour s'inscrire en tant qu'admin
+                              Un token est nécessaire pour s'inscrire en tant qu'admin.
+                              <Link to="/admin-invite" className="block text-primary hover:underline mt-1">
+                                Générer un nouveau token
+                              </Link>
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -271,6 +288,10 @@ export default function BasicRegister() {
                   Connectez-vous ici
                 </Link>
               </p>
+              {/* Lien pour générer un token admin */}
+              <Link to="/admin-invite" className="text-sm text-primary hover:underline mt-2">
+                Générer un token d'invitation admin
+              </Link>
             </CardFooter>
           </Card>
         </div>

@@ -546,6 +546,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_owner_of_profile: {
+        Args: { profile_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       document_type: "devis" | "facture" | "fiche_mission"

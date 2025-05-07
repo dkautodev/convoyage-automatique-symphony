@@ -1,4 +1,3 @@
-
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,34 +123,26 @@ export const calculateAddressDistance = async (originLat: number, originLng: num
 // Fonction pour vérifier un token d'invitation admin
 export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
+    console.log("Verification du token admin:", token, "pour l'email:", email);
+    
+    const { data: tokenData, error } = await supabase
       .from('admin_invitation_tokens')
       .select('*')
       .eq('token', token)
       .eq('email', email)
       .eq('used', false)
-      .single();
-      
-    if (error || !data) return false;
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
     
-    // Vérifier si le token n'a pas expiré
-    const expiryDate = new Date(data.expires_at);
-    const now = new Date();
+    if (error) {
+      console.error('Erreur lors de la vérification du token:', error);
+      return false;
+    }
     
-    if (now > expiryDate) return false;
-    
-    // Marquer le token comme utilisé
-    await supabase
-      .from('admin_invitation_tokens')
-      .update({
-        used: true,
-        used_at: new Date().toISOString()
-      })
-      .eq('id', data.id);
-      
-    return true;
-  } catch (error) {
-    console.error("Erreur lors de la vérification du token admin:", error);
+    console.log("Résultat de vérification du token:", tokenData);
+    return tokenData !== null;
+  } catch (err) {
+    console.error('Erreur lors de la vérification du token admin:', err);
     return false;
   }
 };

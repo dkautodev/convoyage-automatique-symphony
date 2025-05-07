@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables, TablesInsert } from '@/types/database';
 
 const inviteFormSchema = z.object({
   email: z.string().email({ message: "Veuillez saisir un email valide" }),
@@ -63,16 +64,27 @@ export default function AdminInvite() {
       const token = generateUniqueToken(12);
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + data.expiryDays);
+      
+      const currentUser = supabase.auth.getUser();
+      const userId = (await currentUser).data.user?.id;
+      
+      if (!userId) {
+        throw new Error("Vous devez être connecté pour créer un token d'invitation");
+      }
+
+      // Préparer les données d'insertion
+      const tokenData: TablesInsert<'admin_invitation_tokens'> = { 
+        token,
+        email: data.email,
+        expires_at: expiryDate.toISOString(),
+        used: false,
+        created_by: userId
+      };
 
       // Enregistrer le token dans la base de données Supabase
-      const { error } = await supabase.from('admin_tokens').insert([
-        { 
-          token,
-          email: data.email,
-          expires_at: expiryDate.toISOString(),
-          used: false
-        },
-      ]);
+      const { error } = await supabase
+        .from('admin_invitation_tokens')
+        .insert(tokenData);
 
       if (error) {
         throw error;

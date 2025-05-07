@@ -1,23 +1,15 @@
+
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { typedSupabase } from '@/types/database';
+import { Tables, TablesInsert } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole, VehicleCategory } from '@/types/supabase';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
 import { RegisterFormData, BasicRegisterFormData, ClientProfileFormData, DriverProfileFormData } from '@/types/auth';
 
 // Type pour le profil utilisateur
-export type Profile = {
-  id: string;
-  email: string;
-  full_name: string | null;
-  role: UserRole;
-  created_at: string;
-  last_login: string | null;
-  active: boolean;
-  profile_completed: boolean;
-};
+export type Profile = Tables<'profiles'>;
 
 // Type pour le contexte d'authentification
 interface AuthContextType {
@@ -62,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Récupérer le profil de l'utilisateur
   const fetchProfile = useCallback(async (userId: string) => {
     try {
-      const { data, error: profileError } = await typedSupabase
+      const { data, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -77,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Profil récupéré:", data);
         
         // Mettre à jour le timestamp de dernière connexion
-        await typedSupabase
+        await supabase
           .from('profiles')
           .update({ last_login: new Date().toISOString() })
           .eq('id', userId);
@@ -249,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Données du profil client:", data);
       
       // Mettre à jour le profil utilisateur
-      const { error: updateError } = await typedSupabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           full_name: data.fullName,
@@ -260,18 +252,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (updateError) throw updateError;
       
       // Insérer ou mettre à jour les données client
-      const { error: clientError } = await typedSupabase
+      const clientData: TablesInsert<'clients'> = {
+        id: user.id,
+        company_name: data.companyName,
+        billing_address: data.billingAddress,
+        siret: data.siret,
+        vat_number: data.tvaNumb || null,
+        phone1: data.phone1,
+        phone2: data.phone2 || null,
+        full_name: data.fullName
+      };
+      
+      const { error: clientError } = await supabase
         .from('clients')
-        .upsert({
-          id: user.id,
-          company_name: data.companyName,
-          billing_address: data.billingAddress,
-          siret: data.siret,
-          vat_number: data.tvaNumb || null,
-          phone1: data.phone1,
-          phone2: data.phone2 || null,
-          full_name: data.fullName
-        });
+        .upsert(clientData);
         
       if (clientError) throw clientError;
       
@@ -302,7 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Données du profil chauffeur:", data);
       
       // Mettre à jour le profil utilisateur
-      const { error: updateError } = await typedSupabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           full_name: data.fullName,
@@ -313,21 +307,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (updateError) throw updateError;
       
       // Insérer ou mettre à jour les données chauffeur
-      // S'assurer que le vehicleType est bien du type VehicleCategory
-      const { error: driverError } = await typedSupabase
+      const driverData: TablesInsert<'drivers'> = {
+        id: user.id,
+        full_name: data.fullName,
+        company_name: data.companyName,
+        billing_address: data.billingAddress,
+        license_number: data.licenseNumber,
+        vat_applicable: data.tvaApplicable,
+        vat_number: data.tvaNumb || null,
+        vehicle_type: data.vehicleType as VehicleCategory,
+        phone1: data.phone1,
+        phone2: data.phone2 || null
+      };
+      
+      const { error: driverError } = await supabase
         .from('drivers')
-        .upsert({
-          id: user.id,
-          full_name: data.fullName,
-          company_name: data.companyName,
-          billing_address: data.billingAddress,
-          license_number: data.licenseNumber,
-          vat_applicable: data.tvaApplicable,
-          vat_number: data.tvaNumb || null,
-          vehicle_type: data.vehicleType as VehicleCategory, // Utiliser un cast explicite
-          phone1: data.phone1,
-          phone2: data.phone2 || null
-        });
+        .upsert(driverData);
         
       if (driverError) throw driverError;
       
@@ -439,7 +434,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fonction pour vérifier un token d'invitation admin
   const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
     try {
-      const { data, error } = await typedSupabase
+      const { data, error } = await supabase
         .from('admin_invitation_tokens')
         .select('*')
         .eq('token', token)
@@ -456,7 +451,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (now > expiryDate) return false;
       
       // Marquer le token comme utilisé
-      await typedSupabase
+      await supabase
         .from('admin_invitation_tokens')
         .update({
           used: true,
@@ -506,7 +501,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Utilisateur non connecté');
       }
       
-      const { error } = await typedSupabase
+      const { error } = await supabase
         .from('profiles')
         .update(data)
         .eq('id', user.id);

@@ -39,7 +39,7 @@ export default function Home() {
   
   // Si l'utilisateur est déjà connecté, rediriger vers son tableau de bord
   useEffect(() => {
-    if (user && profile) {
+    if (!loading && user && profile) {
       console.log("Redirection depuis Home vers le tableau de bord:", profile.role);
       switch (profile.role) {
         case 'admin':
@@ -53,7 +53,7 @@ export default function Home() {
           break;
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, navigate, loading]);
   
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -70,15 +70,17 @@ export default function Home() {
       // La redirection se fera dans l'effet useEffect ci-dessus
     } catch (err) {
       console.error("Erreur lors de la connexion:", err);
+      toast.error("Erreur lors de la connexion. Veuillez vérifier vos identifiants.");
     }
   };
 
-  if (loading) {
+  // Affichage d'un écran de chargement adapté
+  if (loading && user) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="h-12 w-12 border-t-4 border-b-4 border-primary rounded-full animate-spin"></div>
-          <p className="mt-4 text-muted-foreground">Chargement...</p>
+          <p className="mt-4 text-muted-foreground">Chargement de votre profil...</p>
         </div>
       </div>
     );
@@ -194,7 +196,7 @@ export default function Home() {
             <CardFooter className="flex flex-col items-center border-t pt-6">
               <p className="text-sm text-muted-foreground">
                 Vous n'avez pas encore de compte ?{' '}
-                <Link to="/register" className="text-primary hover:underline">
+                <Link to="/signup" className="text-primary hover:underline">
                   Inscrivez-vous ici
                 </Link>
               </p>

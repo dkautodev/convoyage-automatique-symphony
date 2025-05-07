@@ -38,7 +38,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
             
-            {/* Rediriger les anciennes routes d'inscription vers la nouvelle */}
+            {/* Routes d'inscription - redirection des anciennes routes vers /signup */}
             <Route path="/register" element={<Navigate to="/signup" replace />} />
             <Route path="/register-admin" element={<Navigate to="/signup" replace />} />
             <Route path="/admin-invite" element={<Navigate to="/signup" replace />} />
@@ -53,26 +53,20 @@ const App = () => (
             {/* Routes du dashboard admin */}
             <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>
               <Route path="dashboard" element={<AdminDashboard />} />
-              {/* D'autres routes admin à venir */}
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
             
             {/* Routes du dashboard client */}
             <Route path="/client" element={<DashboardLayout allowedRoles="client" />}>
               <Route path="dashboard" element={<ClientDashboard />} />
-              {/* D'autres routes client à venir */}
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
             
             {/* Routes du dashboard chauffeur */}
             <Route path="/driver" element={<DashboardLayout allowedRoles="chauffeur" />}>
               <Route path="dashboard" element={<DriverDashboard />} />
-              {/* D'autres routes chauffeur à venir */}
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>
-            
-            {/* Redirection générique vers le tableau de bord approprié */}
-            <Route path="/dashboard" element={<Navigate to="/client/dashboard" replace />} />
             
             {/* Route de secours */}
             <Route path="*" element={<NotFound />} />

@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_invitation_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token: string
+          used: boolean
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          token: string
+          used?: boolean
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used?: boolean
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       admin_tokens: {
         Row: {
           created_at: string
@@ -515,6 +545,7 @@ export type Database = {
           full_name: string | null
           id: string
           last_login: string | null
+          profile_completed: boolean
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
@@ -524,6 +555,7 @@ export type Database = {
           full_name?: string | null
           id: string
           last_login?: string | null
+          profile_completed?: boolean
           role: Database["public"]["Enums"]["user_role"]
         }
         Update: {
@@ -533,6 +565,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_login?: string | null
+          profile_completed?: boolean
           role?: Database["public"]["Enums"]["user_role"]
         }
         Relationships: []

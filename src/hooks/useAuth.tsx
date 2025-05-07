@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -5,7 +6,7 @@ import { typedSupabase } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { UserRole } from '@/types/supabase';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
-import { RegisterFormData } from '@/types/auth';
+import { RegisterFormData, BasicRegisterFormData, ClientProfileFormData, DriverProfileFormData } from '@/types/auth';
 
 // Type pour le profil utilisateur
 export type Profile = {
@@ -16,6 +17,7 @@ export type Profile = {
   created_at: string;
   last_login: string | null;
   active: boolean;
+  profile_completed: boolean;
 };
 
 // Type pour le contexte d'authentification
@@ -26,10 +28,15 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterFormData) => Promise<void>;
+  basicRegister: (data: BasicRegisterFormData) => Promise<void>;
+  completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
+  completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
+  register: (data: RegisterFormData) => Promise<void>; // Gardé pour rétrocompatibilité
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  verifyAdminToken: (token: string, email: string) => Promise<boolean>;
+  uploadDriverDocument: (file: File, type: string) => Promise<string | null>;
 }
 
 // Création du contexte d'authentification
@@ -67,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       if (data) {
-        setProfile(data);
+        setProfile(data as Profile);
         console.log("Profil récupéré:", data);
         
         // Mettre à jour le timestamp de dernière connexion
@@ -155,21 +162,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Récupérer le profil après connexion
         await fetchProfile(data.user.id);
         
-        // Obtenir le rôle depuis le profil que nous venons de récupérer
-        const { data: profileData } = await typedSupabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-        
-        if (profileData) {
-          // Rediriger vers le tableau de bord approprié
-          redirectToDashboard(profileData.role);
-          toast.success('Connexion réussie !');
-        } else {
-          // Si aucun profil n'est trouvé, rediriger vers la page d'accueil
-          navigate('/home');
-          toast.error('Profil utilisateur non trouvé');
+        if (profile) {
+          // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
+          if (!profile.profile_completed) {
+            navigateToProfileCompletion(profile.role);
+            toast.success('Veuillez compléter votre profil');
+          } else {
+            // Sinon rediriger vers le tableau de bord approprié
+            redirectToDashboard(profile.role);
+            toast.success('Connexion réussie !');
+          }
         }
       }
     } catch (err: any) {
@@ -180,7 +182,213 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction d'inscription mise à jour pour corriger les problèmes
+  // Nouvelle fonction pour l'inscription simplifiée
+  const basicRegister = async (data: BasicRegisterFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log("Données d'inscription de base:", data);
+      
+      // Vérifier le token admin si nécessaire
+      if (data.role === 'admin' && data.adminToken) {
+        const isValidToken = await verifyAdminToken(data.adminToken, data.email);
+        if (!isValidToken) {
+          throw new Error('Token d\'invitation admin invalide ou expiré');
+        }
+      }
+      
+      // Préparer les métadonnées utilisateur
+      const userMetadata = {
+        role: data.role,
+      };
+      
+      console.log("Données envoyées à Supabase:", {
+        email: data.email,
+        password: data.password,
+        options: { data: userMetadata }
+      });
+      
+      // Créer l'utilisateur dans Supabase Auth
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: userMetadata,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+      
+      if (error) {
+        console.error("Erreur d'inscription:", error);
+        throw error;
+      }
+      
+      if (authData?.user) {
+        toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
+        navigate('/register-confirmation');
+      }
+    } catch (err: any) {
+      console.error("Erreur d'inscription:", err);
+      setError(err.message);
+      toast.error('Échec de l\'inscription: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour compléter le profil client
+  const completeClientProfile = async (data: ClientProfileFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      console.log("Données du profil client:", data);
+      
+      // Mettre à jour le profil utilisateur
+      const { error: updateError } = await typedSupabase
+        .from('profiles')
+        .update({
+          full_name: data.fullName,
+          profile_completed: true
+        })
+        .eq('id', user.id);
+        
+      if (updateError) throw updateError;
+      
+      // Insérer ou mettre à jour les données client
+      const { error: clientError } = await typedSupabase
+        .from('clients')
+        .upsert({
+          id: user.id,
+          company_name: data.companyName,
+          billing_address: data.billingAddress,
+          siret: data.siret,
+          vat_number: data.tvaNumb || null,
+          phone1: data.phone1,
+          phone2: data.phone2 || null,
+          full_name: data.fullName
+        });
+        
+      if (clientError) throw clientError;
+      
+      // Mettre à jour le profil localement
+      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
+      
+      toast.success('Profil complété avec succès');
+      redirectToDashboard('client');
+      
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la complétion du profil: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour compléter le profil chauffeur
+  const completeDriverProfile = async (data: DriverProfileFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      console.log("Données du profil chauffeur:", data);
+      
+      // Mettre à jour le profil utilisateur
+      const { error: updateError } = await typedSupabase
+        .from('profiles')
+        .update({
+          full_name: data.fullName,
+          profile_completed: true
+        })
+        .eq('id', user.id);
+        
+      if (updateError) throw updateError;
+      
+      // Insérer ou mettre à jour les données chauffeur
+      const { error: driverError } = await typedSupabase
+        .from('drivers')
+        .upsert({
+          id: user.id,
+          full_name: data.fullName,
+          company_name: data.companyName,
+          billing_address: data.billingAddress,
+          license_number: data.licenseNumber,
+          vat_applicable: data.tvaApplicable,
+          vat_number: data.tvaNumb || null,
+          vehicle_type: data.vehicleType,
+          phone1: data.phone1,
+          phone2: data.phone2 || null
+        });
+        
+      if (driverError) throw driverError;
+      
+      // Télécharger les documents
+      const uploadPromises: Promise<string | null>[] = [];
+      const documents = data.documents;
+      
+      if (documents.kbis) {
+        uploadPromises.push(uploadDriverDocument(documents.kbis, 'kbis'));
+      }
+      if (documents.driverLicenseFront) {
+        uploadPromises.push(uploadDriverDocument(documents.driverLicenseFront, 'license_front'));
+      }
+      if (documents.driverLicenseBack) {
+        uploadPromises.push(uploadDriverDocument(documents.driverLicenseBack, 'license_back'));
+      }
+      if (documents.vigilanceAttestation) {
+        uploadPromises.push(uploadDriverDocument(documents.vigilanceAttestation, 'vigilance_attestation'));
+      }
+      if (documents.idDocument) {
+        uploadPromises.push(uploadDriverDocument(documents.idDocument, 'id_document'));
+      }
+      
+      await Promise.all(uploadPromises);
+      
+      // Mettre à jour le profil localement
+      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
+      
+      toast.success('Profil complété avec succès');
+      redirectToDashboard('chauffeur');
+      
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la complétion du profil: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour télécharger un document chauffeur
+  const uploadDriverDocument = async (file: File, type: string): Promise<string | null> => {
+    if (!user) return null;
+    
+    try {
+      const fileName = `${user.id}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('driver_documents')
+        .upload(fileName, file);
+        
+      if (uploadError) throw uploadError;
+      
+      return data?.path || null;
+    } catch (err: any) {
+      console.error(`Erreur lors du téléchargement du document ${type}:`, err);
+      toast.error(`Échec du téléchargement du document ${type}`);
+      return null;
+    }
+  };
+
+  // Fonction d'inscription (gardée pour rétrocompatibilité)
   const register = async (data: RegisterFormData) => {
     try {
       setLoading(true);
@@ -192,15 +400,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userMetadata = {
         role: data.role,
         fullName: data.fullName || data.companyName,
-        companyName: data.companyName,
-        billingAddress: data.billingAddress,
-        siret: data.siret.replace(/\s/g, ''),
-        vatNumber: data.tvaNumb || null,
-        vatApplicable: data.role === 'chauffeur' ? data.tvaApplicable : true,
-        licenseNumber: data.licenseNumber,
-        vehicleType: data.vehicleType,
-        phone1: data.phone1,
-        phone2: data.phone2 || null,
       };
 
       console.log("Données envoyées à Supabase:", {
@@ -214,7 +413,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: data.email,
         password: data.password,
         options: {
-          data: userMetadata
+          data: userMetadata,
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       
@@ -224,8 +424,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       if (authData?.user) {
-        toast.success('Inscription réussie ! Veuillez vous connecter.');
-        navigate('/login');
+        toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
+        navigate('/register-confirmation');
       }
     } catch (err: any) {
       console.error("Erreur d'inscription:", err);
@@ -233,6 +433,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.error('Échec de l\'inscription: ' + err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fonction pour vérifier un token d'invitation admin
+  const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await typedSupabase
+        .from('admin_invitation_tokens')
+        .select('*')
+        .eq('token', token)
+        .eq('email', email)
+        .eq('used', false)
+        .single();
+        
+      if (error || !data) return false;
+      
+      // Vérifier si le token n'a pas expiré
+      const expiryDate = new Date(data.expires_at);
+      const now = new Date();
+      
+      if (now > expiryDate) return false;
+      
+      // Marquer le token comme utilisé
+      await typedSupabase
+        .from('admin_invitation_tokens')
+        .update({
+          used: true,
+          used_at: new Date().toISOString()
+        })
+        .eq('id', data.id);
+        
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification du token admin:", error);
+      return false;
     }
   };
 
@@ -332,6 +567,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Fonction pour rediriger vers la page d'achèvement de profil appropriée
+  const navigateToProfileCompletion = (role: UserRole) => {
+    switch (role) {
+      case 'client':
+        navigate('/complete-client-profile');
+        break;
+      case 'chauffeur':
+        navigate('/complete-driver-profile');
+        break;
+      case 'admin':
+        // Les admins n'ont pas besoin de compléter leur profil
+        navigate('/admin/dashboard');
+        break;
+      default:
+        navigate('/home');
+    }
+  };
+
   // Contexte à partager
   const value = {
     user,
@@ -340,10 +593,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     login,
-    register,
+    basicRegister,
+    completeClientProfile,
+    completeDriverProfile,
+    register, // Gardé pour rétrocompatibilité
     logout,
     updateProfile,
     resetPassword,
+    verifyAdminToken,
+    uploadDriverDocument
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

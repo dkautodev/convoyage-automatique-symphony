@@ -1,6 +1,64 @@
 
 import { UserRole } from './supabase';
 
+// Type pour le formulaire initial d'inscription
+export interface BasicRegisterFormData {
+  email: string;
+  password: string;
+  role: UserRole;
+  adminToken?: string; // Optionnel, utilisé uniquement pour les inscriptions admin
+}
+
+// Type pour le profil complet du client
+export interface ClientProfileFormData {
+  companyName: string;
+  fullName: string;
+  billingAddress: {
+    street: string;
+    city: string;
+    postal_code: string;
+    country: string;
+    formatted_address?: string;
+    lat?: number;
+    lng?: number;
+  };
+  siret: string;
+  tvaNumb?: string;
+  phone1: string;
+  phone2?: string;
+}
+
+// Type pour le profil complet du chauffeur
+export interface DriverProfileFormData {
+  companyName: string;
+  fullName: string;
+  billingAddress: {
+    street: string;
+    city: string;
+    postal_code: string;
+    country: string;
+    formatted_address?: string;
+    lat?: number;
+    lng?: number;
+  };
+  siret: string;
+  tvaApplicable: boolean;
+  tvaNumb?: string;
+  phone1: string;
+  phone2?: string;
+  licenseNumber: string;
+  vehicleType: string;
+  idNumber: string; // Numéro CNI/Passeport
+  documents: {
+    kbis?: File;
+    driverLicenseFront?: File;
+    driverLicenseBack?: File;
+    vigilanceAttestation?: File;
+    idDocument?: File;
+  };
+}
+
+// Type pour le formulaire d'inscription complet (pour compatibilité avec le code existant)
 export interface RegisterFormData {
   email: string;
   password: string;

@@ -12,6 +12,13 @@ import RegisterAdmin from "./pages/RegisterAdmin";
 import AdminInvite from "./pages/AdminInvite";
 import NotFound from "./pages/NotFound";
 
+// Nouvelles pages du processus d'inscription
+import BasicRegister from "./pages/auth/BasicRegister";
+import RegisterConfirmation from "./pages/auth/RegisterConfirmation";
+import AuthCallback from "./pages/auth/AuthCallback";
+import CompleteClientProfile from "./pages/auth/CompleteClientProfile";
+import CompleteDriverProfile from "./pages/auth/CompleteDriverProfile";
+
 // Layouts
 import DashboardLayout from "./layouts/DashboardLayout";
 
@@ -33,9 +40,18 @@ const App = () => (
             {/* Routes publiques */}
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home" element={<Home />} />
+            
+            {/* Anciennes routes d'inscription (à maintenir pour rétrocompatibilité) */}
             <Route path="/register" element={<Register />} />
             <Route path="/register-admin" element={<RegisterAdmin />} />
             <Route path="/admin-invite" element={<AdminInvite />} />
+            
+            {/* Nouvelles routes d'inscription */}
+            <Route path="/signup" element={<BasicRegister />} />
+            <Route path="/register-confirmation" element={<RegisterConfirmation />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
+            <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
             
             {/* Routes du dashboard admin */}
             <Route path="/admin" element={<DashboardLayout allowedRoles="admin" />}>

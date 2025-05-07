@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -26,27 +26,35 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
   
   console.log("DashboardLayout - État de l'authentification:", { user, profile, loading });
   
   // Vérifier si le profil est complet
   useEffect(() => {
-    if (profile && !profile.profile_completed) {
-      console.log("Profil non complété, redirection vers la page d'achèvement");
+    if (!loading && profile) {
+      console.log("Vérification du profil complété:", { profile_completed: profile.profile_completed, role: profile.role });
       
-      // Redirection vers la page appropriée selon le rôle
-      if (profile.role === 'client') {
-        navigate('/complete-client-profile');
-        toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
-      } else if (profile.role === 'chauffeur') {
-        navigate('/complete-driver-profile');
-        toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
+      if (!profile.profile_completed) {
+        console.log("Profil non complété, redirection vers la page d'achèvement");
+        
+        // Redirection vers la page appropriée selon le rôle
+        if (profile.role === 'client') {
+          toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
+          navigate('/complete-client-profile', { replace: true });
+        } else if (profile.role === 'chauffeur') {
+          toast.warning('Veuillez compléter votre profil pour accéder à votre tableau de bord');
+          navigate('/complete-driver-profile', { replace: true });
+        }
       }
+      setIsCheckingProfile(false);
+    } else if (!loading) {
+      setIsCheckingProfile(false);
     }
-  }, [profile, navigate]);
+  }, [profile, navigate, loading]);
   
   // Si l'authentification est en cours, afficher un écran de chargement
-  if (loading) {
+  if (loading || isCheckingProfile) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

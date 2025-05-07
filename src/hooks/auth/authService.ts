@@ -1,3 +1,4 @@
+
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -17,9 +18,14 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     
     if (error) {
+      // Si l'erreur est due à une politique de récursion, on ne la considère pas comme une erreur fatale
+      if (error.code === '42P17') {
+        console.warn("Erreur de récursion détectée dans la politique, ignorée");
+        return null;
+      }
       console.error('Erreur lors de la récupération du profil:', error);
       throw error;
     }

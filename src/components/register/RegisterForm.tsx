@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
-import { UserRole, VehicleCategory } from '@/types/supabase';
+import { UserRole } from '@/types/supabase';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,40 +10,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useNavigate, Link } from 'react-router-dom';
-import ProfileFields from './ProfileFields';
-import TaxFields from './TaxFields';
-import DriverFields from './DriverFields';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface RegisterFormProps {}
 
 const RegisterForm: React.FC<RegisterFormProps> = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [siret, setSiret] = useState('');
-  const [phone1, setPhone1] = useState('');
-  const [phone2, setPhone2] = useState('');
   const [gdprConsent, setGdprConsent] = useState(false);
   const [role, setRole] = useState<UserRole>('client');
-  const [tvaApplicable, setTvaApplicable] = useState(false);
-  const [tvaNumb, setTvaNumb] = useState('');
-  const [licenseNumber, setLicenseNumber] = useState('');
-  const [vehicleType, setVehicleType] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleRoleChange = (newRole: UserRole) => {
-    setRole(newRole);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Validation côté client (vous pouvez ajouter des validations plus robustes)
+    // Validation côté client
     if (!email || !password || !gdprConsent) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
@@ -52,65 +37,26 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
     setLoading(true);
 
     try {
-      if (role === 'chauffeur') {
-        await register({
-          email,
-          password,
-          companyName,
-          siret,
-          phone1,
-          phone2,
-          gdprConsent,
-          role,
-          tvaApplicable,
-          tvaNumb,
-          licenseNumber,
-          vehicleType: vehicleType as VehicleCategory,
-        });
-      } else {
-        await register({
-          email,
-          password,
-          companyName,
-          siret,
-          phone1,
-          phone2,
-          gdprConsent,
-          role,
-          fullName,
-        });
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const register = async (data: any) => {
-    try {
-      setLoading(true);
-      setError(null);
-
+      // Préparer les métadonnées utilisateur
       const userMetadata = {
-        role: data.role,
-        fullName: data.fullName || data.companyName,
+        role: role,
       };
 
+      // Inscription simpliée avec seulement email, mot de passe et rôle
       const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+        email: email,
+        password: password,
         options: {
           data: userMetadata,
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
-
+      
       if (error) {
         console.error("Erreur d'inscription:", error);
         throw error;
       }
-
+      
       if (authData?.user) {
         toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
         navigate('/register-confirmation');
@@ -160,32 +106,23 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
             </div>
           </div>
           
-          <ProfileFields 
-            fullName={fullName} 
-            setFullName={setFullName} 
-            companyName={companyName} 
-            setCompanyName={setCompanyName}
-            siret={siret}
-            setSiret={setSiret}
-            phone1={phone1}
-            setPhone1={setPhone1}
-            phone2={phone2}
-            setPhone2={setPhone2}
-          />
-
-          <TaxFields 
-            tvaApplicable={tvaApplicable}
-            setTvaApplicable={setTvaApplicable}
-            tvaNumb={tvaNumb}
-            setTvaNumb={setTvaNumb}
-          />
-
-          <DriverFields 
-            licenseNumber={licenseNumber}
-            setLicenseNumber={setLicenseNumber}
-            vehicleType={vehicleType}
-            setVehicleType={setVehicleType}
-          />
+          <div className="space-y-2">
+            <Label>Type de compte</Label>
+            <RadioGroup 
+              value={role} 
+              onValueChange={(value) => setRole(value as UserRole)}
+              className="flex flex-col space-y-1"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="client" id="client" />
+                <Label htmlFor="client">Client</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="chauffeur" id="chauffeur" />
+                <Label htmlFor="chauffeur">Chauffeur</Label>
+              </div>
+            </RadioGroup>
+          </div>
 
           <div className="flex items-center space-x-2">
             <Checkbox

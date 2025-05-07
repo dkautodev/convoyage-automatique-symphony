@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -181,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction d'inscription mise à jour pour inclure tous les champs
+  // Fonction d'inscription mise à jour pour corriger les problèmes
   const register = async (data: RegisterFormData) => {
     try {
       setLoading(true);
@@ -189,24 +188,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Données d'inscription:", data);
       
+      // Préparer les métadonnées utilisateur
+      const userMetadata = {
+        role: data.role,
+        fullName: data.fullName || data.companyName,
+        companyName: data.companyName,
+        billingAddress: data.billingAddress,
+        siret: data.siret.replace(/\s/g, ''),
+        vatNumber: data.tvaNumb || null,
+        vatApplicable: data.role === 'chauffeur' ? data.tvaApplicable : true,
+        licenseNumber: data.licenseNumber,
+        vehicleType: data.vehicleType,
+        phone1: data.phone1,
+        phone2: data.phone2 || null,
+      };
+
+      console.log("Données envoyées à Supabase:", {
+        email: data.email,
+        password: data.password,
+        options: { data: userMetadata }
+      });
+      
       // Créer l'utilisateur dans Supabase Auth avec les métadonnées nécessaires
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
-          data: {
-            role: data.role,
-            fullName: data.fullName || data.companyName,
-            companyName: data.companyName,
-            billingAddress: JSON.stringify(data.billingAddress), // Convertir l'objet en JSON
-            siret: data.siret.replace(/\s/g, ''),
-            vatNumber: data.tvaNumb || null,
-            vatApplicable: data.role === 'chauffeur' ? data.tvaApplicable : true,
-            licenseNumber: data.licenseNumber,
-            vehicleType: data.vehicleType,
-            phone1: data.phone1,
-            phone2: data.phone2 || null,
-          }
+          data: userMetadata
         }
       });
       

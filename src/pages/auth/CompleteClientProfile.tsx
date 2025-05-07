@@ -39,6 +39,11 @@ type FormData = z.infer<typeof clientProfileSchema>;
 
 export default function CompleteClientProfile() {
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number} | null>(null);
+  const [addressDetails, setAddressDetails] = useState<{
+    city: string;
+    postal_code: string;
+    country: string;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { completeClientProfile, profile } = useAuth();
   
@@ -60,11 +65,42 @@ export default function CompleteClientProfile() {
     form.setValue('billingAddress', address);
     form.setValue('placeId', placeId);
     
-    // Simuler l'obtention des coordonnées depuis l'API Google Maps
-    setMapCoords({
-      lat: 48.8566 + Math.random() * 0.01,
-      lng: 2.3522 + Math.random() * 0.01,
-    });
+    // Utiliser l'API Google Maps pour récupérer les coordonnées
+    if (window.google && placeId) {
+      try {
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ placeId }, (results, status) => {
+          if (status === 'OK' && results && results.length > 0) {
+            const location = results[0].geometry.location;
+            const coords = {
+              lat: location.lat(),
+              lng: location.lng()
+            };
+            setMapCoords(coords);
+            
+            // Extraire les détails de l'adresse
+            let city = '';
+            let postal_code = '';
+            let country = '';
+            
+            results[0].address_components.forEach(component => {
+              if (component.types.includes('locality')) {
+                city = component.long_name;
+              } else if (component.types.includes('postal_code')) {
+                postal_code = component.long_name;
+              } else if (component.types.includes('country')) {
+                country = component.long_name;
+              }
+            });
+            
+            setAddressDetails({ city, postal_code, country });
+            console.log("Détails d'adresse extraits:", { city, postal_code, country });
+          }
+        });
+      } catch (error) {
+        console.error("Erreur lors de la récupération des coordonnées:", error);
+      }
+    }
   };
 
   const handleSiretChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,9 +117,9 @@ export default function CompleteClientProfile() {
         fullName: data.fullName,
         billingAddress: {
           street: data.billingAddress,
-          city: "", // Ces valeurs seront complétées par l'API Google Maps
-          postal_code: "",
-          country: "",
+          city: addressDetails?.city || "",
+          postal_code: addressDetails?.postal_code || "",
+          country: addressDetails?.country || "",
           formatted_address: data.billingAddress,
           lat: mapCoords?.lat,
           lng: mapCoords?.lng

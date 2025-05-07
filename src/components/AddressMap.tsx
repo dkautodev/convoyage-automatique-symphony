@@ -14,9 +14,18 @@ export default function AddressMap({ lat, lng }: AddressMapProps) {
   
   useEffect(() => {
     // Initialize map only if we have coordinates and Google Maps is loaded
-    if (!lat || !lng || !mapRef.current || !window.google) return;
+    if (!lat || !lng || !mapRef.current || !window.google) {
+      console.log("Conditions non remplies pour l'initialisation de la carte:", { 
+        hasLat: !!lat, 
+        hasLng: !!lng, 
+        hasMapRef: !!mapRef.current, 
+        hasGoogle: !!window.google 
+      });
+      return;
+    }
     
     const position = { lat, lng };
+    console.log("Initialisation de la carte avec position:", position);
     
     // Create map instance if not already created
     if (!mapInstanceRef.current) {
@@ -48,7 +57,7 @@ export default function AddressMap({ lat, lng }: AddressMapProps) {
     return (
       <Card className="w-full">
         <CardContent className="p-4 text-center text-muted-foreground h-[200px] flex items-center justify-center">
-          <p>Enter an address to see the location</p>
+          <p>Entrez une adresse pour voir sa localisation</p>
         </CardContent>
       </Card>
     );

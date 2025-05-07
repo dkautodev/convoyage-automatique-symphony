@@ -1,3 +1,4 @@
+
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,6 +75,48 @@ export const uploadDriverDocument = async (file: File, type: string, userId: str
     return data?.path || null;
   } catch (err: any) {
     console.error(`Erreur lors du téléchargement du document ${type}:`, err);
+    return null;
+  }
+};
+
+// Fonction pour calculer la distance et la durée entre deux adresses
+export const calculateAddressDistance = async (originLat: number, originLng: number, destLat: number, destLng: number) => {
+  if (!window.google) {
+    console.error("API Google Maps non chargée");
+    return null;
+  }
+  
+  try {
+    const service = new window.google.maps.DistanceMatrixService();
+    
+    return new Promise((resolve, reject) => {
+      service.getDistanceMatrix(
+        {
+          origins: [{ lat: originLat, lng: originLng }],
+          destinations: [{ lat: destLat, lng: destLng }],
+          travelMode: window.google.maps.TravelMode.DRIVING,
+          unitSystem: window.google.maps.UnitSystem.METRIC,
+        },
+        (response: any, status: string) => {
+          if (status === 'OK' && response) {
+            const result = response.rows[0].elements[0];
+            
+            if (result.status === 'OK') {
+              resolve({
+                distance: result.distance,
+                duration: result.duration
+              });
+            } else {
+              reject(new Error(`Calcul impossible: ${result.status}`));
+            }
+          } else {
+            reject(new Error(`Erreur de service: ${status}`));
+          }
+        }
+      );
+    });
+  } catch (error) {
+    console.error("Erreur lors du calcul de la distance:", error);
     return null;
   }
 };

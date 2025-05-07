@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -314,6 +313,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (updateError) throw updateError;
       
       // Insérer ou mettre à jour les données chauffeur
+      // S'assurer que le vehicleType est bien du type VehicleCategory
       const { error: driverError } = await typedSupabase
         .from('drivers')
         .upsert({
@@ -324,7 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           license_number: data.licenseNumber,
           vat_applicable: data.tvaApplicable,
           vat_number: data.tvaNumb || null,
-          vehicle_type: data.vehicleType, // Maintenant accepté comme string
+          vehicle_type: data.vehicleType as VehicleCategory, // Utiliser un cast explicite
           phone1: data.phone1,
           phone2: data.phone2 || null
         });

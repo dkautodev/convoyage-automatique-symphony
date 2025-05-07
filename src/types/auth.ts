@@ -1,5 +1,5 @@
 
-import { UserRole } from './supabase';
+import { UserRole, VehicleCategory } from './supabase';
 
 // Type pour le formulaire initial d'inscription
 export interface BasicRegisterFormData {
@@ -48,7 +48,7 @@ export interface DriverProfileFormData {
   phone1: string;
   phone2?: string;
   licenseNumber: string;
-  vehicleType: string; // Changé en string pour corriger l'erreur TS2769
+  vehicleType: VehicleCategory; // Utiliser le type VehicleCategory au lieu de string
   idNumber: string; // Numéro CNI/Passeport
   documents: {
     kbis?: File;
@@ -81,7 +81,7 @@ export interface RegisterFormData {
   role: UserRole;
   tvaApplicable?: boolean;
   licenseNumber?: string;
-  vehicleType?: string; // Changé en string pour correspondre au changement dans DriverProfileFormData
+  vehicleType?: VehicleCategory; // Utiliser le type VehicleCategory au lieu de string
   fullName?: string;
 }
 

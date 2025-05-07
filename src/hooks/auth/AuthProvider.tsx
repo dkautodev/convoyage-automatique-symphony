@@ -47,9 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (profileData) {
         console.log("Profil récupéré avec succès:", profileData);
         setProfile(profileData);
+        return profileData;
       } else {
         console.warn("Aucun profil trouvé pour l'utilisateur:", userId);
         setProfile(null);
+        return null;
       }
     } catch (err: any) {
       console.error('Erreur lors de la récupération du profil:', err);
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.warn("Erreur de récursion détectée dans la politique, ignorée");
       }
+      return null;
     }
   }, []);
 
@@ -86,6 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fetchProfile(currentSession.user.id);
         } else {
           console.log("Aucun utilisateur connecté");
+          setUser(null);
+          setProfile(null);
         }
       } catch (err: any) {
         setError(err.message);
@@ -108,7 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             console.log("Utilisateur connecté, récupération du profil");
-            await fetchProfile(newSession.user.id);
+            setTimeout(() => {
+              // Utiliser setTimeout pour éviter les deadlocks avec Supabase
+              fetchProfile(newSession.user.id);
+            }, 0);
           }
         } else {
           setSession(null);
@@ -138,31 +146,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         setSession(data.session);
         
-        // Récupérer le profil après connexion
-        await fetchProfile(data.user.id);
-        
-        // Vérifier si le profil a été correctement récupéré
-        console.log("Profil après connexion:", profile);
-        
-        // Rediriger en fonction du profil récupéré par le fetchProfile
-        const currentProfile = await fetchUserProfile(data.user.id);
-        if (currentProfile) {
-          // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
-          if (!currentProfile.profile_completed) {
-            console.log("Le profil n'est pas complet, redirection vers la page d'achèvement", currentProfile.role);
-            navigateToProfileCompletion(currentProfile.role, navigate);
-            toast.success('Veuillez compléter votre profil');
+        // Récupérer le profil après connexion avec un setTimeout pour éviter les deadlocks
+        setTimeout(async () => {
+          // Récupérer le profil après connexion
+          const currentProfile = await fetchProfile(data.user.id);
+          
+          if (currentProfile) {
+            // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
+            if (!currentProfile.profile_completed) {
+              console.log("Le profil n'est pas complet, redirection vers la page d'achèvement", currentProfile.role);
+              navigateToProfileCompletion(currentProfile.role, navigate);
+              toast.success('Veuillez compléter votre profil');
+            } else {
+              // Sinon rediriger vers le tableau de bord approprié
+              console.log("Redirection vers le tableau de bord:", currentProfile.role);
+              redirectToDashboard(currentProfile.role, navigate);
+              toast.success('Connexion réussie !');
+            }
           } else {
-            // Sinon rediriger vers le tableau de bord approprié
-            console.log("Redirection vers le tableau de bord:", currentProfile.role);
-            redirectToDashboard(currentProfile.role, navigate);
-            toast.success('Connexion réussie !');
+            console.warn("Aucun profil trouvé après connexion");
+            // Redirection vers la page d'accueil si pas de profil
+            navigate('/home');
           }
-        } else {
-          console.warn("Aucun profil trouvé après connexion");
-          // Redirection vers la page d'accueil si pas de profil
-          navigate('/home');
-        }
+        }, 0);
       }
     } catch (err: any) {
       setError(err.message);

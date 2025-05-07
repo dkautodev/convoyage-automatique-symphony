@@ -37,7 +37,7 @@ export default function Home() {
   
   console.log("Home - État de l'authentification:", { user, profile, loading, error });
   
-  // Si l'utilisateur est déjà connecté, rediriger vers son tableau de bord
+  // Si l'utilisateur est déjà connecté et a un profil, rediriger vers son tableau de bord
   useEffect(() => {
     if (!loading && user && profile) {
       console.log("Redirection depuis Home vers le tableau de bord:", profile.role);
@@ -74,7 +74,7 @@ export default function Home() {
     }
   };
 
-  // Affichage d'un écran de chargement adapté
+  // Montrer un spinner uniquement si on charge un profil (utilisateur déjà connecté)
   if (loading && user) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">

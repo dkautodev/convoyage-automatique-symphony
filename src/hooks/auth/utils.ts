@@ -1,4 +1,3 @@
-
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +17,9 @@ export const navigateToProfileCompletion = (role: string, navigate: NavigateFunc
       redirectToDashboard('admin', navigate);
       break;
     default:
-      navigate('/home');
+      // En cas de rôle non reconnu, rediriger vers la page d'accueil
+      console.warn("Rôle non reconnu:", role);
+      navigate('/home', { replace: true });
       break;
   }
 };
@@ -37,7 +38,9 @@ export const redirectToDashboard = (role: string, navigate: NavigateFunction) =>
       navigate('/driver/dashboard', { replace: true });
       break;
     default:
-      navigate('/home');
+      // En cas de rôle non reconnu, rediriger vers la page d'accueil
+      console.warn("Rôle non reconnu pour le tableau de bord:", role);
+      navigate('/home', { replace: true });
       break;
   }
 };

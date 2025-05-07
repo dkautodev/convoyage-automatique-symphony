@@ -27,39 +27,60 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
     console.log("Récupération du profil pour l'utilisateur:", userId);
     
     // Première tentative: récupérer directement depuis profiles
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération du profil:', error);
+      throw error;
+    }
+    
+    if (data) {
+      console.log("Profil récupéré avec succès:", data);
+      // Conversion des champs Json en types spécifiques
+      const profileData: Profile = {
+        ...data,
+        billing_address: data.billing_address ? convertJsonToAddress(data.billing_address) : undefined
+      };
+      return profileData;
+    }
+    
+    // Plan B: récupérer les informations d'utilisateur depuis auth.users via metadata
+    console.log("Aucun profil trouvé, utilisation de la méthode alternative");
+    const { data: userData } = await supabase.auth.getUser();
+    
+    if (userData?.user) {
+      // Créer un profil basique à partir des métadonnées utilisateur
+      const userMetadata = userData.user.user_metadata;
+      const basicProfile: Profile = {
+        id: userId,
+        email: userData.user.email || '',
+        role: (userMetadata?.role as any) || 'client',
+        full_name: userMetadata?.fullName || null,
+        created_at: userData.user.created_at,
+        last_login: userData.user.last_sign_in_at || null,
+        active: true,
+        profile_completed: false
+      };
+      
+      console.log("Profil récupéré depuis les métadonnées utilisateur:", basicProfile);
+      return basicProfile;
+    }
+    
+    console.warn("Aucun profil trouvé pour l'utilisateur:", userId);
+    return null;
+  } catch (err) {
+    console.error('Erreur lors de la récupération du profil:', err);
+    
+    // Dernière tentative avec l'API auth
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        // Si l'erreur est due à une politique de récursion, on va utiliser le plan B
-        if (error.code === '42P17') {
-          console.warn("Erreur de récursion détectée dans la politique. Tentative alternative...");
-          throw error; // Pour passer au catch et utiliser la méthode alternative
-        }
-        console.error('Erreur lors de la récupération du profil:', error);
-        throw error;
-      }
-      
-      if (data) {
-        console.log("Profil récupéré avec succès:", data);
-        // Conversion des champs Json en types spécifiques
-        const profileData: Profile = {
-          ...data,
-          billing_address: data.billing_address ? convertJsonToAddress(data.billing_address) : undefined
-        };
-        return profileData;
-      }
-    } catch (recursionErr) {
-      // Plan B: récupérer les informations d'utilisateur depuis auth.users via metadata
-      console.log("Utilisation de la méthode alternative pour récupérer le profil");
+      console.log("Tentative de récupération des informations de base via auth");
       const { data: userData } = await supabase.auth.getUser();
       
       if (userData?.user) {
-        // Créer un profil basique à partir des métadonnées utilisateur
         const userMetadata = userData.user.user_metadata;
         const basicProfile: Profile = {
           id: userId,
@@ -72,15 +93,13 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
           profile_completed: false
         };
         
-        console.log("Profil récupéré depuis les métadonnées utilisateur:", basicProfile);
+        console.log("Profil de secours créé:", basicProfile);
         return basicProfile;
       }
+    } catch (fallbackErr) {
+      console.error('Échec de la récupération de secours:', fallbackErr);
     }
     
-    console.warn("Aucun profil trouvé pour l'utilisateur:", userId);
-    return null;
-  } catch (err) {
-    console.error('Erreur lors de la récupération du profil:', err);
     return null; // Retourner null au lieu de lever l'exception pour éviter les interruptions
   }
 };

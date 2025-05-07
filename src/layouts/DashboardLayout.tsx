@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
 import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
@@ -11,11 +12,12 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
 
 const DashboardLayout = () => {
-  const { profile, isLoading } = useAuth();
+  const { profile, user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-
+  
   // Vérifiez si l'utilisateur est en train de charger ou n'est pas authentifié
+  const isLoading = !user && !profile;
+
   if (isLoading) {
     return <div>Chargement...</div>; // Vous pouvez remplacer cela par un spinner
   }

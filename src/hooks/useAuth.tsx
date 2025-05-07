@@ -1,10 +1,9 @@
-
 import { useEffect, useState, useCallback, createContext, useContext, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Tables, TablesInsert } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole, VehicleCategory } from '@/types/supabase';
+import { UserRole } from '@/types/supabase';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
 import { RegisterFormData, BasicRegisterFormData, ClientProfileFormData, DriverProfileFormData } from '@/types/auth';
 
@@ -61,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
       
       if (profileError) {
+        console.error('Erreur lors de la récupération du profil:', profileError);
         throw profileError;
       }
       

@@ -36,11 +36,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ allowedRoles }) => {
   
   // Si l'utilisateur n'est pas connecté, rediriger vers la page de connexion
   if (!user) {
+    return <Navigate to="/signup" state={{ from: location }} replace />;
+  }
+  
+  // Si l'utilisateur n'a pas de profil ou si une erreur s'est produite lors de la récupération du profil
+  if (!profile) {
+    console.log("Pas de profil disponible, redirection vers la page d'accueil");
     return <Navigate to="/home" state={{ from: location }} replace />;
   }
   
-  // Si l'utilisateur n'a pas le rôle requis, rediriger vers son tableau de bord approprié ou la page d'accueil
-  if (profile && !hasRequiredRole(allowedRoles, profile.role)) {
+  // Si l'utilisateur n'a pas le rôle requis, rediriger vers son tableau de bord approprié
+  if (!hasRequiredRole(allowedRoles, profile.role)) {
     switch (profile.role) {
       case 'admin':
         return <Navigate to="/admin/dashboard" replace />;

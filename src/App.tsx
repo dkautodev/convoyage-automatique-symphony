@@ -20,6 +20,8 @@ import ClientDashboard from './pages/dashboard/client/ClientDashboard';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import CompleteDriverProfile from './pages/auth/CompleteDriverProfile';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
+import ClientsPage from './pages/dashboard/admin/Clients';
+import NotFound from './pages/NotFound';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -63,6 +65,11 @@ function App() {
             <PricingGrid />
           </DashboardLayout>
         } />
+        <Route path="/admin/clients" element={
+          <DashboardLayout>
+            <ClientsPage />
+          </DashboardLayout>
+        } />
         
         {/* Pages client */}
         <Route path="/client/dashboard" element={
@@ -82,6 +89,9 @@ function App() {
             <Settings />
           </DashboardLayout>
         } />
+
+        {/* Page 404 pour les routes non trouvées */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>
   );

@@ -1,16 +1,14 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, User as UserIcon, Car as CarIcon } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import RegisterForm from '@/components/register/RegisterForm';
 
-interface RegisterProps {}
-
-const Register: React.FC<RegisterProps> = () => {
+const Register: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-      <div className="container mx-auto p-4 bg-neutral-50">
+      <div className="container mx-auto p-4">
         <Link to="/" className="inline-flex items-center text-sm mb-6 hover:underline text-gray-600 mt-6">
           <ArrowLeft className="mr-1 h-4 w-4" />
           Retour à l'accueil
@@ -23,30 +21,8 @@ const Register: React.FC<RegisterProps> = () => {
               Choisissez votre type de compte et renseignez vos informations
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <div className="font-semibold text-blue-700 mb-2 flex items-center">
-                <UserIcon className="mr-2 h-4 w-4" />
-                Client
-              </div>
-              <p className="text-sm text-gray-600">
-                Créez un compte client pour réserver des transports et gérer vos missions.
-              </p>
-            </div>
-
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <div className="font-semibold text-green-700 mb-2 flex items-center">
-                <CarIcon className="mr-2 h-4 w-4" />
-                Chauffeur
-              </div>
-              <p className="text-sm text-gray-600">
-                Créez un compte chauffeur pour proposer vos services et répondre aux demandes de transport.
-              </p>
-            </div>
-          </div>
           
-          <Card className="border-none shadow-lg">
+          <Card className="border-none shadow-lg overflow-hidden">
             <CardContent className="p-0">
               <RegisterForm />
             </CardContent>

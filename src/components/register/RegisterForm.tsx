@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -99,14 +98,20 @@ const RegisterForm = () => {
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="client" className="flex items-center gap-2 py-3">
-            <User className="h-5 w-5" />
-            <span className="font-medium">Client</span>
+        <TabsList className="grid w-full grid-cols-2 mb-8 h-14 rounded-lg">
+          <TabsTrigger 
+            value="client" 
+            className={`flex items-center justify-center gap-2 py-3 text-base transition-all duration-200 ${activeTab === 'client' ? 'bg-white font-semibold shadow-md text-blue-600' : 'bg-gray-50 hover:bg-gray-100'}`}
+          >
+            <User className={`h-5 w-5 ${activeTab === 'client' ? 'text-blue-600' : 'text-gray-500'}`} />
+            <span>Client</span>
           </TabsTrigger>
-          <TabsTrigger value="chauffeur" className="flex items-center gap-2 py-3">
-            <Car className="h-5 w-5" />
-            <span className="font-medium">Chauffeur</span>
+          <TabsTrigger 
+            value="chauffeur" 
+            className={`flex items-center justify-center gap-2 py-3 text-base transition-all duration-200 ${activeTab === 'chauffeur' ? 'bg-white font-semibold shadow-md text-blue-600' : 'bg-gray-50 hover:bg-gray-100'}`}
+          >
+            <Car className={`h-5 w-5 ${activeTab === 'chauffeur' ? 'text-blue-600' : 'text-gray-500'}`} />
+            <span>Chauffeur</span>
           </TabsTrigger>
         </TabsList>
 
@@ -129,7 +134,7 @@ const RegisterForm = () => {
                     <Input 
                       placeholder="John Doe" 
                       {...field} 
-                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm py-2.5"
                     />
                   </FormControl>
                   <FormMessage />
@@ -148,7 +153,7 @@ const RegisterForm = () => {
                       type="email" 
                       placeholder="votre@email.com" 
                       {...field} 
-                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm py-2.5"
                     />
                   </FormControl>
                   <FormMessage />
@@ -168,7 +173,7 @@ const RegisterForm = () => {
                         type={showPassword ? "text" : "password"} 
                         placeholder="••••••••" 
                         {...field} 
-                        className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10"
+                        className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10 py-2.5"
                       />
                       <button 
                         type="button"
@@ -201,7 +206,7 @@ const RegisterForm = () => {
                         type={showConfirmPassword ? "text" : "password"} 
                         placeholder="••••••••" 
                         {...field} 
-                        className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10"
+                        className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10 py-2.5"
                       />
                       <button 
                         type="button"
@@ -259,7 +264,11 @@ const RegisterForm = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-md transition-colors"
+              className={`w-full font-medium py-3 rounded-md transition-colors ${
+                activeTab === 'client' 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-green-600 hover:bg-green-700 text-white'
+              }`}
               disabled={form.formState.isSubmitting || loading}
             >
               {form.formState.isSubmitting || loading ? (

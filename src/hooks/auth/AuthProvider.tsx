@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         navigate('/admin/dashboard');
         break;
       case 'client':
-        navigate('/client/dashboard');
+        navigate('/client/dashboard'); // S'assurer que cette route est correcte
         break;
       case 'chauffeur':
         navigate('/driver/dashboard');
@@ -193,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const currentProfile = await fetchProfile(data.user.id);
           
           if (currentProfile) {
+            console.log("Profil récupéré après connexion:", currentProfile);
             // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
             if (!currentProfile.profile_completed) {
               console.log("Le profil n'est pas complet, redirection vers la page d'achèvement", currentProfile.role);

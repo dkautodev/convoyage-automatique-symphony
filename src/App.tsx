@@ -15,6 +15,9 @@ import { AuthProvider } from './hooks/auth';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import ClientDashboard from './pages/dashboard/client/ClientDashboard';
+import CompleteClientProfile from './pages/auth/CompleteClientProfile';
+import CompleteDriverProfile from './pages/auth/CompleteDriverProfile';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -43,6 +46,10 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         
+        {/* Pages d'authentification et profil */}
+        <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
+        <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
+        
         {/* Pages du tableau de bord administrateur */}
         <Route path="/admin/dashboard" element={
           <DashboardLayout>
@@ -52,6 +59,13 @@ function App() {
         <Route path="/admin/pricing-grid" element={
           <DashboardLayout>
             <PricingGrid />
+          </DashboardLayout>
+        } />
+        
+        {/* Pages client */}
+        <Route path="/client/dashboard" element={
+          <DashboardLayout>
+            <ClientDashboard />
           </DashboardLayout>
         } />
         

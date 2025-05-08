@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -10,7 +10,11 @@ import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
 import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
 
-const DashboardLayout = () => {
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
+
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { profile, user } = useAuth();
   const location = useLocation();
   
@@ -44,8 +48,8 @@ const DashboardLayout = () => {
       }
     }
     
-    // For other paths, let the router handle it with Outlet
-    return <Outlet />;
+    // For other paths, use the children prop instead of Outlet
+    return children || <Outlet />;
   };
 
   return (

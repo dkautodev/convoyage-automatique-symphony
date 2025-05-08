@@ -63,6 +63,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
       {alert && alert.visible && (
         <div className="fixed top-4 right-4 z-50 w-80">
           <Alert 
+            // Use custom logic to apply the right variant
             variant={alert.type === 'success' ? 'default' : alert.type}
             className={`relative ${alert.type === 'success' ? 'border-green-500 bg-green-50 text-green-700' : ''}`}
           >

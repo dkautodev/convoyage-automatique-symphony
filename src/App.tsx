@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { createBrowserRouter, RouterProvider, Route, createRoutesFromElements } from 'react-router-dom';
+import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -18,7 +18,6 @@ import About from '@/pages/About';
 import NotFound from '@/pages/NotFound';
 
 // Dashboard pages
-import Dashboard from '@/pages/Dashboard';
 import Clients from '@/pages/dashboard/admin/Clients';
 import Drivers from '@/pages/dashboard/admin/Drivers';
 import Missions from '@/pages/dashboard/admin/Missions';
@@ -40,6 +39,7 @@ function App() {
     }, 500);
   }, []);
 
+  // Create the router once and outside any components to avoid nesting
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<RootLayout />}>
@@ -52,13 +52,23 @@ function App() {
         <Route path="about" element={<About />} />
         
         {/* Dashboard routes - Protected by DashboardLayout */}
-        <Route path=":role" element={<DashboardLayout />}>
+        <Route path="admin/*" element={<DashboardLayout />}>
           <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
           <Route path="clients" element={<Clients />} />
           <Route path="drivers" element={<Drivers />} />
           <Route path="missions" element={<Missions />} />
           <Route path="pricing-grid" element={<PricingGridPage />} />
           <Route path="users" element={<div>Page des utilisateurs</div>} />
+        </Route>
+
+        <Route path="client/*" element={<DashboardLayout />}>
+          <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
+          <Route path="missions" element={<div>Client Missions</div>} />
+        </Route>
+
+        <Route path="driver/*" element={<DashboardLayout />}>
+          <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
+          <Route path="missions" element={<div>Driver Missions</div>} />
         </Route>
         
         {/* Not Found Route */}

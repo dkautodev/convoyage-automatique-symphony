@@ -12,7 +12,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-primary">Tableau de bord administrateur</h2>
+        <h2 className="text-3xl font-bold text-admin">Tableau de bord administrateur</h2>
         <div className="text-sm text-gray-500">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
@@ -29,14 +29,14 @@ const AdminDashboard = () => {
               <div>
                 <p className="text-2xl font-bold">0</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Package size={20} className="text-primary" />
+              <div className="h-10 w-10 rounded-full bg-admin/10 flex items-center justify-center">
+                <Package size={20} className="text-admin" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        {/* Plus de cartes statistiques simplifiées */}
+        {/* More statistic cards */}
         <Card className="bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Missions Actives</CardTitle>
@@ -68,41 +68,9 @@ const AdminDashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Chauffeurs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">0</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <User size={20} className="text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Revenus</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">0 €</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <CreditCard size={20} className="text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
       
-      {/* Tableau de missions simplifié */}
+      {/* Simplified missions table */}
       <Card className="bg-white">
         <CardHeader>
           <CardTitle>Missions Récentes</CardTitle>

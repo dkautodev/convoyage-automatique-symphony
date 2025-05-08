@@ -1,16 +1,17 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+
+// Import dashboard components using relative paths to avoid resolution issues
 import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '../pages/dashboard/client/ClientDashboard';
 import DriverDashboard from '../pages/dashboard/driver/DriverDashboard';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 
 const DashboardLayout = () => {
   const { profile, user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   
   // Vérifiez si l'utilisateur est en train de charger ou n'est pas authentifié
   const isLoading = !user && !profile;

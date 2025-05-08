@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,18 +39,23 @@ type AdminFormValues = z.infer<typeof adminSchema>;
 
 export default function RegisterAdmin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Récupérer les paramètres d'URL si disponibles
+  const tokenFromUrl = searchParams.get('token') || '';
+  const emailFromUrl = searchParams.get('email') || '';
+
   const form = useForm<AdminFormValues>({
     resolver: zodResolver(adminSchema),
     defaultValues: {
-      email: '',
+      email: emailFromUrl,
       password: '',
       confirmPassword: '',
-      adminToken: '',
+      adminToken: tokenFromUrl,
     },
   });
 
@@ -68,7 +73,9 @@ export default function RegisterAdmin() {
       
       if (!tokenResult.valid) {
         console.error("Échec de validation du token:", tokenResult.message);
-        throw new Error(`Token d'invitation invalide: ${tokenResult.message}`);
+        setError(`Token d'invitation invalide: ${tokenResult.message}`);
+        setLoading(false);
+        return;
       }
       
       console.log("Token validé avec succès");

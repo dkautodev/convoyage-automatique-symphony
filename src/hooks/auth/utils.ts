@@ -1,4 +1,3 @@
-
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -162,53 +161,40 @@ export const verifyAndUseAdminToken = async (
   });
 
   try {
-    // Commencer une transaction Supabase (en utilisant une requête avec .eq multiple)
+    // Étape 1: Vérifier d'abord si le token existe pour cet email
     const { data: tokenData, error: fetchError } = await supabase
       .from('admin_invitation_tokens')
       .select('*')
       .eq('token', normalizedToken)
       .eq('email', normalizedEmail)
-      .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+      .maybeSingle();
     
     if (fetchError) {
-      console.error('Erreur lors de la vérification du token:', fetchError);
-      
-      // Effectuer une vérification plus granulaire pour donner un message d'erreur précis
-      const { data: anyToken } = await supabase
-        .from('admin_invitation_tokens')
-        .select('*')
-        .eq('token', normalizedToken)
-        .single();
-      
-      if (!anyToken) {
-        return { valid: false, message: 'Token invalide ou inexistant' };
-      }
-      
-      if (anyToken.email !== normalizedEmail) {
-        return { valid: false, message: 'Ce token ne correspond pas à cet email' };
-      }
-      
-      if (anyToken.used) {
-        return { valid: false, message: 'Ce token a déjà été utilisé' };
-      }
-      
-      if (new Date(anyToken.expires_at) < new Date()) {
-        return { valid: false, message: 'Ce token a expiré' };
-      }
-      
+      console.error('Erreur lors de la requête de vérification du token:', fetchError);
       return { valid: false, message: 'Erreur lors de la vérification du token' };
     }
     
+    // Étape 2: Vérifier si le token a été trouvé
     if (!tokenData) {
-      console.warn("Aucun token valide trouvé pour:", { normalizedToken, normalizedEmail });
-      return { valid: false, message: 'Token invalide, expiré ou déjà utilisé' };
+      console.warn("Aucun token trouvé pour:", { normalizedToken, normalizedEmail });
+      return { valid: false, message: 'Token ou email invalide' };
     }
     
-    console.log("Token valide trouvé:", tokenData);
+    console.log("Token trouvé dans la base:", tokenData);
     
-    // Marquer le token comme utilisé
+    // Étape 3: Vérifier si le token est déjà utilisé
+    if (tokenData.used) {
+      console.warn("Token déjà utilisé:", tokenData);
+      return { valid: false, message: 'Ce token a déjà été utilisé' };
+    }
+    
+    // Étape 4: Vérifier si le token est expiré
+    if (new Date(tokenData.expires_at) < new Date()) {
+      console.warn("Token expiré:", tokenData);
+      return { valid: false, message: 'Ce token a expiré' };
+    }
+    
+    // Étape 5: Token valide, le marquer comme utilisé
     const { error: updateError } = await supabase
       .from('admin_invitation_tokens')
       .update({
@@ -222,7 +208,7 @@ export const verifyAndUseAdminToken = async (
       return { valid: false, message: 'Erreur lors de la mise à jour du statut du token' };
     }
     
-    console.log("Token marqué comme utilisé avec succès");
+    console.log("Token validé et marqué comme utilisé avec succès");
     return { valid: true, message: 'Token vérifié et marqué comme utilisé avec succès' };
   } catch (err: any) {
     console.error('Exception lors de la vérification du token admin:', err);

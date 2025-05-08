@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, User, Car } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -31,6 +33,9 @@ const registerSchema = z.object({
   password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' }),
   confirmPassword: z.string(),
   fullName: z.string().min(2, { message: 'Le nom complet est requis' }),
+  role: z.enum(['client', 'chauffeur'], { 
+    required_error: "Veuillez sélectionner un type de compte" 
+  }),
   terms: z.boolean().refine((value) => value === true, {
     message: 'Vous devez accepter les termes et conditions',
   }),
@@ -46,6 +51,7 @@ const RegisterForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<'client' | 'chauffeur'>('client');
   const { register, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -56,20 +62,26 @@ const RegisterForm = () => {
       password: '',
       confirmPassword: '',
       fullName: '',
+      role: 'client',
       terms: false,
     },
   });
 
+  // Update the role when the tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as 'client' | 'chauffeur');
+    form.setValue('role', value as 'client' | 'chauffeur');
+  };
+
   const onSubmit = async (data: FormValues) => {
     setAuthError(null);
     try {
-      // Add 'client' as the default role when registering
       // Ensure all required fields are included with proper types
       const registerData: RegisterFormData = {
         email: data.email,
         password: data.password,
         fullName: data.fullName,
-        role: 'client',
+        role: data.role,
       };
       
       await register(registerData);
@@ -86,161 +98,187 @@ const RegisterForm = () => {
   
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {authError && (
-            <Alert variant="destructive" className="animate-fade-in">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{authError}</AlertDescription>
-            </Alert>
-          )}
-          
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-medium">Nom complet</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="John Doe" 
-                    {...field} 
-                    className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="client" className="flex items-center gap-2 py-3">
+            <User className="h-5 w-5" />
+            <span className="font-medium">Client</span>
+          </TabsTrigger>
+          <TabsTrigger value="chauffeur" className="flex items-center gap-2 py-3">
+            <Car className="h-5 w-5" />
+            <span className="font-medium">Chauffeur</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {authError && (
+              <Alert variant="destructive" className="animate-fade-in">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{authError}</AlertDescription>
+              </Alert>
             )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-medium">Email</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="email" 
-                    placeholder="votre@email.com" 
-                    {...field} 
-                    className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-medium">Mot de passe</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      {...field} 
-                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10"
-                    />
-                    <button 
-                      type="button"
-                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
-                      onClick={togglePasswordVisibility}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
-                <PasswordStrengthMeter password={field.value} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-medium">Confirmer le mot de passe</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      type={showConfirmPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      {...field} 
-                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10"
-                    />
-                    <button 
-                      type="button"
-                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
-                      onClick={toggleConfirmPasswordVisibility}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="terms"
-            render={({ field }) => (
-              <FormItem className="bg-gray-50 rounded-md border p-4">
-                <div className="flex flex-row items-start space-x-3 space-y-0">
+            
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Nom complet</FormLabel>
                   <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-1" />
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                    />
                   </FormControl>
-                  <div className="space-y-1">
-                    <FormLabel className="text-base font-semibold">
-                      J'accepte les termes et conditions
-                    </FormLabel>
-                    <FormDescription>
-                      Veuillez lire attentivement nos termes et conditions avant de vous inscrire.
-                    </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="votre@email.com" 
+                      {...field} 
+                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Mot de passe</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="••••••••" 
+                        {...field} 
+                        className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10"
+                      />
+                      <button 
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                        onClick={togglePasswordVisibility}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <PasswordStrengthMeter password={field.value} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Confirmer le mot de passe</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input 
+                        type={showConfirmPassword ? "text" : "password"} 
+                        placeholder="••••••••" 
+                        {...field} 
+                        className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm pr-10"
+                      />
+                      <button 
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700"
+                        onClick={toggleConfirmPasswordVisibility}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem className="hidden">
+                  <FormControl>
+                    <Input type="hidden" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="terms"
+              render={({ field }) => (
+                <FormItem className="bg-gray-50 rounded-md border p-4">
+                  <div className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-1" />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="text-base font-semibold">
+                        J'accepte les termes et conditions
+                      </FormLabel>
+                      <FormDescription>
+                        Veuillez lire attentivement nos termes et conditions avant de vous inscrire.
+                      </FormDescription>
+                    </div>
                   </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-md transition-colors"
+              disabled={form.formState.isSubmitting || loading}
+            >
+              {form.formState.isSubmitting || loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
+                  <span>Création du compte...</span>
                 </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <Button 
-            type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-md transition-colors"
-            disabled={form.formState.isSubmitting || loading}
-          >
-            {form.formState.isSubmitting || loading ? (
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
-                <span>Création du compte...</span>
-              </div>
-            ) : (
-              'Créer un compte'
-            )}
-          </Button>
-        </form>
-      </Form>
+              ) : (
+                `Créer un compte ${activeTab === 'client' ? 'client' : 'chauffeur'}`
+              )}
+            </Button>
+          </form>
+        </Form>
+      </Tabs>
       
       <div className="text-center mt-6">
         <p className="text-sm text-muted-foreground">
           Vous avez déjà un compte ?{' '}
-          <Link to="/home" className="text-blue-600 hover:text-blue-800 font-medium hover:underline">
+          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium hover:underline">
             Connectez-vous ici
           </Link>
         </p>

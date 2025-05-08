@@ -18,6 +18,7 @@ import Pricing from '@/pages/Pricing';
 import Contact from '@/pages/Contact';
 import About from '@/pages/About';
 import NotFound from '@/pages/NotFound';
+import BasicRegister from '@/pages/auth/BasicRegister';
 
 // Dashboard pages
 import Clients from '@/pages/dashboard/admin/Clients';

@@ -134,6 +134,7 @@ export const verifyAdminToken = async (token: string, email: string): Promise<bo
     const normalizedEmail = email.toLowerCase().trim();
     console.log("Email normalisé pour la vérification:", normalizedEmail);
     
+    // Vérifier si le token existe, correspond à l'email, n'a pas été utilisé et n'a pas expiré
     const { data: tokenData, error } = await supabase
       .from('admin_invitation_tokens')
       .select('*')

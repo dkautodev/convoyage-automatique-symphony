@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -52,6 +51,7 @@ type Token = {
 };
 
 const generateRandomToken = () => {
+  // Generate a shorter UUID-based token (first 10 chars of UUID)
   return uuidv4().substring(0, 10);
 };
 
@@ -130,11 +130,14 @@ export default function AdminInvite() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + data.expirationDays);
       
+      // S'assurer que l'email est en minuscule et sans espaces
+      const normalizedEmail = data.email.toLowerCase().trim();
+      
       // Insérer le token dans la base de données
       const { error: insertError } = await supabase
         .from('admin_invitation_tokens')
         .insert({
-          email: data.email.toLowerCase().trim(),
+          email: normalizedEmail,
           token: token,
           expires_at: expiresAt.toISOString(),
           created_by: user.id

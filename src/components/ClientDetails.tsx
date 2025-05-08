@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Client, Address } from '@/types/supabase';
-import { updateClient } from '@/utils/clientUtils';
+import { updateClient, createClient } from '@/utils/clientUtils';
 
 interface ClientDetailsProps {
   client: Client | null;
@@ -29,10 +29,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   React.useEffect(() => {
     if (client) {
       setFormData({
-        company_name: client.company_name,
-        siret: client.siret,
+        full_name: client.full_name || '',
+        email: client.email || '',
+        company_name: client.company_name || '',
+        siret: client.siret || '',
         vat_number: client.vat_number || '',
-        phone1: client.phone1,
+        phone1: client.phone1 || '',
         phone2: client.phone2 || '',
         billing_address: client.billing_address ? { ...client.billing_address } : {
           street: '',
@@ -64,39 +66,72 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!client) return;
+    if (!formData.email || !formData.company_name) {
+      toast.error("L'email et le nom de l'entreprise sont requis");
+      return;
+    }
     
     try {
       setIsSubmitting(true);
       
-      const success = await updateClient(client.id, formData);
+      let success = false;
       
-      if (!success) {
-        throw new Error("Échec de la mise à jour");
+      if (client?.id) {
+        // Mise à jour d'un client existant
+        success = await updateClient(client.id, formData);
+      } else {
+        // Création d'un nouveau client
+        const newId = await createClient(formData as Omit<Client, 'id' | 'created_at'>);
+        success = newId !== null;
       }
       
-      toast.success('Client mis à jour avec succès');
+      if (!success) {
+        throw new Error("Échec de l'opération");
+      }
+      
+      toast.success(client?.id ? 'Client mis à jour avec succès' : 'Client créé avec succès');
       onSave();
       onClose();
     } catch (error: any) {
-      console.error('Erreur lors de la mise à jour du client:', error);
-      toast.error(`Erreur lors de la mise à jour du client: ${error.message}`);
+      console.error('Erreur lors de l\'opération:', error);
+      toast.error(`Erreur: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!client) return null;
+  if (!client && !open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{client.id ? 'Modifier le client' : 'Ajouter un client'}</DialogTitle>
+          <DialogTitle>{client?.id ? 'Modifier le client' : 'Ajouter un client'}</DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                name="email"
+                value={formData.email || ''}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="full_name">Nom complet</Label>
+              <Input
+                id="full_name"
+                name="full_name"
+                value={formData.full_name || ''}
+                onChange={handleChange}
+              />
+            </div>
+            
             <div>
               <Label htmlFor="company_name">Nom de l'entreprise *</Label>
               <Input
@@ -109,13 +144,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
             </div>
             
             <div>
-              <Label htmlFor="siret">SIRET *</Label>
+              <Label htmlFor="siret">SIRET</Label>
               <Input
                 id="siret"
                 name="siret"
                 value={formData.siret || ''}
                 onChange={handleChange}
-                required
               />
             </div>
             
@@ -131,13 +165,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="phone1">Téléphone principal *</Label>
+                <Label htmlFor="phone1">Téléphone principal</Label>
                 <Input
                   id="phone1"
                   name="phone1"
                   value={formData.phone1 || ''}
                   onChange={handleChange}
-                  required
                 />
               </div>
               
@@ -157,48 +190,44 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
               
               <div className="grid gap-3">
                 <div>
-                  <Label htmlFor="street">Rue *</Label>
+                  <Label htmlFor="street">Rue</Label>
                   <Input
                     id="street"
                     name="street"
                     value={formData.billing_address?.street || ''}
                     onChange={handleAddressChange}
-                    required
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="postal_code">Code postal *</Label>
+                    <Label htmlFor="postal_code">Code postal</Label>
                     <Input
                       id="postal_code"
                       name="postal_code"
                       value={formData.billing_address?.postal_code || ''}
                       onChange={handleAddressChange}
-                      required
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="city">Ville *</Label>
+                    <Label htmlFor="city">Ville</Label>
                     <Input
                       id="city"
                       name="city"
                       value={formData.billing_address?.city || ''}
                       onChange={handleAddressChange}
-                      required
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <Label htmlFor="country">Pays *</Label>
+                  <Label htmlFor="country">Pays</Label>
                   <Input
                     id="country"
                     name="country"
                     value={formData.billing_address?.country || 'France'}
                     onChange={handleAddressChange}
-                    required
                   />
                 </div>
               </div>

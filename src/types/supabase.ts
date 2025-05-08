@@ -44,16 +44,19 @@ export interface Profile {
   vehicle_registration?: string;
 }
 
-// Interface pour les clients
+// Interface pour les clients (basée sur le profil)
 export interface Client {
   id: string;
-  company_name: string;
-  siret: string;
+  company_name: string | null;
+  siret: string | null;
   vat_number: string | null;
-  billing_address: Address;
-  phone1: string;
+  billing_address: Address | null;
+  phone1: string | null;
   phone2: string | null;
   created_at: string;
+  full_name: string | null;
+  email: string;
+  profile_completed: boolean;
 }
 
 // Interface pour les chauffeurs

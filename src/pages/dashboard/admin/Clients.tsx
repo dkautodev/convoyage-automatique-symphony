@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Plus, Search, Pencil, Trash2, Users, Phone, Building2 } from 'lucide-react';
+import { Building, Plus, Search, Pencil, Trash2, Users, Phone, Building2, Mail, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -47,9 +47,11 @@ const ClientsPage = () => {
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      client.company_name.toLowerCase().includes(searchLower) ||
-      client.siret.toLowerCase().includes(searchLower) ||
-      (client.vat_number && client.vat_number.toLowerCase().includes(searchLower))
+      (client.company_name && client.company_name.toLowerCase().includes(searchLower)) ||
+      (client.siret && client.siret.toLowerCase().includes(searchLower)) ||
+      (client.vat_number && client.vat_number.toLowerCase().includes(searchLower)) ||
+      (client.full_name && client.full_name.toLowerCase().includes(searchLower)) ||
+      (client.email && client.email.toLowerCase().includes(searchLower))
     );
   });
 
@@ -57,18 +59,16 @@ const ClientsPage = () => {
     // Create a new empty client object
     const newClient: Client = {
       id: '',
-      company_name: '',
-      siret: '',
+      company_name: null,
+      siret: null,
       vat_number: null,
-      billing_address: {
-        street: '',
-        city: '',
-        postal_code: '',
-        country: 'France'
-      },
-      phone1: '',
+      billing_address: null,
+      phone1: null,
       phone2: null,
-      created_at: new Date().toISOString()
+      email: '',
+      full_name: null,
+      created_at: new Date().toISOString(),
+      profile_completed: false
     };
     
     setSelectedClient(newClient);
@@ -90,7 +90,7 @@ const ClientsPage = () => {
       try {
         const success = await deleteClient(clientToDelete.id);
         if (success) {
-          toast.success(`Client ${clientToDelete.company_name} supprimé avec succès`);
+          toast.success(`Client ${clientToDelete.company_name || clientToDelete.full_name || clientToDelete.email} supprimé avec succès`);
           loadClients();
         } else {
           toast.error('Erreur lors de la suppression du client');
@@ -148,9 +148,9 @@ const ClientsPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Entreprise</TableHead>
+                  <TableHead>Nom / Entreprise</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>SIRET</TableHead>
-                  <TableHead>TVA</TableHead>
                   <TableHead>Téléphone</TableHead>
                   <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
@@ -159,18 +159,35 @@ const ClientsPage = () => {
                 {filteredClients.map((client) => (
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-neutral-500" />
-                        {client.company_name}
+                      <div className="flex flex-col">
+                        {client.company_name && (
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-neutral-500" />
+                            {client.company_name}
+                          </div>
+                        )}
+                        {client.full_name && (
+                          <div className="flex items-center gap-2 text-sm text-neutral-600">
+                            <User className="h-3 w-3 text-neutral-500" />
+                            {client.full_name}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell>{client.siret}</TableCell>
-                    <TableCell>{client.vat_number || '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3 text-neutral-500" />
-                        {client.phone1}
+                        <Mail className="h-3 w-3 text-neutral-500" />
+                        {client.email}
                       </div>
+                    </TableCell>
+                    <TableCell>{client.siret || '-'}</TableCell>
+                    <TableCell>
+                      {client.phone1 && (
+                        <div className="flex items-center gap-1">
+                          <Phone className="h-3 w-3 text-neutral-500" />
+                          {client.phone1}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
@@ -219,7 +236,7 @@ const ClientsPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce client ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Toutes les données associées à {clientToDelete?.company_name} seront définitivement supprimées.
+              Cette action est irréversible. Toutes les données associées à {clientToDelete?.company_name || clientToDelete?.full_name || clientToDelete?.email} seront définitivement supprimées.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PricingGridEditForm from '@/components/PricingGridEditForm';
 import { usePricing } from '@/hooks/usePricing';
+import PriceSimulator from '@/components/PriceSimulator';
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('fr-FR', {
@@ -252,16 +253,7 @@ const PricingGridPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Simulateur de prix</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4 text-neutral-500">
-            <p>Le simulateur de prix sera implémenté dans une prochaine mise à jour.</p>
-          </div>
-        </CardContent>
-      </Card>
+      <PriceSimulator />
 
       <PricingGridEditForm 
         item={editingItem} 

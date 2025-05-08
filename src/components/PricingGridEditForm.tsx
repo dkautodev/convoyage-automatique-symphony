@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { PricingGridItem, updatePricingGridItem } from '@/utils/pricingUtils';
+import { PricingGridItem, updatePricingGridItem, calculateHT, calculateTTC } from '@/utils/pricingUtils';
 import { vehicleCategoryLabels, VehicleCategory } from '@/types/supabase';
 import { toast } from 'sonner';
 
@@ -25,9 +25,7 @@ const PricingGridEditForm: React.FC<PricingGridEditFormProps> = ({
   const [priceHT, setPriceHT] = useState<string>('');
   const [priceTTC, setPriceTTC] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  // TVA 20%
-  const TVA_RATE = 0.2;
+  const [isUserModifyingHT, setIsUserModifyingHT] = useState<boolean>(true);
 
   // Initialiser les champs quand l'élément change
   useEffect(() => {
@@ -37,34 +35,28 @@ const PricingGridEditForm: React.FC<PricingGridEditFormProps> = ({
     }
   }, [item]);
 
-  // Calculer le prix TTC à partir du prix HT
-  const calculatePriceTTC = (priceHT: string): string => {
-    const ht = parseFloat(priceHT);
-    if (isNaN(ht)) return '';
-    const ttc = Math.round((ht * (1 + TVA_RATE)) * 100) / 100;
-    return ttc.toString();
-  };
-
-  // Calculer le prix HT à partir du prix TTC
-  const calculatePriceHT = (priceTTC: string): string => {
-    const ttc = parseFloat(priceTTC);
-    if (isNaN(ttc)) return '';
-    const ht = Math.round((ttc / (1 + TVA_RATE)) * 100) / 100;
-    return ht.toString();
-  };
-
   // Gestion du changement de prix HT
   const handlePriceHTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsUserModifyingHT(true);
     const newPriceHT = e.target.value;
     setPriceHT(newPriceHT);
-    setPriceTTC(calculatePriceTTC(newPriceHT));
+    
+    // Calculer le TTC correspondant si la valeur est valide
+    if (!isNaN(parseFloat(newPriceHT)) && parseFloat(newPriceHT) >= 0) {
+      setPriceTTC(calculateTTC(parseFloat(newPriceHT)).toFixed(2));
+    }
   };
 
   // Gestion du changement de prix TTC
   const handlePriceTTCChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsUserModifyingHT(false);
     const newPriceTTC = e.target.value;
     setPriceTTC(newPriceTTC);
-    setPriceHT(calculatePriceHT(newPriceTTC));
+    
+    // Calculer le HT correspondant si la valeur est valide
+    if (!isNaN(parseFloat(newPriceTTC)) && parseFloat(newPriceTTC) >= 0) {
+      setPriceHT(calculateHT(parseFloat(newPriceTTC)).toFixed(2));
+    }
   };
 
   // Soumission du formulaire
@@ -144,6 +136,10 @@ const PricingGridEditForm: React.FC<PricingGridEditFormProps> = ({
               value={priceTTC}
               onChange={handlePriceTTCChange}
             />
+          </div>
+
+          <div className="text-xs text-gray-500 col-span-2 text-center">
+            TVA appliquée: 20%
           </div>
         </div>
         

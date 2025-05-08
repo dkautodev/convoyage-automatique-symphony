@@ -148,3 +148,13 @@ export const updatePricingGridItem = async (
     return false;
   }
 };
+
+// Fonction pour convertir une valeur HT en TTC (TVA 20%)
+export const calculateTTC = (priceHT: number): number => {
+  return Math.round((priceHT * 1.2) * 100) / 100;
+};
+
+// Fonction pour convertir une valeur TTC en HT (TVA 20%)
+export const calculateHT = (priceTTC: number): number => {
+  return Math.round((priceTTC / 1.2) * 100) / 100;
+};

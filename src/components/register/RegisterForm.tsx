@@ -1,162 +1,181 @@
-
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+
 import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { useNavigate, Link } from 'react-router-dom';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useAuth } from '@/hooks/useAuth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
-interface RegisterFormProps {}
+const registerSchema = z.object({
+  email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
+  password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' }),
+  confirmPassword: z.string(),
+  fullName: z.string().min(2, { message: 'Le nom complet est requis' }),
+  terms: z.boolean().refine((value) => value === true, {
+    message: 'Vous devez accepter les termes et conditions',
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ["confirmPassword"], // path of error
+});
 
-const RegisterForm: React.FC<RegisterFormProps> = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [gdprConsent, setGdprConsent] = useState(false);
-  const [role, setRole] = useState<'client' | 'chauffeur' | 'admin'>('client');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+type RegisterFormData = z.infer<typeof registerSchema>;
+
+const RegisterForm = () => {
+  const [authError, setAuthError] = useState<string | null>(null);
+  const { register, loading } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+      fullName: '',
+      terms: false,
+    },
+  });
 
-    // Validation côté client
-    if (!email || !password || !gdprConsent) {
-      setError('Veuillez remplir tous les champs obligatoires.');
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data: RegisterFormData) => {
+    setAuthError(null);
     try {
-      console.log('Début inscription avec les données:', { email, role });
-      
-      // Inscription avec email, mot de passe et rôle dans les métadonnées
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            role: role, // Utiliser directement le rôle sélectionné
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-      
-      if (signUpError) {
-        console.error("Erreur d'inscription:", signUpError);
-        throw signUpError;
-      }
-      
-      console.log('Résultat inscription:', authData);
-      
-      if (authData?.user) {
-        toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
-        navigate('/register-confirmation');
-      } else {
-        throw new Error('Échec de création du compte utilisateur');
-      }
+      await register(data);
+      // Redirection après l'inscription réussie est gérée dans AuthProvider
     } catch (err: any) {
-      console.error("Erreur d'inscription détaillée:", err);
-      setError(err.message);
-      toast.error('Échec de l\'inscription: ' + err.message);
-    } finally {
-      setLoading(false);
+      console.error("Erreur lors de l'inscription:", err);
+      setAuthError(err.message || "Erreur lors de l'inscription. Veuillez réessayer.");
+      toast.error("Erreur lors de l'inscription. Veuillez réessayer.");
     }
   };
-
+  
   return (
-    <Card>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                placeholder="********"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </Button>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {authError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
+        
+        <FormField
+          control={form.control}
+          name="fullName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nom complet</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="votre@email.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mot de passe</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirmer le mot de passe</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="terms"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              </FormControl>
+              <div className="space-y-0.5">
+                <FormLabel className="text-base font-semibold">
+                  J'accepte les termes et conditions
+                </FormLabel>
+                <FormDescription>
+                  Veuillez lire attentivement nos termes et conditions avant de vous inscrire.
+                </FormDescription>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={form.formState.isSubmitting || loading}
+        >
+          {form.formState.isSubmitting || loading ? (
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
+              <span>Création du compte...</span>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Type de compte</Label>
-            <RadioGroup 
-              value={role} 
-              onValueChange={(value) => setRole(value as 'client' | 'chauffeur' | 'admin')}
-              className="flex flex-col space-y-1"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="client" id="client" />
-                <Label htmlFor="client">Client</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="chauffeur" id="chauffeur" />
-                <Label htmlFor="chauffeur">Chauffeur</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="gdprConsent"
-              checked={gdprConsent}
-              onCheckedChange={(checked) => setGdprConsent(checked as boolean)}
-            />
-            <Label htmlFor="gdprConsent" className="text-sm">
-              J'accepte les <a href="/terms" className="text-blue-500 hover:underline">Conditions d'utilisation</a> et la <a href="/privacy" className="text-blue-500 hover:underline">Politique de confidentialité</a>.
-            </Label>
-          </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Création du compte...' : 'Créer mon compte'}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-gray-600">
+          ) : (
+            'Créer un compte'
+          )}
+        </Button>
+      </form>
+      
+      <div className="text-center mt-6">
+        <p className="text-sm text-muted-foreground">
           Vous avez déjà un compte ?{' '}
-          <Link to="/login" className="text-blue-500 hover:underline">
+          <Link to="/home" className="text-blue-500 hover:underline">
             Connectez-vous ici
           </Link>
         </p>
-      </CardFooter>
-    </Card>
+      </div>
+    </Form>
   );
 };
 

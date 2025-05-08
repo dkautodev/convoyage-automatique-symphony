@@ -1,3 +1,4 @@
+
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -123,7 +124,7 @@ export const calculateAddressDistance = async (originLat: number, originLng: num
 // Fonction pour vérifier un token d'invitation admin
 export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
   try {
-    console.log("Verification du token admin:", token, "pour l'email:", email);
+    console.log("Vérification du token admin:", token, "pour l'email:", email);
     
     const { data: tokenData, error } = await supabase
       .from('admin_invitation_tokens')

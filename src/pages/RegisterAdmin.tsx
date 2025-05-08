@@ -59,6 +59,8 @@ export default function RegisterAdmin() {
       setError(null);
       
       // Vérifier si le token d'invitation est valide et correspond à l'email
+      console.log("Vérification du token:", data.adminToken, "pour l'email:", data.email);
+      
       const { data: tokenData, error: tokenError } = await supabase
         .from('admin_invitation_tokens')
         .select('*')
@@ -69,8 +71,12 @@ export default function RegisterAdmin() {
         .single();
       
       if (tokenError || !tokenData) {
+        console.error("Erreur de vérification du token:", tokenError);
+        console.log("Token data:", tokenData);
         throw new Error("Token d'invitation invalide, expiré ou ne correspond pas à l'email fourni");
       }
+      
+      console.log("Token validé avec succès:", tokenData);
       
       // Créer l'utilisateur avec le rôle admin
       const { data: userData, error: signupError } = await supabase.auth.signUp({

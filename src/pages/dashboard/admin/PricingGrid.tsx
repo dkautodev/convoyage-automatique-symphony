@@ -12,11 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PricingGridItem, fetchPricingGrid } from '@/utils/pricingUtils';
 import { vehicleCategoryLabels, VehicleCategory } from '@/types/supabase';
-import { Euro, Filter, RefreshCw } from 'lucide-react';
+import { Euro, Filter, RefreshCw, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import PricingGridEditForm from '@/components/PricingGridEditForm';
+import { usePricing } from '@/hooks/usePricing';
 
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('fr-FR', {
@@ -32,12 +34,25 @@ const PricingGridPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedVehicle, setSelectedVehicle] = useState<string>('all');
   const [searchDistance, setSearchDistance] = useState<string>('');
+  const [editingItem, setEditingItem] = useState<PricingGridItem | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
 
   const loadPricingData = async () => {
     setLoading(true);
     try {
       const data = await fetchPricingGrid();
-      setPricingData(data);
+      
+      // Trier les données par type de véhicule puis par distance minimale
+      const sortedData = [...data].sort((a, b) => {
+        // D'abord trier par type de véhicule
+        if (a.vehicle_category < b.vehicle_category) return -1;
+        if (a.vehicle_category > b.vehicle_category) return 1;
+        
+        // Ensuite trier par distance minimale
+        return a.min_distance - b.min_distance;
+      });
+      
+      setPricingData(sortedData);
     } catch (error) {
       console.error('Erreur lors du chargement des données de tarification:', error);
     } finally {
@@ -64,6 +79,16 @@ const PricingGridPage: React.FC = () => {
   const vehicleTypes = Array.from(
     new Set(pricingData.map(item => item.vehicle_category))
   ).sort();
+
+  const handleEditClick = (item: PricingGridItem) => {
+    setEditingItem(item);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingItem(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -138,6 +163,7 @@ const PricingGridPage: React.FC = () => {
                       <TableHead>Type</TableHead>
                       <TableHead>Prix HT</TableHead>
                       <TableHead>Prix TTC</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -155,11 +181,21 @@ const PricingGridPage: React.FC = () => {
                           </TableCell>
                           <TableCell>{formatPrice(item.price_ht)}</TableCell>
                           <TableCell>{formatPrice(item.price_ttc)}</TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditClick(item)}
+                              title="Modifier"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-4">
+                        <TableCell colSpan={6} className="text-center py-4">
                           Aucun tarif correspondant aux critères.
                         </TableCell>
                       </TableRow>
@@ -177,6 +213,7 @@ const PricingGridPage: React.FC = () => {
                         <TableHead>Type</TableHead>
                         <TableHead>Prix HT</TableHead>
                         <TableHead>Prix TTC</TableHead>
+                        <TableHead className="w-[100px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -194,6 +231,16 @@ const PricingGridPage: React.FC = () => {
                             </TableCell>
                             <TableCell>{formatPrice(item.price_ht)}</TableCell>
                             <TableCell>{formatPrice(item.price_ttc)}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => handleEditClick(item)}
+                                title="Modifier"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                     </TableBody>
@@ -215,6 +262,13 @@ const PricingGridPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      <PricingGridEditForm 
+        item={editingItem} 
+        open={isDialogOpen} 
+        onClose={handleDialogClose} 
+        onSave={loadPricingData} 
+      />
     </div>
   );
 };

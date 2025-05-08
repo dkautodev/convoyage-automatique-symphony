@@ -1,101 +1,229 @@
-import React, { useState, useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+import React, { useEffect, useState } from 'react';
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { useTranslation } from 'react-i18next';
+import i18n from './i18n'; // Import de la configuration i18next
+import './App.css';
+import { useAuth } from './hooks/auth';
+import { AuthLayout } from './layouts/AuthLayout';
+import { DashboardLayout } from './layouts/DashboardLayout';
+import { Home } from './pages/Home';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { Profile } from './pages/Profile';
+import { CompleteClientProfile } from './pages/CompleteClientProfile';
+import { CompleteDriverProfile } from './pages/CompleteDriverProfile';
+import { AdminDashboard } from './pages/dashboard/AdminDashboard';
+import { ClientDashboard } from './pages/dashboard/ClientDashboard';
+import { DriverDashboard } from './pages/dashboard/DriverDashboard';
+import { Missions } from './pages/Missions';
+import { NewMission } from './pages/NewMission';
+import { EditMission } from './pages/EditMission';
+import { Vehicles } from './pages/Vehicles';
+import { Clients } from './pages/Clients';
+import { Drivers } from './pages/Drivers';
+import { Contacts } from './pages/Contacts';
+import { Pricing } from './pages/Pricing';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { AdminRegister } from './pages/AdminRegister';
+import { PricingGridPage as PricingGrid } from './pages/dashboard/admin/PricingGrid';
 
-// Import layouts
-import RootLayout from './layouts/RootLayout';
-import DashboardLayout from './layouts/DashboardLayout';
-
-// Import pages
-import Home from '@/pages/Home';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import RegisterAdmin from '@/pages/RegisterAdmin';
-import AdminInvite from '@/pages/AdminInvite'; 
-import Pricing from '@/pages/Pricing';
-import Contact from '@/pages/Contact';
-import About from '@/pages/About';
-import NotFound from '@/pages/NotFound';
-import BasicRegister from '@/pages/auth/BasicRegister';
-
-// Dashboard pages
-import Clients from '@/pages/dashboard/admin/Clients';
-import Drivers from '@/pages/dashboard/admin/Drivers';
-import Missions from '@/pages/dashboard/admin/Missions';
-import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
-
-// Auth Context Provider
-import { AuthProvider } from '@/hooks/useAuth';
-import { AlertProvider } from '@/components/providers/AlertProvider';
-
-const queryClient = new QueryClient();
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home />,
+  },
+  {
+    path: "/home",
+    element: <Home />,
+  },
+  {
+    path: "/login",
+    element: (
+      <AuthLayout>
+        <Login />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: "/register",
+    element: (
+      <AuthLayout>
+        <Register />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <AuthLayout>
+        <ForgotPassword />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <AuthLayout>
+        <ResetPassword />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: "/verify-email",
+    element: (
+      <AuthLayout>
+        <VerifyEmail />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: "/admin/register",
+    element: (
+      <AuthLayout>
+        <AdminRegister />
+      </AuthLayout>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <DashboardLayout>
+        <Profile />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/complete-client-profile",
+    element: (
+      <DashboardLayout>
+        <CompleteClientProfile />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/complete-driver-profile",
+    element: (
+      <DashboardLayout>
+        <CompleteDriverProfile />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/admin/dashboard",
+    element: (
+      <DashboardLayout>
+        <AdminDashboard />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/client/dashboard",
+    element: (
+      <DashboardLayout>
+        <ClientDashboard />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/driver/dashboard",
+    element: (
+      <DashboardLayout>
+        <DriverDashboard />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/missions",
+    element: (
+      <DashboardLayout>
+        <Missions />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/missions/new",
+    element: (
+      <DashboardLayout>
+        <NewMission />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/missions/:id/edit",
+    element: (
+      <DashboardLayout>
+        <EditMission />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/vehicles",
+    element: (
+      <DashboardLayout>
+        <Vehicles />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/clients",
+    element: (
+      <DashboardLayout>
+        <Clients />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/drivers",
+    element: (
+      <DashboardLayout>
+        <Drivers />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/contacts",
+    element: (
+      <DashboardLayout>
+        <Contacts />
+      </DashboardLayout>
+    ),
+  },
+  {
+    path: "/pricing",
+    element: <Pricing />,
+  },
+  {
+    path: "/admin/pricing-grid",
+    element: (
+      <DashboardLayout>
+        <PricingGrid />
+      </DashboardLayout>
+    )
+  },
+]);
 
 function App() {
-  const [loading, setLoading] = useState(true);
+  const { i18n } = useTranslation();
+  const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
-    // Simulate loading delay
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+    // Détecter la langue du navigateur au chargement de l'application
+    const browserLanguage = navigator.language.split('-')[0]; // Récupère la partie principale de la langue (ex: "fr" de "fr-CA")
+    if (i18n.language !== browserLanguage) {
+      i18n.changeLanguage(browserLanguage);
+    }
+  }, [i18n]);
 
   return (
-    <div className="App">
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AlertProvider>
-            <Routes>
-              <Route path="/" element={<RootLayout />}>
-                <Route index element={<Home />} />
-                <Route path="home" element={<Home />} />
-                <Route path="login" element={<Login />} />
-                <Route path="register" element={<Register />} />
-                <Route path="register-admin" element={<RegisterAdmin />} />
-                <Route path="pricing" element={<Pricing />} />
-                <Route path="contact" element={<Contact />} />
-                <Route path="about" element={<About />} />
-                
-                {/* Dashboard routes - Protected by DashboardLayout */}
-                <Route path="admin" element={<DashboardLayout />}>
-                  <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
-                  <Route path="clients" element={<Clients />} />
-                  <Route path="drivers" element={<Drivers />} />
-                  <Route path="missions" element={<Missions />} />
-                  <Route path="pricing-grid" element={<PricingGridPage />} />
-                  <Route path="users" element={<div>Page des utilisateurs</div>} />
-                  <Route path="invite" element={<AdminInvite />} /> {/* Route de création de token admin */}
-                </Route>
-
-                <Route path="client" element={<DashboardLayout />}>
-                  <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
-                  <Route path="missions" element={<div>Client Missions</div>} />
-                </Route>
-
-                <Route path="driver" element={<DashboardLayout />}>
-                  <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
-                  <Route path="missions" element={<div>Driver Missions</div>} />
-                </Route>
-                
-                {/* Not Found Route */}
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-            <Toaster position="top-right" />
-          </AlertProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   );
 }
 

@@ -1,13 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
-import { typedSupabase } from '@/types/database';
-import { useAuth } from '@/hooks/useAuth';
-import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin, Truck, Clock, CreditCard, Calendar, Package, Phone, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MapPin, Truck, CheckCircle, CreditCard, CalendarDays, Phone } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 const DriverDashboard = () => {
   return (

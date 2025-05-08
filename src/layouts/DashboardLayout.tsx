@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import AdminDashboard from '@/pages/dashboard/AdminDashboard';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
 import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
 import Clients from '@/pages/dashboard/admin/Clients';
@@ -13,6 +14,7 @@ import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
 const DashboardLayout = () => {
   const { profile, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Vérifiez si l'utilisateur est en train de charger ou n'est pas authentifié
   const isLoading = !user && !profile;
@@ -26,39 +28,33 @@ const DashboardLayout = () => {
     return <Navigate to="/home" state={{ from: location }} replace />;
   }
 
+  // Determine which dashboard to render based on user role and path
+  const renderDashboardContent = () => {
+    const path = location.pathname;
+    const role = profile?.role || 'client';
+    
+    if (path.includes('dashboard')) {
+      switch (role) {
+        case 'admin':
+          return <AdminDashboard />;
+        case 'client':
+          return <ClientDashboard />;
+        case 'chauffeur':
+          return <DriverDashboard />;
+        default:
+          return <ClientDashboard />;
+      }
+    }
+    
+    // For other paths, let the router handle it with Outlet
+    return <Outlet />;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <DashboardHeader />
       <div className="container mx-auto py-6">
-        <Routes>
-          {/* Routes génériques */}
-          <Route path="/" element={<Navigate to="dashboard" replace />} />
-
-          {/* Routes admin */}
-          {profile?.role === 'admin' && (
-            <>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<div>Page des utilisateurs</div>} />
-              <Route path="clients" element={<Clients />} />
-              <Route path="drivers" element={<Drivers />} />
-              <Route path="missions" element={<Missions />} />
-              <Route path="pricing-grid" element={<PricingGridPage />} />
-            </>
-          )}
-
-          {/* Routes client */}
-          {profile?.role === 'client' && (
-            <Route path="dashboard" element={<ClientDashboard />} />
-          )}
-
-          {/* Routes chauffeur */}
-          {profile?.role === 'chauffeur' && (
-            <Route path="dashboard" element={<DriverDashboard />} />
-          )}
-
-          {/* Route par défaut - redirige vers le tableau de bord */}
-          <Route path="*" element={<Navigate to="dashboard" replace />} />
-        </Routes>
+        {renderDashboardContent()}
       </div>
     </div>
   );

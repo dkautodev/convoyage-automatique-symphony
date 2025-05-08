@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Route, createRoutesFromElements } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +19,10 @@ import NotFound from '@/pages/NotFound';
 
 // Dashboard pages
 import Dashboard from '@/pages/Dashboard';
-import AdminDashboard from '@/pages/dashboard/AdminDashboard';
+import Clients from '@/pages/dashboard/admin/Clients';
+import Drivers from '@/pages/dashboard/admin/Drivers';
+import Missions from '@/pages/dashboard/admin/Missions';
+import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
 
 // Auth Context Provider
 import { AuthProvider } from '@/hooks/useAuth';
@@ -49,9 +53,14 @@ function App() {
         
         {/* Dashboard routes - Protected by DashboardLayout */}
         <Route path=":role" element={<DashboardLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
+          <Route path="clients" element={<Clients />} />
+          <Route path="drivers" element={<Drivers />} />
+          <Route path="missions" element={<Missions />} />
+          <Route path="pricing-grid" element={<PricingGridPage />} />
+          <Route path="users" element={<div>Page des utilisateurs</div>} />
         </Route>
-
+        
         {/* Not Found Route */}
         <Route path="*" element={<NotFound />} />
       </Route>

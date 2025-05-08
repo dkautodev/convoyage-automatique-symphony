@@ -1,6 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Client } from '@/types/supabase';
+import { Json } from '@/integrations/supabase/types';
+import { convertJsonToType } from '@/types/database';
 
 export const fetchClients = async (): Promise<Client[]> => {
   try {
@@ -13,7 +15,11 @@ export const fetchClients = async (): Promise<Client[]> => {
       throw error;
     }
     
-    return data || [];
+    // Convert from Supabase Json to our Address type
+    return data ? data.map(client => ({
+      ...client,
+      billing_address: convertJsonToType(client.billing_address)
+    })) : [];
   } catch (error) {
     console.error('Erreur lors du chargement des clients:', error);
     return [];
@@ -32,7 +38,11 @@ export const fetchClientById = async (id: string): Promise<Client | null> => {
       throw error;
     }
     
-    return data;
+    // Convert from Supabase Json to our Address type
+    return data ? {
+      ...data,
+      billing_address: convertJsonToType(data.billing_address)
+    } : null;
   } catch (error) {
     console.error(`Erreur lors du chargement du client ${id}:`, error);
     return null;
@@ -41,9 +51,15 @@ export const fetchClientById = async (id: string): Promise<Client | null> => {
 
 export const createClient = async (client: Omit<Client, 'id' | 'created_at'>): Promise<string | null> => {
   try {
+    // Convert Address type to Json for Supabase
+    const supabaseClient = {
+      ...client,
+      billing_address: client.billing_address as unknown as Json
+    };
+    
     const { data, error } = await supabase
       .from('clients')
-      .insert([client])
+      .insert([supabaseClient])
       .select();
     
     if (error) {
@@ -59,9 +75,15 @@ export const createClient = async (client: Omit<Client, 'id' | 'created_at'>): P
 
 export const updateClient = async (id: string, updates: Partial<Client>): Promise<boolean> => {
   try {
+    // Convert Address type to Json for Supabase if it exists in the updates
+    const supabaseUpdates = {
+      ...updates,
+      billing_address: updates.billing_address ? updates.billing_address as unknown as Json : undefined
+    };
+    
     const { error } = await supabase
       .from('clients')
-      .update(updates)
+      .update(supabaseUpdates)
       .eq('id', id);
     
     if (error) {

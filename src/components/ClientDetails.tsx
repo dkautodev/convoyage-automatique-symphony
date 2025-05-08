@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Client } from '@/types/supabase';
-import { supabase } from '@/integrations/supabase/client';
+import { Client, Address } from '@/types/supabase';
+import { updateClient } from '@/utils/clientUtils';
 
 interface ClientDetailsProps {
   client: Client | null;
@@ -34,7 +34,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
         vat_number: client.vat_number || '',
         phone1: client.phone1,
         phone2: client.phone2 || '',
-        billing_address: client.billing_address
+        billing_address: client.billing_address ? { ...client.billing_address } : {
+          street: '',
+          city: '',
+          postal_code: '',
+          country: 'France'
+        } as Address
       });
     }
   }, [client]);
@@ -52,9 +57,9 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
     setFormData(prev => ({
       ...prev,
       billing_address: {
-        ...(prev.billing_address || {}),
+        ...(prev.billing_address || {} as Address),
         [name]: value
-      }
+      } as Address
     }));
   };
 
@@ -64,13 +69,10 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({
     try {
       setIsSubmitting(true);
       
-      const { error } = await supabase
-        .from('clients')
-        .update(formData)
-        .eq('id', client.id);
+      const success = await updateClient(client.id, formData);
       
-      if (error) {
-        throw error;
+      if (!success) {
+        throw new Error("Échec de la mise à jour");
       }
       
       toast.success('Client mis à jour avec succès');

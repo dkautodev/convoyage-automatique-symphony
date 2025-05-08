@@ -66,7 +66,13 @@ const Profile = () => {
   // Remplir le formulaire avec les données du profil quand elles sont disponibles
   useEffect(() => {
     if (profile) {
-      const billingAddress = profile.billing_address as Address || {};
+      // Ensure billing_address is treated as an object with required properties
+      const billingAddress = profile.billing_address as Address || {
+        street: '',
+        city: '',
+        postal_code: '',
+        country: 'France'
+      };
       
       form.reset({
         full_name: profile.full_name || '',
@@ -77,10 +83,10 @@ const Profile = () => {
         siret: profile.siret || '',
         tva_number: profile.tva_number || '',
         tva_applicable: profile.tva_applicable || false,
-        street: billingAddress?.street || '',
-        city: billingAddress?.city || '',
-        postal_code: billingAddress?.postal_code || '',
-        country: billingAddress?.country || 'France',
+        street: billingAddress.street || '',
+        city: billingAddress.city || '',
+        postal_code: billingAddress.postal_code || '',
+        country: billingAddress.country || 'France',
       });
     }
   }, [profile, form]);

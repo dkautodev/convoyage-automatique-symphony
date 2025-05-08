@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import PricingGrid from './pages/dashboard/admin/PricingGrid';
 import { AuthProvider } from './hooks/auth';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import ClientDashboard from './pages/dashboard/client/ClientDashboard';
@@ -73,6 +74,11 @@ function App() {
         <Route path="/profile" element={
           <DashboardLayout>
             <Profile />
+          </DashboardLayout>
+        } />
+        <Route path="/settings" element={
+          <DashboardLayout>
+            <Settings />
           </DashboardLayout>
         } />
       </Routes>

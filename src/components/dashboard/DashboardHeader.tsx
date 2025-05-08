@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types/supabase';
-import { Bell, User, LogOut } from 'lucide-react';
+import { Bell, User, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -42,6 +42,11 @@ const DashboardHeader = () => {
     navigate('/profile');
   };
   
+  // Fonction pour naviguer vers les paramètres
+  const navigateToSettings = () => {
+    navigate('/settings');
+  };
+  
   return (
     <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
       {/* Titre de la page */}
@@ -74,7 +79,7 @@ const DashboardHeader = () => {
             <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={navigateToProfile}>Profil</DropdownMenuItem>
-            <DropdownMenuItem>Paramètres</DropdownMenuItem>
+            <DropdownMenuItem onClick={navigateToSettings}>Paramètres</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />

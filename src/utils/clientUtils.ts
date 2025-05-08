@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Client, Address } from '@/types/supabase';
 import { Json } from '@/integrations/supabase/types';
 import { convertJsonToType } from '@/types/database';
+import { UserRole } from '@/types/supabase';
 
 export const fetchClients = async (): Promise<Client[]> => {
   try {
@@ -77,7 +78,7 @@ export const createClient = async (client: Omit<Client, 'id' | 'created_at'>): P
     const profileData = {
       id,
       email: client.email,
-      role: 'client',
+      role: 'client' as UserRole,
       full_name: client.full_name,
       company_name: client.company_name,
       siret: client.siret,

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Plus, Search, Pencil, Trash2, Users, Phone, Building2, Mail, User } from 'lucide-react';
+import { Building, Plus, Search, Pencil, Trash2, Building2, Mail, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -12,7 +11,6 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { fetchClients, deleteClient } from '@/utils/clientUtils';
 import { Client } from '@/types/supabase';
 import ClientDetails from '@/components/ClientDetails';
@@ -150,7 +148,6 @@ const ClientsPage = () => {
                 <TableRow>
                   <TableHead>Nom / Entreprise</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>SIRET</TableHead>
                   <TableHead>Téléphone</TableHead>
                   <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
@@ -180,7 +177,6 @@ const ClientsPage = () => {
                         {client.email}
                       </div>
                     </TableCell>
-                    <TableCell>{client.siret || '-'}</TableCell>
                     <TableCell>
                       {client.phone1 && (
                         <div className="flex items-center gap-1">

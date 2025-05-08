@@ -21,8 +21,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { RegisterFormData } from '@/types/auth';
 
-// Define a local schema for the register form that doesn't require the 'role' field
+// Define a local schema for the register form that has all required fields
 const registerSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
   password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' }),
@@ -33,7 +34,7 @@ const registerSchema = z.object({
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
-  path: ["confirmPassword"], // path of error
+  path: ["confirmPassword"],
 });
 
 // Define our form data type based on the schema
@@ -59,10 +60,15 @@ const RegisterForm = () => {
     setAuthError(null);
     try {
       // Add 'client' as the default role when registering
-      await register({
-        ...data,
-        role: 'client', // Add the required role field
-      });
+      // Ensure all required fields are included with proper types
+      const registerData: RegisterFormData = {
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        role: 'client',
+      };
+      
+      await register(registerData);
       // Redirection après l'inscription réussie est gérée dans AuthProvider
     } catch (err: any) {
       console.error("Erreur lors de l'inscription:", err);

@@ -58,17 +58,18 @@ export default function RegisterAdmin() {
       setLoading(true);
       setError(null);
       
-      // Vérifier si le token d'invitation est valide
+      // Vérifier si le token d'invitation est valide et correspond à l'email
       const { data: tokenData, error: tokenError } = await supabase
         .from('admin_invitation_tokens')
         .select('*')
         .eq('token', data.adminToken)
+        .eq('email', data.email)
         .eq('used', false)
         .gt('expires_at', new Date().toISOString())
         .single();
       
       if (tokenError || !tokenData) {
-        throw new Error("Token d'invitation invalide ou expiré");
+        throw new Error("Token d'invitation invalide, expiré ou ne correspond pas à l'email fourni");
       }
       
       // Créer l'utilisateur avec le rôle admin
@@ -100,8 +101,8 @@ export default function RegisterAdmin() {
         })
         .eq('token', data.adminToken);
       
-      toast.success("Compte administrateur créé avec succès");
-      navigate('/login');
+      toast.success("Compte administrateur créé avec succès ! Veuillez vous connecter.");
+      navigate('/home');
     } catch (err: any) {
       console.error("Erreur lors de l'inscription admin:", err);
       setError(err.message || "Une erreur est survenue");
@@ -140,6 +141,28 @@ export default function RegisterAdmin() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="admin@example.com" 
+                            {...field}
+                            className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Doit correspondre à l'email utilisé pour l'invitation
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="adminToken"
                     render={({ field }) => (
                       <FormItem>
@@ -154,25 +177,6 @@ export default function RegisterAdmin() {
                         <FormDescription>
                           Un token est requis pour créer un compte administrateur
                         </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="admin@example.com" 
-                            {...field}
-                            className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm"
-                          />
-                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -263,7 +267,7 @@ export default function RegisterAdmin() {
             
             <CardFooter className="text-center py-4 border-t">
               <p className="text-sm text-muted-foreground">
-                <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium hover:underline">
+                <Link to="/home" className="text-blue-600 hover:text-blue-800 font-medium hover:underline">
                   Revenir à la connexion
                 </Link>
               </p>

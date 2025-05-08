@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { Copy, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/hooks/useAuth';
 
 const inviteFormSchema = z.object({
   email: z.string().email({ message: "Veuillez saisir un email valide" }),
@@ -49,6 +51,22 @@ const generateUniqueToken = (length = 12) => {
 
 export default function AdminInvite() {
   const [generatedToken, setGeneratedToken] = useState<string | null>(null);
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+
+  // Vérifier si l'utilisateur est connecté et est un administrateur
+  React.useEffect(() => {
+    if (!user) {
+      toast.error("Vous devez être connecté pour accéder à cette page");
+      navigate('/login');
+      return;
+    }
+
+    if (profile && profile.role !== 'admin') {
+      toast.error("Seuls les administrateurs peuvent accéder à cette page");
+      navigate('/');
+    }
+  }, [user, profile, navigate]);
 
   const form = useForm<InviteFormData>({
     resolver: zodResolver(inviteFormSchema),
@@ -60,17 +78,14 @@ export default function AdminInvite() {
 
   const onSubmit = async (data: InviteFormData) => {
     try {
+      if (!user) {
+        throw new Error("Vous devez être connecté pour créer un token d'invitation");
+      }
+
       const token = generateUniqueToken(12);
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + data.expiryDays);
       
-      const currentUser = supabase.auth.getUser();
-      const userId = (await currentUser).data.user?.id;
-      
-      if (!userId) {
-        throw new Error("Vous devez être connecté pour créer un token d'invitation");
-      }
-
       // Insérer le token dans la base de données
       const { error } = await supabase
         .from('admin_invitation_tokens')
@@ -79,10 +94,11 @@ export default function AdminInvite() {
           email: data.email,
           expires_at: expiryDate.toISOString(),
           used: false,
-          created_by: userId
+          created_by: user.id
         });
 
       if (error) {
+        console.error("Erreur lors de l'insertion du token:", error);
         throw error;
       }
       
@@ -100,6 +116,15 @@ export default function AdminInvite() {
       toast.success("Token copié dans le presse-papier!");
     }
   };
+
+  // Si l'utilisateur n'est pas connecté, afficher un message de chargement
+  if (!user || !profile) {
+    return (
+      <div className="container max-w-md mx-auto py-10 flex justify-center">
+        <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-md mx-auto py-10">

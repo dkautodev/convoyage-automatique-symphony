@@ -1,3 +1,4 @@
+
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -223,25 +224,34 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
 
 // Fonction d'inscription (gardée pour rétrocompatibilité)
 export const registerLegacyUser = async (data: RegisterFormData) => {
-  const { email, password, role } = data;
-  
-  const { data: authData, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        email,
-        role,
-        fullName: data.fullName
+  try {
+    const { email, password, role, fullName } = data;
+    
+    console.log("Tentative d'inscription legacy avec:", { email, role, fullName });
+    
+    // Utiliser signUp avec les métadonnées appropriées
+    const { data: authData, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          fullName
+        }
       }
+    });
+    
+    if (error) {
+      console.error("Erreur d'inscription legacy:", error);
+      throw error;
     }
-  });
-  
-  if (error) {
-    throw error;
+    
+    console.log("Résultat inscription legacy:", authData);
+    return authData;
+  } catch (err) {
+    console.error("Erreur dans registerLegacyUser:", err);
+    throw err;
   }
-  
-  return authData;
 };
 
 // Fonction pour mettre à jour le profil utilisateur
@@ -257,7 +267,8 @@ export const updateUserProfile = async (userId: string, data: Partial<Profile>) 
   const { data: updatedProfile, error } = await supabase
     .from('profiles')
     .update(updateData)
-    .eq('id', userId);
+    .eq('id', userId)
+    .select();
   
   if (error) {
     throw error;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -53,6 +54,8 @@ export default function Home() {
           case 'chauffeur':
             navigate('/driver/dashboard');
             break;
+          default:
+            navigate('/home');
         }
       } else if (profile) {
         // Si l'utilisateur a un profil mais qu'il n'est pas complété
@@ -66,7 +69,6 @@ export default function Home() {
             break;
           default:
             navigate('/home');
-            break;
         }
       }
       // Si user existe mais pas profile, on reste sur la page Home pour attendre le chargement du profil
@@ -229,6 +231,12 @@ export default function Home() {
                   Inscrivez-vous ici
                 </Link>
               </p>
+              
+              <div className="mt-4 text-xs text-muted-foreground">
+                <Link to="/register-admin" className="hover:underline">
+                  Vous êtes administrateur ?
+                </Link>
+              </div>
             </CardFooter>
           </Card>
         </div>

@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,10 +28,9 @@ import {
   ClientProfileFormData, 
   DriverProfileFormData 
 } from '@/types/auth';
-import { useAuth } from './useAuth';
 
 // Export the useAuth hook for external use
-export { useAuth };
+export { useAuth } from './useAuth';
 
 // Étendre l'interface BasicRegisterFormData pour inclure adminToken
 declare module '@/types/auth' {
@@ -47,6 +47,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Fonction utilitaire pour la redirection basée sur le rôle
+  const handleRoleBasedRedirection = useCallback((role: string, isProfileCompleted: boolean) => {
+    if (!isProfileCompleted) {
+      switch (role) {
+        case 'client':
+          navigate('/complete-client-profile');
+          break;
+        case 'chauffeur':
+          navigate('/complete-driver-profile');
+          break;
+        default:
+          navigate('/home');
+      }
+      return;
+    }
+
+    switch (role) {
+      case 'admin':
+        navigate('/admin/dashboard');
+        break;
+      case 'client':
+        navigate('/client/dashboard');
+        break;
+      case 'chauffeur':
+        navigate('/driver/dashboard');
+        break;
+      default:
+        navigate('/home');
+    }
+  }, [navigate]);
 
   // Récupérer le profil de l'utilisateur
   const fetchProfile = useCallback(async (userId: string) => {
@@ -165,12 +196,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Si le profil n'est pas complet, rediriger vers la page d'achèvement de profil
             if (!currentProfile.profile_completed) {
               console.log("Le profil n'est pas complet, redirection vers la page d'achèvement", currentProfile.role);
-              navigateToProfileCompletion(currentProfile.role, navigate);
+              handleRoleBasedRedirection(currentProfile.role, false);
               toast.success('Veuillez compléter votre profil');
             } else {
               // Sinon rediriger vers le tableau de bord approprié
               console.log("Redirection vers le tableau de bord:", currentProfile.role);
-              redirectToDashboard(currentProfile.role, navigate);
+              handleRoleBasedRedirection(currentProfile.role, true);
               toast.success('Connexion réussie !');
             }
           } else {
@@ -208,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (authData?.user) {
         toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
-        navigate('/register-confirmation');
+        navigate('/home');
       }
     } catch (err: any) {
       console.error("Erreur d'inscription:", err);
@@ -237,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
       
       toast.success('Profil complété avec succès');
-      redirectToDashboard('client', navigate);
+      handleRoleBasedRedirection('client', true);
       
     } catch (err: any) {
       setError(err.message);
@@ -265,7 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
       
       toast.success('Profil complété avec succès');
-      redirectToDashboard('chauffeur', navigate);
+      handleRoleBasedRedirection('chauffeur', true);
       
     } catch (err: any) {
       setError(err.message);
@@ -286,8 +317,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authData = await registerLegacyUser(data);
       
       if (authData?.user) {
-        toast.success('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.');
-        navigate('/register-confirmation');
+        toast.success(`Compte ${data.role} créé avec succès ! Veuillez vous connecter pour accéder à votre compte.`);
+        navigate('/home');
       }
     } catch (err: any) {
       console.error("Erreur d'inscription:", err);

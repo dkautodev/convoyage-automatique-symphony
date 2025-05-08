@@ -20,7 +20,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -85,7 +84,8 @@ const RegisterForm = () => {
       };
       
       await register(registerData);
-      // Redirection après l'inscription réussie est gérée dans AuthProvider
+      toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vérifier votre email pour confirmer votre compte.`);
+      navigate('/home');
     } catch (err: any) {
       console.error("Erreur lors de l'inscription:", err);
       setAuthError(err.message || "Erreur lors de l'inscription. Veuillez réessayer.");
@@ -278,7 +278,7 @@ const RegisterForm = () => {
       <div className="text-center mt-6">
         <p className="text-sm text-muted-foreground">
           Vous avez déjà un compte ?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium hover:underline">
+          <Link to="/home" className="text-blue-600 hover:text-blue-800 font-medium hover:underline">
             Connectez-vous ici
           </Link>
         </p>

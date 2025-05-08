@@ -11,7 +11,7 @@ import './App.css';
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import Home from './pages/Home';
-import { PricingGridPage } from './pages/dashboard/admin/PricingGrid';
+import PricingGridPage from './pages/dashboard/admin/PricingGrid';
 
 // Créer une configuration de route simplifiée pour déboguer
 const router = createBrowserRouter([

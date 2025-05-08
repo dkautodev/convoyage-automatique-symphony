@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -21,6 +22,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
+// Define a local schema for the register form that doesn't require the 'role' field
 const registerSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
   password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' }),
@@ -34,14 +36,15 @@ const registerSchema = z.object({
   path: ["confirmPassword"], // path of error
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+// Define our form data type based on the schema
+type FormValues = z.infer<typeof registerSchema>;
 
 const RegisterForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const { register, loading } = useAuth();
   const navigate = useNavigate();
 
-  const form = useForm<RegisterFormData>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: '',
@@ -52,10 +55,14 @@ const RegisterForm = () => {
     },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: FormValues) => {
     setAuthError(null);
     try {
-      await register(data);
+      // Add 'client' as the default role when registering
+      await register({
+        ...data,
+        role: 'client', // Add the required role field
+      });
       // Redirection après l'inscription réussie est gérée dans AuthProvider
     } catch (err: any) {
       console.error("Erreur lors de l'inscription:", err);

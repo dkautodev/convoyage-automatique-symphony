@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -21,7 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
-import { verifyAdminToken } from '@/hooks/auth/utils';
+import { verifyAdminToken, markAdminTokenAsUsed } from '@/hooks/auth/utils';
 
 // Schéma de validation pour l'inscription admin
 const adminSchema = z.object({
@@ -90,13 +91,11 @@ export default function RegisterAdmin() {
       }
       
       // Marquer le token comme utilisé
-      await supabase
-        .from('admin_invitation_tokens')
-        .update({
-          used: true,
-          used_at: new Date().toISOString(),
-        })
-        .eq('token', data.adminToken);
+      const tokenUpdated = await markAdminTokenAsUsed(data.adminToken, data.email);
+      
+      if (!tokenUpdated) {
+        console.warn("Le token n'a pas pu être marqué comme utilisé, mais le compte a été créé");
+      }
       
       toast.success("Compte administrateur créé avec succès ! Veuillez vous connecter.");
       navigate('/home');

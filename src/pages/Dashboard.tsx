@@ -1,10 +1,20 @@
 
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { User, Clipboard, Truck, MapPin, Calendar, Settings, LogOut } from 'lucide-react';
+import { 
+  User, 
+  Clipboard, 
+  Truck, 
+  MapPin, 
+  Calendar, 
+  Settings, 
+  LogOut,
+  UserPlus,
+  Shield
+} from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -60,6 +70,12 @@ const Dashboard = () => {
                   <Truck className="mr-2 h-4 w-4" />
                   Chauffeurs
                 </Button>
+                <Link to="/admin/invite">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Shield className="mr-2 h-4 w-4" />
+                    Invitations Admin
+                  </Button>
+                </Link>
               </>
             )}
             
@@ -117,6 +133,20 @@ const Dashboard = () => {
             </h2>
             <p className="text-muted-foreground">Bienvenue ! Voici un aperçu de votre activité.</p>
           </div>
+          
+          {/* Admin-specific quick action */}
+          {userRole === 'admin' && (
+            <div className="mb-8">
+              <Button 
+                variant="outline" 
+                className="border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => navigate('/admin/invite')}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Inviter un nouvel administrateur
+              </Button>
+            </div>
+          )}
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card>

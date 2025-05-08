@@ -65,7 +65,10 @@ export default function AdminInvite() {
     if (profile && profile.role !== 'admin') {
       toast.error("Seuls les administrateurs peuvent accéder à cette page");
       navigate('/');
+      return;
     }
+    
+    console.log("Accès autorisé à la page d'invitation admin");
   }, [user, profile, navigate]);
 
   const form = useForm<InviteFormData>({
@@ -85,6 +88,8 @@ export default function AdminInvite() {
       const token = generateUniqueToken(12);
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + data.expiryDays);
+      
+      console.log("Création du token pour:", data.email, "valide jusqu'à:", expiryDate);
       
       // Insérer le token dans la base de données
       const { error } = await supabase
@@ -128,17 +133,17 @@ export default function AdminInvite() {
 
   return (
     <div className="container max-w-md mx-auto py-10">
-      <Card>
-        <CardHeader>
+      <Card className="shadow-md">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
-            <CardTitle>Générateur d'invitation administrateur</CardTitle>
+            <CardTitle>Invitation d'administrateur</CardTitle>
           </div>
           <CardDescription>
             Créez un token unique pour inviter un nouvel administrateur
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -184,7 +189,7 @@ export default function AdminInvite() {
                 )}
               />
               
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
                 Générer un token
               </Button>
             </form>
@@ -199,6 +204,7 @@ export default function AdminInvite() {
                   variant="ghost" 
                   size="sm"
                   onClick={copyToClipboard}
+                  className="hover:bg-primary/10"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -206,7 +212,7 @@ export default function AdminInvite() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-between text-xs text-muted-foreground">
+        <CardFooter className="flex justify-between text-xs text-muted-foreground bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-b-lg">
           <div>Sécurisé et à usage unique</div>
           <div>Expiration automatique</div>
         </CardFooter>

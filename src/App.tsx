@@ -63,7 +63,6 @@ function App() {
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
                 <Route path="register-admin" element={<RegisterAdmin />} />
-                <Route path="admin-invite" element={<AdminInvite />} />
                 <Route path="pricing" element={<Pricing />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="about" element={<About />} />
@@ -76,6 +75,7 @@ function App() {
                   <Route path="missions" element={<Missions />} />
                   <Route path="pricing-grid" element={<PricingGridPage />} />
                   <Route path="users" element={<div>Page des utilisateurs</div>} />
+                  <Route path="invite" element={<AdminInvite />} /> {/* Ajout de la route /admin/invite */}
                 </Route>
 
                 <Route path="client" element={<DashboardLayout />}>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -44,10 +44,16 @@ export default function RegisterAdmin() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Récupérer les paramètres d'URL si disponibles
   const tokenFromUrl = searchParams.get('token') || '';
   const emailFromUrl = searchParams.get('email') || '';
+
+  // Log des paramètres d'URL pour le débogage
+  useEffect(() => {
+    console.log("Paramètres d'URL récupérés:", { tokenFromUrl, emailFromUrl });
+  }, [tokenFromUrl, emailFromUrl]);
 
   const form = useForm<AdminFormValues>({
     resolver: zodResolver(adminSchema),
@@ -63,8 +69,13 @@ export default function RegisterAdmin() {
     try {
       setLoading(true);
       setError(null);
+      setDebugInfo(null);
       
-      console.log("Démarrage du processus d'inscription admin");
+      console.log("Démarrage du processus d'inscription admin avec les données:", {
+        email: data.email,
+        token: data.adminToken,
+        passwordLength: data.password.length
+      });
       
       // Étape 1 : Vérifier le token d'invitation et le marquer comme utilisé si valide
       console.log("Vérification du token:", data.adminToken, "pour l'email:", data.email);
@@ -73,7 +84,8 @@ export default function RegisterAdmin() {
       
       if (!tokenResult.valid) {
         console.error("Échec de validation du token:", tokenResult.message);
-        setError(`Token d'invitation invalide: ${tokenResult.message}`);
+        setError(`Échec de validation du token: ${tokenResult.message}`);
+        setDebugInfo(`Détails: Token [${data.adminToken}], Email [${data.email}]`);
         setLoading(false);
         return;
       }
@@ -136,7 +148,14 @@ export default function RegisterAdmin() {
               {error && (
                 <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>
+                    {error}
+                    {debugInfo && (
+                      <div className="mt-2 text-xs opacity-75 bg-gray-100 p-2 rounded">
+                        {debugInfo}
+                      </div>
+                    )}
+                  </AlertDescription>
                 </Alert>
               )}
               

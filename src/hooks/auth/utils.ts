@@ -1,3 +1,4 @@
+
 import { UserRole } from '@/types/supabase';
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -154,47 +155,60 @@ export const verifyAndUseAdminToken = async (
   const normalizedToken = token.trim();
   const normalizedEmail = email.toLowerCase().trim();
   
-  console.log("Données normalisées:", { 
+  console.log("Données normalisées pour la recherche:", { 
     normalizedToken, 
     normalizedEmail, 
     timestamp: new Date().toISOString() 
   });
 
   try {
-    // Étape 1: Vérifier d'abord si le token existe pour cet email
-    const { data: tokenData, error: fetchError } = await supabase
+    // MÉTHODE CORRIGÉE: Ne pas utiliser eq dans la requête, mais faire la comparaison manuellement
+    // pour éviter les problèmes de correspondance exacte avec la casse
+    const { data, error } = await supabase
       .from('admin_invitation_tokens')
-      .select('*')
-      .eq('token', normalizedToken)
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+      .select('*');
     
-    if (fetchError) {
-      console.error('Erreur lors de la requête de vérification du token:', fetchError);
+    if (error) {
+      console.error('Erreur lors de la requête vers la table admin_invitation_tokens:', error);
       return { valid: false, message: 'Erreur lors de la vérification du token' };
     }
     
-    // Étape 2: Vérifier si le token a été trouvé
+    console.log("Tokens récupérés de la base:", data);
+    
+    // Recherche manuelle du token en ignorant la casse
+    const tokenData = data?.find(t => 
+      t.token.toLowerCase() === normalizedToken.toLowerCase() && 
+      t.email.toLowerCase() === normalizedEmail.toLowerCase()
+    );
+    
     if (!tokenData) {
-      console.warn("Aucun token trouvé pour:", { normalizedToken, normalizedEmail });
+      console.warn("Aucun token correspondant trouvé pour:", { normalizedToken, normalizedEmail });
+      
+      // Liste des tokens disponibles pour debug
+      if (data?.length) {
+        console.log("Tokens disponibles dans la base:", 
+          data.map(t => ({token: t.token, email: t.email}))
+        );
+      }
+      
       return { valid: false, message: 'Token ou email invalide' };
     }
     
     console.log("Token trouvé dans la base:", tokenData);
     
-    // Étape 3: Vérifier si le token est déjà utilisé
+    // Vérifier si le token est déjà utilisé
     if (tokenData.used) {
       console.warn("Token déjà utilisé:", tokenData);
       return { valid: false, message: 'Ce token a déjà été utilisé' };
     }
     
-    // Étape 4: Vérifier si le token est expiré
+    // Vérifier si le token est expiré
     if (new Date(tokenData.expires_at) < new Date()) {
       console.warn("Token expiré:", tokenData);
       return { valid: false, message: 'Ce token a expiré' };
     }
     
-    // Étape 5: Token valide, le marquer comme utilisé
+    // Token valide, le marquer comme utilisé
     const { error: updateError } = await supabase
       .from('admin_invitation_tokens')
       .update({

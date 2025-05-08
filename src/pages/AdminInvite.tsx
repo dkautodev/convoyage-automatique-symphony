@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Copy, ShieldCheck } from 'lucide-react';
+import { Copy, Shield } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables, TablesInsert } from '@/types/database';
 
 const inviteFormSchema = z.object({
   email: z.string().email({ message: "Veuillez saisir un email valide" }),
@@ -72,19 +71,16 @@ export default function AdminInvite() {
         throw new Error("Vous devez être connecté pour créer un token d'invitation");
       }
 
-      // Préparer les données d'insertion
-      const tokenData: TablesInsert<'admin_invitation_tokens'> = { 
-        token,
-        email: data.email,
-        expires_at: expiryDate.toISOString(),
-        used: false,
-        created_by: userId
-      };
-
-      // Enregistrer le token dans la base de données Supabase
+      // Insérer le token dans la base de données
       const { error } = await supabase
         .from('admin_invitation_tokens')
-        .insert(tokenData);
+        .insert({
+          token,
+          email: data.email,
+          expires_at: expiryDate.toISOString(),
+          used: false,
+          created_by: userId
+        });
 
       if (error) {
         throw error;
@@ -110,7 +106,7 @@ export default function AdminInvite() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-primary" />
+            <Shield className="h-6 w-6 text-primary" />
             <CardTitle>Générateur d'invitation administrateur</CardTitle>
           </div>
           <CardDescription>

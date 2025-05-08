@@ -12,6 +12,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import RegisterAdmin from '@/pages/RegisterAdmin';
+import AdminInvite from '@/pages/AdminInvite'; 
 import Pricing from '@/pages/Pricing';
 import Contact from '@/pages/Contact';
 import About from '@/pages/About';
@@ -59,6 +61,8 @@ function App() {
                 <Route path="home" element={<Home />} />
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
+                <Route path="register-admin" element={<RegisterAdmin />} />
+                <Route path="admin-invite" element={<AdminInvite />} />
                 <Route path="pricing" element={<Pricing />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="about" element={<About />} />

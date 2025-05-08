@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Table, 
@@ -145,6 +146,14 @@ const PricingGridPage: React.FC = () => {
             <div className="text-center py-6">Chargement des données...</div>
           ) : (
             <Tabs defaultValue="all" className="w-full">
+              <TabsList className="mb-4 flex flex-wrap">
+                <TabsTrigger value="all">Tous</TabsTrigger>
+                {vehicleTypes.map(type => (
+                  <TabsTrigger key={type} value={type}>
+                    {vehicleCategoryLabels[type as VehicleCategory]}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
               <TabsContent value="all" className="overflow-x-auto">
                 <Table>

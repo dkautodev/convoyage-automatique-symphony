@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -133,7 +134,52 @@ export default function AdminInvite() {
       // S'assurer que l'email est en minuscule et sans espaces
       const normalizedEmail = data.email.toLowerCase().trim();
       
-      // Insérer le token dans la base de données
+      console.log("Création d'un nouveau token:", {
+        email: normalizedEmail,
+        token,
+        expirationDays: data.expirationDays,
+        expires_at: expiresAt.toISOString(),
+        created_by: user.id
+      });
+      
+      // Vérifier si un token actif existe déjà pour cet email
+      const { data: existingToken } = await supabase
+        .from('admin_invitation_tokens')
+        .select('*')
+        .eq('email', normalizedEmail)
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+      
+      if (existingToken) {
+        console.warn("Un token actif existe déjà pour cet email:", existingToken);
+        
+        const confirmOverwrite = window.confirm(
+          `Un token actif existe déjà pour ${normalizedEmail}. Voulez-vous créer un nouveau token qui remplacera l'ancien ?`
+        );
+        
+        if (!confirmOverwrite) {
+          toast.info("Création du nouveau token annulée");
+          setLoading(false);
+          return;
+        }
+        
+        // Marquer l'ancien token comme utilisé (obsolète)
+        const { error: updateError } = await supabase
+          .from('admin_invitation_tokens')
+          .update({ 
+            used: true,
+            used_at: new Date().toISOString()
+          })
+          .eq('id', existingToken.id);
+        
+        if (updateError) {
+          console.error("Erreur lors de l'invalidation de l'ancien token:", updateError);
+          toast.warning("L'ancien token n'a pas pu être marqué comme obsolète");
+        }
+      }
+      
+      // Insérer le nouveau token dans la base de données
       const { error: insertError } = await supabase
         .from('admin_invitation_tokens')
         .insert({
@@ -145,7 +191,7 @@ export default function AdminInvite() {
       
       if (insertError) throw insertError;
       
-      toast.success(`Token d'invitation créé pour ${data.email}`);
+      toast.success(`Token d'invitation créé pour ${normalizedEmail}`);
       form.reset();
       
       // Recharger la liste des tokens
@@ -170,6 +216,23 @@ export default function AdminInvite() {
       }, 2000);
     } catch (err) {
       toast.error("Impossible de copier le token");
+    }
+  };
+
+  const handleCreateInvitationLink = async (token: string, email: string, id: number) => {
+    try {
+      const baseURL = window.location.origin;
+      const invitationLink = `${baseURL}/register-admin?token=${token}&email=${encodeURIComponent(email)}`;
+      
+      await navigator.clipboard.writeText(invitationLink);
+      setCopied(id);
+      toast.success("Lien d'invitation complet copié dans le presse-papiers");
+      
+      setTimeout(() => {
+        setCopied(null);
+      }, 2000);
+    } catch (err) {
+      toast.error("Impossible de copier le lien d'invitation");
     }
   };
 
@@ -290,6 +353,7 @@ export default function AdminInvite() {
                         <TableHead>Token</TableHead>
                         <TableHead>Expire le</TableHead>
                         <TableHead>Statut</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -311,6 +375,7 @@ export default function AdminInvite() {
                                   size="sm"
                                   onClick={() => handleCopyToken(token.token, token.id)}
                                   disabled={token.used || isExpired}
+                                  title="Copier le token"
                                 >
                                   {copied === token.id ? (
                                     <Check className="h-4 w-4 text-green-500" />
@@ -333,6 +398,18 @@ export default function AdminInvite() {
                               }`}>
                                 {tokenStatus}
                               </span>
+                            </TableCell>
+                            <TableCell>
+                              {!token.used && !isExpired && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCreateInvitationLink(token.token, token.email, token.id)}
+                                  title="Copier le lien d'invitation complet"
+                                >
+                                  Copier le lien
+                                </Button>
+                              )}
                             </TableCell>
                           </TableRow>
                         );

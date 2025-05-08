@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
-import { verifyAdminToken, markAdminTokenAsUsed } from '@/hooks/auth/utils';
+import { verifyAndUseAdminToken } from '@/hooks/auth/utils';
 
 // Schéma de validation pour l'inscription admin
 const adminSchema = z.object({
@@ -59,18 +59,21 @@ export default function RegisterAdmin() {
       setLoading(true);
       setError(null);
       
-      // Vérifier si le token d'invitation est valide et correspond à l'email
+      console.log("Démarrage du processus d'inscription admin");
+      
+      // Étape 1 : Vérifier le token d'invitation et le marquer comme utilisé si valide
       console.log("Vérification du token:", data.adminToken, "pour l'email:", data.email);
       
-      const isTokenValid = await verifyAdminToken(data.adminToken, data.email);
+      const tokenResult = await verifyAndUseAdminToken(data.adminToken, data.email);
       
-      if (!isTokenValid) {
-        throw new Error("Token d'invitation invalide, expiré ou ne correspond pas à l'email fourni");
+      if (!tokenResult.valid) {
+        console.error("Échec de validation du token:", tokenResult.message);
+        throw new Error(`Token d'invitation invalide: ${tokenResult.message}`);
       }
       
       console.log("Token validé avec succès");
       
-      // Créer l'utilisateur avec le rôle admin
+      // Étape 2 : Créer l'utilisateur avec le rôle admin
       const { data: userData, error: signupError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -83,19 +86,16 @@ export default function RegisterAdmin() {
       });
       
       if (signupError) {
+        console.error("Erreur lors de la création du compte:", signupError);
         throw signupError;
       }
       
       if (!userData.user) {
+        console.error("Aucun utilisateur retourné après inscription");
         throw new Error("Erreur lors de la création du compte");
       }
       
-      // Marquer le token comme utilisé
-      const tokenUpdated = await markAdminTokenAsUsed(data.adminToken, data.email);
-      
-      if (!tokenUpdated) {
-        console.warn("Le token n'a pas pu être marqué comme utilisé, mais le compte a été créé");
-      }
+      console.log("Compte administrateur créé avec succès:", userData.user.id);
       
       toast.success("Compte administrateur créé avec succès ! Veuillez vous connecter.");
       navigate('/home');

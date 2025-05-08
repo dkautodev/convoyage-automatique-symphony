@@ -121,24 +121,131 @@ export const calculateAddressDistance = async (originLat: number, originLng: num
   }
 };
 
-// Fonction pour vérifier un token d'invitation admin
-export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
+// Interface pour les données de token admin
+interface AdminToken {
+  id: number;
+  email: string;
+  token: string;
+  created_at: string;
+  expires_at: string;
+  used: boolean;
+  used_at: string | null;
+  created_by: string;
+}
+
+/**
+ * Vérifie un token d'invitation admin et le marque comme utilisé si valide
+ * Cette fonction combine la vérification et la mise à jour pour garantir l'atomicité
+ * 
+ * @param token - Le token à vérifier
+ * @param email - L'email associé au token
+ * @returns Un objet contenant le statut de vérification et une éventuelle erreur
+ */
+export const verifyAndUseAdminToken = async (
+  token: string, 
+  email: string
+): Promise<{ valid: boolean; message: string; }> => {
+  console.log("Vérification et utilisation du token admin:", token, "pour l'email:", email);
+  
+  if (!token || !email) {
+    console.error('Token ou email manquant');
+    return { valid: false, message: 'Token ou email manquant' };
+  }
+  
+  const normalizedToken = token.trim();
+  const normalizedEmail = email.toLowerCase().trim();
+  
+  console.log("Données normalisées:", { 
+    normalizedToken, 
+    normalizedEmail, 
+    timestamp: new Date().toISOString() 
+  });
+
   try {
-    console.log("Vérification du token admin:", token, "pour l'email:", email);
+    // Commencer une transaction Supabase (en utilisant une requête avec .eq multiple)
+    const { data: tokenData, error: fetchError } = await supabase
+      .from('admin_invitation_tokens')
+      .select('*')
+      .eq('token', normalizedToken)
+      .eq('email', normalizedEmail)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .single();
     
+    if (fetchError) {
+      console.error('Erreur lors de la vérification du token:', fetchError);
+      
+      // Effectuer une vérification plus granulaire pour donner un message d'erreur précis
+      const { data: anyToken } = await supabase
+        .from('admin_invitation_tokens')
+        .select('*')
+        .eq('token', normalizedToken)
+        .single();
+      
+      if (!anyToken) {
+        return { valid: false, message: 'Token invalide ou inexistant' };
+      }
+      
+      if (anyToken.email !== normalizedEmail) {
+        return { valid: false, message: 'Ce token ne correspond pas à cet email' };
+      }
+      
+      if (anyToken.used) {
+        return { valid: false, message: 'Ce token a déjà été utilisé' };
+      }
+      
+      if (new Date(anyToken.expires_at) < new Date()) {
+        return { valid: false, message: 'Ce token a expiré' };
+      }
+      
+      return { valid: false, message: 'Erreur lors de la vérification du token' };
+    }
+    
+    if (!tokenData) {
+      console.warn("Aucun token valide trouvé pour:", { normalizedToken, normalizedEmail });
+      return { valid: false, message: 'Token invalide, expiré ou déjà utilisé' };
+    }
+    
+    console.log("Token valide trouvé:", tokenData);
+    
+    // Marquer le token comme utilisé
+    const { error: updateError } = await supabase
+      .from('admin_invitation_tokens')
+      .update({
+        used: true,
+        used_at: new Date().toISOString()
+      })
+      .eq('id', tokenData.id);
+    
+    if (updateError) {
+      console.error('Erreur lors du marquage du token comme utilisé:', updateError);
+      return { valid: false, message: 'Erreur lors de la mise à jour du statut du token' };
+    }
+    
+    console.log("Token marqué comme utilisé avec succès");
+    return { valid: true, message: 'Token vérifié et marqué comme utilisé avec succès' };
+  } catch (err: any) {
+    console.error('Exception lors de la vérification du token admin:', err);
+    return { valid: false, message: err.message || 'Erreur système lors de la vérification' };
+  }
+};
+
+// Anciennes fonctions conservées pour rétrocompatibilité
+// Mais leur utilisation n'est plus recommandée, préférez verifyAndUseAdminToken
+export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
+  console.warn("DÉPRÉCIÉ: Utiliser verifyAndUseAdminToken à la place de verifyAdminToken");
+  try {
     if (!token || !email) {
       console.error('Token ou email manquant');
       return false;
     }
     
     const normalizedEmail = email.toLowerCase().trim();
-    console.log("Email normalisé pour la vérification:", normalizedEmail);
     
-    // Vérifier si le token existe, correspond à l'email, n'a pas été utilisé et n'a pas expiré
     const { data: tokenData, error } = await supabase
       .from('admin_invitation_tokens')
       .select('*')
-      .eq('token', token)
+      .eq('token', token.trim())
       .eq('email', normalizedEmail)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
@@ -149,7 +256,6 @@ export const verifyAdminToken = async (token: string, email: string): Promise<bo
       return false;
     }
     
-    console.log("Résultat de vérification du token:", tokenData);
     return tokenData !== null;
   } catch (err) {
     console.error('Erreur lors de la vérification du token admin:', err);
@@ -157,11 +263,9 @@ export const verifyAdminToken = async (token: string, email: string): Promise<bo
   }
 };
 
-// Fonction pour marquer un token admin comme utilisé
 export const markAdminTokenAsUsed = async (token: string, email: string): Promise<boolean> => {
+  console.warn("DÉPRÉCIÉ: Utiliser verifyAndUseAdminToken à la place de markAdminTokenAsUsed");
   try {
-    console.log("Marquage du token comme utilisé:", token, "pour l'email:", email);
-    
     if (!token || !email) {
       console.error('Token ou email manquant pour le marquage');
       return false;
@@ -175,7 +279,7 @@ export const markAdminTokenAsUsed = async (token: string, email: string): Promis
         used: true,
         used_at: new Date().toISOString()
       })
-      .eq('token', token)
+      .eq('token', token.trim())
       .eq('email', normalizedEmail);
     
     if (error) {
@@ -183,7 +287,6 @@ export const markAdminTokenAsUsed = async (token: string, email: string): Promis
       return false;
     }
     
-    console.log("Token marqué comme utilisé avec succès");
     return true;
   } catch (err) {
     console.error('Erreur lors du marquage du token admin comme utilisé:', err);

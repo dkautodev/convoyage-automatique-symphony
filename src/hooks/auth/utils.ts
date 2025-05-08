@@ -126,11 +126,16 @@ export const verifyAdminToken = async (token: string, email: string): Promise<bo
   try {
     console.log("Vérification du token admin:", token, "pour l'email:", email);
     
+    if (!token || !email) {
+      console.error('Token ou email manquant');
+      return false;
+    }
+    
     const { data: tokenData, error } = await supabase
       .from('admin_invitation_tokens')
       .select('*')
       .eq('token', token)
-      .eq('email', email)
+      .eq('email', email.toLowerCase().trim())
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();

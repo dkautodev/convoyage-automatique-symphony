@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -22,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
+import { verifyAdminToken } from '@/hooks/auth/utils';
 
 // Schéma de validation pour l'inscription admin
 const adminSchema = z.object({
@@ -61,22 +61,13 @@ export default function RegisterAdmin() {
       // Vérifier si le token d'invitation est valide et correspond à l'email
       console.log("Vérification du token:", data.adminToken, "pour l'email:", data.email);
       
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('admin_invitation_tokens')
-        .select('*')
-        .eq('token', data.adminToken)
-        .eq('email', data.email)
-        .eq('used', false)
-        .gt('expires_at', new Date().toISOString())
-        .single();
+      const isTokenValid = await verifyAdminToken(data.adminToken, data.email);
       
-      if (tokenError || !tokenData) {
-        console.error("Erreur de vérification du token:", tokenError);
-        console.log("Token data:", tokenData);
+      if (!isTokenValid) {
         throw new Error("Token d'invitation invalide, expiré ou ne correspond pas à l'email fourni");
       }
       
-      console.log("Token validé avec succès:", tokenData);
+      console.log("Token validé avec succès");
       
       // Créer l'utilisateur avec le rôle admin
       const { data: userData, error: signupError } = await supabase.auth.signUp({

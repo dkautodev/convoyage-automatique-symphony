@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -226,7 +225,7 @@ export default function Home() {
             <CardFooter className="flex flex-col items-center border-t pt-6">
               <p className="text-sm text-muted-foreground">
                 Vous n'avez pas encore de compte ?{' '}
-                <Link to="/signup" className="text-primary hover:underline">
+                <Link to="/register" className="text-primary hover:underline">
                   Inscrivez-vous ici
                 </Link>
               </p>

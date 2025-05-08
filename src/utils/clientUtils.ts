@@ -59,7 +59,7 @@ export const createClient = async (client: Omit<Client, 'id' | 'created_at'>): P
     
     const { data, error } = await supabase
       .from('clients')
-      .insert([supabaseClient])
+      .insert(supabaseClient)
       .select();
     
     if (error) {

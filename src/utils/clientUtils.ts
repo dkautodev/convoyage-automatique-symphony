@@ -51,8 +51,12 @@ export const fetchClientById = async (id: string): Promise<Client | null> => {
 
 export const createClient = async (client: Omit<Client, 'id' | 'created_at'>): Promise<string | null> => {
   try {
-    // Convert Address type to Json for Supabase
+    // Generate a UUID for the client
+    const id = crypto.randomUUID();
+    
+    // Convert Address type to Json for Supabase and add the id
     const supabaseClient = {
+      id,
       ...client,
       billing_address: client.billing_address as unknown as Json
     };

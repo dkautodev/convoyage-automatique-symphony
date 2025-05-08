@@ -33,6 +33,7 @@ import { VerifyEmail } from './pages/VerifyEmail';
 import { AdminRegister } from './pages/AdminRegister';
 import { PricingGridPage as PricingGrid } from './pages/dashboard/admin/PricingGrid';
 
+// Create route configuration
 const router = createBrowserRouter([
   {
     path: "/",

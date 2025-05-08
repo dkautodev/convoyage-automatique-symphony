@@ -39,6 +39,14 @@ const router = createBrowserRouter([
       </DashboardLayout>
     )
   },
+  {
+    path: "/profile",
+    element: (
+      <DashboardLayout>
+        <div>Page de profil</div>
+      </DashboardLayout>
+    )
+  },
 ]);
 
 function App() {

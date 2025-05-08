@@ -1,154 +1,136 @@
 
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types/supabase';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import {
-  Truck,
-  Users,
-  FileText,
-  Settings,
-  Home,
-  Package,
-  Calendar,
-  MapPin,
-  CreditCard,
-  ClipboardList,
-  Building,
-  PhoneCall,
-  BarChart,
-  Cog,
-  LogOut,
-  Shield
+import { 
+  LayoutDashboard, Users, FileText, Settings, LogOut, 
+  Building, Truck, PackageOpen, Euro, ShieldCheck, 
+  ChevronDown, ChevronRight
 } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
 
 interface SidebarProps {
-  userRole?: UserRole;
+  userRole: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
-  const { logout } = useAuth();
+const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   
-  // Déterminer la couleur de thème en fonction du rôle
-  const themeColor = {
-    admin: 'bg-neutral-100 text-neutral-800 border-neutral-300',
-    client: 'bg-neutral-100 text-neutral-800 border-neutral-300',
-    chauffeur: 'bg-neutral-100 text-neutral-800 border-neutral-300'
-  }[userRole];
-  
-  // Liens communs à tous les rôles
-  const commonLinks = [
-    { icon: <Home size={18} />, label: 'Tableau de bord', to: `/${userRole === 'chauffeur' ? 'driver' : userRole}/dashboard` },
-    { icon: <Settings size={18} />, label: 'Paramètres', to: `/${userRole === 'chauffeur' ? 'driver' : userRole}/settings` }
-  ];
-  
-  // Liens spécifiques au rôle administrateur
-  const adminLinks = [
-    { icon: <Package size={18} />, label: 'Missions', to: '/admin/missions' },
-    { icon: <Building size={18} />, label: 'Clients', to: '/admin/clients' },
-    { icon: <Users size={18} />, label: 'Chauffeurs', to: '/admin/drivers' },
-    { icon: <Shield size={18} />, label: 'Invitations Admin', to: '/admin/invite' }, // Lien d'invitation admin
-    { icon: <PhoneCall size={18} />, label: 'Contacts', to: '/admin/contacts' },
-    { icon: <Truck size={18} />, label: 'Véhicules', to: '/admin/vehicles' },
-    { icon: <CreditCard size={18} />, label: 'Tarifs', to: '/admin/pricing' },
-    { icon: <FileText size={18} />, label: 'Documents', to: '/admin/documents' },
-    { icon: <BarChart size={18} />, label: 'Rapports', to: '/admin/reports' },
-    { icon: <Cog size={18} />, label: 'Configuration', to: '/admin/configuration' }
-  ];
-  
-  // Liens spécifiques au rôle client
-  const clientLinks = [
-    { icon: <Package size={18} />, label: 'Missions', to: '/client/missions' },
-    { icon: <PhoneCall size={18} />, label: 'Contacts', to: '/client/contacts' },
-    { icon: <FileText size={18} />, label: 'Documents', to: '/client/documents' }
-  ];
-  
-  // Liens spécifiques au rôle chauffeur
-  const driverLinks = [
-    { icon: <Package size={18} />, label: 'Missions', to: '/driver/missions' },
-    { icon: <Calendar size={18} />, label: 'Planning', to: '/driver/schedule' },
-    { icon: <MapPin size={18} />, label: 'Itinéraires', to: '/driver/routes' },
-    { icon: <ClipboardList size={18} />, label: 'Rapports', to: '/driver/reports' }
-  ];
-  
-  // Sélection des liens en fonction du rôle
-  let roleLinks = [];
-  switch (userRole) {
-    case 'admin':
-      roleLinks = adminLinks;
-      break;
-    case 'client':
-      roleLinks = clientLinks;
-      break;
-    case 'chauffeur':
-      roleLinks = driverLinks;
-      break;
-    default:
-      roleLinks = clientLinks;
-  }
-  
-  // Tous les liens à afficher
-  const links = [...commonLinks.slice(0, 1), ...roleLinks, ...commonLinks.slice(1)];
-  
-  // Gestion du clic sur le bouton de déconnexion - version corrigée
-  const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    console.log("Déconnexion demandée depuis la Sidebar");
-    logout()
-      .catch(error => {
-        console.error('Erreur lors de la déconnexion (Sidebar):', error);
-      });
+  // Définir les liens en fonction du rôle de l'utilisateur
+  const getLinks = () => {
+    switch (userRole) {
+      case 'admin':
+        return [
+          { href: '/admin/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
+          { href: '/admin/clients', icon: <Building className="mr-2 h-4 w-4" />, label: 'Clients' },
+          { href: '/admin/drivers', icon: <Truck className="mr-2 h-4 w-4" />, label: 'Chauffeurs' },
+          { href: '/admin/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Missions' },
+          { href: '/admin/pricing-grid', icon: <Euro className="mr-2 h-4 w-4" />, label: 'Tarifs' }
+        ];
+      case 'client':
+        return [
+          { href: '/client/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
+          { href: '/client/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Mes missions' },
+          { href: '/client/new-mission', icon: <FileText className="mr-2 h-4 w-4" />, label: 'Nouvelle mission' }
+        ];
+      case 'chauffeur':
+        return [
+          { href: '/driver/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
+          { href: '/driver/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Missions' }
+        ];
+      default:
+        return [
+          { href: '/client/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' }
+        ];
+    }
   };
-  
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Déconnexion réussie');
+      navigate('/home');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      toast.error('Erreur lors de la déconnexion');
+    }
+  };
+
   return (
-    <aside className={`w-64 min-h-screen border-r ${themeColor} transition-all duration-200`}>
-      <div className="h-full flex flex-col">
-        {/* En-tête du sidebar */}
-        <div className="p-4 border-b flex items-center gap-2">
-          <Truck className="h-6 w-6" />
-          <h1 className="text-xl font-bold">ConvoySync</h1>
+    <div className="h-screen border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-64 flex flex-col">
+      <div className="p-6">
+        <NavLink to="/" className="flex items-center gap-2 font-bold text-xl">
+          <ShieldCheck className="h-6 w-6" />
+          <span>ConvoySync</span>
+        </NavLink>
+      </div>
+      
+      <nav className="flex-1 px-3 py-4">
+        <div className="space-y-1">
+          {getLinks().map((link, index) => (
+            <NavLink
+              key={index}
+              to={link.href}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center rounded-md px-3 py-2 text-sm font-medium",
+                  isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-accent hover:text-accent-foreground"
+                )
+              }
+            >
+              {link.icon}
+              {link.label}
+            </NavLink>
+          ))}
         </div>
-        
-        {/* Navigation */}
-        <nav className="flex-1 p-2">
-          <ul className="space-y-1">
-            {links.map((link, index) => (
-              <li key={index}>
-                <NavLink
-                  to={link.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-md transition-colors",
-                      isActive
-                        ? `bg-neutral-800 text-white`
-                        : "hover:bg-neutral-200"
-                    )
-                  }
-                >
-                  {link.icon}
-                  <span>{link.label}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        
-        {/* Bouton de déconnexion */}
-        <div className="p-4 border-t">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 w-full px-4 py-2 rounded-md text-gray-600 hover:bg-neutral-200 transition-colors"
-            type="button"
+      </nav>
+      
+      <div className="p-4 border-t">
+        <div className="space-y-1">
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center rounded-md px-3 py-2 text-sm font-medium",
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              )
+            }
           >
-            <LogOut size={18} />
-            <span>Déconnexion</span>
-          </button>
+            <Users className="mr-2 h-4 w-4" />
+            Profile
+          </NavLink>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center rounded-md px-3 py-2 text-sm font-medium",
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              )
+            }
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Paramètres
+          </NavLink>
+          <Button 
+            variant="ghost"
+            className="w-full justify-start px-3 py-2 text-sm font-medium"
+            onClick={handleLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Déconnexion
+          </Button>
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

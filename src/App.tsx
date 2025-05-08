@@ -19,6 +19,7 @@ import Login from './pages/Login';
 import ClientDashboard from './pages/dashboard/client/ClientDashboard';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import CompleteDriverProfile from './pages/auth/CompleteDriverProfile';
+import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -54,7 +55,7 @@ function App() {
         {/* Pages du tableau de bord administrateur */}
         <Route path="/admin/dashboard" element={
           <DashboardLayout>
-            <div>Tableau de bord administrateur</div>
+            <AdminDashboard />
           </DashboardLayout>
         } />
         <Route path="/admin/pricing-grid" element={

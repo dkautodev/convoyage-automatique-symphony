@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -55,7 +55,7 @@ export default function AdminInvite() {
   const navigate = useNavigate();
 
   // Vérifier si l'utilisateur est connecté et est un administrateur
-  React.useEffect(() => {
+  useEffect(() => {
     if (!user) {
       toast.error("Vous devez être connecté pour accéder à cette page");
       navigate('/login');

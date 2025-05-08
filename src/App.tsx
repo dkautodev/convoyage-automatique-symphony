@@ -52,7 +52,7 @@ function App() {
         <Route path="about" element={<About />} />
         
         {/* Dashboard routes - Protected by DashboardLayout */}
-        <Route path="admin/*" element={<DashboardLayout />}>
+        <Route path="admin" element={<DashboardLayout />}>
           <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
           <Route path="clients" element={<Clients />} />
           <Route path="drivers" element={<Drivers />} />
@@ -61,12 +61,12 @@ function App() {
           <Route path="users" element={<div>Page des utilisateurs</div>} />
         </Route>
 
-        <Route path="client/*" element={<DashboardLayout />}>
+        <Route path="client" element={<DashboardLayout />}>
           <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
           <Route path="missions" element={<div>Client Missions</div>} />
         </Route>
 
-        <Route path="driver/*" element={<DashboardLayout />}>
+        <Route path="driver" element={<DashboardLayout />}>
           <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
           <Route path="missions" element={<div>Driver Missions</div>} />
         </Route>

@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 
-// Import dashboard page components
+// Import dashboard page components 
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
 import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
@@ -30,7 +30,7 @@ const DashboardLayout = () => {
     const path = location.pathname;
     const role = profile?.role || 'client';
     
-    if (path.endsWith('dashboard') || path.endsWith('/')) {
+    if (path.endsWith('/dashboard') || path.endsWith('/')) {
       switch (role) {
         case 'admin':
           return <AdminDashboard />;

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -39,50 +39,54 @@ function App() {
     }, 500);
   }, []);
 
-  // Create the router once and outside any components to avoid nesting
-  const router = createBrowserRouter(
-    createRoutesFromElements(
-      <Route path="/" element={<RootLayout />}>
-        <Route index element={<Home />} />
-        <Route path="home" element={<Home />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-        <Route path="pricing" element={<Pricing />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="about" element={<About />} />
-        
-        {/* Dashboard routes - Protected by DashboardLayout */}
-        <Route path="admin" element={<DashboardLayout />}>
-          <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
-          <Route path="clients" element={<Clients />} />
-          <Route path="drivers" element={<Drivers />} />
-          <Route path="missions" element={<Missions />} />
-          <Route path="pricing-grid" element={<PricingGridPage />} />
-          <Route path="users" element={<div>Page des utilisateurs</div>} />
-        </Route>
-
-        <Route path="client" element={<DashboardLayout />}>
-          <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
-          <Route path="missions" element={<div>Client Missions</div>} />
-        </Route>
-
-        <Route path="driver" element={<DashboardLayout />}>
-          <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
-          <Route path="missions" element={<div>Driver Missions</div>} />
-        </Route>
-        
-        {/* Not Found Route */}
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    )
-  );
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <AlertProvider>
-            <RouterProvider router={router} />
+            <Routes>
+              <Route path="/" element={<RootLayout />}>
+                <Route index element={<Home />} />
+                <Route path="home" element={<Home />} />
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+                <Route path="pricing" element={<Pricing />} />
+                <Route path="contact" element={<Contact />} />
+                <Route path="about" element={<About />} />
+                
+                {/* Dashboard routes - Protected by DashboardLayout */}
+                <Route path="admin" element={<DashboardLayout />}>
+                  <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
+                  <Route path="clients" element={<Clients />} />
+                  <Route path="drivers" element={<Drivers />} />
+                  <Route path="missions" element={<Missions />} />
+                  <Route path="pricing-grid" element={<PricingGridPage />} />
+                  <Route path="users" element={<div>Page des utilisateurs</div>} />
+                </Route>
+
+                <Route path="client" element={<DashboardLayout />}>
+                  <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
+                  <Route path="missions" element={<div>Client Missions</div>} />
+                </Route>
+
+                <Route path="driver" element={<DashboardLayout />}>
+                  <Route path="dashboard" element={null} /> {/* Handled by DashboardLayout directly */}
+                  <Route path="missions" element={<div>Driver Missions</div>} />
+                </Route>
+                
+                {/* Not Found Route */}
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
             <Toaster position="top-right" />
           </AlertProvider>
         </AuthProvider>

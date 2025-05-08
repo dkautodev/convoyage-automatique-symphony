@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, Car as CarIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import RegisterForm from '@/components/register/RegisterForm';
 
@@ -27,7 +27,7 @@ const Register: React.FC<RegisterProps> = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <div className="font-semibold text-blue-700 mb-2 flex items-center">
-                <User className="mr-2 h-4 w-4" />
+                <UserIcon className="mr-2 h-4 w-4" />
                 Client
               </div>
               <p className="text-sm text-gray-600">
@@ -37,7 +37,7 @@ const Register: React.FC<RegisterProps> = () => {
 
             <div className="bg-green-50 p-4 rounded-lg border border-green-100">
               <div className="font-semibold text-green-700 mb-2 flex items-center">
-                <Car className="mr-2 h-4 w-4" />
+                <CarIcon className="mr-2 h-4 w-4" />
                 Chauffeur
               </div>
               <p className="text-sm text-gray-600">

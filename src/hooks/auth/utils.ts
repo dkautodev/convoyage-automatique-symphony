@@ -162,18 +162,22 @@ export const verifyAndUseAdminToken = async (
   });
 
   try {
-    // MÉTHODE CORRIGÉE: Ne pas utiliser eq dans la requête, mais faire la comparaison manuellement
-    // pour éviter les problèmes de correspondance exacte avec la casse
-    const { data, error } = await supabase
+    // Ajout de l'option count=exact pour obtenir des informations plus précises sur la recherche
+    const { data, error, count } = await supabase
       .from('admin_invitation_tokens')
-      .select('*');
+      .select('*', { count: 'exact' });
     
     if (error) {
       console.error('Erreur lors de la requête vers la table admin_invitation_tokens:', error);
-      return { valid: false, message: 'Erreur lors de la vérification du token' };
+      return { valid: false, message: `Erreur lors de la vérification du token: ${error.message}` };
     }
     
-    console.log("Tokens récupérés de la base:", data);
+    console.log(`Tokens récupérés de la base: ${data?.length || 0}, count: ${count}`);
+    
+    if (!data || data.length === 0) {
+      console.warn("Aucun token disponible dans la base de données");
+      return { valid: false, message: 'Aucun token disponible dans la base de données' };
+    }
     
     // Recherche manuelle du token en ignorant la casse
     const tokenData = data?.find(t => 
@@ -187,7 +191,12 @@ export const verifyAndUseAdminToken = async (
       // Liste des tokens disponibles pour debug
       if (data?.length) {
         console.log("Tokens disponibles dans la base:", 
-          data.map(t => ({token: t.token, email: t.email}))
+          data.map(t => ({
+            token: t.token, 
+            email: t.email, 
+            tokenMatch: t.token.toLowerCase() === normalizedToken.toLowerCase(),
+            emailMatch: t.email.toLowerCase() === normalizedEmail.toLowerCase()
+          }))
         );
       }
       
@@ -219,7 +228,7 @@ export const verifyAndUseAdminToken = async (
     
     if (updateError) {
       console.error('Erreur lors du marquage du token comme utilisé:', updateError);
-      return { valid: false, message: 'Erreur lors de la mise à jour du statut du token' };
+      return { valid: false, message: `Erreur lors de la mise à jour du statut du token: ${updateError.message}` };
     }
     
     console.log("Token validé et marqué comme utilisé avec succès");

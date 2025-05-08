@@ -53,6 +53,25 @@ export default function RegisterAdmin() {
   // Log des paramètres d'URL pour le débogage
   useEffect(() => {
     console.log("Paramètres d'URL récupérés:", { tokenFromUrl, emailFromUrl });
+    
+    // Vérifier la configuration RLS et l'accès à la table admin_invitation_tokens
+    const checkAccess = async () => {
+      try {
+        const { data, error, count } = await supabase
+          .from('admin_invitation_tokens')
+          .select('*', { count: 'exact' });
+        
+        console.log("Test d'accès à admin_invitation_tokens:", { 
+          success: !error, 
+          count: count || 0,
+          errorMessage: error?.message || 'Aucune erreur'
+        });
+      } catch (err) {
+        console.error("Erreur lors du test d'accès:", err);
+      }
+    };
+    
+    checkAccess();
   }, [tokenFromUrl, emailFromUrl]);
 
   const form = useForm<AdminFormValues>({

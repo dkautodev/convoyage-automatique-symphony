@@ -13,6 +13,8 @@ import Home from './pages/Home';
 import PricingGrid from './pages/dashboard/admin/PricingGrid';
 import { AuthProvider } from './hooks/auth';
 import Profile from './pages/Profile';
+import Register from './pages/Register';
+import Login from './pages/Login';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -35,8 +37,13 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Pages publiques */}
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* Pages du tableau de bord administrateur */}
         <Route path="/admin/dashboard" element={
           <DashboardLayout>
             <div>Tableau de bord administrateur</div>
@@ -47,6 +54,8 @@ function App() {
             <PricingGrid />
           </DashboardLayout>
         } />
+        
+        {/* Pages utilisateur */}
         <Route path="/profile" element={
           <DashboardLayout>
             <Profile />

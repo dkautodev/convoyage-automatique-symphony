@@ -36,6 +36,11 @@ const DashboardHeader = () => {
         console.error('Erreur lors de la déconnexion (DashboardHeader):', error);
       });
   };
+
+  // Fonction pour naviguer vers le profil
+  const navigateToProfile = () => {
+    navigate('/profile');
+  };
   
   return (
     <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
@@ -68,7 +73,7 @@ const DashboardHeader = () => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profil</DropdownMenuItem>
+            <DropdownMenuItem onClick={navigateToProfile}>Profil</DropdownMenuItem>
             <DropdownMenuItem>Paramètres</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>

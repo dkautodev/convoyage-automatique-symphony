@@ -2,14 +2,10 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
-import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
-import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
-import Clients from '@/pages/dashboard/admin/Clients';
-import Drivers from '@/pages/dashboard/admin/Drivers';
-import Missions from '@/pages/dashboard/admin/Missions';
+import AdminDashboard from '../pages/dashboard/admin/AdminDashboard';
+import ClientDashboard from '../pages/dashboard/client/ClientDashboard';
+import DriverDashboard from '../pages/dashboard/driver/DriverDashboard';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
 
 const DashboardLayout = () => {
   const { profile, user } = useAuth();

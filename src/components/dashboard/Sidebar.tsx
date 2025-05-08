@@ -19,7 +19,8 @@ import {
   PhoneCall,
   BarChart,
   Cog,
-  LogOut
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -49,6 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole = 'client' }) => {
     { icon: <Package size={18} />, label: 'Missions', to: '/admin/missions' },
     { icon: <Building size={18} />, label: 'Clients', to: '/admin/clients' },
     { icon: <Users size={18} />, label: 'Chauffeurs', to: '/admin/drivers' },
+    { icon: <Shield size={18} />, label: 'Invitations Admin', to: '/admin/invite' }, // Lien d'invitation admin
     { icon: <PhoneCall size={18} />, label: 'Contacts', to: '/admin/contacts' },
     { icon: <Truck size={18} />, label: 'Véhicules', to: '/admin/vehicles' },
     { icon: <CreditCard size={18} />, label: 'Tarifs', to: '/admin/pricing' },

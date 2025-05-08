@@ -3,6 +3,7 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import Sidebar from '@/components/dashboard/Sidebar';
 
 // Import dashboard page components 
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
@@ -48,10 +49,13 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <DashboardHeader />
-      <div className="container mx-auto py-6">
-        {renderDashboardContent()}
+    <div className="min-h-screen bg-gray-100 flex">
+      <Sidebar userRole={profile.role} />
+      <div className="flex-1">
+        <DashboardHeader />
+        <div className="container mx-auto py-6">
+          {renderDashboardContent()}
+        </div>
       </div>
     </div>
   );

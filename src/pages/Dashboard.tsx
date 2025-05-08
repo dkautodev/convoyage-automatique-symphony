@@ -35,6 +35,10 @@ const Dashboard = () => {
     toast.success('Déconnexion réussie');
     navigate('/login');
   };
+
+  const handleInviteAdmin = () => {
+    navigate('/admin/invite');
+  };
   
   return (
     <div className="min-h-screen bg-muted/30">
@@ -134,15 +138,15 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Bienvenue ! Voici un aperçu de votre activité.</p>
           </div>
           
-          {/* Admin-specific quick action */}
+          {/* Admin-specific quick action - improved visibility */}
           {userRole === 'admin' && (
             <div className="mb-8">
               <Button 
-                variant="outline" 
-                className="border-primary/30 text-primary hover:bg-primary/5"
-                onClick={() => navigate('/admin/invite')}
+                variant="default" 
+                className="bg-primary text-white hover:bg-primary/90"
+                onClick={handleInviteAdmin}
               >
-                <UserPlus className="mr-2 h-4 w-4" />
+                <Shield className="mr-2 h-4 w-4" />
                 Inviter un nouvel administrateur
               </Button>
             </div>

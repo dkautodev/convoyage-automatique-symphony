@@ -54,15 +54,19 @@ export default function AdminInvite() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
+  console.log("Chargement de la page d'invitation admin", { user, profile });
+
   // Vérifier si l'utilisateur est connecté et est un administrateur
   useEffect(() => {
     if (!user) {
+      console.log("Pas d'utilisateur connecté, redirection vers login");
       toast.error("Vous devez être connecté pour accéder à cette page");
       navigate('/login');
       return;
     }
 
     if (profile && profile.role !== 'admin') {
+      console.log("L'utilisateur n'est pas admin, redirection vers accueil");
       toast.error("Seuls les administrateurs peuvent accéder à cette page");
       navigate('/');
       return;

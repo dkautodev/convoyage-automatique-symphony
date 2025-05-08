@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -75,7 +74,7 @@ function App() {
                   <Route path="missions" element={<Missions />} />
                   <Route path="pricing-grid" element={<PricingGridPage />} />
                   <Route path="users" element={<div>Page des utilisateurs</div>} />
-                  <Route path="invite" element={<AdminInvite />} /> {/* Ajout de la route /admin/invite */}
+                  <Route path="invite" element={<AdminInvite />} /> {/* Route de création de token admin */}
                 </Route>
 
                 <Route path="client" element={<DashboardLayout />}>

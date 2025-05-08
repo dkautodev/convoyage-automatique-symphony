@@ -109,8 +109,8 @@ const ClientsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-0 -m-6">
+      <div className="flex justify-between items-center px-6 pt-6">
         <h2 className="text-2xl font-bold">Gestion des clients</h2>
         <Button onClick={handleNewClient}>
           <Plus className="mr-2 h-4 w-4" />
@@ -118,8 +118,8 @@ const ClientsPage = () => {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="rounded-none shadow-none border-x-0 mx-0">
+        <CardHeader className="px-6">
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
               <Building className="h-5 w-5" />
@@ -137,7 +137,7 @@ const ClientsPage = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6">
           {loading ? (
             <div className="text-center py-10 text-neutral-500">
               <p>Chargement des clients...</p>

@@ -10,6 +10,7 @@ import DriverDashboard from './pages/dashboard/DriverDashboard';
 import PricingGridPage from './pages/dashboard/admin/PricingGrid';
 import MissionsPage from './pages/dashboard/admin/Missions';
 import ClientMissionsPage from './pages/dashboard/client/Missions';
+import MissionDetailsPage from './pages/mission/MissionDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import AdminInvitePage from './pages/AdminInvitePage';
@@ -54,6 +55,13 @@ function App() {
           </DashboardLayout>
         </ProtectedRoute>
       } />
+      <Route path="/admin/missions/:id" element={
+        <ProtectedRoute roles={['admin']}>
+          <DashboardLayout>
+            <MissionDetailsPage />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/admin/invite" element={
         <ProtectedRoute roles={['admin']}>
           <DashboardLayout>
@@ -84,6 +92,13 @@ function App() {
           </DashboardLayout>
         </ProtectedRoute>
       } />
+      <Route path="/client/missions/:id" element={
+        <ProtectedRoute roles={['client']}>
+          <DashboardLayout>
+            <MissionDetailsPage />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
       
       {/* Driver routes */}
       <Route path="/driver" element={
@@ -97,6 +112,13 @@ function App() {
         <ProtectedRoute roles={['chauffeur']}>
           <DashboardLayout>
             <DriverDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/driver/missions/:id" element={
+        <ProtectedRoute roles={['chauffeur']}>
+          <DashboardLayout>
+            <MissionDetailsPage />
           </DashboardLayout>
         </ProtectedRoute>
       } />

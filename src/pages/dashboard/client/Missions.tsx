@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Package, Plus, Search, Filter } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils';
 
 const ClientMissionsPage = () => {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ const ClientMissionsPage = () => {
       
       try {
         setLoading(true);
+        
+        console.log("Fetching missions for client ID:", user.id);
         
         const { data: missionsData, error: missionsError } = await typedSupabase
           .from('missions')
@@ -53,14 +56,6 @@ const ClientMissionsPage = () => {
     
     fetchMissions();
   }, [user]);
-
-  // Helper function to get a display friendly address string
-  const getAddressDisplay = (address: any) => {
-    if (!address) return 'Non spécifié';
-    const postalCode = address.postal_code || '';
-    const city = address.city || '';
-    return (postalCode && city) ? `${postalCode} ${city}` : (city || postalCode || 'Adresse incomplète');
-  };
 
   // Filtered missions based on search query
   const filteredMissions = missions.filter(mission => {
@@ -148,13 +143,13 @@ const ClientMissionsPage = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
+                        <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
                         <Badge className={missionStatusColors[mission.status]}>
                           {missionStatusLabels[mission.status]}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {getAddressDisplay(mission.pickup_address)} → {getAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                        {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}

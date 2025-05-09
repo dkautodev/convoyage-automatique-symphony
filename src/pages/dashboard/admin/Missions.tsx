@@ -10,6 +10,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
 import { toast } from 'sonner';
+import { formatAddressDisplay, formatMissionNumber, formatClientName } from '@/utils/missionUtils';
 
 // Define valid tab values type that includes 'all' and all mission statuses
 type MissionTab = 'all' | MissionStatus;
@@ -78,6 +79,8 @@ const MissionsPage = () => {
         throw missionsError;
       }
       
+      console.log('Missions récupérées:', missionsData);
+      
       const convertedMissions = (missionsData || []).map(mission => {
         const basicMission = convertMissionFromDB(mission as unknown as MissionFromDB);
         return {
@@ -116,14 +119,6 @@ const MissionsPage = () => {
 
   const navigateToPricingGrid = () => {
     navigate('/admin/pricing-grid');
-  };
-
-  // Helper function to get a display friendly address string with postal code and city only
-  const getAddressDisplay = (address: any) => {
-    if (!address) return 'Non spécifié';
-    const postalCode = address.postal_code || '';
-    const city = address.city || '';
-    return (postalCode && city) ? `${postalCode} ${city}` : (city || postalCode || 'Adresse incomplète');
   };
 
   // Empty state component
@@ -226,16 +221,16 @@ const MissionsPage = () => {
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
+                            <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
                             <Badge className={missionStatusColors[mission.status]}>
                               {missionStatusLabels[mission.status]}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {getAddressDisplay(mission.pickup_address)} → {getAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                            {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            Client: {(mission as any).client_name || 'N/A'} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                            Client: {formatClientName(mission, clientsData)} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                           </p>
                         </div>
                         <Button variant="outline" size="sm" asChild>

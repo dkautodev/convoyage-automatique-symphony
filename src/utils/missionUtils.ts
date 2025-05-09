@@ -51,4 +51,3 @@ export const formatClientName = (mission: any, clientsData: Record<string, any> 
   
   return 'Client inconnu';
 };
-

@@ -658,7 +658,7 @@ const MissionDetailsPage = () => {
                                     <SelectItem value="utilitaire_6_12m3">Utilitaire (6-12m³)</SelectItem>
                                     <SelectItem value="utilitaire_12_15m3">Utilitaire (12-15m³)</SelectItem>
                                     <SelectItem value="utilitaire_15_20m3">Utilitaire (15-20m³)</SelectItem>
-                                    <SelectItem value="utilitaire_plus_20m3">Utilitaire (>20m³)</SelectItem>
+                                    <SelectItem value="utilitaire_plus_20m3">Utilitaire (&gt;20m³)</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -801,4 +801,3 @@ const MissionDetailsPage = () => {
 };
 
 export default MissionDetailsPage;
-

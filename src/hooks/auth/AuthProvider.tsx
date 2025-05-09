@@ -27,7 +27,8 @@ import {
   RegisterFormData, 
   BasicRegisterFormData, 
   ClientProfileFormData, 
-  DriverProfileFormData 
+  DriverProfileFormData,
+  DriverConfigFormData
 } from '@/types/auth';
 
 // Export the useAuth hook for external use
@@ -285,7 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Fonction pour compléter la seconde étape du profil chauffeur
-  const completeDriverConfig = async (legalStatus: LegalStatusType, documents?: Record<string, File>) => {
+  const completeDriverConfig = async (data: DriverConfigFormData) => {
     try {
       setLoading(true);
       setError(null);
@@ -294,9 +295,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Utilisateur non connecté');
       }
       
-      console.log("Données de configuration chauffeur (étape 2):", { legalStatus, documents });
+      console.log("Données de configuration chauffeur (étape 2):", data);
       
-      await completeDriverConfigService(user.id, legalStatus, documents);
+      await completeDriverConfigService(user.id, data);
       
       toast.success('Configuration du chauffeur complétée avec succès');
       handleRoleBasedRedirection('chauffeur', true);

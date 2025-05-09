@@ -90,7 +90,7 @@ export const formatFullAddress = (address: Address | null | undefined): string =
  * Formate les informations de contact pour l'affichage
  */
 export const formatContactInfo = (contact: { name?: string | null, phone?: string | null, email?: string | null }): string => {
-  if (!contact.name && !contact.phone && !contact.email) {
+  if (!contact || (!contact.name && !contact.phone && !contact.email)) {
     return "Aucun contact spécifié";
   }
   

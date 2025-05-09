@@ -126,7 +126,7 @@ const MissionDetailsPage = () => {
       }
       
       console.log('Setting form values with:', missionObj);
-      // Mettre à jour les valeurs du formulaire
+      // Mettre à jour les valeurs du formulaire avec les données de la mission
       form.reset({
         status: missionObj.status,
         mission_type: missionObj.mission_type || '',
@@ -143,7 +143,7 @@ const MissionDetailsPage = () => {
         vehicle_registration: missionObj.vehicle_registration || '',
         vehicle_vin: missionObj.vehicle_vin || '',
         vehicle_fuel: missionObj.vehicle_fuel || '',
-        vehicle_year: missionObj.vehicle_year ? String(missionObj.vehicle_year) : ''  // Convert number to string for the form
+        vehicle_year: missionObj.vehicle_year ? String(missionObj.vehicle_year) : ''
       });
       
     } catch (error) {

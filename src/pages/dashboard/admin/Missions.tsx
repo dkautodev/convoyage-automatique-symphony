@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, Link } from 'react-router-dom';
 import { typedSupabase } from '@/types/database';
-import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors } from '@/types/supabase';
+import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
 
 const MissionsPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<string>('all');
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -33,7 +33,9 @@ const MissionsPage = () => {
       
       // Filtrer par statut si un tab spécifique est sélectionné
       if (activeTab !== 'all') {
-        query = query.eq('status', activeTab);
+        // Convertir le tab actif en statut de mission valide
+        const tabAsStatus = activeTab as MissionStatus;
+        query = query.eq('status', tabAsStatus);
       }
       
       const { data: missionsData, error: missionsError } = await query;
@@ -45,10 +47,11 @@ const MissionsPage = () => {
       
       const convertedMissions = (missionsData || []).map(mission => {
         const basicMission = convertMissionFromDB(mission as unknown as MissionFromDB);
-        // Ajouter des informations supplémentaires du client si disponibles
+        // Sécuriser l'accès aux propriétés du profil client
+        const profileData = mission.profiles as any;
         return {
           ...basicMission,
-          client_name: mission.profiles?.company_name || mission.profiles?.full_name || 'Client inconnu'
+          client_name: profileData?.company_name || profileData?.full_name || 'Client inconnu'
         };
       });
       

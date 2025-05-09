@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -203,7 +202,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     form.setValue('delivery_address', address);
   };
 
-  const onSubmit = async (values: CreateMissionFormValues) => {
+  const onSubmit = async (values: any) => {
     try {
       setIsSubmitting(true);
       

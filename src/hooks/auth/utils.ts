@@ -62,6 +62,56 @@ export const verifyAdminToken = async (token: string, email: string): Promise<bo
   }
 };
 
+// Nouvelle fonction qui permet à la fois de vérifier et de marquer le token d'invitation comme utilisé
+export const verifyAndUseAdminToken = async (token: string, email: string): Promise<{ valid: boolean; message?: string }> => {
+  try {
+    console.log(`Vérification du token: ${token} pour l'email: ${email}`);
+    
+    // Vérifier si le token existe et est valide
+    const { data, error } = await supabase
+      .from('admin_invitation_tokens')
+      .select('*')
+      .eq('token', token)
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Erreur lors de la vérification du token:', error);
+      return { valid: false, message: `Erreur de base de données: ${error.message}` };
+    }
+    
+    if (!data) {
+      return { valid: false, message: "Token d'invitation invalide ou email non correspondant" };
+    }
+    
+    // Vérifier si le token a déjà été utilisé
+    if (data.used) {
+      return { valid: false, message: "Ce token d'invitation a déjà été utilisé" };
+    }
+    
+    // Vérifier si le token a expiré
+    if (new Date(data.expires_at) < new Date()) {
+      return { valid: false, message: "Ce token d'invitation a expiré" };
+    }
+    
+    // Marquer le token comme utilisé
+    const { error: updateError } = await supabase
+      .from('admin_invitation_tokens')
+      .update({ used: true, used_at: new Date().toISOString() })
+      .eq('id', data.id);
+    
+    if (updateError) {
+      console.error('Erreur lors de la mise à jour du token:', updateError);
+      return { valid: false, message: `Erreur de mise à jour: ${updateError.message}` };
+    }
+    
+    return { valid: true };
+  } catch (err: any) {
+    console.error('Erreur dans verifyAndUseAdminToken:', err);
+    return { valid: false, message: `Erreur inattendue: ${err.message}` };
+  }
+};
+
 // Fonction pour télécharger des documents de chauffeur
 export const uploadDriverDocument = async (file: File, type: string, userId: string): Promise<string | null> => {
   try {

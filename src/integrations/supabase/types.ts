@@ -384,7 +384,7 @@ export type Database = {
             foreignKeyName: "missions_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "clients"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

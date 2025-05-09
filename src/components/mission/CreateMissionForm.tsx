@@ -249,9 +249,26 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         return;
       }
       
-      // Pour les clients, attribuer automatiquement la mission à l'utilisateur actuel
+      // Utiliser directement l'ID du profil connecté si c'est un client
+      // Pour les admins, on utilise la valeur sélectionnée dans le formulaire
+      let clientId = null;
       if (profile?.role === 'client' && user?.id) {
-        values.client_id = user.id;
+        clientId = user.id;
+        console.log("Client ID (utilisateur connecté):", clientId);
+      } else if (values.client_id) {
+        clientId = values.client_id;
+        console.log("Client ID (sélectionné par admin):", clientId);
+      } else if (user?.id) {
+        // Fallback: utiliser l'id de l'utilisateur connecté
+        clientId = user.id;
+        console.log("Client ID (fallback):", clientId);
+      }
+      
+      // Vérifier que nous avons un client_id valide
+      if (!clientId) {
+        toast.error('Aucun client valide n\'a été trouvé ou sélectionné');
+        setIsSubmitting(false);
+        return;
       }
       
       // S'assurer que chauffeur_id n'est pas "no_driver_assigned"
@@ -260,7 +277,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       }
       
       console.log("User ID:", user?.id);
-      console.log("Client ID:", values.client_id || user?.id);
+      console.log("Client ID final:", clientId);
       
       // Préparer les données d'adresse pour la base de données
       const pickupAddressData = values.pickup_address_data || { formatted_address: values.pickup_address };
@@ -280,7 +297,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       
       // Enregistrer la mission
       const missionData = {
-        client_id: values.client_id || user?.id,
+        client_id: clientId,
         status: values.status || 'en_acceptation',
         pickup_address: pickupAddressJson,
         delivery_address: deliveryAddressJson,
@@ -307,7 +324,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         scheduled_date: new Date().toISOString(),
         vehicle_id: 1, // Valeur par défaut (assurez-vous qu'elle existe dans la table vehicles)
         vat_rate: 20, // Taux de TVA par défaut
-        mission_type: values.mission_type
+        mission_type: values.mission_type || 'LIV' // S'assurer qu'une valeur par défaut existe
       };
       
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));

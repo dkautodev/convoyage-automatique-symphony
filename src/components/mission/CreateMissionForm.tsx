@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Save, Calculator } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Save, Calculator, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -20,6 +19,9 @@ import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { typedSupabase } from '@/types/database';
 import { vehicleCategoryLabels, VehicleCategory, MissionStatus } from '@/types/supabase';
 import { Address } from '@/types/supabase';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({
@@ -43,24 +45,34 @@ const vehicleAndAddressSchema = z.object({
   vehicle_id: z.number().nullable().optional(),
 });
 
-// Étape 3: Information du véhicule
+// Étape 3: Information du véhicule - VIN devient optionnel
 const vehicleInfoSchema = z.object({
   vehicle_make: z.string().min(1, 'La marque du véhicule est requise'),
   vehicle_model: z.string().min(1, 'Le modèle du véhicule est requis'),
   vehicle_fuel: z.string().min(1, 'Le type de carburant est requis'),
   vehicle_year: z.number().int().positive().optional(),
   vehicle_registration: z.string().min(1, 'L\'immatriculation est requise'),
-  vehicle_vin: z.string().min(1, 'Le numéro VIN est requis'),
+  vehicle_vin: z.string().optional(), // VIN est maintenant optionnel
 });
 
-// Étape 4: Contacts et notes
+// Étape 4: Contacts et notes avec créneaux horaires
 const contactsAndNotesSchema = z.object({
   contact_pickup_name: z.string().min(1, 'Le nom du contact de départ est requis'),
   contact_pickup_phone: z.string().min(1, 'Le téléphone du contact de départ est requis'),
   contact_pickup_email: z.string().min(1, 'L\'email du contact de départ est requis').email('Email invalide'),
+  // Nouveaux champs pour créneaux de ramassage
+  D1_PEC: z.date({ required_error: 'La date de ramassage est requise' }),
+  H1_PEC: z.string().min(1, 'L\'heure de début de ramassage est requise'),
+  H2_PEC: z.string().min(1, 'L\'heure de fin de ramassage est requise'),
+  
   contact_delivery_name: z.string().min(1, 'Le nom du contact de livraison est requis'),
   contact_delivery_phone: z.string().min(1, 'Le téléphone du contact de livraison est requis'),
   contact_delivery_email: z.string().min(1, 'L\'email du contact de livraison est requis').email('Email invalide'),
+  // Nouveaux champs pour créneaux de livraison
+  D2_LIV: z.date({ required_error: 'La date de livraison est requise' }),
+  H1_LIV: z.string().min(1, 'L\'heure de début de livraison est requise'),
+  H2_LIV: z.string().min(1, 'L\'heure de fin de livraison est requise'),
+  
   notes: z.string().optional(),
 });
 
@@ -120,6 +132,13 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       chauffeur_id: null,
       chauffeur_price_ht: 0,
       vehicle_id: null,
+      // Nouveaux champs par défaut
+      D1_PEC: undefined,
+      H1_PEC: '',
+      H2_PEC: '',
+      D2_LIV: undefined,
+      H1_LIV: '',
+      H2_LIV: '',
     },
   });
 
@@ -331,6 +350,18 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         JSON.parse(JSON.stringify(deliveryAddressData)) : 
         { formatted_address: values.delivery_address };
       
+      // Préparer les données pour les nouveaux champs date/heure
+      let formattedD1PEC = null;
+      let formattedD2LIV = null;
+
+      if (values.D1_PEC) {
+        formattedD1PEC = format(values.D1_PEC, 'yyyy-MM-dd');
+      }
+
+      if (values.D2_LIV) {
+        formattedD2LIV = format(values.D2_LIV, 'yyyy-MM-dd');
+      }
+      
       // Enregistrer la mission
       const missionData = {
         client_id: clientId,
@@ -347,13 +378,23 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         vehicle_fuel: values.vehicle_fuel,
         vehicle_year: values.vehicle_year ? parseInt(values.vehicle_year) : null,
         vehicle_registration: values.vehicle_registration,
-        vehicle_vin: values.vehicle_vin,
+        vehicle_vin: values.vehicle_vin || null, // VIN désormais optionnel
         contact_pickup_name: values.contact_pickup_name,
         contact_pickup_phone: values.contact_pickup_phone,
         contact_pickup_email: values.contact_pickup_email,
+        // Nouveaux champs pour le ramassage
+        D1_PEC: formattedD1PEC,
+        H1_PEC: values.H1_PEC,
+        H2_PEC: values.H2_PEC,
+        
         contact_delivery_name: values.contact_delivery_name,
         contact_delivery_phone: values.contact_delivery_phone,
         contact_delivery_email: values.contact_delivery_email,
+        // Nouveaux champs pour la livraison
+        D2_LIV: formattedD2LIV,
+        H1_LIV: values.H1_LIV,
+        H2_LIV: values.H2_LIV,
+        
         notes: values.notes,
         chauffeur_id: values.chauffeur_id || null,
         chauffeur_price_ht: values.chauffeur_price_ht || 0,
@@ -731,10 +772,13 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                     name="vehicle_vin"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Numéro VIN (Numéro de châssis) *</FormLabel>
+                        <FormLabel>Numéro VIN (Numéro de châssis)</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: WVWZZZ1JZXW000001" />
                         </FormControl>
+                        <FormDescription>
+                          Ce champ est optionnel
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -743,9 +787,10 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
               </div>
             )}
 
-            {/* Étape 4: Contacts et notes */}
+            {/* Étape 4: Contacts, créneaux horaires et notes */}
             {currentStep === 4 && (
               <div className="space-y-6">
+                {/* Contact au lieu de départ et créneau horaire */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
@@ -784,312 +829,3 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                           <FormControl>
                             <Input {...field} type="email" placeholder="Adresse email" />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
-                    <FormField
-                      control={form.control}
-                      name="contact_delivery_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nom / Société *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Nom complet ou société" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contact_delivery_phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Téléphone *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Numéro de téléphone" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contact_delivery_email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email *</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" placeholder="Adresse email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Informations complémentaires</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Saisissez ici toute information complémentaire utile pour cette mission"
-                          className="h-32"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Ces informations seront visibles sur la fiche mission.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {/* Étape 5: Attribution (Admin uniquement) */}
-            {currentStep === 5 && profile?.role === 'admin' && (
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="client_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client</FormLabel>
-                      <Select 
-                        onValueChange={(value) => handleClientChange(value)} 
-                        value={selectedClientId || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un client" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <ClientSelectItems onSelectClient={handleClientChange} />
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Sélectionnez le client pour cette mission.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Statut initial</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un statut" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="en_acceptation">En cours d'acceptation</SelectItem>
-                          <SelectItem value="accepte">Accepté</SelectItem>
-                          <SelectItem value="prise_en_charge">En cours de prise en charge</SelectItem>
-                          <SelectItem value="livraison">En cours de livraison</SelectItem>
-                          <SelectItem value="livre">Livré</SelectItem>
-                          <SelectItem value="termine">Terminé</SelectItem>
-                          <SelectItem value="annule">Annulé</SelectItem>
-                          <SelectItem value="incident">Incident</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Le statut initial de la mission.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Optionnel: Attribuer à un chauffeur */}
-                <FormField
-                  control={form.control}
-                  name="chauffeur_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Chauffeur (optionnel)</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value || "no_driver_assigned"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un chauffeur (optionnel)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="no_driver_assigned">Pas de chauffeur assigné</SelectItem>
-                          <DriverSelectItems />
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Vous pouvez attribuer la mission à un chauffeur maintenant ou plus tard.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {form.watch('chauffeur_id') && form.watch('chauffeur_id') !== "no_driver_assigned" && (
-                  <FormField
-                    control={form.control}
-                    name="chauffeur_price_ht"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Prix chauffeur HT (€)</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            step="0.01"
-                            placeholder="Prix HT pour le chauffeur"
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Prix HT qui sera versé au chauffeur pour cette mission.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Navigation et soumission */}
-            <CardFooter className="flex justify-between border-t pt-6 mt-6">
-              {currentStep > 1 && (
-                <Button type="button" variant="outline" onClick={prevStep}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Précédent
-                </Button>
-              )}
-              {currentStep < totalSteps ? (
-                <Button type="button" onClick={nextStep} className="ml-auto">
-                  Suivant
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              ) : (
-                <Button type="submit" disabled={isSubmitting} className="ml-auto">
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Création en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Créer la mission
-                    </>
-                  )}
-                </Button>
-              )}
-            </CardFooter>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Composant helper pour lister les clients
-function ClientSelectItems({ onSelectClient }: { onSelectClient: (clientId: string) => void }) {
-  const [clients, setClients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchClients() {
-      try {
-        const { data, error } = await typedSupabase
-          .from('profiles')
-          .select('id, full_name, company_name')
-          .eq('role', 'client');
-
-        if (error) throw error;
-        setClients(data || []);
-        
-        // Pour debugging
-        console.log("Clients récupérés:", data);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des clients:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchClients();
-  }, []);
-
-  if (loading) {
-    return <SelectItem value="loading">Chargement des clients...</SelectItem>;
-  }
-
-  if (clients.length === 0) {
-    return <SelectItem value="no-clients">Aucun client trouvé</SelectItem>;
-  }
-
-  return clients.map((client) => (
-    <SelectItem key={client.id} value={client.id || "unknown-client"}>
-      {client.company_name || client.full_name || 'Client sans nom'}
-    </SelectItem>
-  ));
-}
-
-// Composant helper pour lister les chauffeurs
-function DriverSelectItems() {
-  const [drivers, setDrivers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchDrivers() {
-      try {
-        const { data, error } = await typedSupabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('role', 'chauffeur');
-
-        if (error) throw error;
-        setDrivers(data || []);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des chauffeurs:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDrivers();
-  }, []);
-
-  if (loading) {
-    return <SelectItem value="loading-drivers">Chargement des chauffeurs...</SelectItem>;
-  }
-
-  if (drivers.length === 0) {
-    return <SelectItem value="no-drivers">Aucun chauffeur trouvé</SelectItem>;
-  }
-
-  return drivers.map((driver) => (
-    <SelectItem key={driver.id} value={driver.id || "unknown-driver"}>
-      {driver.full_name || 'Chauffeur sans nom'}
-    </SelectItem>
-  ));
-}

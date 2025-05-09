@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Mission } from '@/types/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, MapPin, Truck, User } from 'lucide-react';
+import { FileText, MapPin, Truck, User, Calendar, Clock } from 'lucide-react';
 import { formatFullAddress, formatContactInfo } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
 interface MissionDetailsCardProps {
@@ -23,6 +24,32 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
 }) => {
   const clientName = client?.company_name || client?.full_name || 'Client inconnu';
   const vehicleCategory = mission.vehicle_category ? vehicleCategoryLabels[mission.vehicle_category] : 'Non spécifiée';
+  
+  // Formatter les créneaux horaires
+  const formatTimeSlot = (date: string | null, timeStart: string | null, timeEnd: string | null) => {
+    if (!date) return 'Non spécifié';
+    
+    let formattedDate;
+    try {
+      // Convertir la date au format français
+      formattedDate = new Date(date).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      formattedDate = date;
+    }
+    
+    if (timeStart && timeEnd) {
+      return `${formattedDate} entre ${timeStart} et ${timeEnd}`;
+    } else if (timeStart) {
+      return `${formattedDate} à partir de ${timeStart}`;
+    } else {
+      return formattedDate;
+    }
+  };
+  
   return <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
@@ -67,7 +94,7 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-1">Catégorie de véhicule</h4>
             <p className="text-lg font-medium flex items-center gap-1">
-              
+              <Truck className="h-4 w-4 text-gray-500" />
               {vehicleCategory}
             </p>
           </div>
@@ -92,6 +119,15 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
                       <p className="font-medium">{mission.contact_pickup_name}</p>
                       {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
                       {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
+                      {/* Afficher le créneau horaire de ramassage s'il existe */}
+                      {(mission.D1_PEC || mission.H1_PEC) && (
+                        <div className="mt-2 flex items-start gap-1">
+                          <Clock className="h-4 w-4 text-gray-500 mt-0.5" />
+                          <p className="text-sm">
+                            {formatTimeSlot(mission.D1_PEC, mission.H1_PEC, mission.H2_PEC)}
+                          </p>
+                        </div>
+                      )}
                     </div> : <p className="text-gray-500">Aucun contact spécifié</p>}
                 </div>
               </div>
@@ -112,6 +148,15 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
                       <p className="font-medium">{mission.contact_delivery_name}</p>
                       {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
                       {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
+                      {/* Afficher le créneau horaire de livraison s'il existe */}
+                      {(mission.D2_LIV || mission.H1_LIV) && (
+                        <div className="mt-2 flex items-start gap-1">
+                          <Clock className="h-4 w-4 text-gray-500 mt-0.5" />
+                          <p className="text-sm">
+                            {formatTimeSlot(mission.D2_LIV, mission.H1_LIV, mission.H2_LIV)}
+                          </p>
+                        </div>
+                      )}
                     </div> : <p className="text-gray-500">Aucun contact spécifié</p>}
                 </div>
               </div>
@@ -120,7 +165,32 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6">
-          
+          {/* Créneaux horaires (si existants et pas déjà affichés) */}
+          {(mission.D1_PEC || mission.D2_LIV) && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Créneaux horaires
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(mission.D1_PEC || mission.H1_PEC) && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">Créneau de ramassage</h4>
+                    <p>{formatTimeSlot(mission.D1_PEC, mission.H1_PEC, mission.H2_PEC)}</p>
+                  </div>
+                )}
+                
+                {(mission.D2_LIV || mission.H1_LIV) && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 mb-1">Créneau de livraison</h4>
+                    <p>{formatTimeSlot(mission.D2_LIV, mission.H1_LIV, mission.H2_LIV)}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         

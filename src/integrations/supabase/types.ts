@@ -278,8 +278,14 @@ export type Database = {
           contact_pickup_phone: string | null
           created_at: string
           created_by: string
+          D1_PEC: string | null
+          D2_LIV: string | null
           delivery_address: Json
           distance_km: number
+          H1_LIV: string | null
+          H1_PEC: string | null
+          H2_LIV: string | null
+          H2_PEC: string | null
           id: string
           mission_number: string | null
           mission_type: string | null
@@ -315,8 +321,14 @@ export type Database = {
           contact_pickup_phone?: string | null
           created_at?: string
           created_by: string
+          D1_PEC?: string | null
+          D2_LIV?: string | null
           delivery_address: Json
           distance_km: number
+          H1_LIV?: string | null
+          H1_PEC?: string | null
+          H2_LIV?: string | null
+          H2_PEC?: string | null
           id?: string
           mission_number?: string | null
           mission_type?: string | null
@@ -352,8 +364,14 @@ export type Database = {
           contact_pickup_phone?: string | null
           created_at?: string
           created_by?: string
+          D1_PEC?: string | null
+          D2_LIV?: string | null
           delivery_address?: Json
           distance_km?: number
+          H1_LIV?: string | null
+          H1_PEC?: string | null
+          H2_LIV?: string | null
+          H2_PEC?: string | null
           id?: string
           mission_number?: string | null
           mission_type?: string | null

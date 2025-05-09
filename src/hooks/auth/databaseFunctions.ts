@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { PostgrestError } from '@supabase/supabase-js';
 
 // Function to create necessary database functions on first app load
 export const setupDatabaseFunctions = async () => {
@@ -17,7 +18,7 @@ export const setupDatabaseFunctions = async () => {
 export const checkDriverFieldsConstraint = async () => {
   try {
     // Vérifier si la contrainte existe déjà
-    const { data: constraintExists, error: checkError } = await supabase
+    const checkConstraintPromise = supabase
       .from('profiles')
       .select('id')
       .limit(1)
@@ -36,10 +37,12 @@ export const checkDriverFieldsConstraint = async () => {
         
         return { data, error: null };
       })
-      .catch(() => {
+      .catch((error) => {
         console.log('Error accessing profiles, assuming constraint does not exist');
         return { data: false, error: null };
       });
+
+    const { data: constraintExists, error: checkError } = await checkConstraintPromise;
     
     if (checkError) {
       console.error('Error checking driver fields constraint:', checkError);

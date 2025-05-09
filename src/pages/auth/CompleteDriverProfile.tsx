@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,58 +48,33 @@ const driverProfileSchema = z.object({
   phone2: z.string().optional(),
   licenseNumber: z.string().min(2, { message: 'Le numéro de permis est requis' }),
   idNumber: z.string().min(2, { message: 'Le numéro de CNI/passeport est requis' }),
-  vehicleType: z.string(),
+  vehicleType: z.string().min(1, { message: 'Le type de véhicule est requis' }),
   // Document fields
   kbis: typeof window === 'undefined' 
     ? z.any() 
     : z.instanceof(File)
-      .refine(file => file && file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .refine(
-        file => ACCEPTED_FILE_TYPES['application/pdf'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/jpeg'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/png'].some(ext => file.name.endsWith(ext)),
-        { message: 'Format de fichier non supporté' }
-      ).optional(),
+      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
+      .optional(),
   driverLicenseFront: typeof window === 'undefined' 
     ? z.any() 
     : z.instanceof(File)
-      .refine(file => file && file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .refine(
-        file => ACCEPTED_FILE_TYPES['application/pdf'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/jpeg'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/png'].some(ext => file.name.endsWith(ext)),
-        { message: 'Format de fichier non supporté' }
-      ).optional(),
+      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
+      .optional(),
   driverLicenseBack: typeof window === 'undefined' 
     ? z.any() 
     : z.instanceof(File)
-      .refine(file => file && file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .refine(
-        file => ACCEPTED_FILE_TYPES['application/pdf'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/jpeg'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/png'].some(ext => file.name.endsWith(ext)),
-        { message: 'Format de fichier non supporté' }
-      ).optional(),
+      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
+      .optional(),
   vigilanceAttestation: typeof window === 'undefined' 
     ? z.any() 
     : z.instanceof(File)
-      .refine(file => file && file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .refine(
-        file => ACCEPTED_FILE_TYPES['application/pdf'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/jpeg'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/png'].some(ext => file.name.endsWith(ext)),
-        { message: 'Format de fichier non supporté' }
-      ).optional(),
+      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
+      .optional(),
   idDocument: typeof window === 'undefined' 
     ? z.any() 
     : z.instanceof(File)
-      .refine(file => file && file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .refine(
-        file => ACCEPTED_FILE_TYPES['application/pdf'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/jpeg'].some(ext => file.name.endsWith(ext)) || 
-                ACCEPTED_FILE_TYPES['image/png'].some(ext => file.name.endsWith(ext)),
-        { message: 'Format de fichier non supporté' }
-      ).optional(),
+      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
+      .optional(),
 });
 
 type FormData = z.infer<typeof driverProfileSchema>;
@@ -127,13 +101,37 @@ export default function CompleteDriverProfile() {
       vehicleType: (profile?.vehicle_type as string) || '',
     },
   });
+
+  // S'assurer que les valeurs du formulaire sont mises à jour quand le profil est chargé
+  useEffect(() => {
+    if (profile) {
+      form.setValue('companyName', profile.company_name || '');
+      form.setValue('fullName', profile.full_name || '');
+      form.setValue('siret', profile.siret || '');
+      form.setValue('tvaApplicable', profile.tva_applicable || false);
+      form.setValue('tvaNumb', profile.tva_number || '');
+      form.setValue('phone1', profile.phone_1 || '');
+      form.setValue('phone2', profile.phone_2 || '');
+      form.setValue('licenseNumber', profile.driver_license || '');
+      form.setValue('idNumber', profile.vehicle_registration || '');
+      form.setValue('vehicleType', (profile.vehicle_type as string) || '');
+      
+      // Définir une adresse par défaut si elle est disponible
+      const address = profile.billing_address && typeof profile.billing_address === 'object' 
+        ? profile.billing_address.formatted_address 
+        : '';
+      
+      if (address) {
+        form.setValue('billingAddress', address);
+      }
+    }
+  }, [profile, form]);
   
   const onAddressSelect = async (address: string, placeId: string) => {
     form.setValue('billingAddress', address);
     form.setValue('placeId', placeId);
     
     // Simuler l'obtention des coordonnées depuis l'API Google Maps
-    // En production, utilisez l'API Google Places pour obtenir les coordonnées réelles
     setMapCoords({
       lat: 48.8566 + Math.random() * 0.01,
       lng: 2.3522 + Math.random() * 0.01,
@@ -292,6 +290,7 @@ export default function CompleteDriverProfile() {
                             <Select 
                               onValueChange={field.onChange} 
                               defaultValue={field.value}
+                              value={field.value || undefined}
                             >
                               <FormControl>
                                 <SelectTrigger>

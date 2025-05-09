@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,47 +19,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import AddressAutocomplete from '@/components/AddressAutocomplete';
-import AddressMap from '@/components/AddressMap';
 import { useAuth } from '@/hooks/useAuth';
 import { formatSiret } from '@/utils/validation';
-import { Json } from '@/integrations/supabase/types';
-import { Address } from '@/types/supabase';
 
-// Helper function to convert JSON to Address
-function jsonToAddress(json: Json | null): {
-  formatted_address?: string;
-  lat?: number;
-  lng?: number;
-} {
-  if (!json) return {};
-  
-  // Handle if json is an array
-  if (Array.isArray(json)) {
-    return {};
-  }
-  
-  // Make sure json is an object and not a string/number/boolean
-  if (typeof json !== 'object' || json === null) {
-    return {};
-  }
-  
-  // Now we know json is an object, we can safely access its properties
-  const jsonObj = json as Record<string, Json>;
-  
-  return {
-    formatted_address: typeof jsonObj.formatted_address === 'string' ? jsonObj.formatted_address : undefined,
-    lat: typeof jsonObj.lat === 'number' ? jsonObj.lat : undefined,
-    lng: typeof jsonObj.lng === 'number' ? jsonObj.lng : undefined
-  };
-}
-
-// Schema de validation pour la première étape du profil chauffeur (informations de base)
-const driverBasicProfileSchema = z.object({
-  companyName: z.string().min(2, { message: 'Le nom de la société est requis' }),
+// Schema de validation pour le profil chauffeur
+const driverProfileSchema = z.object({
   fullName: z.string().min(2, { message: 'Le nom complet est requis' }),
-  billingAddress: z.string().min(5, { message: "L'adresse de facturation est requise" }),
-  placeId: z.string().optional(),
+  companyName: z.string().min(2, { message: 'Le nom de la société est requis' }),
   siret: z.string().refine(val => /^\d{14}$/.test(val.replace(/\s/g, '')), {
     message: 'Le SIRET doit contenir exactement 14 chiffres',
   }),
@@ -69,21 +37,19 @@ const driverBasicProfileSchema = z.object({
   phone2: z.string().optional(),
 });
 
-type FormData = z.infer<typeof driverBasicProfileSchema>;
+type FormData = z.infer<typeof driverProfileSchema>;
 
 export default function CompleteDriverProfile() {
-  const [mapCoords, setMapCoords] = useState<{lat: number; lng: number}>({ lat: 48.8566, lng: 2.3522 });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { completeDriverBasicProfile, profile } = useAuth();
+  const { completeDriverProfile, profile } = useAuth();
   const [formInitialized, setFormInitialized] = useState(false);
+  const navigate = useNavigate();
   
   const form = useForm<FormData>({
-    resolver: zodResolver(driverBasicProfileSchema),
+    resolver: zodResolver(driverProfileSchema),
     defaultValues: {
-      companyName: '',
       fullName: '',
-      billingAddress: '',
-      placeId: '',
+      companyName: '',
       siret: '',
       tvaApplicable: false,
       tvaNumb: '',
@@ -97,46 +63,17 @@ export default function CompleteDriverProfile() {
     if (profile && !formInitialized) {
       console.log("Setting form values from profile:", profile);
       
-      form.setValue('companyName', profile.company_name || '');
       form.setValue('fullName', profile.full_name || '');
+      form.setValue('companyName', profile.company_name || '');
       form.setValue('siret', profile.siret || '');
       form.setValue('tvaApplicable', profile.tva_applicable || false);
       form.setValue('tvaNumb', profile.tva_number || '');
       form.setValue('phone1', profile.phone_1 || '');
       form.setValue('phone2', profile.phone_2 || '');
       
-      // Définir une adresse par défaut si elle est disponible
-      if (profile.billing_address) {
-        const addressData = jsonToAddress(profile.billing_address);
-        
-        if (addressData.formatted_address) {
-          form.setValue('billingAddress', addressData.formatted_address);
-          
-          // Si on a aussi les coordonnées, mettre à jour la carte
-          if (addressData.lat && addressData.lng) {
-            setMapCoords({
-              lat: addressData.lat,
-              lng: addressData.lng
-            });
-          }
-        }
-      }
-      
       setFormInitialized(true);
     }
   }, [profile, form, formInitialized]);
-  
-  const onAddressSelect = async (address: string, placeId: string) => {
-    console.log("Address selected:", address, "placeId:", placeId);
-    form.setValue('billingAddress', address);
-    form.setValue('placeId', placeId);
-    
-    // Simuler l'obtention des coordonnées depuis l'API Google Maps
-    setMapCoords({
-      lat: 48.8566 + Math.random() * 0.01,
-      lng: 2.3522 + Math.random() * 0.01,
-    });
-  };
 
   const handleSiretChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatSiret(e.target.value);
@@ -146,44 +83,30 @@ export default function CompleteDriverProfile() {
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
-      console.log("Submitting driver basic profile data:", data);
-      
-      // S'assurer que billingAddress est non vide
-      if (!data.billingAddress) {
-        toast.error("L'adresse de facturation est obligatoire");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Préparer les données pour l'envoi
-      const billingAddress = {
-        street: data.billingAddress,
-        city: "Paris", // Valeur par défaut si l'API ne retourne pas la ville
-        postal_code: "75000", // Valeur par défaut si l'API ne retourne pas le code postal
-        country: "France", // Valeur par défaut si l'API ne retourne pas le pays
-        formatted_address: data.billingAddress,
-        lat: mapCoords.lat,
-        lng: mapCoords.lng
-      };
-      
-      console.log("Formatted address data:", billingAddress);
+      console.log("Submitting driver profile data:", data);
       
       try {
-        await completeDriverBasicProfile({
-          companyName: data.companyName,
+        // Simplifier la structure des données envoyées pour correspondre au nouveau format d'inscription
+        await completeDriverProfile({
           fullName: data.fullName,
-          billingAddress,
+          companyName: data.companyName,
+          // Pas besoin d'adresse dans cette version simplifiée
+          billingAddress: {
+            street: "",
+            city: "",
+            postal_code: "",
+            country: "France",
+          },
           siret: data.siret.replace(/\s/g, ''),
           tvaApplicable: data.tvaApplicable,
           tvaNumb: data.tvaApplicable && data.tvaNumb ? data.tvaNumb : undefined,
           phone1: data.phone1,
           phone2: data.phone2 || undefined,
-          documents: undefined
         });
         
-        toast.success("Première étape complétée avec succès!");
-        // Redirect to the next step
-        window.location.href = '/complete-driver-config';
+        toast.success("Profil complété avec succès!");
+        // Redirection vers le tableau de bord
+        navigate('/driver/dashboard');
         
       } catch (error: any) {
         console.error("Error submitting driver profile:", error);
@@ -197,10 +120,6 @@ export default function CompleteDriverProfile() {
     }
   };
 
-  // Débogage des valeurs du formulaire
-  console.log("Current form values:", form.getValues());
-  console.log("Form errors:", form.formState.errors);
-
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
       <div className="container mx-auto p-4">
@@ -209,7 +128,7 @@ export default function CompleteDriverProfile() {
             <CardHeader>
               <CardTitle className="text-2xl">Compléter votre profil chauffeur</CardTitle>
               <CardDescription>
-                Étape 1/2 : Informations professionnelles de base
+                Renseignez vos informations professionnelles
               </CardDescription>
             </CardHeader>
             
@@ -350,30 +269,6 @@ export default function CompleteDriverProfile() {
                     </div>
                   </div>
                   
-                  {/* Adresse avec carte */}
-                  <FormField
-                    control={form.control}
-                    name="billingAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Adresse de facturation</FormLabel>
-                        <FormControl>
-                          <AddressAutocomplete
-                            value={field.value}
-                            onChange={field.onChange}
-                            onSelect={onAddressSelect}
-                            placeholder="Commencez à taper votre adresse..."
-                            error={form.formState.errors.billingAddress?.message}
-                          />
-                        </FormControl>
-                        {mapCoords && <div className="mt-2">
-                          <AddressMap lat={mapCoords.lat} lng={mapCoords.lng} />
-                        </div>}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
                   <Button 
                     type="submit" 
                     className="w-full"
@@ -385,7 +280,7 @@ export default function CompleteDriverProfile() {
                         <span>Enregistrement en cours...</span>
                       </div>
                     ) : (
-                      'Continuer à l\'étape suivante'
+                      'Finaliser mon profil'
                     )}
                   </Button>
                 </form>

@@ -69,61 +69,6 @@ export async function loginUser(email: string, password: string) {
   }
 }
 
-// Fonction pour enregistrer un nouvel utilisateur (legacy)
-export async function registerLegacyUser(data: RegisterFormData) {
-  try {
-    console.log("Service: Inscription de l'utilisateur (legacy)", data.email);
-
-    // Enregistrer l'utilisateur via Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          role: data.role,
-        },
-      },
-    });
-
-    if (authError) {
-      console.error("Service: Erreur lors de l'inscription de l'utilisateur", authError);
-      throw authError;
-    }
-
-    console.log("Service: Utilisateur inscrit avec succès, ID:", authData.user?.id);
-
-    // Créer un profil utilisateur dans la base de données
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: authData.user?.id,
-          email: data.email,
-          role: data.role,
-          full_name: data.fullName,
-          company_name: data.companyName,
-          siret: data.siret,
-          created_at: new Date().toISOString(),
-          last_login: new Date().toISOString(),
-          active: true,
-          profile_completed: false,
-        },
-      ]);
-
-    if (profileError) {
-      console.error("Service: Erreur lors de la création du profil", profileError);
-      throw profileError;
-    }
-
-    console.log("Service: Profil utilisateur créé avec succès pour", authData.user?.id);
-    return authData;
-
-  } catch (error) {
-    console.error("Service: Erreur lors de l'inscription de l'utilisateur", error);
-    throw error;
-  }
-}
-
 // Fonction pour enregistrer un nouvel utilisateur (basic)
 export async function registerBasicUser(data: BasicRegisterFormData) {
   try {
@@ -208,39 +153,7 @@ export async function completeClientProfileService(
   }
 }
 
-// Fonction pour compléter la première étape du profil chauffeur
-export async function completeDriverBasicProfileService(
-  userId: string,
-  data: DriverProfileFormData
-): Promise<void> {
-  try {
-    console.log("Service: Complétion de la première étape du profil chauffeur pour", userId);
-
-    // Mise à jour du profil avec les nouvelles données
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: data.fullName,
-        company_name: data.companyName,
-        billing_address: addressToJson(data.billingAddress),
-        siret: data.siret,
-        tva_applicable: data.tvaApplicable,
-        tva_number: data.tvaNumb,
-        phone_1: data.phone1,
-        phone_2: data.phone2,
-      })
-      .eq('id', userId);
-
-    if (error) throw error;
-
-    console.log("Service: Première étape du profil chauffeur complétée avec succès");
-  } catch (error) {
-    console.error("Service: Erreur lors de la complétion de la première étape du profil chauffeur", error);
-    throw error;
-  }
-}
-
-// Fonction pour compléter le profil chauffeur (legacy)
+// Fonction pour compléter le profil chauffeur
 export async function completeDriverProfileService(
   userId: string,
   data: DriverProfileFormData
@@ -266,45 +179,16 @@ export async function completeDriverProfileService(
 
     if (error) throw error;
 
-    console.log("Service: Profil chauffeur complété avec succès");
-  } catch (error) {
-    console.error("Service: Erreur lors de la complétion du profil chauffeur", error);
-    throw error;
-  }
-}
-
-// Fonction pour compléter la seconde étape du profil chauffeur
-export async function completeDriverConfigService(
-  userId: string, 
-  data: DriverConfigFormData
-): Promise<void> {
-  try {
-    console.log("Service: Enregistrement de la configuration chauffeur pour", userId);
-    
-    // Mise à jour du profil avec les nouvelles données
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        driver_license: data.licenseNumber,
-        id_document: data.idNumber,
-        legal_status: data.legalStatus,
-        profile_completed: true
-      })
-      .eq('id', userId);
-    
-    if (error) throw error;
-    
-    // Téléchargement des documents si présents
+    // Si des documents sont présents, les télécharger
     if (data.documents) {
       for (const [type, file] of Object.entries(data.documents)) {
         await uploadDriverDocument(file, type, userId);
       }
     }
-    
-    console.log("Service: Configuration du chauffeur enregistrée avec succès");
-    
+
+    console.log("Service: Profil chauffeur complété avec succès");
   } catch (error) {
-    console.error("Service: Erreur lors de l'enregistrement de la configuration chauffeur", error);
+    console.error("Service: Erreur lors de la complétion du profil chauffeur", error);
     throw error;
   }
 }
@@ -413,5 +297,59 @@ export async function uploadDriverDocument(file: File, type: string, userId: str
   } catch (error) {
     console.error(`Service: Erreur lors de l'upload du document ${type}`, error);
     return null;
+  }
+}
+
+// Fonction pour enregistrer un nouvel utilisateur (legacy - gardée pour compatibilité)
+export async function registerLegacyUser(data: RegisterFormData) {
+  try {
+    console.log("Service: Inscription de l'utilisateur (legacy)", data.email);
+
+    // Enregistrer l'utilisateur via Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          role: data.role,
+        },
+      },
+    });
+
+    if (authError) {
+      console.error("Service: Erreur lors de l'inscription de l'utilisateur", authError);
+      throw authError;
+    }
+
+    console.log("Service: Utilisateur inscrit avec succès, ID:", authData.user?.id);
+
+    // Créer un profil utilisateur dans la base de données
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          id: authData.user?.id,
+          email: data.email,
+          role: data.role,
+          full_name: data.fullName,
+          company_name: data.companyName,
+          siret: data.siret,
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          active: true,
+          profile_completed: false,
+        },
+      ]);
+
+    if (profileError) {
+      console.error("Service: Erreur lors de la création du profil", profileError);
+      throw profileError;
+    }
+
+    console.log("Service: Profil utilisateur créé avec succès pour", authData.user?.id);
+    return authData;
+  } catch (error) {
+    console.error("Service: Erreur lors de l'inscription de l'utilisateur", error);
+    throw error;
   }
 }

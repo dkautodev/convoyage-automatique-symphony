@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -11,25 +12,18 @@ import {
   registerBasicUser,
   completeClientProfileService, 
   completeDriverProfileService,
-  completeDriverBasicProfileService,
-  completeDriverConfigService,
-  registerLegacyUser,
+  resetUserPassword,
   updateUserProfile,
-  resetUserPassword
-} from './authService';
-import { 
-  redirectToDashboard, 
-  navigateToProfileCompletion, 
   verifyAdminToken, 
-  uploadDriverDocument 
-} from './utils';
+  uploadDriverDocument,
+  registerLegacyUser
+} from './authService';
+import { UserRole } from '@/types/supabase';
 import { 
   RegisterFormData, 
   BasicRegisterFormData, 
   ClientProfileFormData, 
-  DriverProfileFormData,
-  DriverConfigFormData,
-  LegalStatusType as AuthLegalStatusType
+  DriverProfileFormData
 } from '@/types/auth';
 
 // Export the useAuth hook for external use
@@ -225,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Nouvelle fonction pour l'inscription simplifiée
+  // Fonction pour l'inscription simplifiée
   const basicRegister = async (data: BasicRegisterFormData) => {
     try {
       setLoading(true);
@@ -256,94 +250,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction pour compléter la première étape du profil chauffeur
-  const completeDriverBasicProfile = async (data: DriverProfileFormData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
-      }
-      
-      console.log("Données du profil chauffeur (étape 1):", data);
-      
-      const result = await completeDriverBasicProfileService(user.id, data);
-      
-      // Mettre à jour le profil localement
-      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
-      
-      toast.success('Première étape complétée avec succès');
-      
-      // Redirection vers la seconde étape
-      navigate('/complete-driver-config');
-      
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Erreur lors de la complétion du profil: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction pour compléter la seconde étape du profil chauffeur
-  const completeDriverConfig = async (data: DriverConfigFormData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
-      }
-      
-      console.log("Données de configuration chauffeur (étape 2):", data);
-      
-      await completeDriverConfigService(user.id, data);
-      
-      toast.success('Configuration du chauffeur complétée avec succès');
-      
-      // Important: Assurez-vous que le profil est correctement mis à jour avant la redirection
-      setProfile(prev => prev ? { ...prev, profile_completed: true } : null);
-      
-      // Utiliser le chemin exact correspondant à la route définie dans App.tsx
-      navigate('/driver/dashboard');
-      
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Erreur lors de la configuration du chauffeur: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction pour compléter le profil chauffeur (version originale pour compatibilité)
-  const completeDriverProfile = async (data: DriverProfileFormData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
-      }
-      
-      console.log("Données du profil chauffeur (méthode complète):", data);
-      
-      await completeDriverProfileService(user.id, data);
-      
-      // Mettre à jour le profil localement
-      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
-      
-      toast.success('Profil complété avec succès');
-      handleRoleBasedRedirection('chauffeur', true);
-      
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Erreur lors de la complétion du profil: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Fonction pour compléter le profil client
   const completeClientProfile = async (data: ClientProfileFormData) => {
     try {
@@ -359,10 +265,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await completeClientProfileService(user.id, data);
       
       // Mettre à jour le profil localement
-      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
+      setProfile(prev => prev ? { 
+        ...prev, 
+        full_name: data.fullName, 
+        company_name: data.companyName,
+        billing_address: data.billingAddress,
+        siret: data.siret,
+        tva_number: data.tvaNumb,
+        phone_1: data.phone1,
+        phone_2: data.phone2,
+        profile_completed: true 
+      } : null);
       
       toast.success('Profil complété avec succès');
-      handleRoleBasedRedirection('client', true);
+      navigate('/client/dashboard');
+      
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la complétion du profil: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour compléter le profil chauffeur
+  const completeDriverProfile = async (data: DriverProfileFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      console.log("Données du profil chauffeur:", data);
+      
+      await completeDriverProfileService(user.id, data);
+      
+      // Mettre à jour le profil localement
+      setProfile(prev => prev ? { 
+        ...prev, 
+        full_name: data.fullName, 
+        company_name: data.companyName,
+        billing_address: data.billingAddress,
+        siret: data.siret,
+        tva_applicable: data.tvaApplicable,
+        tva_number: data.tvaNumb,
+        phone_1: data.phone1,
+        phone_2: data.phone2,
+        profile_completed: true 
+      } : null);
+      
+      toast.success('Profil complété avec succès');
+      navigate('/driver/dashboard');
       
     } catch (err: any) {
       setError(err.message);
@@ -395,7 +350,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Fonction de déconnexion - correction de la gestion des erreurs
+  // Fonction de déconnexion
   const logout = async () => {
     try {
       setLoading(true);
@@ -486,8 +441,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     basicRegister,
     completeClientProfile,
     completeDriverProfile,
-    completeDriverBasicProfile,
-    completeDriverConfig,
     register, // Gardé pour rétrocompatibilité
     logout,
     updateProfile,

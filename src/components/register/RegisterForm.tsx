@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -30,7 +31,6 @@ const registerSchema = z.object({
   email: z.string().email({ message: 'Veuillez saisir une adresse email valide' }),
   password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' }),
   confirmPassword: z.string(),
-  fullName: z.string().min(2, { message: 'Le nom complet est requis' }),
   role: z.enum(['client', 'chauffeur'], { 
     required_error: "Veuillez sélectionner un type de compte" 
   }),
@@ -50,7 +50,7 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'client' | 'chauffeur'>('client');
-  const { register, loading } = useAuth();
+  const { basicRegister, loading } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({
@@ -59,7 +59,6 @@ const RegisterForm = () => {
       email: '',
       password: '',
       confirmPassword: '',
-      fullName: '',
       role: 'client',
       terms: false,
     },
@@ -74,18 +73,17 @@ const RegisterForm = () => {
   const onSubmit = async (data: FormValues) => {
     setAuthError(null);
     try {
-      // Ensure all required fields are included with proper types
-      const registerData: RegisterFormData = {
+      // Prepare data for basic registration
+      const registerData = {
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
-        role: data.role,
+        role: data.role
       };
       
       console.log("Starting registration process with data:", registerData);
-      await register(registerData);
-      toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vous connecter pour accéder à votre compte.`);
-      navigate('/login');
+      await basicRegister(registerData);
+      toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vérifier votre email pour confirmer votre compte.`);
+      navigate('/home');
     } catch (err: any) {
       console.error("Erreur lors de l'inscription:", err);
       let errorMessage = err.message || "Erreur lors de l'inscription. Veuillez réessayer.";
@@ -133,24 +131,6 @@ const RegisterForm = () => {
                 <AlertDescription>{authError}</AlertDescription>
               </Alert>
             )}
-            
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-base font-medium">Nom complet</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="John Doe" 
-                      {...field} 
-                      className="border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md shadow-sm py-2.5"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <FormField
               control={form.control}

@@ -85,3 +85,20 @@ export const formatFullAddress = (address: Address | null | undefined): string =
   
   return components.length > 0 ? components.join(', ') : 'Adresse incomplète';
 };
+
+/**
+ * Formate les informations de contact pour l'affichage
+ */
+export const formatContactInfo = (contact: { name?: string | null, phone?: string | null, email?: string | null }): string => {
+  if (!contact.name && !contact.phone && !contact.email) {
+    return "Aucun contact spécifié";
+  }
+  
+  const parts = [];
+  
+  if (contact.name) parts.push(contact.name);
+  if (contact.phone) parts.push(contact.phone);
+  if (contact.email) parts.push(contact.email);
+  
+  return parts.join(' • ');
+};

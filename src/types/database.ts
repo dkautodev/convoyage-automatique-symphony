@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: {
@@ -162,7 +162,7 @@ export interface Database {
       user_role: 'admin' | 'client' | 'chauffeur';
     };
   };
-}
+};
 
 // Création d'un client typé pour Supabase
 export const typedSupabase = supabase;
@@ -191,5 +191,4 @@ export function convertJsonToType<T>(json: Json | null): T {
   return json as unknown as T;
 }
 
-// Fix the re-export with 'export type' to avoid the conflict
-export type { Database };
+// Only export the Database type once and use 'export type'

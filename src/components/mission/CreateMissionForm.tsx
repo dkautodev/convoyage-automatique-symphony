@@ -222,43 +222,45 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       const deliveryAddressData = form.getValues('delivery_address_data') as Address;
       
       // Enregistrer la mission
-      const { data: missionData, error: missionError } = await typedSupabase
+      const missionData = {
+        client_id: values.client_id || user?.id,
+        status: values.status || 'en_acceptation',
+        pickup_address: pickupAddressData || { formatted_address: values.pickup_address },
+        delivery_address: deliveryAddressData || { formatted_address: values.delivery_address },
+        distance_km: values.distance_km,
+        price_ht: values.price_ht,
+        price_ttc: values.price_ttc,
+        vehicle_category: values.vehicle_category,
+        vehicle_make: values.vehicle_make,
+        vehicle_model: values.vehicle_model,
+        vehicle_fuel: values.vehicle_fuel,
+        vehicle_year: values.vehicle_year,
+        vehicle_registration: values.vehicle_registration,
+        vehicle_vin: values.vehicle_vin,
+        contact_pickup_name: values.contact_pickup_name,
+        contact_pickup_phone: values.contact_pickup_phone,
+        contact_pickup_email: values.contact_pickup_email,
+        contact_delivery_name: values.contact_delivery_name,
+        contact_delivery_phone: values.contact_delivery_phone,
+        contact_delivery_email: values.contact_delivery_email,
+        notes: values.notes,
+        chauffeur_id: values.chauffeur_id || null,
+        chauffeur_price_ht: values.chauffeur_price_ht || 0,
+        created_by: user?.id || '',
+        scheduled_date: new Date().toISOString(),
+        vehicle_id: 1, // Valeur temporaire, à remplacer par une vraie sélection de véhicule
+        vat_rate: 20, // Taux de TVA par défaut
+        mission_type: values.mission_type
+      };
+      
+      const { data, error } = await typedSupabase
         .from('missions')
-        .insert({
-          client_id: values.client_id || user?.id,
-          status: values.status || 'en_acceptation',
-          pickup_address: pickupAddressData || { formatted_address: values.pickup_address },
-          delivery_address: deliveryAddressData || { formatted_address: values.delivery_address },
-          distance_km: values.distance_km,
-          price_ht: values.price_ht,
-          price_ttc: values.price_ttc,
-          vehicle_category: values.vehicle_category,
-          vehicle_make: values.vehicle_make,
-          vehicle_model: values.vehicle_model,
-          vehicle_fuel: values.vehicle_fuel,
-          vehicle_year: values.vehicle_year,
-          vehicle_registration: values.vehicle_registration,
-          vehicle_vin: values.vehicle_vin,
-          contact_pickup_name: values.contact_pickup_name,
-          contact_pickup_phone: values.contact_pickup_phone,
-          contact_pickup_email: values.contact_pickup_email,
-          contact_delivery_name: values.contact_delivery_name,
-          contact_delivery_phone: values.contact_delivery_phone,
-          contact_delivery_email: values.contact_delivery_email,
-          notes: values.notes,
-          chauffeur_id: values.chauffeur_id || null,
-          chauffeur_price_ht: values.chauffeur_price_ht || 0,
-          created_by: user?.id || '',
-          scheduled_date: new Date().toISOString(),
-          vehicle_id: 1, // Valeur temporaire, à remplacer par une vraie sélection de véhicule
-          vat_rate: 20, // Taux de TVA par défaut
-          mission_type: values.mission_type
-        })
+        .insert(missionData)
         .select('id')
         .single();
       
-      if (missionError) {
-        console.error('Erreur lors de la création de la mission:', missionError);
+      if (error) {
+        console.error('Erreur lors de la création de la mission:', error);
         toast.error('Erreur lors de la création de la mission');
         return;
       }

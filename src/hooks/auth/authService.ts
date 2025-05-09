@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile } from './types';
 import type { 
@@ -189,6 +188,91 @@ export async function completeDriverProfileService(
     console.log("Service: Profil chauffeur complété avec succès");
   } catch (error) {
     console.error("Service: Erreur lors de la complétion du profil chauffeur", error);
+    throw error;
+  }
+}
+
+// Fonction pour compléter la configuration du chauffeur
+export async function completeDriverConfigService(
+  userId: string,
+  data: DriverConfigFormData
+): Promise<void> {
+  try {
+    console.log("Service: Complétion de la configuration du chauffeur pour", userId);
+
+    // Mise à jour du profil avec les données de configuration
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        legal_status: data.legalStatus,
+        profile_completed: true
+      })
+      .eq('id', userId);
+
+    if (profileError) throw profileError;
+
+    // Création ou mise à jour de l'entrée dans drivers_config
+    const { error: configError } = await supabase
+      .from('drivers_config')
+      .upsert({
+        id: userId,
+        legal_status: data.legalStatus,
+        license_number: data.licenseNumber,
+        id_number: data.idNumber,
+        updated_at: new Date().toISOString()
+      });
+
+    if (configError) throw configError;
+
+    // Si des documents sont présents, les télécharger
+    if (data.documents) {
+      for (const [type, file] of Object.entries(data.documents)) {
+        let path: string | null = null;
+        
+        switch(type) {
+          case 'kbis':
+            path = await uploadDriverDocument(file, 'kbis', userId);
+            if (path) {
+              await supabase
+                .from('drivers_config')
+                .update({ kbis_document_path: path })
+                .eq('id', userId);
+            }
+            break;
+          case 'driverLicenseFront':
+            path = await uploadDriverDocument(file, 'license', userId);
+            if (path) {
+              await supabase
+                .from('drivers_config')
+                .update({ license_document_path: path })
+                .eq('id', userId);
+            }
+            break;
+          case 'idDocument':
+            path = await uploadDriverDocument(file, 'id', userId);
+            if (path) {
+              await supabase
+                .from('drivers_config')
+                .update({ id_document_path: path })
+                .eq('id', userId);
+            }
+            break;
+          case 'vigilanceAttestation':
+            path = await uploadDriverDocument(file, 'vigilance', userId);
+            if (path) {
+              await supabase
+                .from('drivers_config')
+                .update({ vigilance_document_path: path })
+                .eq('id', userId);
+            }
+            break;
+        }
+      }
+    }
+
+    console.log("Service: Configuration chauffeur complétée avec succès");
+  } catch (error) {
+    console.error("Service: Erreur lors de la complétion de la configuration du chauffeur", error);
     throw error;
   }
 }

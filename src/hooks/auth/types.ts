@@ -72,6 +72,14 @@ export interface DriverProfileFormData {
   documents?: Record<string, File>;
 }
 
+// Interface pour la seconde étape du profil chauffeur
+export interface DriverConfigFormData {
+  legalStatus: LegalStatusType;
+  licenseNumber: string;
+  idNumber: string;
+  documents?: Record<string, File>;
+}
+
 // Interface pour les anciennes données d'inscription
 export interface RegisterFormData {
   email: string;
@@ -91,6 +99,11 @@ export interface Address {
   formatted_address?: string;
   lat?: number;
   lng?: number;
+}
+
+// Helper pour convertir Address en Json compatible
+export function addressToJson(address: Address): Json {
+  return address as unknown as Json;
 }
 
 // Interface pour le profil utilisateur
@@ -127,6 +140,7 @@ export interface AuthContextType {
   basicRegister: (data: BasicRegisterFormData) => Promise<void>;
   completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
   completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
+  completeDriverConfig: (data: DriverConfigFormData) => Promise<void>;
   register: (data: RegisterFormData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;

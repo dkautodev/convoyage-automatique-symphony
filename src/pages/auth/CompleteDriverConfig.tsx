@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -20,7 +19,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { LegalStatusType, DriverConfigFormData } from '@/hooks/auth/types';
+import { LegalStatusType } from '@/hooks/auth/types';
+import { DriverConfigFormData } from '@/types/auth';
 
 // Définir les types acceptés de fichiers
 const ACCEPTED_FILE_TYPES = {
@@ -119,7 +119,7 @@ export default function CompleteDriverConfig() {
         
         toast.success("Configuration du chauffeur complétée avec succès!");
         // Rediriger vers le tableau de bord ou une page de confirmation
-        window.location.href = '/dashboard';
+        window.location.href = '/driver/dashboard';
         
       } catch (error: any) {
         console.error("Error submitting driver config:", error);

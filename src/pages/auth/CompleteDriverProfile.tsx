@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -22,6 +21,29 @@ import AddressAutocomplete from '@/components/AddressAutocomplete';
 import AddressMap from '@/components/AddressMap';
 import { useAuth } from '@/hooks/useAuth';
 import { formatSiret } from '@/utils/validation';
+import { Json } from '@/integrations/supabase/types';
+import { Address } from '@/types/supabase';
+
+// Helper function to convert JSON to Address
+function jsonToAddress(json: Json | null): {
+  formatted_address?: string;
+  lat?: number;
+  lng?: number;
+} {
+  if (!json) return {};
+  
+  // Handle if json is an array
+  if (Array.isArray(json)) {
+    return {};
+  }
+  
+  // Handle if json is an object (most likely case)
+  return {
+    formatted_address: json.formatted_address as string,
+    lat: json.lat as number,
+    lng: json.lng as number
+  };
+}
 
 // Schema de validation pour la première étape du profil chauffeur (informations de base)
 const driverBasicProfileSchema = z.object({
@@ -77,17 +99,17 @@ export default function CompleteDriverProfile() {
       form.setValue('phone2', profile.phone_2 || '');
       
       // Définir une adresse par défaut si elle est disponible
-      if (profile.billing_address && typeof profile.billing_address === 'object') {
-        const address = profile.billing_address.formatted_address || '';
+      if (profile.billing_address) {
+        const addressData = jsonToAddress(profile.billing_address);
         
-        if (address) {
-          form.setValue('billingAddress', address);
+        if (addressData.formatted_address) {
+          form.setValue('billingAddress', addressData.formatted_address);
           
           // Si on a aussi les coordonnées, mettre à jour la carte
-          if (profile.billing_address.lat && profile.billing_address.lng) {
+          if (addressData.lat && addressData.lng) {
             setMapCoords({
-              lat: profile.billing_address.lat,
-              lng: profile.billing_address.lng
+              lat: addressData.lat,
+              lng: addressData.lng
             });
           }
         }

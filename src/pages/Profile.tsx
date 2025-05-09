@@ -21,6 +21,38 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Address } from '@/types/supabase';
 import { Loader2, Save } from 'lucide-react';
+import { Json } from '@/integrations/supabase/types';
+
+// Helper function to convert JSON to Address
+function jsonToAddress(json: Json | null): Address {
+  if (!json) return {
+    street: '',
+    city: '',
+    postal_code: '',
+    country: 'France'
+  };
+  
+  // Handle if json is an array
+  if (Array.isArray(json)) {
+    return {
+      street: '',
+      city: '',
+      postal_code: '',
+      country: 'France'
+    };
+  }
+  
+  // Handle if json is an object
+  return {
+    street: json.street as string || '',
+    city: json.city as string || '',
+    postal_code: json.postal_code as string || '',
+    country: json.country as string || 'France',
+    formatted_address: json.formatted_address as string,
+    lat: json.lat as number,
+    lng: json.lng as number
+  };
+}
 
 // Définition du schéma de validation pour le formulaire
 const profileSchema = z.object({
@@ -66,13 +98,8 @@ const Profile = () => {
   // Remplir le formulaire avec les données du profil quand elles sont disponibles
   useEffect(() => {
     if (profile) {
-      // Ensure billing_address is treated as an object with required properties
-      const billingAddress = profile.billing_address as Address || {
-        street: '',
-        city: '',
-        postal_code: '',
-        country: 'France'
-      };
+      // Convert billing_address from Json to Address type
+      const billingAddress = jsonToAddress(profile.billing_address);
       
       form.reset({
         full_name: profile.full_name || '',
@@ -113,7 +140,7 @@ const Profile = () => {
         siret: data.siret,
         tva_number: data.tva_number,
         tva_applicable: data.tva_applicable,
-        billing_address: billingAddress,
+        billing_address: billingAddress as any, // Type assertion to handle Json conversion
       };
 
       // Appeler la fonction de mise à jour du profil

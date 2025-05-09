@@ -120,77 +120,10 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Contacts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium mb-2">Contact ramassage</h4>
-                  {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? <div className="space-y-1">
-                      {mission.contact_pickup_name && <p><span className="font-medium">Nom:</span> {mission.contact_pickup_name}</p>}
-                      {mission.contact_pickup_phone && <p><span className="font-medium">Téléphone:</span> {mission.contact_pickup_phone}</p>}
-                      {mission.contact_pickup_email && <p><span className="font-medium">Email:</span> {mission.contact_pickup_email}</p>}
-                    </div> : <p className="text-gray-500">Aucun contact spécifié</p>}
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">Contact livraison</h4>
-                  {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? <div className="space-y-1">
-                      {mission.contact_delivery_name && <p><span className="font-medium">Nom:</span> {mission.contact_delivery_name}</p>}
-                      {mission.contact_delivery_phone && <p><span className="font-medium">Téléphone:</span> {mission.contact_delivery_phone}</p>}
-                      {mission.contact_delivery_email && <p><span className="font-medium">Email:</span> {mission.contact_delivery_email}</p>}
-                    </div> : <p className="text-gray-500">Aucun contact spécifié</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
         </div>
         
-        <Card className="mt-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Truck className="h-4 w-4" />
-              Informations véhicule
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {mission.vehicle_category && <div>
-                  <h4 className="text-sm font-medium text-gray-500">Catégorie</h4>
-                  <p>{vehicleCategory}</p>
-                </div>}
-              {mission.vehicle_make && <div>
-                  <h4 className="text-sm font-medium text-gray-500">Marque</h4>
-                  <p>{mission.vehicle_make}</p>
-                </div>}
-              {mission.vehicle_model && <div>
-                  <h4 className="text-sm font-medium text-gray-500">Modèle</h4>
-                  <p>{mission.vehicle_model}</p>
-                </div>}
-              {mission.vehicle_registration && <div>
-                  <h4 className="text-sm font-medium text-gray-500">Immatriculation</h4>
-                  <p>{mission.vehicle_registration}</p>
-                </div>}
-              {mission.vehicle_vin && <div>
-                  <h4 className="text-sm font-medium text-gray-500">VIN</h4>
-                  <p>{mission.vehicle_vin}</p>
-                </div>}
-              {mission.vehicle_fuel && <div>
-                  <h4 className="text-sm font-medium text-gray-500">Carburant</h4>
-                  <p>{mission.vehicle_fuel}</p>
-                </div>}
-              {mission.vehicle_year && <div>
-                  <h4 className="text-sm font-medium text-gray-500">Année</h4>
-                  <p>{mission.vehicle_year}</p>
-                </div>}
-            </div>
-          </CardContent>
-        </Card>
+        
         
         {mission.notes && <Card className="mt-6">
             <CardHeader className="pb-2">

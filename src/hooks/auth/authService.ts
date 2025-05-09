@@ -1,4 +1,3 @@
-
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -234,11 +233,13 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       throw checkError;
     }
     
+    // Configuration de l'opération à effectuer (insert ou update)
     let driverOperation;
     
     // Créer ou mettre à jour dans la table des chauffeurs
     if (!existingDriver) {
       // Si le chauffeur n'existe pas, l'insérer
+      console.log("Creating new driver record in drivers table");
       driverOperation = supabase
         .from('drivers')
         .insert({
@@ -255,6 +256,7 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
         });
     } else {
       // Si le chauffeur existe, le mettre à jour
+      console.log("Updating existing driver record in drivers table");
       driverOperation = supabase
         .from('drivers')
         .update({

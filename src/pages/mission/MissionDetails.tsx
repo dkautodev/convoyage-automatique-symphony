@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,8 +42,12 @@ const missionUpdateSchema = z.object({
   vehicle_registration: z.string().optional(),
   vehicle_vin: z.string().optional(),
   vehicle_fuel: z.string().optional(),
-  vehicle_year: z.number().optional().nullable().or(z.string().transform(val => val === '' ? null : parseInt(val, 10)))
+  // Modified: Accept string that can be transformed to number OR null
+  vehicle_year: z.string().transform(val => val === '' ? null : Number(val)).optional()
 });
+
+// Type for the form values
+type MissionUpdateFormValues = z.infer<typeof missionUpdateSchema>;
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,7 +60,7 @@ const MissionDetailsPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   
-  const form = useForm({
+  const form = useForm<MissionUpdateFormValues>({
     resolver: zodResolver(missionUpdateSchema),
     defaultValues: {
       status: '',
@@ -174,7 +177,7 @@ const MissionDetailsPage = () => {
     }
   };
   
-  const onSubmit = async (data: z.infer<typeof missionUpdateSchema>) => {
+  const onSubmit = async (data: MissionUpdateFormValues) => {
     if (!mission || !id) return;
     
     try {
@@ -202,7 +205,7 @@ const MissionDetailsPage = () => {
         updateData.vehicle_registration = data.vehicle_registration;
         updateData.vehicle_vin = data.vehicle_vin;
         updateData.vehicle_fuel = data.vehicle_fuel;
-        updateData.vehicle_year = data.vehicle_year;
+        updateData.vehicle_year = data.vehicle_year; // This is now properly transformed by the schema
       }
 
       console.log('Updating mission with data:', updateData);

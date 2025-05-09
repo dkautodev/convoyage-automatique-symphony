@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -104,25 +106,25 @@ const driverProfileSchema = z.object({
 type FormData = z.infer<typeof driverProfileSchema>;
 
 export default function CompleteDriverProfile() {
-  const [mapCoords, setMapCoords] = useState<{lat: number; lng: number} | null>(null);
+  const [mapCoords, setMapCoords] = useState<{lat: number; lng: number}>({ lat: 48.8566, lng: 2.3522 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { completeDriverProfile, profile } = useAuth();
   
   const form = useForm<FormData>({
     resolver: zodResolver(driverProfileSchema),
     defaultValues: {
-      companyName: '',
+      companyName: profile?.company_name || '',
       fullName: profile?.full_name || '',
       billingAddress: '',
       placeId: '',
-      siret: '',
-      tvaApplicable: false,
-      tvaNumb: '',
-      phone1: '',
-      phone2: '',
-      licenseNumber: '',
-      idNumber: '',
-      vehicleType: '',
+      siret: profile?.siret || '',
+      tvaApplicable: profile?.tva_applicable || false,
+      tvaNumb: profile?.tva_number || '',
+      phone1: profile?.phone_1 || '',
+      phone2: profile?.phone_2 || '',
+      licenseNumber: profile?.driver_license || '',
+      idNumber: profile?.vehicle_registration || '',
+      vehicleType: (profile?.vehicle_type as string) || '',
     },
   });
   
@@ -131,6 +133,7 @@ export default function CompleteDriverProfile() {
     form.setValue('placeId', placeId);
     
     // Simuler l'obtention des coordonnées depuis l'API Google Maps
+    // En production, utilisez l'API Google Places pour obtenir les coordonnées réelles
     setMapCoords({
       lat: 48.8566 + Math.random() * 0.01,
       lng: 2.3522 + Math.random() * 0.01,
@@ -145,6 +148,7 @@ export default function CompleteDriverProfile() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      console.log(`File selected for ${fieldName}:`, file.name, file.size);
       form.setValue(fieldName as any, file);
     }
   };
@@ -154,6 +158,7 @@ export default function CompleteDriverProfile() {
       setIsSubmitting(true);
       console.log("Submitting driver profile data:", data);
       
+      // Collecte des documents
       const documents: Record<string, File> = {};
       if (data.kbis) documents.kbis = data.kbis;
       if (data.driverLicenseFront) documents.driverLicenseFront = data.driverLicenseFront;
@@ -161,36 +166,53 @@ export default function CompleteDriverProfile() {
       if (data.vigilanceAttestation) documents.vigilanceAttestation = data.vigilanceAttestation;
       if (data.idDocument) documents.idDocument = data.idDocument;
       
-      // Assurer que mapCoords est défini avec des valeurs par défaut si nécessaire
-      const coordinates = mapCoords || { lat: 48.8566, lng: 2.3522 };
+      console.log("Documents to upload:", Object.keys(documents).length);
       
-      const result = await completeDriverProfile({
-        companyName: data.companyName,
-        fullName: data.fullName,
-        billingAddress: {
-          street: data.billingAddress,
-          city: "", // Ces valeurs seront complétées par l'API Google Maps
-          postal_code: "",
-          country: "",
-          formatted_address: data.billingAddress,
-          lat: coordinates.lat,
-          lng: coordinates.lng
-        },
-        siret: data.siret.replace(/\s/g, ''),
-        tvaApplicable: data.tvaApplicable,
-        tvaNumb: data.tvaApplicable ? data.tvaNumb : '',
-        phone1: data.phone1,
-        phone2: data.phone2 || '',
-        licenseNumber: data.licenseNumber,
-        vehicleType: data.vehicleType as VehicleCategory,
-        idNumber: data.idNumber,
-        documents: documents as any,
-      });
+      // S'assurer que billingAddress est non vide
+      if (!data.billingAddress) {
+        toast.error("L'adresse de facturation est obligatoire");
+        setIsSubmitting(false);
+        return;
+      }
       
-      console.log("Driver profile completion result:", result);
+      // Coordination pour l'envoi
+      const billingAddress = {
+        street: data.billingAddress,
+        city: "Paris", // Valeur par défaut si l'API ne retourne pas la ville
+        postal_code: "75000", // Valeur par défaut si l'API ne retourne pas le code postal
+        country: "France", // Valeur par défaut si l'API ne retourne pas le pays
+        formatted_address: data.billingAddress,
+        lat: mapCoords.lat,
+        lng: mapCoords.lng
+      };
+      
+      console.log("Formatted address data:", billingAddress);
+      
+      try {
+        const result = await completeDriverProfile({
+          companyName: data.companyName,
+          fullName: data.fullName,
+          billingAddress,
+          siret: data.siret.replace(/\s/g, ''),
+          tvaApplicable: data.tvaApplicable,
+          tvaNumb: data.tvaApplicable && data.tvaNumb ? data.tvaNumb : undefined,
+          phone1: data.phone1,
+          phone2: data.phone2 || undefined,
+          licenseNumber: data.licenseNumber,
+          vehicleType: data.vehicleType as VehicleCategory,
+          idNumber: data.idNumber,
+          documents: Object.keys(documents).length > 0 ? documents : undefined,
+        });
+        
+        console.log("Driver profile completion result:", result);
+        toast.success("Profil complété avec succès!");
+      } catch (error: any) {
+        console.error("Error submitting driver profile:", error);
+        toast.error(`Erreur lors de la création du profil: ${error.message || 'Erreur inconnue'}`);
+      }
     } catch (error) {
-      console.error("Error completing driver profile:", error);
-      // Vous pourriez ajouter une notification d'erreur ici
+      console.error("Form submission error:", error);
+      toast.error("Erreur lors de la soumission du formulaire, vérifiez les champs");
     } finally {
       setIsSubmitting(false);
     }

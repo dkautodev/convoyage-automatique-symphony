@@ -1,261 +1,41 @@
 
-import { UserRole } from '@/types/supabase';
-import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { UserRole } from '@/types/supabase';
 
-// Fonction pour rediriger vers la page de complétion de profil en fonction du rôle
-export const navigateToProfileCompletion = (role: string, navigate: NavigateFunction) => {
-  console.log("Redirection vers la page de complétion pour le rôle:", role);
-  try {
-    switch (role) {
-      case 'client':
-        navigate('/complete-client-profile', { replace: true });
-        break;
-      case 'chauffeur':
-        navigate('/complete-driver-profile', { replace: true });
-        break;
-      case 'admin':
-        // Les admins n'ont pas de profil à compléter
-        redirectToDashboard('admin', navigate);
-        break;
-      default:
-        // En cas de rôle non reconnu, rediriger vers la page d'accueil avec notification
-        console.warn("Rôle non reconnu:", role);
-        toast.warning(`Rôle non reconnu : ${role}. Redirection vers la page d'accueil.`);
-        navigate('/home', { replace: true });
-        break;
-    }
-  } catch (error) {
-    console.error("Erreur lors de la redirection:", error);
-    toast.error("Une erreur est survenue lors de la navigation");
-    navigate('/home', { replace: true });
+// Redirection vers le tableau de bord approprié en fonction du rôle
+export const redirectToDashboard = (role: UserRole) => {
+  switch (role) {
+    case 'admin':
+      return '/admin/dashboard';
+    case 'client':
+      return '/client/dashboard';
+    case 'chauffeur':
+      return '/driver/dashboard';
+    default:
+      return '/home';
   }
 };
 
-// Fonction pour rediriger vers le tableau de bord approprié
-export const redirectToDashboard = (role: string, navigate: NavigateFunction) => {
-  console.log("Redirection vers le tableau de bord pour le rôle:", role);
-  try {
-    switch (role) {
-      case 'admin':
-        navigate('/admin/dashboard', { replace: true });
-        break;
-      case 'client':
-        navigate('/client/dashboard', { replace: true });
-        break;
-      case 'chauffeur':
-        navigate('/driver/dashboard', { replace: true });
-        break;
-      default:
-        // En cas de rôle non reconnu, rediriger vers la page d'accueil avec notification
-        console.warn("Rôle non reconnu pour le tableau de bord:", role);
-        toast.warning(`Rôle non reconnu : ${role}. Redirection vers la page d'accueil.`);
-        navigate('/home', { replace: true });
-        break;
-    }
-  } catch (error) {
-    console.error("Erreur lors de la redirection vers le dashboard:", error);
-    toast.error("Une erreur est survenue lors de la navigation");
-    navigate('/home', { replace: true });
+// Navigation vers la page pour compléter le profil
+export const navigateToProfileCompletion = (role: UserRole) => {
+  switch (role) {
+    case 'client':
+      return '/complete-client-profile';
+    case 'chauffeur':
+      return '/complete-driver-profile';
+    default:
+      return '/home';
   }
 };
 
-// Fonction pour télécharger un document chauffeur
-export const uploadDriverDocument = async (file: File, type: string, userId: string): Promise<string | null> => {
-  try {
-    const fileName = `${userId}/${type}_${Date.now()}.${file.name.split('.').pop()}`;
-    
-    const { error: uploadError, data } = await supabase.storage
-      .from('driver_documents')
-      .upload(fileName, file);
-      
-    if (uploadError) throw uploadError;
-    
-    return data?.path || null;
-  } catch (err: any) {
-    console.error(`Erreur lors du téléchargement du document ${type}:`, err);
-    return null;
-  }
-};
-
-// Fonction pour calculer la distance et la durée entre deux adresses
-export const calculateAddressDistance = async (originLat: number, originLng: number, destLat: number, destLng: number) => {
-  if (!window.google) {
-    console.error("API Google Maps non chargée");
-    return null;
-  }
-  
-  try {
-    const service = new window.google.maps.DistanceMatrixService();
-    
-    return new Promise((resolve, reject) => {
-      service.getDistanceMatrix(
-        {
-          origins: [{ lat: originLat, lng: originLng }],
-          destinations: [{ lat: destLat, lng: destLng }],
-          travelMode: window.google.maps.TravelMode.DRIVING,
-          unitSystem: window.google.maps.UnitSystem.METRIC,
-        },
-        (response: any, status: string) => {
-          if (status === 'OK' && response) {
-            const result = response.rows[0].elements[0];
-            
-            if (result.status === 'OK') {
-              resolve({
-                distance: result.distance,
-                duration: result.duration
-              });
-            } else {
-              reject(new Error(`Calcul impossible: ${result.status}`));
-            }
-          } else {
-            reject(new Error(`Erreur de service: ${status}`));
-          }
-        }
-      );
-    });
-  } catch (error) {
-    console.error("Erreur lors du calcul de la distance:", error);
-    return null;
-  }
-};
-
-// Interface pour les données de token admin
-interface AdminToken {
-  id: number;
-  email: string;
-  token: string;
-  created_at: string;
-  expires_at: string;
-  used: boolean;
-  used_at: string | null;
-  created_by: string;
-}
-
-/**
- * Vérifie un token d'invitation admin et le marque comme utilisé si valide
- * Cette fonction combine la vérification et la mise à jour pour garantir l'atomicité
- * 
- * @param token - Le token à vérifier
- * @param email - L'email associé au token
- * @returns Un objet contenant le statut de vérification et une éventuelle erreur
- */
-export const verifyAndUseAdminToken = async (
-  token: string, 
-  email: string
-): Promise<{ valid: boolean; message: string; }> => {
-  console.log("Vérification et utilisation du token admin:", token, "pour l'email:", email);
-  
-  if (!token || !email) {
-    console.error('Token ou email manquant');
-    return { valid: false, message: 'Token ou email manquant' };
-  }
-  
-  const normalizedToken = token.trim();
-  const normalizedEmail = email.toLowerCase().trim();
-  
-  console.log("Données normalisées pour la recherche:", { 
-    normalizedToken, 
-    normalizedEmail, 
-    timestamp: new Date().toISOString() 
-  });
-
-  try {
-    // Ajout de l'option count=exact pour obtenir des informations plus précises sur la recherche
-    const { data, error, count } = await supabase
-      .from('admin_invitation_tokens')
-      .select('*', { count: 'exact' });
-    
-    if (error) {
-      console.error('Erreur lors de la requête vers la table admin_invitation_tokens:', error);
-      return { valid: false, message: `Erreur lors de la vérification du token: ${error.message}` };
-    }
-    
-    console.log(`Tokens récupérés de la base: ${data?.length || 0}, count: ${count}`);
-    
-    if (!data || data.length === 0) {
-      console.warn("Aucun token disponible dans la base de données");
-      return { valid: false, message: 'Aucun token disponible dans la base de données' };
-    }
-    
-    // Recherche manuelle du token en ignorant la casse
-    const tokenData = data?.find(t => 
-      t.token.toLowerCase() === normalizedToken.toLowerCase() && 
-      t.email.toLowerCase() === normalizedEmail.toLowerCase()
-    );
-    
-    if (!tokenData) {
-      console.warn("Aucun token correspondant trouvé pour:", { normalizedToken, normalizedEmail });
-      
-      // Liste des tokens disponibles pour debug
-      if (data?.length) {
-        console.log("Tokens disponibles dans la base:", 
-          data.map(t => ({
-            token: t.token, 
-            email: t.email, 
-            tokenMatch: t.token.toLowerCase() === normalizedToken.toLowerCase(),
-            emailMatch: t.email.toLowerCase() === normalizedEmail.toLowerCase()
-          }))
-        );
-      }
-      
-      return { valid: false, message: 'Token ou email invalide' };
-    }
-    
-    console.log("Token trouvé dans la base:", tokenData);
-    
-    // Vérifier si le token est déjà utilisé
-    if (tokenData.used) {
-      console.warn("Token déjà utilisé:", tokenData);
-      return { valid: false, message: 'Ce token a déjà été utilisé' };
-    }
-    
-    // Vérifier si le token est expiré
-    if (new Date(tokenData.expires_at) < new Date()) {
-      console.warn("Token expiré:", tokenData);
-      return { valid: false, message: 'Ce token a expiré' };
-    }
-    
-    // Token valide, le marquer comme utilisé
-    const { error: updateError } = await supabase
-      .from('admin_invitation_tokens')
-      .update({
-        used: true,
-        used_at: new Date().toISOString()
-      })
-      .eq('id', tokenData.id);
-    
-    if (updateError) {
-      console.error('Erreur lors du marquage du token comme utilisé:', updateError);
-      return { valid: false, message: `Erreur lors de la mise à jour du statut du token: ${updateError.message}` };
-    }
-    
-    console.log("Token validé et marqué comme utilisé avec succès");
-    return { valid: true, message: 'Token vérifié et marqué comme utilisé avec succès' };
-  } catch (err: any) {
-    console.error('Exception lors de la vérification du token admin:', err);
-    return { valid: false, message: err.message || 'Erreur système lors de la vérification' };
-  }
-};
-
-// Anciennes fonctions conservées pour rétrocompatibilité
-// Mais leur utilisation n'est plus recommandée, préférez verifyAndUseAdminToken
+// Vérifier la validité d'un token d'invitation admin
 export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
-  console.warn("DÉPRÉCIÉ: Utiliser verifyAndUseAdminToken à la place de verifyAdminToken");
   try {
-    if (!token || !email) {
-      console.error('Token ou email manquant');
-      return false;
-    }
-    
-    const normalizedEmail = email.toLowerCase().trim();
-    
-    const { data: tokenData, error } = await supabase
+    const { data, error } = await supabase
       .from('admin_invitation_tokens')
       .select('*')
-      .eq('token', token.trim())
-      .eq('email', normalizedEmail)
+      .eq('token', token)
+      .eq('email', email)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
@@ -265,40 +45,77 @@ export const verifyAdminToken = async (token: string, email: string): Promise<bo
       return false;
     }
     
-    return tokenData !== null;
+    if (data) {
+      // Marquer le token comme utilisé
+      await supabase
+        .from('admin_invitation_tokens')
+        .update({ used: true, used_at: new Date().toISOString() })
+        .eq('id', data.id);
+      
+      return true;
+    }
+    
+    return false;
   } catch (err) {
-    console.error('Erreur lors de la vérification du token admin:', err);
+    console.error('Erreur dans verifyAdminToken:', err);
     return false;
   }
 };
 
-export const markAdminTokenAsUsed = async (token: string, email: string): Promise<boolean> => {
-  console.warn("DÉPRÉCIÉ: Utiliser verifyAndUseAdminToken à la place de markAdminTokenAsUsed");
+// Fonction pour télécharger des documents de chauffeur
+export const uploadDriverDocument = async (file: File, type: string, userId: string): Promise<string | null> => {
   try {
-    if (!token || !email) {
-      console.error('Token ou email manquant pour le marquage');
-      return false;
+    if (!file || !userId) {
+      console.error("Fichier ou ID utilisateur manquant");
+      return null;
     }
     
-    const normalizedEmail = email.toLowerCase().trim();
+    // Vérifier si le bucket existe, sinon le créer
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === 'driver_documents');
     
-    const { error } = await supabase
-      .from('admin_invitation_tokens')
-      .update({
-        used: true,
-        used_at: new Date().toISOString()
-      })
-      .eq('token', token.trim())
-      .eq('email', normalizedEmail);
+    if (!bucketExists) {
+      console.log("Le bucket 'driver_documents' n'existe pas, tentative de création...");
+      try {
+        const { data, error } = await supabase.storage.createBucket('driver_documents', {
+          public: false,
+          allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+          fileSizeLimit: 5242880 // 5MB
+        });
+        
+        if (error) {
+          console.error("Erreur lors de la création du bucket:", error);
+          return null;
+        }
+        
+        console.log("Bucket créé avec succès:", data);
+      } catch (bucketErr) {
+        console.error("Erreur lors de la création du bucket:", bucketErr);
+        return null;
+      }
+    }
+    
+    // Créer un nom de fichier unique
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${type}_${Date.now()}.${fileExt}`;
+    
+    // Télécharger le fichier
+    const { data, error } = await supabase.storage
+      .from('driver_documents')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
     
     if (error) {
-      console.error('Erreur lors du marquage du token comme utilisé:', error);
-      return false;
+      console.error("Erreur lors du téléchargement du document:", error);
+      return null;
     }
     
-    return true;
+    console.log("Document téléchargé avec succès:", data);
+    return fileName;
   } catch (err) {
-    console.error('Erreur lors du marquage du token admin comme utilisé:', err);
-    return false;
+    console.error("Erreur dans uploadDriverDocument:", err);
+    return null;
   }
 };

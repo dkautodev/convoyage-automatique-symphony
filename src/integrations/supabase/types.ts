@@ -173,13 +173,17 @@ export type Database = {
           company_name: string | null
           full_name: string
           id: string
+          id_document_path: string | null
+          kbis_document_path: string | null
           last_location: Json | null
+          license_document_path: string | null
           license_number: string
           phone1: string
           phone2: string | null
           vat_applicable: boolean
           vat_number: string | null
           vehicle_type: Database["public"]["Enums"]["vehicle_category"] | null
+          vigilance_document_path: string | null
         }
         Insert: {
           availability_status?: string | null
@@ -187,13 +191,17 @@ export type Database = {
           company_name?: string | null
           full_name: string
           id: string
+          id_document_path?: string | null
+          kbis_document_path?: string | null
           last_location?: Json | null
+          license_document_path?: string | null
           license_number: string
           phone1: string
           phone2?: string | null
           vat_applicable?: boolean
           vat_number?: string | null
           vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
+          vigilance_document_path?: string | null
         }
         Update: {
           availability_status?: string | null
@@ -201,13 +209,17 @@ export type Database = {
           company_name?: string | null
           full_name?: string
           id?: string
+          id_document_path?: string | null
+          kbis_document_path?: string | null
           last_location?: Json | null
+          license_document_path?: string | null
           license_number?: string
           phone1?: string
           phone2?: string | null
           vat_applicable?: boolean
           vat_number?: string | null
           vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
+          vigilance_document_path?: string | null
         }
         Relationships: []
       }
@@ -556,6 +568,10 @@ export type Database = {
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_id: string }
         Returns: string
       }
       is_owner_of_profile: {

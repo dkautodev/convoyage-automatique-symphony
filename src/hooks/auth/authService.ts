@@ -1,3 +1,4 @@
+
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -190,10 +191,59 @@ export const completeClientProfileService = async (userId: string, data: ClientP
   }
 };
 
+// Fonction pour télécharger les documents du chauffeur
+const uploadDriverDocuments = async (userId: string, documents: Record<string, File>) => {
+  try {
+    const uploadedPaths: Record<string, string> = {};
+    
+    // Parcourir chaque document et le télécharger
+    for (const [type, file] of Object.entries(documents)) {
+      if (!file) continue;
+      
+      const fileExt = file.name.split('.').pop();
+      const filePath = `drivers/${userId}/${type}_${Date.now()}.${fileExt}`;
+      
+      console.log(`Uploading ${type} document for driver ${userId}: ${filePath}`);
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('driver_documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) {
+        console.error(`Error uploading ${type} document:`, uploadError);
+        throw uploadError;
+      }
+      
+      console.log(`Successfully uploaded ${type} document:`, uploadData);
+      uploadedPaths[type] = filePath;
+    }
+    
+    return uploadedPaths;
+  } catch (err) {
+    console.error("Error in uploadDriverDocuments:", err);
+    throw err;
+  }
+};
+
 // Fonction pour compléter le profil chauffeur - Mise à jour pour créer l'entrée dans la table drivers
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
     console.log("Completing driver profile for user:", userId, "with data:", data);
+    
+    let documentPaths: Record<string, string> = {};
+    
+    // Télécharger les documents si fournis
+    if (data.documents && Object.keys(data.documents).length > 0) {
+      try {
+        documentPaths = await uploadDriverDocuments(userId, data.documents);
+        console.log("Documents uploaded successfully:", documentPaths);
+      } catch (docError) {
+        console.error("Error uploading documents, continuing with profile update:", docError);
+      }
+    }
     
     // Commencer une transaction pour garantir l'intégrité des données
     // D'abord, mettre à jour le profil principal
@@ -248,10 +298,16 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       vat_number: data.tvaNumb,
       phone1: data.phone1,
       phone2: data.phone2,
-      vehicle_type: data.vehicleType
+      vehicle_type: data.vehicleType,
+      // Ajouter les chemins des documents s'ils existent
+      license_document_path: documentPaths.driverLicenseFront || null,
+      id_document_path: documentPaths.idDocument || null,
+      kbis_document_path: documentPaths.kbis || null,
+      vigilance_document_path: documentPaths.vigilanceAttestation || null
     };
     
-    let driverOperation;
+    console.log("Driver data to save:", driverData);
+    
     let driverResult;
     
     // Insérer ou mettre à jour dans la table des chauffeurs

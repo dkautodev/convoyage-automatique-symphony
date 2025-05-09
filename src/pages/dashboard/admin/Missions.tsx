@@ -63,8 +63,8 @@ const MissionsPage = () => {
       
       // Filtrer par statut si un tab spécifique est sélectionné
       if (activeTab !== 'all') {
-        // Convertir le tab actif en statut de mission valide
-        query = query.eq('status', activeTab);
+        // Cast activeTab to MissionStatus if it's a valid mission status
+        query = query.eq('status', activeTab as MissionStatus);
       }
       
       const { data: missionsData, error: missionsError } = await query;
@@ -176,7 +176,7 @@ const MissionsPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as any] || ''})` : ''}
+                Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as MissionStatus] || ''})` : ''}
               </CardTitle>
             </CardHeader>
             <CardContent>

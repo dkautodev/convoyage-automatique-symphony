@@ -35,6 +35,9 @@ export interface GoogleAddressSuggestion {
   };
 }
 
+// Type pour les statuts juridiques
+export type LegalStatusType = 'EI' | 'EURL' | 'SARL' | 'SA' | 'SAS' | 'SASU' | 'SNC' | 'Scop' | 'Association';
+
 // Interface pour les données d'inscription basique
 export interface BasicRegisterFormData {
   email: string;
@@ -67,6 +70,12 @@ export interface DriverProfileFormData {
   licenseNumber: string;
   vehicleType: VehicleCategory;
   idNumber: string;
+  documents?: Record<string, File>;
+}
+
+// Interface pour la seconde étape du profil chauffeur
+export interface DriverConfigFormData {
+  legalStatus: LegalStatusType;
   documents?: Record<string, File>;
 }
 
@@ -112,6 +121,8 @@ export interface AuthContextType {
   basicRegister: (data: BasicRegisterFormData) => Promise<void>; // Assurez-vous que cette ligne existe
   completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
   completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
+  completeDriverBasicProfile: (data: DriverProfileFormData) => Promise<void>;
+  completeDriverConfig: (legalStatus: LegalStatusType, documents?: Record<string, File>) => Promise<void>;
   register: (data: RegisterFormData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;

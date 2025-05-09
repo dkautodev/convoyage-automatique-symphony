@@ -4,13 +4,15 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { AuthContext } from './AuthContext';
-import { AuthContextType, Profile } from './types';
+import { AuthContextType, Profile, LegalStatusType } from './types';
 import { 
   fetchUserProfile, 
   loginUser, 
   registerBasicUser,
   completeClientProfileService, 
-  completeDriverProfileService, 
+  completeDriverProfileService,
+  completeDriverBasicProfileService,
+  completeDriverConfigService,
   registerLegacyUser,
   updateUserProfile,
   resetUserPassword
@@ -252,6 +254,89 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Fonction pour compléter la première étape du profil chauffeur
+  const completeDriverBasicProfile = async (data: DriverProfileFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      console.log("Données du profil chauffeur (étape 1):", data);
+      
+      const result = await completeDriverBasicProfileService(user.id, data);
+      
+      // Mettre à jour le profil localement
+      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
+      
+      toast.success('Première étape complétée avec succès');
+      
+      // Redirection vers la seconde étape
+      navigate('/complete-driver-config');
+      
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la complétion du profil: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour compléter la seconde étape du profil chauffeur
+  const completeDriverConfig = async (legalStatus: LegalStatusType, documents?: Record<string, File>) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      console.log("Données de configuration chauffeur (étape 2):", { legalStatus, documents });
+      
+      await completeDriverConfigService(user.id, legalStatus, documents);
+      
+      toast.success('Configuration du chauffeur complétée avec succès');
+      handleRoleBasedRedirection('chauffeur', true);
+      
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la configuration du chauffeur: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour compléter le profil chauffeur (version originale pour compatibilité)
+  const completeDriverProfile = async (data: DriverProfileFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!user) {
+        throw new Error('Utilisateur non connecté');
+      }
+      
+      console.log("Données du profil chauffeur (méthode complète):", data);
+      
+      await completeDriverProfileService(user.id, data);
+      
+      // Mettre à jour le profil localement
+      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
+      
+      toast.success('Profil complété avec succès');
+      handleRoleBasedRedirection('chauffeur', true);
+      
+    } catch (err: any) {
+      setError(err.message);
+      toast.error('Erreur lors de la complétion du profil: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fonction pour compléter le profil client
   const completeClientProfile = async (data: ClientProfileFormData) => {
     try {
@@ -271,34 +356,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast.success('Profil complété avec succès');
       handleRoleBasedRedirection('client', true);
-      
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Erreur lors de la complétion du profil: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fonction pour compléter le profil chauffeur
-  const completeDriverProfile = async (data: DriverProfileFormData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      if (!user) {
-        throw new Error('Utilisateur non connecté');
-      }
-      
-      console.log("Données du profil chauffeur:", data);
-      
-      await completeDriverProfileService(user.id, data);
-      
-      // Mettre à jour le profil localement
-      setProfile(prev => prev ? { ...prev, full_name: data.fullName, profile_completed: true } : null);
-      
-      toast.success('Profil complété avec succès');
-      handleRoleBasedRedirection('chauffeur', true);
       
     } catch (err: any) {
       setError(err.message);
@@ -412,7 +469,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Contexte à partager
-  const value = {
+  const value: AuthContextType = {
     user,
     profile,
     session,
@@ -422,6 +479,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     basicRegister,
     completeClientProfile,
     completeDriverProfile,
+    completeDriverBasicProfile,
+    completeDriverConfig,
     register, // Gardé pour rétrocompatibilité
     logout,
     updateProfile,

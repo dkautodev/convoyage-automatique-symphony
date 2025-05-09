@@ -18,22 +18,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 import AddressMap from '@/components/AddressMap';
 import { useAuth } from '@/hooks/useAuth';
 import { formatSiret } from '@/utils/validation';
-import { vehicleCategoryLabels, VehicleCategory } from '@/types/supabase';
 
-// Définir les types acceptés de fichiers
-const ACCEPTED_FILE_TYPES = {
-  'application/pdf': ['.pdf'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-};
-
-// Schema de validation pour le profil chauffeur
-const driverProfileSchema = z.object({
+// Schema de validation pour la première étape du profil chauffeur (informations de base)
+const driverBasicProfileSchema = z.object({
   companyName: z.string().min(2, { message: 'Le nom de la société est requis' }),
   fullName: z.string().min(2, { message: 'Le nom complet est requis' }),
   billingAddress: z.string().min(5, { message: "L'adresse de facturation est requise" }),
@@ -49,45 +40,18 @@ const driverProfileSchema = z.object({
   phone2: z.string().optional(),
   licenseNumber: z.string().min(2, { message: 'Le numéro de permis est requis' }),
   idNumber: z.string().min(2, { message: 'Le numéro de CNI/passeport est requis' }),
-  vehicleType: z.string().min(1, { message: 'Le type de véhicule est requis' }),
-  // Document fields
-  kbis: typeof window === 'undefined' 
-    ? z.any() 
-    : z.instanceof(File)
-      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .optional(),
-  driverLicenseFront: typeof window === 'undefined' 
-    ? z.any() 
-    : z.instanceof(File)
-      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .optional(),
-  driverLicenseBack: typeof window === 'undefined' 
-    ? z.any() 
-    : z.instanceof(File)
-      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .optional(),
-  vigilanceAttestation: typeof window === 'undefined' 
-    ? z.any() 
-    : z.instanceof(File)
-      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .optional(),
-  idDocument: typeof window === 'undefined' 
-    ? z.any() 
-    : z.instanceof(File)
-      .refine(file => !file || file.size <= 5000000, { message: 'Le fichier doit faire moins de 5MB' })
-      .optional(),
 });
 
-type FormData = z.infer<typeof driverProfileSchema>;
+type FormData = z.infer<typeof driverBasicProfileSchema>;
 
 export default function CompleteDriverProfile() {
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number}>({ lat: 48.8566, lng: 2.3522 });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { completeDriverProfile, profile } = useAuth();
+  const { completeDriverBasicProfile, profile } = useAuth();
   const [formInitialized, setFormInitialized] = useState(false);
   
   const form = useForm<FormData>({
-    resolver: zodResolver(driverProfileSchema),
+    resolver: zodResolver(driverBasicProfileSchema),
     defaultValues: {
       companyName: '',
       fullName: '',
@@ -100,7 +64,6 @@ export default function CompleteDriverProfile() {
       phone2: '',
       licenseNumber: '',
       idNumber: '',
-      vehicleType: '',
     },
   });
 
@@ -118,10 +81,6 @@ export default function CompleteDriverProfile() {
       form.setValue('phone2', profile.phone_2 || '');
       form.setValue('licenseNumber', profile.driver_license || '');
       form.setValue('idNumber', profile.vehicle_registration || '');
-      
-      if (profile.vehicle_type) {
-        form.setValue('vehicleType', profile.vehicle_type as string);
-      }
       
       // Définir une adresse par défaut si elle est disponible
       if (profile.billing_address && typeof profile.billing_address === 'object') {
@@ -161,28 +120,10 @@ export default function CompleteDriverProfile() {
     form.setValue('siret', formatted);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      console.log(`File selected for ${fieldName}:`, file.name, file.size);
-      form.setValue(fieldName as any, file);
-    }
-  };
-
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
-      console.log("Submitting driver profile data:", data);
-      
-      // Collecte des documents
-      const documents: Record<string, File> = {};
-      if (data.kbis) documents.kbis = data.kbis;
-      if (data.driverLicenseFront) documents.driverLicenseFront = data.driverLicenseFront;
-      if (data.driverLicenseBack) documents.driverLicenseBack = data.driverLicenseBack;
-      if (data.vigilanceAttestation) documents.vigilanceAttestation = data.vigilanceAttestation;
-      if (data.idDocument) documents.idDocument = data.idDocument;
-      
-      console.log("Documents to upload:", Object.keys(documents).length);
+      console.log("Submitting driver basic profile data:", data);
       
       // S'assurer que billingAddress est non vide
       if (!data.billingAddress) {
@@ -191,7 +132,7 @@ export default function CompleteDriverProfile() {
         return;
       }
       
-      // Coordination pour l'envoi
+      // Préparer les données pour l'envoi
       const billingAddress = {
         street: data.billingAddress,
         city: "Paris", // Valeur par défaut si l'API ne retourne pas la ville
@@ -205,7 +146,7 @@ export default function CompleteDriverProfile() {
       console.log("Formatted address data:", billingAddress);
       
       try {
-        const result = await completeDriverProfile({
+        await completeDriverBasicProfile({
           companyName: data.companyName,
           fullName: data.fullName,
           billingAddress,
@@ -215,18 +156,11 @@ export default function CompleteDriverProfile() {
           phone1: data.phone1,
           phone2: data.phone2 || undefined,
           licenseNumber: data.licenseNumber,
-          vehicleType: data.vehicleType as VehicleCategory,
           idNumber: data.idNumber,
-          documents: Object.keys(documents).length > 0 ? documents : undefined,
+          documents: undefined,
         });
         
-        console.log("Driver profile completion result:", result);
-        toast.success("Profil complété avec succès!");
-        
-        // Redirection vers le tableau de bord après quelques secondes
-        setTimeout(() => {
-          window.location.href = "/driver/dashboard";
-        }, 2000);
+        toast.success("Première étape complétée avec succès!");
         
       } catch (error: any) {
         console.error("Error submitting driver profile:", error);
@@ -252,7 +186,7 @@ export default function CompleteDriverProfile() {
             <CardHeader>
               <CardTitle className="text-2xl">Compléter votre profil chauffeur</CardTitle>
               <CardDescription>
-                Renseignez vos informations professionnelles pour finaliser votre inscription
+                Étape 1/2 : Informations professionnelles de base
               </CardDescription>
             </CardHeader>
             
@@ -303,33 +237,6 @@ export default function CompleteDriverProfile() {
                             <FormControl>
                               <Input placeholder="12AB34567890" {...field} />
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Type de véhicule */}
-                      <FormField
-                        control={form.control}
-                        name="vehicleType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Type de véhicule</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Sélectionnez un type de véhicule" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {Object.entries(vehicleCategoryLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -474,115 +381,6 @@ export default function CompleteDriverProfile() {
                     )}
                   />
                   
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Documents légaux</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Veuillez télécharger les documents suivants au format PDF, JPEG ou PNG (max 5MB par fichier)
-                    </p>
-                    
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Kbis */}
-                      <FormField
-                        control={form.control}
-                        name="kbis"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
-                          <FormItem>
-                            <FormLabel>Extrait Kbis</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="file" 
-                                accept=".pdf,.jpg,.jpeg,.png" 
-                                onChange={(e) => handleFileChange(e, 'kbis')}
-                                {...fieldProps}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Attestation de vigilance */}
-                      <FormField
-                        control={form.control}
-                        name="vigilanceAttestation"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
-                          <FormItem>
-                            <FormLabel>Attestation de vigilance</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="file" 
-                                accept=".pdf,.jpg,.jpeg,.png" 
-                                onChange={(e) => handleFileChange(e, 'vigilanceAttestation')}
-                                {...fieldProps}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Permis de conduire (recto) */}
-                      <FormField
-                        control={form.control}
-                        name="driverLicenseFront"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
-                          <FormItem>
-                            <FormLabel>Permis de conduire (recto)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="file" 
-                                accept=".pdf,.jpg,.jpeg,.png" 
-                                onChange={(e) => handleFileChange(e, 'driverLicenseFront')}
-                                {...fieldProps}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Permis de conduire (verso) */}
-                      <FormField
-                        control={form.control}
-                        name="driverLicenseBack"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
-                          <FormItem>
-                            <FormLabel>Permis de conduire (verso)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="file" 
-                                accept=".pdf,.jpg,.jpeg,.png" 
-                                onChange={(e) => handleFileChange(e, 'driverLicenseBack')}
-                                {...fieldProps}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* CNI / Passeport */}
-                      <FormField
-                        control={form.control}
-                        name="idDocument"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
-                          <FormItem>
-                            <FormLabel>CNI/Passeport</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="file" 
-                                accept=".pdf,.jpg,.jpeg,.png" 
-                                onChange={(e) => handleFileChange(e, 'idDocument')}
-                                {...fieldProps}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                  
                   <Button 
                     type="submit" 
                     className="w-full"
@@ -591,10 +389,10 @@ export default function CompleteDriverProfile() {
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 border-t-2 border-r-2 border-white rounded-full animate-spin"></div>
-                        <span>Finalisation du profil...</span>
+                        <span>Enregistrement en cours...</span>
                       </div>
                     ) : (
-                      'Finaliser mon profil'
+                      'Continuer à l\'étape suivante'
                     )}
                   </Button>
                 </form>

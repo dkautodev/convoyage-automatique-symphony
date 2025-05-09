@@ -1,4 +1,3 @@
-
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -263,26 +262,10 @@ const uploadDriverDocuments = async (userId: string, documents: Record<string, F
   }
 };
 
-// Fonction pour compléter le profil chauffeur - Mise à jour pour créer l'entrée dans la table drivers
-export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
+// Fonction pour compléter la première étape du profil chauffeur (profil de base)
+export const completeDriverBasicProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
-    console.log("Starting driver profile completion for user:", userId);
-    console.log("Driver profile form data:", JSON.stringify(data, null, 2));
-    
-    let documentPaths: Record<string, string> = {};
-    
-    // Télécharger les documents si fournis
-    if (data.documents && Object.keys(data.documents).length > 0) {
-      try {
-        console.log("Uploading driver documents...");
-        documentPaths = await uploadDriverDocuments(userId, data.documents);
-        console.log("Documents uploaded successfully:", documentPaths);
-      } catch (docError) {
-        console.error("Error uploading documents, continuing with profile update:", docError);
-      }
-    } else {
-      console.log("No documents provided to upload");
-    }
+    console.log("Starting basic driver profile completion for user:", userId);
     
     // D'abord, mettre à jour le profil principal
     console.log("Updating main profile record...");
@@ -298,8 +281,6 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
         phone_1: data.phone1,
         phone_2: data.phone2 || null,
         driver_license: data.licenseNumber,
-        vehicle_type: data.vehicleType,
-        vehicle_registration: data.idNumber,
         profile_completed: true
       })
       .eq('id', userId)
@@ -311,106 +292,120 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
     }
     
     console.log("Updated profile successfully:", updatedProfile);
+    return updatedProfile;
     
-    // Vérifier si le chauffeur existe déjà dans la table drivers
-    console.log("Checking if driver already exists in drivers table...");
-    const { data: existingDriver, error: checkError } = await supabase
-      .from('drivers')
+  } catch (err) {
+    console.error("Error in completeDriverBasicProfileService:", err);
+    throw err;
+  }
+};
+
+// Fonction pour compléter la seconde étape du profil chauffeur (configuration)
+export const completeDriverConfigService = async (
+  userId: string, 
+  legalStatus: string, 
+  documents: Record<string, File> = {}
+) => {
+  try {
+    console.log("Starting driver config completion for user:", userId);
+    
+    let documentPaths: Record<string, string> = {};
+    
+    // Télécharger les documents si fournis
+    if (documents && Object.keys(documents).length > 0) {
+      try {
+        console.log("Uploading driver documents...");
+        documentPaths = await uploadDriverDocuments(userId, documents);
+        console.log("Documents uploaded successfully:", documentPaths);
+      } catch (docError) {
+        console.error("Error uploading documents:", docError);
+      }
+    }
+    
+    // Créer ou mettre à jour l'entrée dans la table drivers_config
+    const driverConfigData = {
+      id: userId,
+      legal_status: legalStatus,
+      kbis_document_path: documentPaths.kbis || null,
+      vigilance_document_path: documentPaths.vigilanceAttestation || null,
+      license_document_path: documentPaths.driverLicenseFront || null,
+      id_document_path: documentPaths.idDocument || null
+    };
+    
+    console.log("Driver config data to save:", driverConfigData);
+    
+    // Vérifier si la configuration existe déjà
+    const { data: existingConfig, error: checkError } = await supabase
+      .from('drivers_config')
       .select('id')
       .eq('id', userId)
       .maybeSingle();
       
     if (checkError) {
-      console.error("Error checking driver:", checkError);
+      console.error("Error checking driver config:", checkError);
       throw checkError;
     }
     
-    console.log("Existing driver check result:", existingDriver);
+    let configResult;
     
-    // Création des données à insérer/mettre à jour
-    const driverData = {
-      id: userId,
-      full_name: data.fullName,
-      company_name: data.companyName,
-      billing_address: convertAddressToJson(data.billingAddress),
-      license_number: data.licenseNumber,
-      vat_applicable: data.tvaApplicable,
-      vat_number: data.tvaNumb,
-      phone1: data.phone1,
-      phone2: data.phone2 || null,
-      vehicle_type: data.vehicleType,
-      // Ajouter les chemins des documents s'ils existent
-      license_document_path: documentPaths.driverLicenseFront || null,
-      id_document_path: documentPaths.idDocument || null,
-      kbis_document_path: documentPaths.kbis || null,
-      vigilance_document_path: documentPaths.vigilanceAttestation || null
-    };
-    
-    console.log("Driver data to save:", driverData);
-    
-    let driverResult;
-    
-    // Insérer ou mettre à jour dans la table des chauffeurs
-    if (!existingDriver) {
-      // Si le chauffeur n'existe pas, l'insérer
-      console.log("Creating new driver record in drivers table");
-      const { data: insertedDriver, error: driverError } = await supabase
-        .from('drivers')
-        .insert(driverData)
+    if (!existingConfig) {
+      // Créer une nouvelle configuration
+      const { data: insertedConfig, error: insertError } = await supabase
+        .from('drivers_config')
+        .insert(driverConfigData)
         .select('*');
       
-      if (driverError) {
-        console.error("Error inserting driver:", driverError);
-        
-        // Vérification détaillée de l'erreur RLS
-        if (driverError.message.includes('violates row-level security policy')) {
-          console.error("RLS policy violation detected. Checking permissions...");
-          
-          // Vérifier la session courante
-          const { data: session } = await supabase.auth.getSession();
-          console.log("Current session:", session);
-          
-          // Vérifions les permissions de l'utilisateur
-          try {
-            // Au lieu d'utiliser get_policies, obtenons simplement le rôle de l'utilisateur
-            const { data: roleData, error: roleError } = await supabase
-              .rpc('get_current_user_role');
-            
-            if (roleError) {
-              console.error("Error fetching user role:", roleError);
-            } else {
-              console.log("Current user role:", roleData);
-            }
-          } catch (policyErr) {
-            console.error("Error checking permissions:", policyErr);
-          }
-        }
-        
-        throw driverError;
+      if (insertError) {
+        console.error("Error inserting driver config:", insertError);
+        throw insertError;
       }
       
-      driverResult = insertedDriver;
-      console.log("Driver inserted successfully:", insertedDriver);
+      configResult = insertedConfig;
+      console.log("Driver config inserted successfully:", insertedConfig);
     } else {
-      // Si le chauffeur existe, le mettre à jour
-      console.log("Updating existing driver record in drivers table");
-      const { data: updatedDriver, error: driverError } = await supabase
-        .from('drivers')
-        .update(driverData)
+      // Mettre à jour la configuration existante
+      const { data: updatedConfig, error: updateError } = await supabase
+        .from('drivers_config')
+        .update(driverConfigData)
         .eq('id', userId)
         .select('*');
       
-      if (driverError) {
-        console.error("Error updating driver:", driverError);
-        throw driverError;
+      if (updateError) {
+        console.error("Error updating driver config:", updateError);
+        throw updateError;
       }
       
-      driverResult = updatedDriver;
-      console.log("Driver updated successfully:", updatedDriver);
+      configResult = updatedConfig;
+      console.log("Driver config updated successfully:", updatedConfig);
     }
     
-    console.log("Driver profile completed successfully");
-    return updatedProfile;
+    return configResult;
+  } catch (err) {
+    console.error("Error in completeDriverConfigService:", err);
+    throw err;
+  }
+};
+
+// Maintenir la fonction complète originale pour la rétrocompatibilité
+export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
+  try {
+    console.log("Starting driver profile completion for user:", userId);
+    console.log("Driver profile form data:", JSON.stringify(data, null, 2));
+    
+    // Appeler la fonction de la première étape
+    const profileResult = await completeDriverBasicProfileService(userId, data);
+    
+    // Si des documents sont fournis, les télécharger
+    if (data.documents && Object.keys(data.documents).length > 0) {
+      try {
+        console.log("Uploading driver documents for legacy function...");
+        await uploadDriverDocuments(userId, data.documents);
+      } catch (docError) {
+        console.error("Error uploading documents, continuing with profile update:", docError);
+      }
+    }
+    
+    return profileResult;
   } catch (err) {
     console.error("Error in completeDriverProfileService:", err);
     throw err;

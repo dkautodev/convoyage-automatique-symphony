@@ -166,59 +166,35 @@ export type Database = {
           },
         ]
       }
-      drivers: {
+      drivers_config: {
         Row: {
-          availability_status: string | null
-          billing_address: Json
-          company_name: string | null
-          full_name: string
+          created_at: string
           id: string
           id_document_path: string | null
           kbis_document_path: string | null
-          last_location: Json | null
+          legal_status: Database["public"]["Enums"]["legal_status_type"]
           license_document_path: string | null
-          license_number: string
-          phone1: string
-          phone2: string | null
-          vat_applicable: boolean
-          vat_number: string | null
-          vehicle_type: Database["public"]["Enums"]["vehicle_category"] | null
+          updated_at: string
           vigilance_document_path: string | null
         }
         Insert: {
-          availability_status?: string | null
-          billing_address: Json
-          company_name?: string | null
-          full_name: string
+          created_at?: string
           id: string
           id_document_path?: string | null
           kbis_document_path?: string | null
-          last_location?: Json | null
+          legal_status: Database["public"]["Enums"]["legal_status_type"]
           license_document_path?: string | null
-          license_number: string
-          phone1: string
-          phone2?: string | null
-          vat_applicable?: boolean
-          vat_number?: string | null
-          vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
+          updated_at?: string
           vigilance_document_path?: string | null
         }
         Update: {
-          availability_status?: string | null
-          billing_address?: Json
-          company_name?: string | null
-          full_name?: string
+          created_at?: string
           id?: string
           id_document_path?: string | null
           kbis_document_path?: string | null
-          last_location?: Json | null
+          legal_status?: Database["public"]["Enums"]["legal_status_type"]
           license_document_path?: string | null
-          license_number?: string
-          phone1?: string
-          phone2?: string | null
-          vat_applicable?: boolean
-          vat_number?: string | null
-          vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
+          updated_at?: string
           vigilance_document_path?: string | null
         }
         Relationships: []
@@ -347,13 +323,6 @@ export type Database = {
           vehicle_id?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "missions_chauffeur_id_fkey"
-            columns: ["chauffeur_id"]
-            isOneToOne: false
-            referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "missions_client_id_fkey"
             columns: ["client_id"]
@@ -581,6 +550,16 @@ export type Database = {
     }
     Enums: {
       document_type: "devis" | "facture" | "fiche_mission"
+      legal_status_type:
+        | "EI"
+        | "EURL"
+        | "SARL"
+        | "SA"
+        | "SAS"
+        | "SASU"
+        | "SNC"
+        | "Scop"
+        | "Association"
       mission_status:
         | "en_acceptation"
         | "prise_en_charge"
@@ -716,6 +695,17 @@ export const Constants = {
   public: {
     Enums: {
       document_type: ["devis", "facture", "fiche_mission"],
+      legal_status_type: [
+        "EI",
+        "EURL",
+        "SARL",
+        "SA",
+        "SAS",
+        "SASU",
+        "SNC",
+        "Scop",
+        "Association",
+      ],
       mission_status: [
         "en_acceptation",
         "prise_en_charge",

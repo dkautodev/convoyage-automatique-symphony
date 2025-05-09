@@ -221,12 +221,21 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       const pickupAddressData = form.getValues('pickup_address_data') as Address;
       const deliveryAddressData = form.getValues('delivery_address_data') as Address;
       
+      // Convertir les objets Address en Json compatible avec Supabase
+      const pickupAddressJson = pickupAddressData ? 
+        JSON.parse(JSON.stringify(pickupAddressData)) : 
+        { formatted_address: values.pickup_address };
+        
+      const deliveryAddressJson = deliveryAddressData ? 
+        JSON.parse(JSON.stringify(deliveryAddressData)) : 
+        { formatted_address: values.delivery_address };
+      
       // Enregistrer la mission
       const missionData = {
         client_id: values.client_id || user?.id,
         status: values.status || 'en_acceptation',
-        pickup_address: pickupAddressData || { formatted_address: values.pickup_address },
-        delivery_address: deliveryAddressData || { formatted_address: values.delivery_address },
+        pickup_address: pickupAddressJson,
+        delivery_address: deliveryAddressJson,
         distance_km: values.distance_km,
         price_ht: values.price_ht,
         price_ttc: values.price_ttc,

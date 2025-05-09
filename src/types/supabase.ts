@@ -40,6 +40,7 @@ export const missionStatusColors: Record<MissionStatus, string> = {
 // UserRole type that matches exactly what's expected in the database
 export type UserRole = 'admin' | 'client' | 'chauffeur';
 
+// Modified Address interface to ensure it's compatible with Json
 export interface Address {
   formatted_address: string;
   place_id?: string;
@@ -50,6 +51,7 @@ export interface Address {
   country?: string;
   lat?: number;
   lng?: number;
+  [key: string]: any; // Add index signature to make it compatible with Json type
 }
 
 export interface Client {

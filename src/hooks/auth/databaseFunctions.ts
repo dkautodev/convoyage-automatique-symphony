@@ -18,49 +18,46 @@ export const setupDatabaseFunctions = async () => {
 export const checkDriverFieldsConstraint = async () => {
   try {
     // Vérifier si la contrainte existe déjà
-    const checkConstraintPromise = supabase
-      .from('profiles')
-      .select('id')
-      .limit(1)
-      .then(async () => {
-        // Si on arrive ici, on peut faire la requête SQL directement
-        const { data, error } = await supabase.rpc('check_constraint_exists', { 
-          schema_name: 'public', 
-          table_name: 'profiles', 
-          constraint_name: 'enforce_driver_fields' 
-        });
+    try {
+      // First attempt to query the profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
         
-        if (error) {
-          console.error('Error checking constraint:', error);
-          return { data: false, error };
-        }
-        
-        return { data, error: null };
-      })
-      .catch((error) => {
+      if (profileError) {
         console.log('Error accessing profiles, assuming constraint does not exist');
-        return { data: false, error: null };
-      });
-
-    const { data: constraintExists, error: checkError } = await checkConstraintPromise;
-    
-    if (checkError) {
-      console.error('Error checking driver fields constraint:', checkError);
-      return false;
-    }
-    
-    // Si la contrainte existe, la supprimer pour permettre l'inscription initiale
-    if (constraintExists) {
-      console.log('Dropping enforce_driver_fields constraint temporarily');
-      const { error: disableError } = await supabase.rpc('disable_driver_fields_constraint');
+        return true;
+      }
       
-      if (disableError) {
-        console.error('Error disabling constraint:', disableError);
+      // If we can access the profiles table, check if the constraint exists
+      const { data: constraintExists, error: checkError } = await supabase.rpc('check_constraint_exists', { 
+        schema_name: 'public', 
+        table_name: 'profiles', 
+        constraint_name: 'enforce_driver_fields' 
+      });
+      
+      if (checkError) {
+        console.error('Error checking constraint:', checkError);
         return false;
       }
+      
+      // Si la contrainte existe, la supprimer pour permettre l'inscription initiale
+      if (constraintExists) {
+        console.log('Dropping enforce_driver_fields constraint temporarily');
+        const { error: disableError } = await supabase.rpc('disable_driver_fields_constraint');
+        
+        if (disableError) {
+          console.error('Error disabling constraint:', disableError);
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (innerError) {
+      console.error('Error accessing profiles:', innerError);
+      return false;
     }
-    
-    return true;
   } catch (error) {
     console.error('Error checking driver fields constraint:', error);
     return false;

@@ -1,7 +1,8 @@
 
 import { User } from '@supabase/supabase-js';
-import { UserRole, VehicleCategory, Address } from '@/types/supabase';
+import { UserRole, VehicleCategory } from '@/types/supabase';
 import { Session } from '@supabase/supabase-js';
+import { Json } from '@/integrations/supabase/types';
 
 // Interface pour le résultat du geocoding de Google
 export interface GoogleGeocodingResult {
@@ -89,6 +90,17 @@ export interface RegisterFormData {
   siret?: string;
 }
 
+// Interface pour l'adresse
+export interface Address {
+  street: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  formatted_address?: string;
+  lat?: number;
+  lng?: number;
+}
+
 // Interface pour le profil utilisateur
 export interface Profile {
   id: string;
@@ -96,13 +108,15 @@ export interface Profile {
   role: UserRole;
   full_name: string | null;
   company_name?: string | null;
-  billing_address?: Address;
+  billing_address?: Json | null;
   siret?: string | null;
   tva_number?: string | null;
   tva_applicable?: boolean;
   phone_1?: string | null;
   phone_2?: string | null;
   driver_license?: string | null;
+  id_document?: string | null;
+  legal_status?: LegalStatusType | null;
   vehicle_type?: VehicleCategory | null;
   vehicle_registration?: string | null;
   created_at: string;
@@ -118,7 +132,7 @@ export interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  basicRegister: (data: BasicRegisterFormData) => Promise<void>; // Assurez-vous que cette ligne existe
+  basicRegister: (data: BasicRegisterFormData) => Promise<void>;
   completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
   completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
   completeDriverBasicProfile: (data: DriverProfileFormData) => Promise<void>;

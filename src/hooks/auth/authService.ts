@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile } from './types';
 import type { 
@@ -9,6 +10,13 @@ import type {
 } from '@/types/auth';
 import { uploadFile } from '@/integrations/supabase/storage';
 import { UserRole } from '@/types/supabase';
+import { Json } from '@/integrations/supabase/types';
+
+// Helper function to convert Address to Json compatible object
+function addressToJson(address: any): Json {
+  if (!address) return null;
+  return address as Json;
+}
 
 // Fonction pour récupérer le profil utilisateur
 export async function fetchUserProfile(userId: string): Promise<Profile | null> {
@@ -27,7 +35,8 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
 
     if (data) {
       console.log("Service: Profil récupéré avec succès", data);
-      return data as Profile;
+      // Use type assertion to convert the raw data to Profile
+      return data as unknown as Profile;
     } else {
       console.warn("Service: Aucun profil trouvé pour l'utilisateur", userId);
       return null;
@@ -181,7 +190,7 @@ export async function completeClientProfileService(
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: addressToJson(data.billingAddress),
         siret: data.siret,
         tva_number: data.tvaNumb,
         phone_1: data.phone1,
@@ -213,7 +222,7 @@ export async function completeDriverBasicProfileService(
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: addressToJson(data.billingAddress),
         siret: data.siret,
         tva_applicable: data.tvaApplicable,
         tva_number: data.tvaNumb,
@@ -245,7 +254,7 @@ export async function completeDriverProfileService(
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: addressToJson(data.billingAddress),
         siret: data.siret,
         tva_applicable: data.tvaApplicable,
         tva_number: data.tvaNumb,
@@ -305,9 +314,15 @@ export async function updateUserProfile(userId: string, data: Partial<Profile>):
   try {
     console.log("Service: Mise à jour du profil pour", userId, "avec", data);
 
+    // Convert any Address fields to Json before updating
+    const updateData = { ...data };
+    if (updateData.billing_address) {
+      updateData.billing_address = addressToJson(updateData.billing_address);
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update(data)
+      .update(updateData as any)
       .eq('id', userId);
 
     if (error) {
@@ -349,7 +364,7 @@ export async function verifyAdminToken(token: string, email: string): Promise<bo
     console.log("Service: Vérification du token d'admin pour", email);
 
     const { data, error } = await supabase
-      .from('admin_invitations')
+      .from('admin_invitation_tokens')
       .select('*')
       .eq('token', token)
       .eq('email', email)

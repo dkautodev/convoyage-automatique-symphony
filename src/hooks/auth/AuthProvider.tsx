@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -302,7 +301,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await completeDriverConfigService(user.id, data);
       
       toast.success('Configuration du chauffeur complétée avec succès');
-      handleRoleBasedRedirection('chauffeur', true);
+      
+      // Important: Assurez-vous que le profil est correctement mis à jour avant la redirection
+      setProfile(prev => prev ? { ...prev, profile_completed: true } : null);
+      
+      // Utiliser le chemin exact correspondant à la route définie dans App.tsx
+      navigate('/driver/dashboard');
       
     } catch (err: any) {
       setError(err.message);

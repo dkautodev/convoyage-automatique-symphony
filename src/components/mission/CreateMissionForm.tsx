@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
 import { useAuth } from '@/hooks/useAuth';
 import { usePricing } from '@/hooks/usePricing';
+import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { typedSupabase } from '@/types/database';
 import { vehicleCategoryLabels, VehicleCategory, MissionStatus } from '@/types/supabase';
 import { Address } from '@/types/supabase';
@@ -86,6 +87,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, profile } = useAuth();
   const { computePrice, prices } = usePricing();
+  const { calculateDistance } = useGooglePlaces();
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [pickupAddressData, setPickupAddressData] = useState<any>(null);
   const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
@@ -134,7 +136,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     }
   })();
 
-  async function calculateDistance() {
+  async function calculatePrice() {
     try {
       setCalculatingPrice(true);
       
@@ -155,13 +157,13 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
 
       // Extraire les coordonnées des adresses
       const pickupCoords = {
-        lat: pickupAddressData.geometry?.location?.lat(),
-        lng: pickupAddressData.geometry?.location?.lng()
+        lat: pickupAddressData.lat || (pickupAddressData.geometry?.location?.lat && typeof pickupAddressData.geometry.location.lat === 'function' ? pickupAddressData.geometry.location.lat() : null),
+        lng: pickupAddressData.lng || (pickupAddressData.geometry?.location?.lng && typeof pickupAddressData.geometry.location.lng === 'function' ? pickupAddressData.geometry.location.lng() : null)
       };
       
       const deliveryCoords = {
-        lat: deliveryAddressData.geometry?.location?.lat(),
-        lng: deliveryAddressData.geometry?.location?.lng()
+        lat: deliveryAddressData.lat || (deliveryAddressData.geometry?.location?.lat && typeof deliveryAddressData.geometry.location.lat === 'function' ? deliveryAddressData.geometry.location.lat() : null),
+        lng: deliveryAddressData.lng || (deliveryAddressData.geometry?.location?.lng && typeof deliveryAddressData.geometry.location.lng === 'function' ? deliveryAddressData.geometry.location.lng() : null)
       };
 
       if (!pickupCoords.lat || !pickupCoords.lng || !deliveryCoords.lat || !deliveryCoords.lng) {
@@ -173,9 +175,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       console.log("Coordonnées de départ:", pickupCoords);
       console.log("Coordonnées d'arrivée:", deliveryCoords);
 
-      // Utiliser le hook Google Places pour calculer la distance
-      const { calculateDistance } = useGooglePlaces();
-
+      // Utiliser directement l'instance de calculateDistance du hook
       const result = await calculateDistance(pickupCoords, deliveryCoords);
 
       if (!result) {
@@ -472,7 +472,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={calculateDistance}
+                      onClick={calculatePrice}
                       disabled={calculatingPrice}
                       className="flex items-center gap-2"
                     >

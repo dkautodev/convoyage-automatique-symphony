@@ -66,9 +66,9 @@ const MissionsPage = () => {
       
       // Filtrer par statut si un tab spécifique est sélectionné
       if (activeTab !== 'all') {
-        // Use the activeTab value for filtering but ensure it's a valid mission status
-        // We're explicitly casting here since we've defined MissionTab to only allow valid values
-        query = query.eq('status', activeTab as string);
+        // Utilisez la valeur activeTab pour le filtrage, mais assurez-vous qu'elle est castée comme MissionStatus
+        // puisque nous avons défini MissionTab pour ne permettre que des valeurs valides
+        query = query.eq('status', activeTab as MissionStatus);
       }
       
       const { data: missionsData, error: missionsError } = await query;

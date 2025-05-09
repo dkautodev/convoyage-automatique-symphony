@@ -579,7 +579,7 @@ export type Database = {
         Returns: string
       }
       get_user_role: {
-        Args: { user_id: string }
+        Args: Record<PropertyKey, never> | { user_id: string }
         Returns: string
       }
       is_owner_of_profile: {
@@ -607,6 +607,7 @@ export type Database = {
         | "termine"
         | "annule"
         | "incident"
+        | "accepte"
       pricing_type: "forfait" | "km"
       user_role: "admin" | "client" | "chauffeur"
       vehicle_category:
@@ -753,6 +754,7 @@ export const Constants = {
         "termine",
         "annule",
         "incident",
+        "accepte",
       ],
       pricing_type: ["forfait", "km"],
       user_role: ["admin", "client", "chauffeur"],

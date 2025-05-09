@@ -274,7 +274,7 @@ export default function CreateMissionForm({
     setDeliveryAddressData(addressData);
     form.setValue('delivery_address_data', addressData);
   };
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: CreateMissionFormValues) => {
     try {
       setIsSubmitting(true);
       console.log("Début de la soumission du formulaire avec les valeurs:", values);
@@ -293,7 +293,7 @@ export default function CreateMissionForm({
         if (selectedClientId) {
           clientId = selectedClientId;
           console.log("Admin: client_id sélectionné =", clientId);
-        } else if (values.client_id) {
+        } else if (values.client_id && values.client_id !== 'no_client_selected' && values.client_id !== 'loading' && values.client_id !== 'no_clients') {
           clientId = values.client_id;
           console.log("Admin: client_id from values =", clientId);
         } else {
@@ -318,11 +318,16 @@ export default function CreateMissionForm({
         return;
       }
 
-      // S'assurer que chauffeur_id n'est pas "no_driver_assigned"
-      if (values.chauffeur_id === "no_driver_assigned") {
-        values.chauffeur_id = null;
+      // S'assurer que chauffeur_id n'est pas un des valeurs statiques
+      let chauffeurId = values.chauffeur_id;
+      if (!chauffeurId || 
+          chauffeurId === "no_driver_assigned" || 
+          chauffeurId === "loading" || 
+          chauffeurId === "no_drivers") {
+        chauffeurId = null;
       }
       console.log("Client ID final:", clientId);
+      console.log("Chauffeur ID final:", chauffeurId);
 
       // Préparer les données d'adresse pour la base de données
       const pickupAddressData = values.pickup_address_data || {
@@ -331,8 +336,6 @@ export default function CreateMissionForm({
       const deliveryAddressData = values.delivery_address_data || {
         formatted_address: values.delivery_address
       };
-      console.log("Données d'adresse de départ:", pickupAddressData);
-      console.log("Données d'adresse de livraison:", deliveryAddressData);
 
       // Convertir les objets Address en Json compatible avec Supabase
       const pickupAddressJson = pickupAddressData ? JSON.parse(JSON.stringify(pickupAddressData)) : {
@@ -366,10 +369,9 @@ export default function CreateMissionForm({
         vehicle_make: values.vehicle_make,
         vehicle_model: values.vehicle_model,
         vehicle_fuel: values.vehicle_fuel,
-        vehicle_year: values.vehicle_year ? parseInt(values.vehicle_year) : null,
+        vehicle_year: values.vehicle_year ? parseInt(String(values.vehicle_year)) : null,
         vehicle_registration: values.vehicle_registration,
         vehicle_vin: values.vehicle_vin || null,
-        // VIN désormais optionnel
         contact_pickup_name: values.contact_pickup_name,
         contact_pickup_phone: values.contact_pickup_phone,
         contact_pickup_email: values.contact_pickup_email,
@@ -385,7 +387,7 @@ export default function CreateMissionForm({
         H1_LIV: values.H1_LIV,
         H2_LIV: values.H2_LIV,
         notes: values.notes,
-        chauffeur_id: values.chauffeur_id || null,
+        chauffeur_id: chauffeurId,
         chauffeur_price_ht: values.chauffeur_price_ht || 0,
         created_by: user?.id || '',
         scheduled_date: new Date().toISOString(),
@@ -394,12 +396,10 @@ export default function CreateMissionForm({
         mission_type: values.mission_type || 'LIV'
       };
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
+      
       try {
         console.log("Sending request to Supabase with data:", missionData);
-        const {
-          data,
-          error
-        } = await typedSupabase.from('missions').insert(missionData).select('id').single();
+        const { data, error } = await typedSupabase.from('missions').insert(missionData).select('id').single();
         if (error) {
           console.error('Erreur Supabase lors de la création de la mission:', error);
           console.error('Detail:', error.details);
@@ -757,7 +757,7 @@ export default function CreateMissionForm({
                 }) => <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Nom complet ou sociét��" />
+                            <Input {...field} placeholder="Nom complet ou sociét���" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>} />

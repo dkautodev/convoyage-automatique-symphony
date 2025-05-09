@@ -24,6 +24,7 @@ export const fetchClients = async (): Promise<Client[]> => {
       .from('profiles')
       .select('*')
       .eq('role', 'client')
+      .eq('active', true)
       .order('company_name', { ascending: true });
     
     if (error) {

@@ -364,20 +364,25 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
         
         // Vérification détaillée de l'erreur RLS
         if (driverError.message.includes('violates row-level security policy')) {
-          console.error("RLS policy violation detected. Checking RLS policies...");
+          console.error("RLS policy violation detected. Checking permissions...");
           
           // Vérifier la session courante
           const { data: session } = await supabase.auth.getSession();
           console.log("Current session:", session);
           
-          // Vérifier les politiques RLS sur la table drivers
-          const { data: policies, error: policiesError } = await supabase
-            .rpc('get_policies', { table_name: 'drivers' });
-          
-          if (policiesError) {
-            console.error("Error fetching RLS policies:", policiesError);
-          } else {
-            console.log("RLS policies on drivers table:", policies);
+          // Vérifions les permissions de l'utilisateur
+          try {
+            // Au lieu d'utiliser get_policies, obtenons simplement le rôle de l'utilisateur
+            const { data: roleData, error: roleError } = await supabase
+              .rpc('get_current_user_role');
+            
+            if (roleError) {
+              console.error("Error fetching user role:", roleError);
+            } else {
+              console.log("Current user role:", roleData);
+            }
+          } catch (policyErr) {
+            console.error("Error checking permissions:", policyErr);
           }
         }
         

@@ -152,6 +152,7 @@ export default function CompleteDriverProfile() {
   const onSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
+      console.log("Submitting driver profile data:", data);
       
       const documents: Record<string, File> = {};
       if (data.kbis) documents.kbis = data.kbis;
@@ -160,7 +161,10 @@ export default function CompleteDriverProfile() {
       if (data.vigilanceAttestation) documents.vigilanceAttestation = data.vigilanceAttestation;
       if (data.idDocument) documents.idDocument = data.idDocument;
       
-      await completeDriverProfile({
+      // Assurer que mapCoords est défini avec des valeurs par défaut si nécessaire
+      const coordinates = mapCoords || { lat: 48.8566, lng: 2.3522 };
+      
+      const result = await completeDriverProfile({
         companyName: data.companyName,
         fullName: data.fullName,
         billingAddress: {
@@ -169,19 +173,24 @@ export default function CompleteDriverProfile() {
           postal_code: "",
           country: "",
           formatted_address: data.billingAddress,
-          lat: mapCoords?.lat,
-          lng: mapCoords?.lng
+          lat: coordinates.lat,
+          lng: coordinates.lng
         },
         siret: data.siret.replace(/\s/g, ''),
         tvaApplicable: data.tvaApplicable,
-        tvaNumb: data.tvaApplicable ? data.tvaNumb : undefined,
+        tvaNumb: data.tvaApplicable ? data.tvaNumb : '',
         phone1: data.phone1,
-        phone2: data.phone2,
+        phone2: data.phone2 || '',
         licenseNumber: data.licenseNumber,
         vehicleType: data.vehicleType as VehicleCategory,
         idNumber: data.idNumber,
         documents: documents as any,
       });
+      
+      console.log("Driver profile completion result:", result);
+    } catch (error) {
+      console.error("Error completing driver profile:", error);
+      // Vous pourriez ajouter une notification d'erreur ici
     } finally {
       setIsSubmitting(false);
     }

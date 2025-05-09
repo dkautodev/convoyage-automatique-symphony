@@ -221,6 +221,8 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       throw profileError;
     }
     
+    console.log("Updated profile successfully:", updatedProfile);
+    
     // Vérifier si le chauffeur existe déjà dans la table drivers
     const { data: existingDriver, error: checkError } = await supabase
       .from('drivers')
@@ -233,51 +235,57 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       throw checkError;
     }
     
-    // Configuration de l'opération à effectuer (insert ou update)
-    let driverOperation;
+    console.log("Existing driver check result:", existingDriver);
     
-    // Créer ou mettre à jour dans la table des chauffeurs
+    // Création des données à insérer/mettre à jour
+    const driverData = {
+      id: userId,
+      full_name: data.fullName,
+      company_name: data.companyName,
+      billing_address: convertAddressToJson(data.billingAddress),
+      license_number: data.licenseNumber,
+      vat_applicable: data.tvaApplicable,
+      vat_number: data.tvaNumb,
+      phone1: data.phone1,
+      phone2: data.phone2,
+      vehicle_type: data.vehicleType
+    };
+    
+    let driverOperation;
+    let driverResult;
+    
+    // Insérer ou mettre à jour dans la table des chauffeurs
     if (!existingDriver) {
       // Si le chauffeur n'existe pas, l'insérer
-      console.log("Creating new driver record in drivers table");
-      driverOperation = supabase
+      console.log("Creating new driver record in drivers table with data:", driverData);
+      const { data: insertedDriver, error: driverError } = await supabase
         .from('drivers')
-        .insert({
-          id: userId,
-          full_name: data.fullName,
-          company_name: data.companyName,
-          billing_address: convertAddressToJson(data.billingAddress),
-          license_number: data.licenseNumber,
-          vat_applicable: data.tvaApplicable,
-          vat_number: data.tvaNumb,
-          phone1: data.phone1,
-          phone2: data.phone2,
-          vehicle_type: data.vehicleType
-        });
+        .insert(driverData)
+        .select();
+      
+      if (driverError) {
+        console.error("Error inserting driver:", driverError);
+        throw driverError;
+      }
+      
+      driverResult = insertedDriver;
+      console.log("Driver inserted successfully:", insertedDriver);
     } else {
       // Si le chauffeur existe, le mettre à jour
-      console.log("Updating existing driver record in drivers table");
-      driverOperation = supabase
+      console.log("Updating existing driver record in drivers table with data:", driverData);
+      const { data: updatedDriver, error: driverError } = await supabase
         .from('drivers')
-        .update({
-          full_name: data.fullName,
-          company_name: data.companyName,
-          billing_address: convertAddressToJson(data.billingAddress),
-          license_number: data.licenseNumber,
-          vat_applicable: data.tvaApplicable,
-          vat_number: data.tvaNumb,
-          phone1: data.phone1,
-          phone2: data.phone2,
-          vehicle_type: data.vehicleType
-        })
-        .eq('id', userId);
-    }
-    
-    const { error: driverError } = await driverOperation;
-    
-    if (driverError) {
-      console.error("Error updating driver table:", driverError);
-      throw driverError;
+        .update(driverData)
+        .eq('id', userId)
+        .select();
+      
+      if (driverError) {
+        console.error("Error updating driver:", driverError);
+        throw driverError;
+      }
+      
+      driverResult = updatedDriver;
+      console.log("Driver updated successfully:", updatedDriver);
     }
     
     console.log("Driver profile completed successfully");

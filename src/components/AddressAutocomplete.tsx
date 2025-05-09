@@ -27,9 +27,12 @@ export default function AddressAutocomplete({
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isAddressSelected, setIsAddressSelected] = useState(false);
   
   // Debounce search input
   useEffect(() => {
+    if (isAddressSelected) return; // Ne pas rechercher si une adresse a été sélectionnée
+    
     const timer = setTimeout(() => {
       if (value) {
         searchPlaces(value);
@@ -41,12 +44,13 @@ export default function AddressAutocomplete({
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [value, searchPlaces, clearPredictions]);
+  }, [value, searchPlaces, clearPredictions, isAddressSelected]);
   
   const handleSelect = async (prediction: any) => {
     try {
-      // Forcer la fermeture des suggestions avant d'appeler getPlaceDetails
+      // Forcer la fermeture des suggestions immédiatement
       setShowSuggestions(false);
+      setIsAddressSelected(true);
       
       const details = await getPlaceDetails(prediction.place_id);
       if (details) {
@@ -54,29 +58,58 @@ export default function AddressAutocomplete({
         // Attendre un court instant pour s'assurer que l'interface se met à jour correctement
         setTimeout(() => {
           onSelect(details.formatted_address, prediction.place_id);
+          // Enlever le focus de l'input pour éviter que les suggestions réapparaissent
+          if (inputRef.current) {
+            inputRef.current.blur();
+          }
         }, 100);
       }
     } catch (error) {
       console.error('Error selecting address:', error);
+      setIsAddressSelected(false);
     }
   };
 
   const handleClear = () => {
     onChange('');
     setShowSuggestions(false);
+    setIsAddressSelected(false);
     clearPredictions();
     if (inputRef.current) {
       inputRef.current.focus();
     }
   };
   
-  // S'assurer que le composant gère correctement le focus/blur et les clics
+  // Gérer le focus pour mieux contrôler l'affichage des suggestions
+  const handleFocus = () => {
+    setFocused(true);
+    // Seulement montrer les suggestions si l'adresse n'a pas été sélectionnée
+    if (value && !isAddressSelected) {
+      searchPlaces(value);
+      setShowSuggestions(true);
+    }
+  };
+  
   const handleBlur = () => {
     // Utiliser un délai pour permettre le clic sur les suggestions
     setTimeout(() => {
       setFocused(false);
-      setShowSuggestions(false);
+      // Ne fermez pas les suggestions si l'utilisateur a cliqué sur une suggestion
+      if (!isAddressSelected) {
+        setShowSuggestions(false);
+      }
     }, 200);
+  };
+  
+  // Permettre à l'utilisateur de recommencer la saisie
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+    
+    // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
+    if (isAddressSelected) {
+      setIsAddressSelected(false);
+    }
   };
   
   return (
@@ -86,11 +119,8 @@ export default function AddressAutocomplete({
           ref={inputRef}
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => {
-            setFocused(true);
-            if (value) setShowSuggestions(true);
-          }}
+          onChange={handleInputChange}
+          onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
           className={`pr-10 ${className} ${error ? 'border-red-500' : ''}`}
@@ -111,7 +141,7 @@ export default function AddressAutocomplete({
       
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       
-      {showSuggestions && predictions.length > 0 && (
+      {showSuggestions && predictions.length > 0 && !isAddressSelected && (
         <Card className="absolute z-50 w-full mt-1 shadow-lg overflow-hidden">
           <ul className="py-1 max-h-60 overflow-auto">
             {predictions.map((prediction) => (
@@ -134,7 +164,7 @@ export default function AddressAutocomplete({
         </Card>
       )}
       
-      {loading && focused && (
+      {loading && focused && !isAddressSelected && (
         <div className="absolute right-3 top-3">
           <div className="h-4 w-4 border-t-2 border-primary rounded-full animate-spin"></div>
         </div>

@@ -166,6 +166,9 @@ export const useGooglePlaces = () => {
 
             console.log("Détails de l'adresse récupérés:", enhancedResult);
             resolve(enhancedResult);
+            
+            // Effacer les prédictions après avoir récupéré les détails
+            setPredictions([]);
           } else {
             console.error("Erreur lors de la récupération des détails:", status);
             reject(new Error('Lieu non trouvé'));

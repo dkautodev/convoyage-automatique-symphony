@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,14 +26,14 @@ import { format } from 'date-fns';
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({
   mission_type: z.enum(['LIV', 'RES'], {
-    required_error: 'Veuillez sélectionner un type de mission',
-  }),
+    required_error: 'Veuillez sélectionner un type de mission'
+  })
 });
 
 // Étape 2: Véhicule, adresses et prix
 const vehicleAndAddressSchema = z.object({
   vehicle_category: z.enum(['citadine', 'berline', '4x4_suv', 'utilitaire_3_5m3', 'utilitaire_6_12m3', 'utilitaire_12_15m3', 'utilitaire_15_20m3', 'utilitaire_plus_20m3'], {
-    required_error: 'Veuillez sélectionner un type de véhicule',
+    required_error: 'Veuillez sélectionner un type de véhicule'
   }),
   pickup_address: z.string().min(1, 'L\'adresse de départ est requise'),
   pickup_address_data: z.any().optional(),
@@ -43,7 +42,7 @@ const vehicleAndAddressSchema = z.object({
   distance_km: z.number().optional(),
   price_ht: z.number().optional(),
   price_ttc: z.number().optional(),
-  vehicle_id: z.number().nullable().optional(),
+  vehicle_id: z.number().nullable().optional()
 });
 
 // Étape 3: Information du véhicule - VIN devient optionnel
@@ -53,7 +52,7 @@ const vehicleInfoSchema = z.object({
   vehicle_fuel: z.string().min(1, 'Le type de carburant est requis'),
   vehicle_year: z.number().int().positive().optional(),
   vehicle_registration: z.string().min(1, 'L\'immatriculation est requise'),
-  vehicle_vin: z.string().optional(), // VIN est maintenant optionnel
+  vehicle_vin: z.string().optional() // VIN est maintenant optionnel
 });
 
 // Étape 4: Contacts et notes avec créneaux horaires
@@ -62,19 +61,21 @@ const contactsAndNotesSchema = z.object({
   contact_pickup_phone: z.string().min(1, 'Le téléphone du contact de départ est requis'),
   contact_pickup_email: z.string().min(1, 'L\'email du contact de départ est requis').email('Email invalide'),
   // Nouveaux champs pour créneaux de ramassage
-  D1_PEC: z.date({ required_error: 'La date de ramassage est requise' }),
+  D1_PEC: z.date({
+    required_error: 'La date de ramassage est requise'
+  }),
   H1_PEC: z.string().min(1, 'L\'heure de début de ramassage est requise'),
   H2_PEC: z.string().min(1, 'L\'heure de fin de ramassage est requise'),
-  
   contact_delivery_name: z.string().min(1, 'Le nom du contact de livraison est requis'),
   contact_delivery_phone: z.string().min(1, 'Le téléphone du contact de livraison est requis'),
   contact_delivery_email: z.string().min(1, 'L\'email du contact de livraison est requis').email('Email invalide'),
   // Nouveaux champs pour créneaux de livraison
-  D2_LIV: z.date({ required_error: 'La date de livraison est requise' }),
+  D2_LIV: z.date({
+    required_error: 'La date de livraison est requise'
+  }),
   H1_LIV: z.string().min(1, 'L\'heure de début de livraison est requise'),
   H2_LIV: z.string().min(1, 'L\'heure de fin de livraison est requise'),
-  
-  notes: z.string().optional(),
+  notes: z.string().optional()
 });
 
 // Étape 5: Attribution (Admin seulement)
@@ -82,7 +83,7 @@ const attributionSchema = z.object({
   client_id: z.string().uuid().optional(),
   status: z.enum(['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident']).default('en_acceptation'),
   chauffeur_id: z.string().nullable().optional(),
-  chauffeur_price_ht: z.number().optional(),
+  chauffeur_price_ht: z.number().optional()
 });
 
 // Schéma complet
@@ -91,23 +92,32 @@ const createMissionSchema = z.object({
   ...vehicleAndAddressSchema.shape,
   ...vehicleInfoSchema.shape,
   ...contactsAndNotesSchema.shape,
-  ...attributionSchema.shape,
+  ...attributionSchema.shape
 });
-
 type CreateMissionFormValues = z.infer<typeof createMissionSchema>;
-
-export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => void }) {
+export default function CreateMissionForm({
+  onSuccess
+}: {
+  onSuccess?: () => void;
+}) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, profile } = useAuth();
-  const { computePrice, prices } = usePricing();
-  const { calculateDistance } = useGooglePlaces();
+  const {
+    user,
+    profile
+  } = useAuth();
+  const {
+    computePrice,
+    prices
+  } = usePricing();
+  const {
+    calculateDistance
+  } = useGooglePlaces();
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [pickupAddressData, setPickupAddressData] = useState<any>(null);
   const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
 
   const form = useForm<CreateMissionFormValues>({
@@ -139,8 +149,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       H2_PEC: '',
       D2_LIV: undefined,
       H1_LIV: '',
-      H2_LIV: '',
-    },
+      H2_LIV: ''
+    }
   });
 
   // Si le rôle est admin, initialiser le client_id avec undefined
@@ -156,7 +166,6 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     setSelectedClientId(clientId);
     form.setValue('client_id', clientId);
   };
-
   const currentSchema = (() => {
     switch (currentStep) {
       case 1:
@@ -173,20 +182,17 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         return missionTypeSchema;
     }
   })();
-
   async function calculatePrice() {
     try {
       setCalculatingPrice(true);
-      
+
       // Vérifier si nous avons les données d'adresse nécessaires
       if (!pickupAddressData || !deliveryAddressData) {
         toast.error('Veuillez sélectionner des adresses valides avant de calculer le prix');
         setCalculatingPrice(false);
         return;
       }
-      
       const vehicleCategory = form.getValues('vehicle_category') as VehicleCategory;
-      
       if (!vehicleCategory) {
         toast.error('Veuillez sélectionner un type de véhicule avant de calculer le prix');
         setCalculatingPrice(false);
@@ -198,24 +204,20 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         lat: pickupAddressData.lat || (pickupAddressData.geometry?.location?.lat && typeof pickupAddressData.geometry.location.lat === 'function' ? pickupAddressData.geometry.location.lat() : null),
         lng: pickupAddressData.lng || (pickupAddressData.geometry?.location?.lng && typeof pickupAddressData.geometry.location.lng === 'function' ? pickupAddressData.geometry.location.lng() : null)
       };
-      
       const deliveryCoords = {
         lat: deliveryAddressData.lat || (deliveryAddressData.geometry?.location?.lat && typeof deliveryAddressData.geometry.location.lat === 'function' ? deliveryAddressData.geometry.location.lat() : null),
         lng: deliveryAddressData.lng || (deliveryAddressData.geometry?.location?.lng && typeof deliveryAddressData.geometry.location.lng === 'function' ? deliveryAddressData.geometry.location.lng() : null)
       };
-
       if (!pickupCoords.lat || !pickupCoords.lng || !deliveryCoords.lat || !deliveryCoords.lng) {
         toast.error('Les coordonnées des adresses sont invalides');
         setCalculatingPrice(false);
         return;
       }
-      
       console.log("Coordonnées de départ:", pickupCoords);
       console.log("Coordonnées d'arrivée:", deliveryCoords);
 
       // Utiliser directement l'instance de calculateDistance du hook
       const result = await calculateDistance(pickupCoords, deliveryCoords);
-
       if (!result) {
         toast.error('Impossible de calculer la distance entre les adresses');
         setCalculatingPrice(false);
@@ -225,22 +227,19 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       // Extraire la distance en km du texte renvoyé (format "XX km")
       const distanceText = result.distance;
       const distanceKm = parseFloat(distanceText.replace(' km', ''));
-      
       console.log("Distance calculée:", distanceKm, "km");
 
       // Calculer le prix basé sur la distance et le type de véhicule
       const priceResult = await computePrice(distanceKm, vehicleCategory);
-
       if (!priceResult) {
         toast.error('Impossible de calculer le prix pour cette distance');
         setCalculatingPrice(false);
         return;
       }
-
       form.setValue('distance_km', distanceKm);
       form.setValue('price_ht', priceResult.priceHT);
       form.setValue('price_ttc', priceResult.priceTTC);
-      
+
       // Ajouter le vehicle_id si disponible
       if (priceResult.vehicleId) {
         form.setValue('vehicle_id', priceResult.vehicleId);
@@ -248,7 +247,6 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       } else {
         console.log('No vehicle ID found for the selected vehicle category');
       }
-      
       console.log("Prix calculé:", priceResult);
       toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC`);
     } catch (error) {
@@ -258,46 +256,38 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       setCalculatingPrice(false);
     }
   }
-  
   const nextStep = async () => {
     const isValid = await form.trigger(Object.keys(currentSchema.shape) as any);
     if (!isValid) return;
-    
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
   };
-
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep(prev => Math.max(prev - 1, 1));
   };
-
   const onSelectPickupAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('pickup_address', address);
     setPickupAddressData(addressData);
     form.setValue('pickup_address_data', addressData);
   };
-
   const onSelectDeliveryAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('delivery_address', address);
     setDeliveryAddressData(addressData);
     form.setValue('delivery_address_data', addressData);
   };
-
   const onSubmit = async (values: any) => {
     try {
       setIsSubmitting(true);
-      
       console.log("Début de la soumission du formulaire avec les valeurs:", values);
-      
+
       // S'assurer que toutes les données requises sont présentes
       if (!values.distance_km || !values.price_ht || !values.price_ttc) {
         toast.error('Veuillez calculer le prix avant de créer la mission');
         setIsSubmitting(false);
         return;
       }
-      
+
       // Déterminer le client_id à utiliser
       let clientId = null;
-      
       if (profile?.role === 'admin') {
         // Pour les admins: utiliser le client sélectionné dans le formulaire
         if (selectedClientId) {
@@ -320,49 +310,48 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         setIsSubmitting(false);
         return;
       }
-      
+
       // Vérifier que nous avons un client_id valide
       if (!clientId) {
         toast.error('Aucun client valide n\'a été trouvé ou sélectionné');
         setIsSubmitting(false);
         return;
       }
-      
+
       // S'assurer que chauffeur_id n'est pas "no_driver_assigned"
       if (values.chauffeur_id === "no_driver_assigned") {
         values.chauffeur_id = null;
       }
-      
       console.log("Client ID final:", clientId);
-      
+
       // Préparer les données d'adresse pour la base de données
-      const pickupAddressData = values.pickup_address_data || { formatted_address: values.pickup_address };
-      const deliveryAddressData = values.delivery_address_data || { formatted_address: values.delivery_address };
-      
+      const pickupAddressData = values.pickup_address_data || {
+        formatted_address: values.pickup_address
+      };
+      const deliveryAddressData = values.delivery_address_data || {
+        formatted_address: values.delivery_address
+      };
       console.log("Données d'adresse de départ:", pickupAddressData);
       console.log("Données d'adresse de livraison:", deliveryAddressData);
-      
+
       // Convertir les objets Address en Json compatible avec Supabase
-      const pickupAddressJson = pickupAddressData ? 
-        JSON.parse(JSON.stringify(pickupAddressData)) : 
-        { formatted_address: values.pickup_address };
-        
-      const deliveryAddressJson = deliveryAddressData ? 
-        JSON.parse(JSON.stringify(deliveryAddressData)) : 
-        { formatted_address: values.delivery_address };
-      
+      const pickupAddressJson = pickupAddressData ? JSON.parse(JSON.stringify(pickupAddressData)) : {
+        formatted_address: values.pickup_address
+      };
+      const deliveryAddressJson = deliveryAddressData ? JSON.parse(JSON.stringify(deliveryAddressData)) : {
+        formatted_address: values.delivery_address
+      };
+
       // Préparer les données pour les nouveaux champs date/heure
       let formattedD1PEC = null;
       let formattedD2LIV = null;
-
       if (values.D1_PEC) {
         formattedD1PEC = format(values.D1_PEC, 'yyyy-MM-dd');
       }
-
       if (values.D2_LIV) {
         formattedD2LIV = format(values.D2_LIV, 'yyyy-MM-dd');
       }
-      
+
       // Enregistrer la mission
       const missionData = {
         client_id: clientId,
@@ -379,7 +368,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         vehicle_fuel: values.vehicle_fuel,
         vehicle_year: values.vehicle_year ? parseInt(values.vehicle_year) : null,
         vehicle_registration: values.vehicle_registration,
-        vehicle_vin: values.vehicle_vin || null, // VIN désormais optionnel
+        vehicle_vin: values.vehicle_vin || null,
+        // VIN désormais optionnel
         contact_pickup_name: values.contact_pickup_name,
         contact_pickup_phone: values.contact_pickup_phone,
         contact_pickup_email: values.contact_pickup_email,
@@ -387,7 +377,6 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         D1_PEC: formattedD1PEC,
         H1_PEC: values.H1_PEC,
         H2_PEC: values.H2_PEC,
-        
         contact_delivery_name: values.contact_delivery_name,
         contact_delivery_phone: values.contact_delivery_phone,
         contact_delivery_email: values.contact_delivery_email,
@@ -395,26 +384,22 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         D2_LIV: formattedD2LIV,
         H1_LIV: values.H1_LIV,
         H2_LIV: values.H2_LIV,
-        
         notes: values.notes,
         chauffeur_id: values.chauffeur_id || null,
         chauffeur_price_ht: values.chauffeur_price_ht || 0,
         created_by: user?.id || '',
         scheduled_date: new Date().toISOString(),
-        vat_rate: 20, // Taux de TVA par défaut
+        vat_rate: 20,
+        // Taux de TVA par défaut
         mission_type: values.mission_type || 'LIV'
       };
-      
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
-      
       try {
         console.log("Sending request to Supabase with data:", missionData);
-        const { data, error } = await typedSupabase
-          .from('missions')
-          .insert(missionData)
-          .select('id')
-          .single();
-        
+        const {
+          data,
+          error
+        } = await typedSupabase.from('missions').insert(missionData).select('id').single();
         if (error) {
           console.error('Erreur Supabase lors de la création de la mission:', error);
           console.error('Detail:', error.details);
@@ -423,10 +408,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
           toast.error(`Erreur lors de la création de la mission: ${error.message}`);
           return;
         }
-        
         console.log("Mission créée avec succès, données retournées:", data);
         toast.success('Mission créée avec succès');
-        
         if (onSuccess) {
           onSuccess();
         } else {
@@ -450,9 +433,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <Card className="w-full max-w-4xl mx-auto">
+  return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Créer une nouvelle mission</CardTitle>
         <CardDescription>
@@ -463,20 +444,13 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Étape 1: Type de mission */}
-            {currentStep === 1 && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="mission_type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
+            {currentStep === 1 && <div className="space-y-4">
+                <FormField control={form.control} name="mission_type" render={({
+              field
+            }) => <FormItem className="space-y-3">
                       <FormLabel>Type de mission</FormLabel>
                       <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="grid grid-cols-2 gap-4"
-                        >
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-4">
                           <FormItem>
                             <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
                               <FormControl>
@@ -508,210 +482,122 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+                    </FormItem>} />
+              </div>}
 
             {/* Étape 2: Sélection du véhicule, adresses et prix */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="vehicle_category"
-                  render={({ field }) => (
-                    <FormItem>
+            {currentStep === 2 && <div className="space-y-6">
+                <FormField control={form.control} name="vehicle_category" render={({
+              field
+            }) => <FormItem>
                       <FormLabel>Type de véhicule</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(value as VehicleCategory)}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={value => field.onChange(value as VehicleCategory)} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un type de véhicule" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(vehicleCategoryLabels).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                          ))}
+                          {Object.entries(vehicleCategoryLabels).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormDescription>
                         Ce choix déterminera le tarif applicable à cette mission.
                       </FormDescription>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
                 <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="pickup_address"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="pickup_address" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Adresse de départ</FormLabel>
                         <FormControl>
-                          <AddressAutocomplete
-                            value={field.value}
-                            onChange={(value) => field.onChange(value)}
-                            onSelect={(address, placeId) => {
-                              onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                            }}
-                            placeholder="Saisissez l'adresse de départ"
-                            error={form.formState.errors.pickup_address?.message}
-                          />
+                          <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
+                    onSelectPickupAddress(address, placeId, window.selectedAddressData);
+                  }} placeholder="Saisissez l'adresse de départ" error={form.formState.errors.pickup_address?.message} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
-                  <FormField
-                    control={form.control}
-                    name="delivery_address"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="delivery_address" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Adresse de livraison</FormLabel>
                         <FormControl>
-                          <AddressAutocomplete
-                            value={field.value}
-                            onChange={(value) => field.onChange(value)}
-                            onSelect={(address, placeId) => {
-                              onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                            }}
-                            placeholder="Saisissez l'adresse de livraison"
-                            error={form.formState.errors.delivery_address?.message}
-                          />
+                          <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
+                    onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
+                  }} placeholder="Saisissez l'adresse de livraison" error={form.formState.errors.delivery_address?.message} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
                   <div className="flex justify-center my-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={calculatePrice}
-                      disabled={calculatingPrice}
-                      className="flex items-center gap-2"
-                    >
-                      {calculatingPrice ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Calculator className="h-4 w-4" />
-                      )}
+                    <Button type="button" variant="outline" onClick={calculatePrice} disabled={calculatingPrice} className="flex items-center gap-2">
+                      {calculatingPrice ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
                       Calculer le prix
                     </Button>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="distance_km"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="distance_km" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Distance (km)</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              step="0.01"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                              readOnly
-                            />
+                            <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} readOnly />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="price_ht"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="price_ht" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Prix HT (€)</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              step="0.01"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                              readOnly
-                            />
+                            <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} readOnly />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="price_ttc"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="price_ttc" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Prix TTC (€)</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              step="0.01"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                              readOnly
-                            />
+                            <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} readOnly />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Étape 3: Informations du véhicule */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
+            {currentStep === 3 && <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="vehicle_make"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="vehicle_make" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Marque du véhicule *</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: Renault, Peugeot" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="vehicle_model"
-                    render={({ field }) => (
-                      <FormItem>
+                      </FormItem>} />
+                  <FormField control={form.control} name="vehicle_model" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Modèle *</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: Clio, 308" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="vehicle_fuel"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="vehicle_fuel" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Carburant *</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
@@ -728,164 +614,105 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                           </SelectContent>
                         </Select>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="vehicle_year"
-                    render={({ field }) => (
-                      <FormItem>
+                      </FormItem>} />
+                  <FormField control={form.control} name="vehicle_year" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Année</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min="1900"
-                            max="2100"
-                            placeholder="Ex: 2020"
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                          />
+                          <Input {...field} type="number" min="1900" max="2100" placeholder="Ex: 2020" value={field.value || ''} onChange={e => field.onChange(parseInt(e.target.value) || undefined)} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="vehicle_registration"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="vehicle_registration" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Immatriculation *</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: AB-123-CD" />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="vehicle_vin"
-                    render={({ field }) => (
-                      <FormItem>
+                      </FormItem>} />
+                  <FormField control={form.control} name="vehicle_vin" render={({
+                field
+              }) => <FormItem>
                         <FormLabel>Numéro VIN (Numéro de châssis)</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Ex: WVWZZZ1JZXW000001" />
                         </FormControl>
-                        <FormDescription>
-                          Ce champ est optionnel
-                        </FormDescription>
+                        
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Étape 4: Contacts, créneaux horaires et notes */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
+            {currentStep === 4 && <div className="space-y-6">
                 {/* Contact au lieu de départ et créneau horaire */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
-                    <FormField
-                      control={form.control}
-                      name="contact_pickup_name"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="contact_pickup_name" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Nom complet ou société" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contact_pickup_phone"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="contact_pickup_phone" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Téléphone *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Numéro de téléphone" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contact_pickup_email"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="contact_pickup_email" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" placeholder="Adresse email" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     {/* Créneau horaire de ramassage */}
                     <div className="space-y-4 border-t pt-4 mt-4">
                       <h4 className="font-medium">Créneau horaire de ramassage *</h4>
                       
                       {/* Date de ramassage */}
-                      <FormField
-                        control={form.control}
-                        name="D1_PEC"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
+                      <FormField control={form.control} name="D1_PEC" render={({
+                    field
+                  }) => <FormItem className="flex flex-col">
                             <FormLabel>Date de ramassage *</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={`w-full pl-3 text-left font-normal ${
-                                      !field.value && "text-muted-foreground"
-                                    }`}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "dd/MM/yyyy")
-                                    ) : (
-                                      <span>Choisir une date</span>
-                                    )}
+                                  <Button variant={"outline"} className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}>
+                                    {field.value ? format(field.value, "dd/MM/yyyy") : <span>Choisir une date</span>}
                                     <Calendar className="ml-auto h-4 w-4 opacity-50" />
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                  className="p-3 pointer-events-auto"
-                                />
+                                <CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus className="p-3 pointer-events-auto" />
                               </PopoverContent>
                             </Popover>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                       
                       {/* Heures de début et fin */}
                       <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="H1_PEC"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="H1_PEC" render={({
+                      field
+                    }) => <FormItem>
                               <FormLabel>Heure de début *</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
@@ -894,20 +721,16 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {Array.from({length: 24}).map((_, i) => 
-                                    <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>
-                                  )}
+                                  {Array.from({
+                            length: 24
+                          }).map((_, i) => <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="H2_PEC"
-                          render={({ field }) => (
-                            <FormItem>
+                            </FormItem>} />
+                        <FormField control={form.control} name="H2_PEC" render={({
+                      field
+                    }) => <FormItem>
                               <FormLabel>Heure de fin *</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
@@ -916,112 +739,77 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {Array.from({length: 24}).map((_, i) => 
-                                    <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>
-                                  )}
+                                  {Array.from({
+                            length: 24
+                          }).map((_, i) => <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
                     </div>
                   </div>
                   
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
-                    <FormField
-                      control={form.control}
-                      name="contact_delivery_name"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="contact_delivery_name" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Nom complet ou société" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contact_delivery_phone"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="contact_delivery_phone" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Téléphone *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Numéro de téléphone" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contact_delivery_email"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="contact_delivery_email" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" placeholder="Adresse email" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     {/* Créneau horaire de livraison */}
                     <div className="space-y-4 border-t pt-4 mt-4">
                       <h4 className="font-medium">Créneau horaire de livraison *</h4>
                       
                       {/* Date de livraison */}
-                      <FormField
-                        control={form.control}
-                        name="D2_LIV"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
+                      <FormField control={form.control} name="D2_LIV" render={({
+                    field
+                  }) => <FormItem className="flex flex-col">
                             <FormLabel>Date de livraison *</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={`w-full pl-3 text-left font-normal ${
-                                      !field.value && "text-muted-foreground"
-                                    }`}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "dd/MM/yyyy")
-                                    ) : (
-                                      <span>Choisir une date</span>
-                                    )}
+                                  <Button variant={"outline"} className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}>
+                                    {field.value ? format(field.value, "dd/MM/yyyy") : <span>Choisir une date</span>}
                                     <Calendar className="ml-auto h-4 w-4 opacity-50" />
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  initialFocus
-                                  className="p-3 pointer-events-auto"
-                                />
+                                <CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus className="p-3 pointer-events-auto" />
                               </PopoverContent>
                             </Popover>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                       
                       {/* Heures de début et fin */}
                       <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="H1_LIV"
-                          render={({ field }) => (
-                            <FormItem>
+                        <FormField control={form.control} name="H1_LIV" render={({
+                      field
+                    }) => <FormItem>
                               <FormLabel>Heure de début *</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
@@ -1030,20 +818,16 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {Array.from({length: 24}).map((_, i) => 
-                                    <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>
-                                  )}
+                                  {Array.from({
+                            length: 24
+                          }).map((_, i) => <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="H2_LIV"
-                          render={({ field }) => (
-                            <FormItem>
+                            </FormItem>} />
+                        <FormField control={form.control} name="H2_LIV" render={({
+                      field
+                    }) => <FormItem>
                               <FormLabel>Heure de fin *</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
@@ -1052,83 +836,52 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  {Array.from({length: 24}).map((_, i) => 
-                                    <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>
-                                  )}
+                                  {Array.from({
+                            length: 24
+                          }).map((_, i) => <SelectItem key={i} value={`${String(i).padStart(2, '0')}:00`}>{`${String(i).padStart(2, '0')}:00`}</SelectItem>)}
                                 </SelectContent>
                               </Select>
                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                            </FormItem>} />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Notes */}
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="notes" render={({
+              field
+            }) => <FormItem>
                       <FormLabel>Notes additionnelles</FormLabel>
                       <FormControl>
                         <Textarea {...field} placeholder="Instructions spécifiques, informations complémentaires..." className="min-h-[100px]" />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+                    </FormItem>} />
+              </div>}
 
             {/* Navigation */}
             <div className="flex justify-between pt-4 border-t mt-8">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className="flex items-center gap-2"
-              >
+              <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1} className="flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Retour
               </Button>
               
-              {currentStep < totalSteps ? (
-                <Button
-                  type="button"
-                  onClick={nextStep}
-                  className="flex items-center gap-2"
-                >
+              {currentStep < totalSteps ? <Button type="button" onClick={nextStep} className="flex items-center gap-2">
                   Suivant
                   <ArrowRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex items-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
+                </Button> : <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+                  {isSubmitting ? <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Création en cours...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Check className="h-4 w-4" />
                       Créer la mission
-                    </>
-                  )}
-                </Button>
-              )}
+                    </>}
+                </Button>}
             </div>
           </form>
         </Form>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
-

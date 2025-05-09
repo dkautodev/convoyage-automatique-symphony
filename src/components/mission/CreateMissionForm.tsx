@@ -39,6 +39,7 @@ const vehicleAndAddressSchema = z.object({
   distance_km: z.number().optional(),
   price_ht: z.number().optional(),
   price_ttc: z.number().optional(),
+  vehicle_id: z.number().nullable().optional(),
 });
 
 // Étape 3: Information du véhicule
@@ -116,6 +117,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       status: 'en_acceptation',
       chauffeur_id: null,
       chauffeur_price_ht: 0,
+      vehicle_id: null,
     },
   });
 

@@ -45,11 +45,16 @@ export default function AddressAutocomplete({
   
   const handleSelect = async (prediction: any) => {
     try {
+      // Forcer la fermeture des suggestions avant d'appeler getPlaceDetails
+      setShowSuggestions(false);
+      
       const details = await getPlaceDetails(prediction.place_id);
       if (details) {
         onChange(details.formatted_address);
-        onSelect(details.formatted_address, prediction.place_id);
-        setShowSuggestions(false);
+        // Attendre un court instant pour s'assurer que l'interface se met à jour correctement
+        setTimeout(() => {
+          onSelect(details.formatted_address, prediction.place_id);
+        }, 100);
       }
     } catch (error) {
       console.error('Error selecting address:', error);
@@ -65,6 +70,15 @@ export default function AddressAutocomplete({
     }
   };
   
+  // S'assurer que le composant gère correctement le focus/blur et les clics
+  const handleBlur = () => {
+    // Utiliser un délai pour permettre le clic sur les suggestions
+    setTimeout(() => {
+      setFocused(false);
+      setShowSuggestions(false);
+    }, 200);
+  };
+  
   return (
     <div className="relative w-full">
       <div className="relative">
@@ -77,13 +91,7 @@ export default function AddressAutocomplete({
             setFocused(true);
             if (value) setShowSuggestions(true);
           }}
-          onBlur={() => {
-            // Delay hiding to allow click on suggestions
-            setTimeout(() => {
-              setFocused(false);
-              setShowSuggestions(false);
-            }, 200);
-          }}
+          onBlur={handleBlur}
           placeholder={placeholder}
           className={`pr-10 ${className} ${error ? 'border-red-500' : ''}`}
         />

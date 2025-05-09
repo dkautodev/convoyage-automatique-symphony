@@ -316,7 +316,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           company_name: data.companyName,
           billing_address: addressToJson(data.billingAddress),
           siret: data.siret,
-          tva_applicable: data.tvaApplicable,
+          // Retiré tva_applicable car la colonne n'existe pas
           tva_number: data.tvaNumb,
           phone_1: data.phone1,
           phone_2: data.phone2,

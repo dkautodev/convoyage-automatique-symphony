@@ -16,6 +16,7 @@ export const useGooglePlaces = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedAddress, setSelectedAddress] = useState<GoogleGeocodingResult | null>(null);
   const [mapPosition, setMapPosition] = useState<{lat: number, lng: number} | null>(null);
+  const serviceRef = useRef<any>(null);
   
   useEffect(() => {
     // Load Google Maps API script
@@ -50,10 +51,16 @@ export const useGooglePlaces = () => {
     setLoading(true);
     
     try {
-      const service = new window.google.maps.places.AutocompleteService();
+      if (!serviceRef.current) {
+        serviceRef.current = new window.google.maps.places.AutocompleteService();
+      }
       
-      service.getPlacePredictions(
-        { input: query, types: ['address'], componentRestrictions: { country: 'fr' } },
+      serviceRef.current.getPlacePredictions(
+        { 
+          input: query, 
+          types: ['address'], 
+          componentRestrictions: { country: 'fr' } 
+        },
         (results: GoogleAddressSuggestion[], status: string) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
             setPredictions(results);

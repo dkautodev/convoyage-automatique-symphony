@@ -46,6 +46,13 @@ export default function CompleteDriverProfile() {
   const { completeDriverProfile, profile } = useAuth();
   const [formInitialized, setFormInitialized] = useState(false);
   const [placeId, setPlaceId] = useState<string | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<{
+    street: string;
+    city: string;
+    postal_code: string;
+    country: string;
+    formatted_address: string;
+  } | null>(null);
   const navigate = useNavigate();
   
   const form = useForm<FormData>({
@@ -79,7 +86,7 @@ export default function CompleteDriverProfile() {
       }
       
       form.setValue('siret', profile.siret || '');
-      form.setValue('tvaApplicable', profile.tva_applicable || false);
+      form.setValue('tvaApplicable', false); // Par défaut à false car la colonne n'existe pas
       form.setValue('tvaNumb', profile.tva_number || '');
       form.setValue('phone1', profile.phone_1 || '');
       form.setValue('phone2', profile.phone_2 || '');
@@ -93,8 +100,35 @@ export default function CompleteDriverProfile() {
     form.setValue('siret', formatted);
   };
   
-  const handleSelectAddress = (_: string, selectedPlaceId: string) => {
+  const handleSelectAddress = (address: string, selectedPlaceId: string) => {
     setPlaceId(selectedPlaceId);
+    
+    // Extraire les composants de l'adresse
+    const parts = address.split(',');
+    
+    // Essayer de parser l'adresse
+    let street = parts[0]?.trim() || "";
+    let postalCode = "";
+    let city = "";
+    let country = "France";
+    
+    if (parts.length > 1) {
+      const cityPart = parts[1]?.trim().split(' ');
+      postalCode = cityPart[0] || "";
+      city = cityPart.slice(1).join(' ') || "";
+    }
+    
+    if (parts.length > 2) {
+      country = parts[2]?.trim() || "France";
+    }
+    
+    setSelectedAddress({
+      street,
+      city,
+      postal_code: postalCode,
+      country,
+      formatted_address: address
+    });
   };
 
   const onSubmit = async (data: FormData) => {
@@ -107,7 +141,7 @@ export default function CompleteDriverProfile() {
         await completeDriverProfile({
           fullName: data.fullName,
           companyName: data.companyName,
-          billingAddress: {
+          billingAddress: selectedAddress || {
             street: data.billingAddress.split(',')[0] || "",
             city: data.billingAddress.split(',')[1]?.trim().split(' ')[1] || "",
             postal_code: data.billingAddress.split(',')[1]?.trim().split(' ')[0] || "",

@@ -84,7 +84,7 @@ const RegisterForm = () => {
       
       await register(registerData);
       toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vérifier votre email pour confirmer votre compte.`);
-      navigate('/home');
+      navigate('/login');
     } catch (err: any) {
       console.error("Erreur lors de l'inscription:", err);
       setAuthError(err.message || "Erreur lors de l'inscription. Veuillez réessayer.");

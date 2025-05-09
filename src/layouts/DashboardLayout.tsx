@@ -8,26 +8,36 @@ import Sidebar from '@/components/dashboard/Sidebar';
 // Import dashboard page components 
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
-import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
+import DriverDashboard from '@/components/dashboard/driver/DriverDashboard';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { profile, user } = useAuth();
+  const { profile, user, loading } = useAuth();
   const location = useLocation();
   
-  // Vérifiez si l'utilisateur est en train de charger ou n'est pas authentifié
-  const isLoading = !user && !profile;
-
-  if (isLoading) {
-    return <div>Chargement...</div>; // Vous pouvez remplacer cela par un spinner
+  // Afficher un écran de chargement pendant la vérification de l'authentification
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
-  if (!profile) {
-    // Redirigez l'utilisateur vers la page d'accueil s'il n'est pas connecté
-    return <Navigate to="/home" state={{ from: location }} replace />;
+  // Vérifiez si l'utilisateur n'est pas authentifié
+  if (!user) {
+    // Redirigez l'utilisateur vers la page de connexion
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Si l'utilisateur est authentifié mais n'a pas complété son profil
+  if (profile && !profile.profile_completed) {
+    // Rediriger vers la page appropriée pour compléter le profil
+    const redirectTo = profile.role === 'chauffeur' ? '/complete-driver-profile' : '/complete-client-profile';
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   // Determine which dashboard to render based on user role and path
@@ -35,7 +45,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     const path = location.pathname;
     const role = profile?.role || 'client';
     
-    if (path.endsWith('/dashboard') || path.endsWith('/')) {
+    if (path.endsWith('/dashboard')) {
       switch (role) {
         case 'admin':
           return <AdminDashboard />;
@@ -54,7 +64,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      <Sidebar userRole={profile.role} />
+      <Sidebar userRole={profile?.role || 'client'} />
       <div className="flex-1">
         <DashboardHeader />
         <div className="container mx-auto py-6">

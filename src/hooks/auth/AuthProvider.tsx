@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         navigate('/admin/dashboard');
         break;
       case 'client':
-        navigate('/client/dashboard'); // S'assurer que cette route est correcte
+        navigate('/client/dashboard');
         break;
       case 'chauffeur':
         navigate('/driver/dashboard');

@@ -150,7 +150,7 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
   }
 };
 
-// Fonction pour compléter le profil client - CORRECTION DU PROBLÈME DE FONCTION MANQUANTE
+// Fonction pour compléter le profil client
 export const completeClientProfileService = async (userId: string, data: ClientProfileFormData) => {
   try {
     console.log("Completing client profile for user:", userId, "with data:", data);
@@ -184,13 +184,14 @@ export const completeClientProfileService = async (userId: string, data: ClientP
   }
 };
 
-// Fonction pour compléter le profil chauffeur - CORRECTION DU PROBLÈME DE FONCTION MANQUANTE
+// Fonction pour compléter le profil chauffeur - Mise à jour pour créer l'entrée dans la table drivers
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
     console.log("Completing driver profile for user:", userId, "with data:", data);
     
-    // Instead of using RPC, directly update the profiles table
-    const { data: updatedProfile, error } = await supabase
+    // Commencer une transaction pour garantir l'intégrité des données
+    // D'abord, mettre à jour le profil principal
+    const { data: updatedProfile, error: profileError } = await supabase
       .from('profiles')
       .update({
         full_name: data.fullName,
@@ -209,12 +210,68 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       .eq('id', userId)
       .select();
     
-    if (error) {
-      console.error("Error completing driver profile:", error);
-      throw error;
+    if (profileError) {
+      console.error("Error updating profile:", profileError);
+      throw profileError;
     }
     
-    console.log("Driver profile updated successfully:", updatedProfile);
+    // Vérifier si le chauffeur existe déjà dans la table drivers
+    const { data: existingDriver, error: checkError } = await supabase
+      .from('drivers')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+      
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error("Error checking driver:", checkError);
+      throw checkError;
+    }
+    
+    let driverOperation;
+    
+    // Créer ou mettre à jour dans la table des chauffeurs
+    if (!existingDriver) {
+      // Si le chauffeur n'existe pas, l'insérer
+      driverOperation = supabase
+        .from('drivers')
+        .insert({
+          id: userId,
+          full_name: data.fullName,
+          company_name: data.companyName,
+          billing_address: convertAddressToJson(data.billingAddress),
+          license_number: data.licenseNumber,
+          vat_applicable: data.tvaApplicable,
+          vat_number: data.tvaNumb,
+          phone1: data.phone1,
+          phone2: data.phone2,
+          vehicle_type: data.vehicleType
+        });
+    } else {
+      // Si le chauffeur existe, le mettre à jour
+      driverOperation = supabase
+        .from('drivers')
+        .update({
+          full_name: data.fullName,
+          company_name: data.companyName,
+          billing_address: convertAddressToJson(data.billingAddress),
+          license_number: data.licenseNumber,
+          vat_applicable: data.tvaApplicable,
+          vat_number: data.tvaNumb,
+          phone1: data.phone1,
+          phone2: data.phone2,
+          vehicle_type: data.vehicleType
+        })
+        .eq('id', userId);
+    }
+    
+    const { error: driverError } = await driverOperation;
+    
+    if (driverError) {
+      console.error("Error updating driver table:", driverError);
+      throw driverError;
+    }
+    
+    console.log("Driver profile completed successfully");
     return updatedProfile;
   } catch (err) {
     console.error("Error in completeDriverProfileService:", err);

@@ -20,6 +20,7 @@ import ClientDashboard from './pages/dashboard/client/ClientDashboard';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import CompleteDriverProfile from './pages/auth/CompleteDriverProfile';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
+import DriverDashboard from './components/dashboard/driver/DriverDashboard';
 import ClientsPage from './pages/dashboard/admin/Clients';
 import NotFound from './pages/NotFound';
 
@@ -75,6 +76,13 @@ function App() {
         <Route path="/client/dashboard" element={
           <DashboardLayout>
             <ClientDashboard />
+          </DashboardLayout>
+        } />
+        
+        {/* Pages chauffeur */}
+        <Route path="/driver/dashboard" element={
+          <DashboardLayout>
+            <DriverDashboard />
           </DashboardLayout>
         } />
         

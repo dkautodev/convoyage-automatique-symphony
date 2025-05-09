@@ -41,6 +41,9 @@ const missionUpdateSchema = z.object({
   vehicle_make: z.string().optional(),
   vehicle_model: z.string().optional(),
   vehicle_registration: z.string().optional(),
+  vehicle_vin: z.string().optional(),
+  vehicle_fuel: z.string().optional(),
+  vehicle_year: z.number().optional().nullable().or(z.string().transform(val => val === '' ? null : parseInt(val, 10)))
 });
 
 const MissionDetailsPage = () => {
@@ -70,6 +73,9 @@ const MissionDetailsPage = () => {
       vehicle_make: '',
       vehicle_model: '',
       vehicle_registration: '',
+      vehicle_vin: '',
+      vehicle_fuel: '',
+      vehicle_year: ''
     },
   });
   
@@ -132,6 +138,9 @@ const MissionDetailsPage = () => {
         vehicle_make: missionObj.vehicle_make || '',
         vehicle_model: missionObj.vehicle_model || '',
         vehicle_registration: missionObj.vehicle_registration || '',
+        vehicle_vin: missionObj.vehicle_vin || '',
+        vehicle_fuel: missionObj.vehicle_fuel || '',
+        vehicle_year: missionObj.vehicle_year ? missionObj.vehicle_year.toString() : ''
       });
       
     } catch (error) {
@@ -191,6 +200,9 @@ const MissionDetailsPage = () => {
         updateData.vehicle_make = data.vehicle_make;
         updateData.vehicle_model = data.vehicle_model;
         updateData.vehicle_registration = data.vehicle_registration;
+        updateData.vehicle_vin = data.vehicle_vin;
+        updateData.vehicle_fuel = data.vehicle_fuel;
+        updateData.vehicle_year = data.vehicle_year;
       }
 
       console.log('Updating mission with data:', updateData);
@@ -410,45 +422,101 @@ const MissionDetailsPage = () => {
                   </CardContent>
                 </Card>
               </div>
-              
-              {(mission.vehicle_category || mission.vehicle_make || mission.vehicle_model || mission.vehicle_registration) && (
-                <Card className="mt-6">
+
+              <div className="mt-6 grid grid-cols-1 gap-6">
+                <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Truck className="h-4 w-4" />
-                      Informations véhicule
+                      <User className="h-4 w-4" />
+                      Contacts
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      {mission.vehicle_category && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Catégorie</h4>
-                          <p>{mission.vehicle_category}</p>
-                        </div>
-                      )}
-                      {mission.vehicle_make && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Marque</h4>
-                          <p>{mission.vehicle_make}</p>
-                        </div>
-                      )}
-                      {mission.vehicle_model && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Modèle</h4>
-                          <p>{mission.vehicle_model}</p>
-                        </div>
-                      )}
-                      {mission.vehicle_registration && (
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500">Immatriculation</h4>
-                          <p>{mission.vehicle_registration}</p>
-                        </div>
-                      )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-medium mb-2">Contact ramassage</h4>
+                        {mission.contact_pickup_name ? (
+                          <div className="space-y-1">
+                            <p><span className="font-medium">Nom:</span> {mission.contact_pickup_name}</p>
+                            {mission.contact_pickup_phone && <p><span className="font-medium">Téléphone:</span> {mission.contact_pickup_phone}</p>}
+                            {mission.contact_pickup_email && <p><span className="font-medium">Email:</span> {mission.contact_pickup_email}</p>}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">Aucun contact spécifié</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium mb-2">Contact livraison</h4>
+                        {mission.contact_delivery_name ? (
+                          <div className="space-y-1">
+                            <p><span className="font-medium">Nom:</span> {mission.contact_delivery_name}</p>
+                            {mission.contact_delivery_phone && <p><span className="font-medium">Téléphone:</span> {mission.contact_delivery_phone}</p>}
+                            {mission.contact_delivery_email && <p><span className="font-medium">Email:</span> {mission.contact_delivery_email}</p>}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">Aucun contact spécifié</p>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              )}
+              </div>
+              
+              <Card className="mt-6">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Truck className="h-4 w-4" />
+                    Informations véhicule
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {mission.vehicle_category && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Catégorie</h4>
+                        <p>{mission.vehicle_category}</p>
+                      </div>
+                    )}
+                    {mission.vehicle_make && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Marque</h4>
+                        <p>{mission.vehicle_make}</p>
+                      </div>
+                    )}
+                    {mission.vehicle_model && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Modèle</h4>
+                        <p>{mission.vehicle_model}</p>
+                      </div>
+                    )}
+                    {mission.vehicle_registration && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Immatriculation</h4>
+                        <p>{mission.vehicle_registration}</p>
+                      </div>
+                    )}
+                    {mission.vehicle_vin && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">VIN</h4>
+                        <p>{mission.vehicle_vin}</p>
+                      </div>
+                    )}
+                    {mission.vehicle_fuel && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Carburant</h4>
+                        <p>{mission.vehicle_fuel}</p>
+                      </div>
+                    )}
+                    {mission.vehicle_year && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Année</h4>
+                        <p>{mission.vehicle_year}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
               
               {mission.notes && (
                 <Card className="mt-6">
@@ -512,9 +580,19 @@ const MissionDetailsPage = () => {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Type de mission</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Type de mission" disabled={updating} />
-                              </FormControl>
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                disabled={updating}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Sélectionner un type de mission" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="LIV">LIV</SelectItem>
+                                  <SelectItem value="RES">RES</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -674,6 +752,48 @@ const MissionDetailsPage = () => {
                                 <FormLabel>Modèle</FormLabel>
                                 <FormControl>
                                   <Input {...field} placeholder="Modèle" disabled={updating} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="vehicle_vin"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>VIN</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Numéro VIN" disabled={updating} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="vehicle_fuel"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Carburant</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Type de carburant" disabled={updating} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="vehicle_year"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Année</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Année" type="number" disabled={updating} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

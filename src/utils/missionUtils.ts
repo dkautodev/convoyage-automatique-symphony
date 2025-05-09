@@ -64,6 +64,10 @@ export const formatClientName = (mission: any, clientsData: Record<string, any> 
 export const formatFullAddress = (address: Address | null | undefined): string => {
   if (!address) return 'Adresse non spécifiée';
   
+  if (address.formatted_address) {
+    return address.formatted_address;
+  }
+  
   const components = [];
   
   if (address.street_number) components.push(address.street_number);

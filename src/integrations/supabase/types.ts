@@ -271,11 +271,9 @@ export type Database = {
           client_id: string
           completion_date: string | null
           contact_delivery_email: string | null
-          contact_delivery_id: number | null
           contact_delivery_name: string | null
           contact_delivery_phone: string | null
           contact_pickup_email: string | null
-          contact_pickup_id: number | null
           contact_pickup_name: string | null
           contact_pickup_phone: string | null
           created_at: string
@@ -310,11 +308,9 @@ export type Database = {
           client_id: string
           completion_date?: string | null
           contact_delivery_email?: string | null
-          contact_delivery_id?: number | null
           contact_delivery_name?: string | null
           contact_delivery_phone?: string | null
           contact_pickup_email?: string | null
-          contact_pickup_id?: number | null
           contact_pickup_name?: string | null
           contact_pickup_phone?: string | null
           created_at?: string
@@ -349,11 +345,9 @@ export type Database = {
           client_id?: string
           completion_date?: string | null
           contact_delivery_email?: string | null
-          contact_delivery_id?: number | null
           contact_delivery_name?: string | null
           contact_delivery_phone?: string | null
           contact_pickup_email?: string | null
-          contact_pickup_id?: number | null
           contact_pickup_name?: string | null
           contact_pickup_phone?: string | null
           created_at?: string
@@ -388,20 +382,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "missions_contact_delivery_id_fkey"
-            columns: ["contact_delivery_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "missions_contact_pickup_id_fkey"
-            columns: ["contact_pickup_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]

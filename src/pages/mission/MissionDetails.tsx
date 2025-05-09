@@ -393,12 +393,14 @@ const MissionDetailsPage = () => {
                       <div>
                         <p>{formatFullAddress(mission.pickup_address)}</p>
                         
-                        {mission.contact_pickup_name && (
+                        {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? (
                           <div className="mt-2 pt-2 border-t">
                             <p className="font-medium">{mission.contact_pickup_name}</p>
                             {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
                             {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
                           </div>
+                        ) : (
+                          <p className="text-gray-500">Aucun contact spécifié</p>
                         )}
                       </div>
                     </div>
@@ -415,12 +417,14 @@ const MissionDetailsPage = () => {
                       <div>
                         <p>{formatFullAddress(mission.delivery_address)}</p>
                         
-                        {mission.contact_delivery_name && (
+                        {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? (
                           <div className="mt-2 pt-2 border-t">
                             <p className="font-medium">{mission.contact_delivery_name}</p>
                             {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
                             {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
                           </div>
+                        ) : (
+                          <p className="text-gray-500">Aucun contact spécifié</p>
                         )}
                       </div>
                     </div>
@@ -440,9 +444,9 @@ const MissionDetailsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="font-medium mb-2">Contact ramassage</h4>
-                        {mission.contact_pickup_name ? (
+                        {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? (
                           <div className="space-y-1">
-                            <p><span className="font-medium">Nom:</span> {mission.contact_pickup_name}</p>
+                            {mission.contact_pickup_name && <p><span className="font-medium">Nom:</span> {mission.contact_pickup_name}</p>}
                             {mission.contact_pickup_phone && <p><span className="font-medium">Téléphone:</span> {mission.contact_pickup_phone}</p>}
                             {mission.contact_pickup_email && <p><span className="font-medium">Email:</span> {mission.contact_pickup_email}</p>}
                           </div>
@@ -453,9 +457,9 @@ const MissionDetailsPage = () => {
                       
                       <div>
                         <h4 className="font-medium mb-2">Contact livraison</h4>
-                        {mission.contact_delivery_name ? (
+                        {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? (
                           <div className="space-y-1">
-                            <p><span className="font-medium">Nom:</span> {mission.contact_delivery_name}</p>
+                            {mission.contact_delivery_name && <p><span className="font-medium">Nom:</span> {mission.contact_delivery_name}</p>}
                             {mission.contact_delivery_phone && <p><span className="font-medium">Téléphone:</span> {mission.contact_delivery_phone}</p>}
                             {mission.contact_delivery_email && <p><span className="font-medium">Email:</span> {mission.contact_delivery_email}</p>}
                           </div>

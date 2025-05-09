@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile } from './types';
 import type { 
@@ -9,6 +10,7 @@ import type {
 } from '@/types/auth';
 import { uploadFile } from '@/integrations/supabase/storage';
 import { Json } from '@/integrations/supabase/types';
+import { UserRole } from '@/types/supabase';
 
 // Helper function to convert Address to Json compatible object
 function addressToJson(address: any): Json {
@@ -91,23 +93,23 @@ export async function registerBasicUser(data: BasicRegisterFormData) {
     console.log("Service: Utilisateur inscrit avec succès, ID:", authData.user?.id);
 
     // Créer un profil utilisateur dans la base de données
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: authData.user?.id,
+    if (authData.user?.id) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
           email: data.email,
-          role: data.role,
+          role: data.role as UserRole,
           created_at: new Date().toISOString(),
           last_login: new Date().toISOString(),
           active: true,
           profile_completed: false,
-        },
-      ]);
+        });
 
-    if (profileError) {
-      console.error("Service: Erreur lors de la création du profil", profileError);
-      throw profileError;
+      if (profileError) {
+        console.error("Service: Erreur lors de la création du profil", profileError);
+        throw profileError;
+      }
     }
 
     console.log("Service: Profil utilisateur créé avec succès pour", authData.user?.id);
@@ -407,13 +409,13 @@ export async function registerLegacyUser(data: RegisterFormData) {
     console.log("Service: Utilisateur inscrit avec succès, ID:", authData.user?.id);
 
     // Créer un profil utilisateur dans la base de données
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: authData.user?.id,
+    if (authData.user?.id) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
           email: data.email,
-          role: data.role,
+          role: data.role as UserRole,
           full_name: data.fullName,
           company_name: data.companyName,
           siret: data.siret,
@@ -421,12 +423,12 @@ export async function registerLegacyUser(data: RegisterFormData) {
           last_login: new Date().toISOString(),
           active: true,
           profile_completed: false,
-        },
-      ]);
+        });
 
-    if (profileError) {
-      console.error("Service: Erreur lors de la création du profil", profileError);
-      throw profileError;
+      if (profileError) {
+        console.error("Service: Erreur lors de la création du profil", profileError);
+        throw profileError;
+      }
     }
 
     console.log("Service: Profil utilisateur créé avec succès pour", authData.user?.id);

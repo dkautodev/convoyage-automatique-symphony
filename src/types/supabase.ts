@@ -1,5 +1,5 @@
 
-// Si ce fichier est en lecture seule, créons un nouveau fichier de types pour nos besoins
+// Import des types nécessaires
 import { Database } from './database';
 
 export type MissionStatus = 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
@@ -37,6 +37,7 @@ export const missionStatusColors: Record<MissionStatus, string> = {
   'incident': 'bg-orange-600 text-white'
 };
 
+// UserRole type that matches exactly what's expected in the database
 export type UserRole = 'admin' | 'client' | 'chauffeur';
 
 export interface Address {
@@ -78,7 +79,8 @@ export function convertMissionFromDB(mission: MissionFromDB): Mission {
     price_ht: mission.price_ht || 0,
     price_ttc: mission.price_ttc || 0,
     created_at: mission.created_at || new Date().toISOString(),
-    chauffeur_id: mission.chauffeur_id || null
+    chauffeur_id: mission.chauffeur_id || null,
+    mission_type: mission.mission_type || null
   };
 }
 
@@ -93,5 +95,6 @@ export interface Mission {
   price_ttc: number;
   created_at: string;
   chauffeur_id: string | null;
+  mission_type?: string | null;
   [key: string]: any;
 }

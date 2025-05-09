@@ -16,7 +16,7 @@ import AddressAutocomplete from '@/components/AddressAutocomplete';
 import { useAuth } from '@/hooks/useAuth';
 import { usePricing } from '@/hooks/usePricing';
 import { typedSupabase } from '@/types/database';
-import { vehicleCategoryLabels, VehicleCategory } from '@/types/supabase';
+import { vehicleCategoryLabels, VehicleCategory, MissionStatus } from '@/types/supabase';
 import { Address } from '@/types/supabase';
 
 // Étape 1: Type de mission
@@ -225,13 +225,14 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       const { data: missionData, error: missionError } = await typedSupabase
         .from('missions')
         .insert({
-          mission_type: values.mission_type,
-          vehicle_category: values.vehicle_category,
+          client_id: values.client_id || user?.id,
+          status: values.status || 'en_acceptation',
           pickup_address: pickupAddressData || { formatted_address: values.pickup_address },
           delivery_address: deliveryAddressData || { formatted_address: values.delivery_address },
           distance_km: values.distance_km,
           price_ht: values.price_ht,
           price_ttc: values.price_ttc,
+          vehicle_category: values.vehicle_category,
           vehicle_make: values.vehicle_make,
           vehicle_model: values.vehicle_model,
           vehicle_fuel: values.vehicle_fuel,
@@ -245,14 +246,13 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
           contact_delivery_phone: values.contact_delivery_phone,
           contact_delivery_email: values.contact_delivery_email,
           notes: values.notes,
-          client_id: values.client_id || user?.id,
-          status: values.status,
           chauffeur_id: values.chauffeur_id || null,
           chauffeur_price_ht: values.chauffeur_price_ht || 0,
           created_by: user?.id || '',
           scheduled_date: new Date().toISOString(),
           vehicle_id: 1, // Valeur temporaire, à remplacer par une vraie sélection de véhicule
           vat_rate: 20, // Taux de TVA par défaut
+          mission_type: values.mission_type
         })
         .select('id')
         .single();

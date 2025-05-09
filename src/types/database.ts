@@ -6,8 +6,107 @@ import { Json } from '@/integrations/supabase/types';
 
 export interface Database {
   public: {
-    Tables: any;
-    Enums: any;
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          email: string;
+          role: 'admin' | 'client' | 'chauffeur';
+          full_name: string | null;
+          company_name?: string | null;
+          billing_address?: Json | null;
+          siret?: string | null;
+          tva_number?: string | null;
+          phone_1?: string | null;
+          phone_2?: string | null;
+          created_at: string;
+          last_login: string | null;
+          active: boolean;
+          profile_completed: boolean;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          role: 'admin' | 'client' | 'chauffeur';
+          full_name?: string | null;
+          company_name?: string | null;
+          billing_address?: Json | null;
+          siret?: string | null;
+          tva_number?: string | null;
+          phone_1?: string | null;
+          phone_2?: string | null;
+          created_at?: string;
+          last_login?: string | null;
+          active?: boolean;
+          profile_completed?: boolean;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          role?: 'admin' | 'client' | 'chauffeur';
+          full_name?: string | null;
+          company_name?: string | null;
+          billing_address?: Json | null;
+          siret?: string | null;
+          tva_number?: string | null;
+          phone_1?: string | null;
+          phone_2?: string | null;
+          created_at?: string;
+          last_login?: string | null;
+          active?: boolean;
+          profile_completed?: boolean;
+        };
+      };
+      missions: {
+        Row: {
+          id: string;
+          client_id: string;
+          chauffeur_id: string | null;
+          status: string;
+          pickup_address: Json;
+          delivery_address: Json;
+          distance_km: number;
+          price_ht: number;
+          price_ttc: number;
+          created_at: string;
+          mission_type: string | null;
+          // Add other mission fields as needed
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          chauffeur_id?: string | null;
+          status?: string;
+          pickup_address: Json;
+          delivery_address: Json;
+          distance_km: number;
+          price_ht: number;
+          price_ttc: number;
+          created_at?: string;
+          mission_type?: string | null;
+          // Add other mission fields as needed
+        };
+        Update: {
+          id?: string;
+          client_id?: string;
+          chauffeur_id?: string | null;
+          status?: string;
+          pickup_address?: Json;
+          delivery_address?: Json;
+          distance_km?: number;
+          price_ht?: number;
+          price_ttc?: number;
+          created_at?: string;
+          mission_type?: string | null;
+          // Add other mission fields as needed
+        };
+      };
+      // Add additional tables as needed
+    };
+    Enums: {
+      mission_status: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
+      user_role: 'admin' | 'client' | 'chauffeur';
+    };
   };
 }
 

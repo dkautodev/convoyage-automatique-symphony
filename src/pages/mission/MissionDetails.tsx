@@ -42,8 +42,8 @@ const missionUpdateSchema = z.object({
   vehicle_registration: z.string().optional(),
   vehicle_vin: z.string().optional(),
   vehicle_fuel: z.string().optional(),
-  // Modified: Accept string that can be transformed to number OR null
-  vehicle_year: z.string().transform(val => val === '' ? null : Number(val)).optional()
+  // Modified: Accept string in the form that can be transformed to number or null when processed
+  vehicle_year: z.string().optional()
 });
 
 // Type for the form values
@@ -78,7 +78,7 @@ const MissionDetailsPage = () => {
       vehicle_registration: '',
       vehicle_vin: '',
       vehicle_fuel: '',
-      vehicle_year: ''  // This is a string in the form, will be transformed by Zod
+      vehicle_year: ''  // Keep as string in the form
     },
   });
   
@@ -205,7 +205,9 @@ const MissionDetailsPage = () => {
         updateData.vehicle_registration = data.vehicle_registration;
         updateData.vehicle_vin = data.vehicle_vin;
         updateData.vehicle_fuel = data.vehicle_fuel;
-        updateData.vehicle_year = data.vehicle_year; // This is now properly transformed by the schema
+        
+        // Convert string to number or null for vehicle_year
+        updateData.vehicle_year = data.vehicle_year ? parseInt(data.vehicle_year, 10) || null : null;
       }
 
       console.log('Updating mission with data:', updateData);

@@ -952,15 +952,15 @@ function ClientSelectItems() {
   }, []);
 
   if (loading) {
-    return <SelectItem value="" disabled>Chargement des clients...</SelectItem>;
+    return <SelectItem value="loading">Chargement des clients...</SelectItem>;
   }
 
   if (clients.length === 0) {
-    return <SelectItem value="" disabled>Aucun client trouvé</SelectItem>;
+    return <SelectItem value="no-clients">Aucun client trouvé</SelectItem>;
   }
 
   return clients.map((client) => (
-    <SelectItem key={client.id} value={client.id}>
+    <SelectItem key={client.id} value={client.id || "unknown-client"}>
       {client.company_name || client.full_name || 'Client sans nom'}
     </SelectItem>
   ));
@@ -992,15 +992,15 @@ function DriverSelectItems() {
   }, []);
 
   if (loading) {
-    return <SelectItem value="" disabled>Chargement des chauffeurs...</SelectItem>;
+    return <SelectItem value="loading-drivers">Chargement des chauffeurs...</SelectItem>;
   }
 
   if (drivers.length === 0) {
-    return <SelectItem value="" disabled>Aucun chauffeur trouvé</SelectItem>;
+    return <SelectItem value="no-drivers">Aucun chauffeur trouvé</SelectItem>;
   }
 
   return drivers.map((driver) => (
-    <SelectItem key={driver.id} value={driver.id}>
+    <SelectItem key={driver.id} value={driver.id || "unknown-driver"}>
       {driver.full_name || 'Chauffeur sans nom'}
     </SelectItem>
   ));

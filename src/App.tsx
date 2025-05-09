@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import {
   Routes,
@@ -19,6 +18,7 @@ import Login from './pages/Login';
 import ClientDashboard from './pages/dashboard/client/ClientDashboard';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import CompleteDriverProfile from './pages/auth/CompleteDriverProfile';
+import CompleteDriverConfig from './pages/auth/CompleteDriverConfig';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
 import DriverDashboard from './components/dashboard/driver/DriverDashboard';
 import ClientsPage from './pages/dashboard/admin/Clients';
@@ -54,6 +54,7 @@ function App() {
         {/* Pages d'authentification et profil */}
         <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
         <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
+        <Route path="/complete-driver-config" element={<CompleteDriverConfig />} />
         
         {/* Pages du tableau de bord administrateur */}
         <Route path="/admin/dashboard" element={

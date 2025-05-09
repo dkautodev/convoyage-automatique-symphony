@@ -1,6 +1,6 @@
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
-import { Profile } from './types';
+import { Profile, LegalStatusType } from './types';
 import { 
   RegisterFormData, 
   BasicRegisterFormData, 
@@ -303,7 +303,7 @@ export const completeDriverBasicProfileService = async (userId: string, data: Dr
 // Fonction pour compléter la seconde étape du profil chauffeur (configuration)
 export const completeDriverConfigService = async (
   userId: string, 
-  legalStatus: string, 
+  legalStatus: LegalStatusType, 
   documents: Record<string, File> = {}
 ) => {
   try {
@@ -325,7 +325,7 @@ export const completeDriverConfigService = async (
     // Créer ou mettre à jour l'entrée dans la table drivers_config
     const driverConfigData = {
       id: userId,
-      legal_status: legalStatus,
+      legal_status: legalStatus as LegalStatusType,
       kbis_document_path: documentPaths.kbis || null,
       vigilance_document_path: documentPaths.vigilanceAttestation || null,
       license_document_path: documentPaths.driverLicenseFront || null,

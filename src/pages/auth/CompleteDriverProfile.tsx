@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -157,10 +156,12 @@ export default function CompleteDriverProfile() {
           phone2: data.phone2 || undefined,
           licenseNumber: data.licenseNumber,
           idNumber: data.idNumber,
-          documents: undefined,
+          documents: undefined
         });
         
         toast.success("Première étape complétée avec succès!");
+        // Redirect to the next step
+        window.location.href = '/complete-driver-config';
         
       } catch (error: any) {
         console.error("Error submitting driver profile:", error);

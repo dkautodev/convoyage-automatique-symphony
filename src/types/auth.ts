@@ -1,5 +1,5 @@
 
-import { UserRole, VehicleCategory, Address } from '@/types/supabase';
+import { LegalStatusType, Address } from '@/hooks/auth/types';
 
 // Interface pour le résultat du geocoding de Google
 export interface GoogleGeocodingResult {
@@ -38,7 +38,8 @@ export interface GoogleAddressSuggestion {
 export interface BasicRegisterFormData {
   email: string;
   password: string;
-  role: UserRole;
+  role: string;
+  adminToken?: string;
 }
 
 // Interface pour les données d'inscription du client
@@ -65,9 +66,6 @@ export interface DriverProfileFormData {
   documents?: Record<string, File>;
 }
 
-// Type pour les statuts juridiques
-export type LegalStatusType = 'EI' | 'EURL' | 'SARL' | 'SA' | 'SAS' | 'SASU' | 'SNC' | 'Scop' | 'Association';
-
 // Interface pour la seconde étape du profil chauffeur
 export interface DriverConfigFormData {
   legalStatus: LegalStatusType;
@@ -80,7 +78,7 @@ export interface DriverConfigFormData {
 export interface RegisterFormData {
   email: string;
   password: string;
-  role: UserRole;
+  role: string;
   fullName: string;
   companyName?: string;
   siret?: string;

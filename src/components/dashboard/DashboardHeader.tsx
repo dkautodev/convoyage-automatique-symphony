@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types/supabase';
 import { Bell, User, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +17,7 @@ const DashboardHeader = () => {
   const navigate = useNavigate();
   
   // Déterminer le rôle
-  const role: UserRole = profile?.role || 'client';
+  const role: string = profile?.role || 'client';
   
   // Titre du tableau de bord en fonction du rôle
   const dashboardTitle = {

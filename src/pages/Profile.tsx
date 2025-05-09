@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,6 +25,7 @@ import { Json } from '@/integrations/supabase/types';
 // Helper function to convert JSON to Address
 function jsonToAddress(json: Json | null): Address {
   if (!json) return {
+    formatted_address: '',
     street: '',
     city: '',
     postal_code: '',
@@ -35,6 +35,7 @@ function jsonToAddress(json: Json | null): Address {
   // Handle if json is an array
   if (Array.isArray(json)) {
     return {
+      formatted_address: '',
       street: '',
       city: '',
       postal_code: '',
@@ -45,6 +46,7 @@ function jsonToAddress(json: Json | null): Address {
   // Make sure json is an object and not a string/number/boolean
   if (typeof json !== 'object' || json === null) {
     return {
+      formatted_address: '',
       street: '',
       city: '',
       postal_code: '',
@@ -56,11 +58,12 @@ function jsonToAddress(json: Json | null): Address {
   const jsonObj = json as Record<string, Json>;
   
   return {
+    formatted_address: typeof jsonObj.formatted_address === 'string' ? jsonObj.formatted_address : '',
     street: typeof jsonObj.street === 'string' ? jsonObj.street : '',
     city: typeof jsonObj.city === 'string' ? jsonObj.city : '',
     postal_code: typeof jsonObj.postal_code === 'string' ? jsonObj.postal_code : '',
     country: typeof jsonObj.country === 'string' ? jsonObj.country : 'France',
-    formatted_address: typeof jsonObj.formatted_address === 'string' ? jsonObj.formatted_address : undefined,
+    place_id: typeof jsonObj.place_id === 'string' ? jsonObj.place_id : undefined,
     lat: typeof jsonObj.lat === 'number' ? jsonObj.lat : undefined,
     lng: typeof jsonObj.lng === 'number' ? jsonObj.lng : undefined
   };
@@ -137,6 +140,7 @@ const Profile = () => {
 
       // Construire l'objet d'adresse
       const billingAddress: Address = {
+        formatted_address: `${data.street || ''}, ${data.postal_code || ''} ${data.city || ''}, ${data.country || 'France'}`,
         street: data.street || '',
         city: data.city || '',
         postal_code: data.postal_code || '',

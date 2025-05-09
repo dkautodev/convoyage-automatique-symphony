@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Client, Address } from '@/types/supabase';
+import { Address } from '@/types/supabase';
 import { updateClient, createClient } from '@/utils/clientUtils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Client } from '@/utils/clientUtils';
 
 interface ClientDetailsProps {
   client: Client | null;

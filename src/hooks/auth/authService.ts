@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Profile } from './types';
 import type { 
@@ -9,7 +8,6 @@ import type {
   DriverConfigFormData
 } from '@/types/auth';
 import { uploadFile } from '@/integrations/supabase/storage';
-import { UserRole } from '@/types/supabase';
 import { Json } from '@/integrations/supabase/types';
 
 // Helper function to convert Address to Json compatible object

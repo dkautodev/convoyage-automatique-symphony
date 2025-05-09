@@ -1,6 +1,5 @@
 
 import { User } from '@supabase/supabase-js';
-import { UserRole, VehicleCategory } from '@/types/supabase';
 import { Session } from '@supabase/supabase-js';
 import { Json } from '@/integrations/supabase/types';
 
@@ -44,8 +43,20 @@ export type LegalStatusType = 'EI' | 'EURL' | 'SARL' | 'SA' | 'SAS' | 'SASU' | '
 export interface BasicRegisterFormData {
   email: string;
   password: string;
-  role: UserRole;
+  role: string;
   adminToken?: string;
+}
+
+// Interface pour l'adresse (identique à celle de supabase.ts)
+export interface Address {
+  formatted_address: string;
+  street: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  place_id?: string;
+  lat?: number;
+  lng?: number;
 }
 
 // Interface pour les données d'inscription du client
@@ -84,21 +95,10 @@ export interface DriverConfigFormData {
 export interface RegisterFormData {
   email: string;
   password: string;
-  role: UserRole;
+  role: string;
   fullName: string;
   companyName?: string;
   siret?: string;
-}
-
-// Interface pour l'adresse
-export interface Address {
-  street: string;
-  city: string;
-  postal_code: string;
-  country: string;
-  formatted_address?: string;
-  lat?: number;
-  lng?: number;
 }
 
 // Helper pour convertir Address en Json compatible
@@ -110,7 +110,7 @@ export function addressToJson(address: Address): Json {
 export interface Profile {
   id: string;
   email: string;
-  role: UserRole;
+  role: string;
   full_name: string | null;
   company_name?: string | null;
   billing_address?: Json | null;
@@ -122,7 +122,7 @@ export interface Profile {
   driver_license?: string | null;
   id_document?: string | null;
   legal_status?: LegalStatusType | null;
-  vehicle_type?: VehicleCategory | null;
+  vehicle_type?: string | null;
   vehicle_registration?: string | null;
   created_at: string;
   last_login: string | null;

@@ -1,9 +1,15 @@
 
 // Import des types nécessaires
-import { Database } from '@/integrations/supabase/types';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
+
+export interface Database {
+  public: {
+    Tables: any;
+    Enums: any;
+  };
+}
 
 // Création d'un client typé pour Supabase
 export const typedSupabase = supabase;

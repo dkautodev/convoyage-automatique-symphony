@@ -37,7 +37,9 @@ export const missionStatusColors: Record<MissionStatus, string> = {
   'incident': 'bg-orange-600 text-white'
 };
 
-export type Address = {
+export type UserRole = 'admin' | 'client' | 'chauffeur';
+
+export interface Address {
   formatted_address: string;
   place_id?: string;
   street?: string;
@@ -47,7 +49,21 @@ export type Address = {
   country?: string;
   lat?: number;
   lng?: number;
-};
+}
+
+export interface Client {
+  id: string;
+  email?: string;
+  full_name?: string | null;
+  company_name: string;
+  siret: string;
+  vat_number?: string | null;
+  billing_address?: Address | null;
+  phone1?: string;
+  phone2?: string | null;
+  created_at?: string;
+  profile_completed?: boolean;
+}
 
 export type MissionFromDB = any; // À remplacer par le vrai type
 

@@ -19,7 +19,6 @@ import {
   uploadDriverDocument,
   registerLegacyUser
 } from './authService';
-import { UserRole } from '@/types/supabase';
 import { 
   RegisterFormData, 
   BasicRegisterFormData, 
@@ -36,6 +35,23 @@ declare module '@/types/auth' {
   interface BasicRegisterFormData {
     adminToken?: string;
   }
+}
+
+// Helper function to convert between address types
+function convertAddressFormat(address: any): any {
+  // Ensure all required properties are present
+  if (!address) return null;
+  
+  return {
+    formatted_address: address.formatted_address || `${address.street || ''}, ${address.postal_code || ''} ${address.city || ''}, ${address.country || 'France'}`,
+    street: address.street || '',
+    city: address.city || '',
+    postal_code: address.postal_code || '',
+    country: address.country || 'France',
+    place_id: address.place_id,
+    lat: address.lat,
+    lng: address.lng
+  };
 }
 
 // Fournisseur du contexte d'authentification
@@ -264,7 +280,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Données du profil client:", data);
       
-      await completeClientProfileService(user.id, data);
+      // Convertir l'adresse au format attendu
+      const convertedData = {
+        ...data,
+        billingAddress: convertAddressFormat(data.billingAddress)
+      };
+      
+      await completeClientProfileService(user.id, convertedData);
       
       // Mettre à jour le profil localement - using addressToJson to convert Address to Json
       setProfile(prev => {
@@ -273,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...prev, 
           full_name: data.fullName, 
           company_name: data.companyName,
-          billing_address: addressToJson(data.billingAddress),
+          billing_address: addressToJson(convertAddressFormat(data.billingAddress)),
           siret: data.siret,
           tva_number: data.tvaNumb,
           phone_1: data.phone1,
@@ -305,7 +327,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Données du profil chauffeur:", data);
       
-      await completeDriverProfileService(user.id, data);
+      // Convertir l'adresse au format attendu
+      const convertedData = {
+        ...data,
+        billingAddress: convertAddressFormat(data.billingAddress)
+      };
+      
+      await completeDriverProfileService(user.id, convertedData);
       
       // Mettre à jour le profil localement - using addressToJson to convert Address to Json
       setProfile(prev => {
@@ -314,9 +342,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...prev, 
           full_name: data.fullName, 
           company_name: data.companyName,
-          billing_address: addressToJson(data.billingAddress),
+          billing_address: addressToJson(convertAddressFormat(data.billingAddress)),
           siret: data.siret,
-          // Retiré tva_applicable car la colonne n'existe pas
           tva_number: data.tvaNumb,
           phone_1: data.phone1,
           phone_2: data.phone2,

@@ -1,9 +1,21 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Client, Address } from '@/types/supabase';
+import { Address } from '@/types/supabase';
 import { Json } from '@/integrations/supabase/types';
 import { convertJsonToType } from '@/types/database';
-import { UserRole } from '@/types/supabase';
+
+export interface Client {
+  id: string;
+  company_name: string;
+  siret: string;
+  vat_number?: string | null;
+  billing_address?: Address | null;
+  phone1?: string;
+  phone2?: string | null;
+  created_at?: string;
+  full_name?: string | null;
+  email?: string;
+  profile_completed?: boolean;
+}
 
 export const fetchClients = async (): Promise<Client[]> => {
   try {
@@ -78,7 +90,7 @@ export const createClient = async (client: Omit<Client, 'id' | 'created_at'>): P
     const profileData = {
       id,
       email: client.email,
-      role: 'client' as UserRole,
+      role: 'client',
       full_name: client.full_name,
       company_name: client.company_name,
       siret: client.siret,

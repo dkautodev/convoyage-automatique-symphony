@@ -1,9 +1,7 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types/supabase';
 
 // Redirection vers le tableau de bord approprié en fonction du rôle
-export const redirectToDashboard = (role: UserRole) => {
+export const redirectToDashboard = (role: string) => {
   switch (role) {
     case 'admin':
       return '/admin/dashboard';
@@ -17,7 +15,7 @@ export const redirectToDashboard = (role: UserRole) => {
 };
 
 // Navigation vers la page pour compléter le profil
-export const navigateToProfileCompletion = (role: UserRole) => {
+export const navigateToProfileCompletion = (role: string) => {
   switch (role) {
     case 'client':
       return '/complete-client-profile';

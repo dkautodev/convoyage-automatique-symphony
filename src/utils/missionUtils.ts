@@ -7,6 +7,12 @@ import { Address } from "@/types/supabase";
 export const formatAddressDisplay = (address: Address | null | undefined): string => {
   if (!address) return 'Adresse non spécifiée';
   
+  // Si l'adresse complète est disponible, l'utiliser en priorité
+  if (address.formatted_address) {
+    return address.formatted_address;
+  }
+  
+  // Sinon utiliser les composants individuels
   const postalCode = address.postal_code || '';
   const city = address.city || '';
   
@@ -50,4 +56,28 @@ export const formatClientName = (mission: any, clientsData: Record<string, any> 
   }
   
   return 'Client inconnu';
+};
+
+/**
+ * Formate l'adresse complète pour l'affichage
+ */
+export const formatFullAddress = (address: Address | null | undefined): string => {
+  if (!address) return 'Adresse non spécifiée';
+  
+  const components = [];
+  
+  if (address.street_number) components.push(address.street_number);
+  if (address.street) components.push(address.street);
+  
+  const cityParts = [];
+  if (address.postal_code) cityParts.push(address.postal_code);
+  if (address.city) cityParts.push(address.city);
+  
+  if (cityParts.length > 0) {
+    components.push(cityParts.join(' '));
+  }
+  
+  if (address.country) components.push(address.country);
+  
+  return components.length > 0 ? components.join(', ') : 'Adresse incomplète';
 };

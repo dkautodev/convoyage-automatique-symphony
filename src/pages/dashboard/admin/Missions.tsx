@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,8 +66,6 @@ const MissionsPage = () => {
       
       // Filtrer par statut si un tab spécifique est sélectionné
       if (activeTab !== 'all') {
-        // Utilisez la valeur activeTab pour le filtrage, mais assurez-vous qu'elle est castée comme MissionStatus
-        // puisque nous avons défini MissionTab pour ne permettre que des valeurs valides
         query = query.eq('status', activeTab as MissionStatus);
       }
       

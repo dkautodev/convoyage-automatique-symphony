@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
-import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils';
+import { formatAddressDisplay, formatMissionNumber, formatFullAddress } from '@/utils/missionUtils';
 import { 
   Card, 
   CardContent, 
@@ -38,7 +38,6 @@ const missionUpdateSchema = z.object({
   contact_delivery_phone: z.string().optional(),
   contact_delivery_email: z.string().email().optional().or(z.literal('')),
   scheduled_date: z.string().optional(),
-  vehicle_category: z.string().optional(),
   vehicle_make: z.string().optional(),
   vehicle_model: z.string().optional(),
   vehicle_registration: z.string().optional(),
@@ -68,7 +67,6 @@ const MissionDetailsPage = () => {
       contact_delivery_phone: '',
       contact_delivery_email: '',
       scheduled_date: '',
-      vehicle_category: '',
       vehicle_make: '',
       vehicle_model: '',
       vehicle_registration: '',
@@ -101,6 +99,7 @@ const MissionDetailsPage = () => {
         return;
       }
       
+      console.log('Mission data retrieved:', missionData);
       const missionObj = convertMissionFromDB(missionData as unknown as MissionFromDB);
       setMission(missionObj);
       
@@ -117,6 +116,7 @@ const MissionDetailsPage = () => {
         }
       }
       
+      console.log('Setting form values with:', missionObj);
       // Mettre à jour les valeurs du formulaire
       form.reset({
         status: missionObj.status,
@@ -129,7 +129,6 @@ const MissionDetailsPage = () => {
         contact_delivery_phone: missionObj.contact_delivery_phone || '',
         contact_delivery_email: missionObj.contact_delivery_email || '',
         scheduled_date: missionObj.scheduled_date ? new Date(missionObj.scheduled_date).toISOString().split('T')[0] : '',
-        vehicle_category: missionObj.vehicle_category || '',
         vehicle_make: missionObj.vehicle_make || '',
         vehicle_model: missionObj.vehicle_model || '',
         vehicle_registration: missionObj.vehicle_registration || '',
@@ -149,7 +148,7 @@ const MissionDetailsPage = () => {
     try {
       const { data, error } = await typedSupabase
         .from('mission_status_history')
-        .select('*, profiles(full_name, email)')
+        .select('*')
         .eq('mission_id', id)
         .order('changed_at', { ascending: false });
       
@@ -158,6 +157,7 @@ const MissionDetailsPage = () => {
         return;
       }
       
+      console.log('Status history:', data);
       setStatusHistory(data || []);
       
     } catch (error) {
@@ -170,6 +170,7 @@ const MissionDetailsPage = () => {
     
     try {
       setUpdating(true);
+      console.log('Submitting form with data:', data);
       
       // Préparer les données à mettre à jour
       const updateData: any = {
@@ -187,11 +188,12 @@ const MissionDetailsPage = () => {
         updateData.contact_delivery_phone = data.contact_delivery_phone;
         updateData.contact_delivery_email = data.contact_delivery_email;
         updateData.scheduled_date = data.scheduled_date ? new Date(data.scheduled_date).toISOString() : mission.scheduled_date;
-        updateData.vehicle_category = data.vehicle_category;
         updateData.vehicle_make = data.vehicle_make;
         updateData.vehicle_model = data.vehicle_model;
         updateData.vehicle_registration = data.vehicle_registration;
       }
+
+      console.log('Updating mission with data:', updateData);
       
       const { error } = await typedSupabase
         .from('missions')
@@ -301,11 +303,33 @@ const MissionDetailsPage = () => {
 
         <TabsContent value="details" className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Informations générales
               </CardTitle>
+              {isAdmin && !editMode && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditMode(true)}
+                  size="sm"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier les détails
+                </Button>
+              )}
+              {editMode && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setEditMode(false);
+                    fetchMission(); // Réinitialiser les valeurs
+                  }}
+                  size="sm"
+                >
+                  Annuler
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -350,9 +374,7 @@ const MissionDetailsPage = () => {
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
                       <div>
-                        <p>{mission.pickup_address?.street_number} {mission.pickup_address?.street}</p>
-                        <p><strong>{pickupAddress}</strong></p>
-                        {mission.pickup_address?.country && <p>{mission.pickup_address.country}</p>}
+                        <p>{formatFullAddress(mission.pickup_address)}</p>
                         
                         {mission.contact_pickup_name && (
                           <div className="mt-2 pt-2 border-t">
@@ -374,9 +396,7 @@ const MissionDetailsPage = () => {
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
                       <div>
-                        <p>{mission.delivery_address?.street_number} {mission.delivery_address?.street}</p>
-                        <p><strong>{deliveryAddress}</strong></p>
-                        {mission.delivery_address?.country && <p>{mission.delivery_address.country}</p>}
+                        <p>{formatFullAddress(mission.delivery_address)}</p>
                         
                         {mission.contact_delivery_name && (
                           <div className="mt-2 pt-2 border-t">
@@ -391,18 +411,7 @@ const MissionDetailsPage = () => {
                 </Card>
               </div>
               
-              {mission.notes && (
-                <Card className="mt-6">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="whitespace-pre-wrap">{mission.notes}</p>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {(mission.vehicle_make || mission.vehicle_model || mission.vehicle_registration || mission.vehicle_category) && (
+              {(mission.vehicle_category || mission.vehicle_make || mission.vehicle_model || mission.vehicle_registration) && (
                 <Card className="mt-6">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -440,38 +449,25 @@ const MissionDetailsPage = () => {
                   </CardContent>
                 </Card>
               )}
+              
+              {mission.notes && (
+                <Card className="mt-6">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="whitespace-pre-wrap">{mission.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Edit className="h-5 w-5" />
-                  {editMode ? 'Modifier la mission' : 'Changer le statut'}
-                </div>
-                {isAdmin && !editMode && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setEditMode(true)}
-                    size="sm"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier les détails
-                  </Button>
-                )}
-                {editMode && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setEditMode(false);
-                      fetchMission(); // Réinitialiser les valeurs
-                    }}
-                    size="sm"
-                  >
-                    Annuler
-                  </Button>
-                )}
+              <CardTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                {editMode ? 'Modifier la mission' : 'Changer le statut'}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -635,36 +631,12 @@ const MissionDetailsPage = () => {
 
                       <div className="border-t pt-6 mt-6">
                         <h3 className="font-medium mb-4">Informations véhicule</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <FormField
-                            control={form.control}
-                            name="vehicle_category"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Catégorie de véhicule</FormLabel>
-                                <Select
-                                  value={field.value}
-                                  onValueChange={field.onChange}
-                                  disabled={updating}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionner une catégorie" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="citadine">Citadine</SelectItem>
-                                    <SelectItem value="berline">Berline</SelectItem>
-                                    <SelectItem value="4x4_suv">4x4 / SUV</SelectItem>
-                                    <SelectItem value="utilitaire_3_5m3">Utilitaire (3-5m³)</SelectItem>
-                                    <SelectItem value="utilitaire_6_12m3">Utilitaire (6-12m³)</SelectItem>
-                                    <SelectItem value="utilitaire_12_15m3">Utilitaire (12-15m³)</SelectItem>
-                                    <SelectItem value="utilitaire_15_20m3">Utilitaire (15-20m³)</SelectItem>
-                                    <SelectItem value="utilitaire_plus_20m3">Utilitaire (&gt;20m³)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* Catégorie de véhicule affichée mais non modifiable */}
+                          <div>
+                            <h4 className="text-sm font-medium">Catégorie de véhicule</h4>
+                            <p className="mt-1 p-2 border rounded bg-gray-50">{mission.vehicle_category || 'Non spécifiée'}</p>
+                          </div>
                           
                           <FormField
                             control={form.control}
@@ -778,9 +750,9 @@ const MissionDetailsPage = () => {
                           Ancien statut: <span className="font-medium">{missionStatusLabels[entry.old_status]}</span>
                         </div>
                       )}
-                      {entry.profiles && (
+                      {entry.changed_by && (
                         <div className="mt-1 text-sm text-gray-500">
-                          Modifié par: {entry.profiles.full_name || entry.profiles.email || "Utilisateur inconnu"}
+                          Modifié par: {entry.changed_by || "Utilisateur inconnu"}
                         </div>
                       )}
                       {entry.notes && (

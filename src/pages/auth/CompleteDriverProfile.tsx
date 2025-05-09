@@ -37,11 +37,18 @@ function jsonToAddress(json: Json | null): {
     return {};
   }
   
-  // Handle if json is an object (most likely case)
+  // Make sure json is an object and not a string/number/boolean
+  if (typeof json !== 'object' || json === null) {
+    return {};
+  }
+  
+  // Now we know json is an object, we can safely access its properties
+  const jsonObj = json as Record<string, Json>;
+  
   return {
-    formatted_address: json.formatted_address as string,
-    lat: json.lat as number,
-    lng: json.lng as number
+    formatted_address: typeof jsonObj.formatted_address === 'string' ? jsonObj.formatted_address : undefined,
+    lat: typeof jsonObj.lat === 'number' ? jsonObj.lat : undefined,
+    lng: typeof jsonObj.lng === 'number' ? jsonObj.lng : undefined
   };
 }
 

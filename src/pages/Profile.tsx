@@ -42,15 +42,27 @@ function jsonToAddress(json: Json | null): Address {
     };
   }
   
-  // Handle if json is an object
+  // Make sure json is an object and not a string/number/boolean
+  if (typeof json !== 'object' || json === null) {
+    return {
+      street: '',
+      city: '',
+      postal_code: '',
+      country: 'France'
+    };
+  }
+  
+  // Now we know json is an object, we can safely access its properties
+  const jsonObj = json as Record<string, Json>;
+  
   return {
-    street: json.street as string || '',
-    city: json.city as string || '',
-    postal_code: json.postal_code as string || '',
-    country: json.country as string || 'France',
-    formatted_address: json.formatted_address as string,
-    lat: json.lat as number,
-    lng: json.lng as number
+    street: typeof jsonObj.street === 'string' ? jsonObj.street : '',
+    city: typeof jsonObj.city === 'string' ? jsonObj.city : '',
+    postal_code: typeof jsonObj.postal_code === 'string' ? jsonObj.postal_code : '',
+    country: typeof jsonObj.country === 'string' ? jsonObj.country : 'France',
+    formatted_address: typeof jsonObj.formatted_address === 'string' ? jsonObj.formatted_address : undefined,
+    lat: typeof jsonObj.lat === 'number' ? jsonObj.lat : undefined,
+    lng: typeof jsonObj.lng === 'number' ? jsonObj.lng : undefined
   };
 }
 

@@ -33,11 +33,12 @@ export const useProfiles = (role: UserRole) => {
         const options = data.map(profile => ({
           id: profile.id,
           label: role === 'client' 
-            ? profile.company_name || profile.full_name || profile.email
-            : profile.full_name || profile.email,
+            ? (profile.company_name || profile.full_name || profile.email)
+            : (profile.full_name || profile.email),
           email: profile.email
         }));
         
+        console.log(`Loaded ${options.length} ${role} profiles:`, options);
         setProfiles(options);
       } catch (err: any) {
         console.error(`Error fetching ${role} profiles:`, err);

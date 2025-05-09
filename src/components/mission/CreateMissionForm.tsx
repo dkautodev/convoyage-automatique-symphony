@@ -22,6 +22,7 @@ import { Address } from '@/types/supabase';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({
@@ -119,6 +120,9 @@ export default function CreateMissionForm({
   const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
+
+  const { profiles: clientProfiles, loading: loadingClients } = useProfiles('client');
+  const { profiles: driverProfiles, loading: loadingDrivers } = useProfiles('chauffeur');
 
   const form = useForm<CreateMissionFormValues>({
     resolver: zodResolver(createMissionSchema),
@@ -290,10 +294,7 @@ export default function CreateMissionForm({
       let clientId = null;
       if (profile?.role === 'admin') {
         // Pour les admins: utiliser le client sélectionné dans le formulaire
-        if (selectedClientId) {
-          clientId = selectedClientId;
-          console.log("Admin: client_id sélectionné =", clientId);
-        } else if (values.client_id && values.client_id !== 'no_client_selected' && values.client_id !== 'loading' && values.client_id !== 'no_clients') {
+        if (values.client_id && values.client_id !== 'no_client_selected') {
           clientId = values.client_id;
           console.log("Admin: client_id from values =", clientId);
         } else {
@@ -320,10 +321,7 @@ export default function CreateMissionForm({
 
       // S'assurer que chauffeur_id n'est pas un des valeurs statiques
       let chauffeurId = values.chauffeur_id;
-      if (!chauffeurId || 
-          chauffeurId === "no_driver_assigned" || 
-          chauffeurId === "loading" || 
-          chauffeurId === "no_drivers") {
+      if (!chauffeurId || chauffeurId === "no_driver_assigned") {
         chauffeurId = null;
       }
       console.log("Client ID final:", clientId);
@@ -883,8 +881,17 @@ export default function CreateMissionForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* This would normally be populated from a database query */}
-                          <SelectItem value="no_client_selected">Aucun client</SelectItem>
+                          {loadingClients ? (
+                            <SelectItem value="loading">Chargement...</SelectItem>
+                          ) : clientProfiles.length === 0 ? (
+                            <SelectItem value="no_clients">Aucun client disponible</SelectItem>
+                          ) : (
+                            clientProfiles.map((client) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.label} ({client.email})
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -936,7 +943,17 @@ export default function CreateMissionForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
-                          {/* This would normally be populated from a database query */}
+                          {loadingDrivers ? (
+                            <SelectItem value="loading">Chargement...</SelectItem>
+                          ) : driverProfiles.length === 0 ? (
+                            <SelectItem value="no_drivers">Aucun chauffeur disponible</SelectItem>
+                          ) : (
+                            driverProfiles.map((driver) => (
+                              <SelectItem key={driver.id} value={driver.id}>
+                                {driver.label} ({driver.email})
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />

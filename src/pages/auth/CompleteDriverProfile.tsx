@@ -21,11 +21,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { formatSiret } from '@/utils/validation';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 // Schema de validation pour le profil chauffeur
 const driverProfileSchema = z.object({
   fullName: z.string().min(2, { message: 'Le nom complet est requis' }),
   companyName: z.string().min(2, { message: 'Le nom de la société est requis' }),
+  billingAddress: z.string().min(5, { message: "L'adresse de facturation est requise" }),
   siret: z.string().refine(val => /^\d{14}$/.test(val.replace(/\s/g, '')), {
     message: 'Le SIRET doit contenir exactement 14 chiffres',
   }),
@@ -43,6 +45,7 @@ export default function CompleteDriverProfile() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { completeDriverProfile, profile } = useAuth();
   const [formInitialized, setFormInitialized] = useState(false);
+  const [placeId, setPlaceId] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const form = useForm<FormData>({
@@ -50,6 +53,7 @@ export default function CompleteDriverProfile() {
     defaultValues: {
       fullName: '',
       companyName: '',
+      billingAddress: '',
       siret: '',
       tvaApplicable: false,
       tvaNumb: '',
@@ -65,6 +69,15 @@ export default function CompleteDriverProfile() {
       
       form.setValue('fullName', profile.full_name || '');
       form.setValue('companyName', profile.company_name || '');
+      
+      // Set billing address if available
+      if (profile.billing_address) {
+        const address = profile.billing_address as any;
+        const formattedAddress = address.formatted_address || 
+          `${address.street}, ${address.postal_code} ${address.city}, ${address.country}`;
+        form.setValue('billingAddress', formattedAddress);
+      }
+      
       form.setValue('siret', profile.siret || '');
       form.setValue('tvaApplicable', profile.tva_applicable || false);
       form.setValue('tvaNumb', profile.tva_number || '');
@@ -79,6 +92,10 @@ export default function CompleteDriverProfile() {
     const formatted = formatSiret(e.target.value);
     form.setValue('siret', formatted);
   };
+  
+  const handleSelectAddress = (_: string, selectedPlaceId: string) => {
+    setPlaceId(selectedPlaceId);
+  };
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -90,12 +107,12 @@ export default function CompleteDriverProfile() {
         await completeDriverProfile({
           fullName: data.fullName,
           companyName: data.companyName,
-          // Utiliser une adresse par défaut pour l'instant, elle sera mise à jour ultérieurement
           billingAddress: {
-            street: "",
-            city: "",
-            postal_code: "",
-            country: "France",
+            street: data.billingAddress.split(',')[0] || "",
+            city: data.billingAddress.split(',')[1]?.trim().split(' ')[1] || "",
+            postal_code: data.billingAddress.split(',')[1]?.trim().split(' ')[0] || "",
+            country: data.billingAddress.split(',')[2]?.trim() || "France",
+            formatted_address: data.billingAddress
           },
           siret: data.siret.replace(/\s/g, ''),
           tvaApplicable: data.tvaApplicable,
@@ -169,6 +186,27 @@ export default function CompleteDriverProfile() {
                             <FormLabel>Nom de l'entreprise</FormLabel>
                             <FormControl>
                               <Input placeholder="Votre Société SAS" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Adresse de facturation */}
+                      <FormField
+                        control={form.control}
+                        name="billingAddress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Adresse de facturation</FormLabel>
+                            <FormControl>
+                              <AddressAutocomplete
+                                value={field.value}
+                                onChange={field.onChange}
+                                onSelect={handleSelectAddress}
+                                placeholder="123 rue du Commerce, 75001 Paris, France"
+                                error={form.formState.errors.billingAddress?.message}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -165,14 +164,49 @@ const MissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="all">Toutes</TabsTrigger>
-          <TabsTrigger value="en_acceptation">En attente</TabsTrigger>
-          <TabsTrigger value="accepte">Accepté</TabsTrigger>
-          <TabsTrigger value="prise_en_charge">En cours</TabsTrigger>
-          <TabsTrigger value="livre">Livrées</TabsTrigger>
-          <TabsTrigger value="termine">Terminées</TabsTrigger>
-          <TabsTrigger value="annule">Annulées</TabsTrigger>
+        <TabsList className="w-full mb-4 grid grid-cols-3 sm:grid-cols-7 gap-1">
+          <TabsTrigger 
+            value="all" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white"
+          >
+            Toutes
+          </TabsTrigger>
+          <TabsTrigger 
+            value="en_acceptation" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-amber-600 data-[state=active]:text-white"
+          >
+            En attente
+          </TabsTrigger>
+          <TabsTrigger 
+            value="accepte" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-green-600 data-[state=active]:text-white"
+          >
+            Accepté
+          </TabsTrigger>
+          <TabsTrigger 
+            value="prise_en_charge" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-amber-700 data-[state=active]:text-white"
+          >
+            En cours
+          </TabsTrigger>
+          <TabsTrigger 
+            value="livre" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+          >
+            Livrées
+          </TabsTrigger>
+          <TabsTrigger 
+            value="termine" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-green-700 data-[state=active]:text-white"
+          >
+            Terminées
+          </TabsTrigger>
+          <TabsTrigger 
+            value="annule" 
+            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-red-600 data-[state=active]:text-white"
+          >
+            Annulées
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab}>

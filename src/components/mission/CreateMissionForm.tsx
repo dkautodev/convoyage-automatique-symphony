@@ -240,6 +240,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     try {
       setIsSubmitting(true);
       
+      console.log("Début de la soumission du formulaire avec les valeurs:", values);
+      
       // S'assurer que toutes les données requises sont présentes
       if (!values.distance_km || !values.price_ht || !values.price_ttc) {
         toast.error('Veuillez calculer le prix avant de créer la mission');
@@ -257,9 +259,15 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         values.chauffeur_id = null;
       }
       
+      console.log("User ID:", user?.id);
+      console.log("Client ID:", values.client_id || user?.id);
+      
       // Préparer les données d'adresse pour la base de données
       const pickupAddressData = values.pickup_address_data || { formatted_address: values.pickup_address };
       const deliveryAddressData = values.delivery_address_data || { formatted_address: values.delivery_address };
+      
+      console.log("Données d'adresse de départ:", pickupAddressData);
+      console.log("Données d'adresse de livraison:", deliveryAddressData);
       
       // Convertir les objets Address en Json compatible avec Supabase
       const pickupAddressJson = pickupAddressData ? 
@@ -296,41 +304,47 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         chauffeur_id: values.chauffeur_id || null,
         chauffeur_price_ht: values.chauffeur_price_ht || 0,
         created_by: user?.id || '',
-        scheduled_date: new Date().toISOString(), // Utilisation d'une date valide
-        vehicle_id: 1, // Assurons-nous que cette valeur existe dans la table vehicles
+        scheduled_date: new Date().toISOString(),
+        vehicle_id: 1, // Valeur par défaut (assurez-vous qu'elle existe dans la table vehicles)
         vat_rate: 20, // Taux de TVA par défaut
-        mission_type: values.mission_type  // Ajout de mission_type au missionData
+        mission_type: values.mission_type
       };
       
-      console.log("Mission data to save:", missionData);
+      console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
       
-      const { data, error } = await typedSupabase
-        .from('missions')
-        .insert(missionData)
-        .select('id')
-        .single();
-      
-      if (error) {
-        console.error('Erreur lors de la création de la mission:', error);
-        toast.error('Erreur lors de la création de la mission: ' + error.message);
-        return;
-      }
-      
-      toast.success('Mission créée avec succès');
-      
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        // Rediriger vers la page appropriée en fonction du rôle
-        if (profile?.role === 'admin') {
-          navigate('/admin/missions');
-        } else {
-          navigate('/client/missions');
+      try {
+        const { data, error } = await typedSupabase
+          .from('missions')
+          .insert(missionData)
+          .select('id')
+          .single();
+        
+        if (error) {
+          console.error('Erreur Supabase lors de la création de la mission:', error);
+          toast.error(`Erreur lors de la création de la mission: ${error.message}`);
+          return;
         }
+        
+        console.log("Mission créée avec succès, données retournées:", data);
+        toast.success('Mission créée avec succès');
+        
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Rediriger vers la page appropriée en fonction du rôle
+          if (profile?.role === 'admin') {
+            navigate('/admin/missions');
+          } else {
+            navigate('/client/missions');
+          }
+        }
+      } catch (dbError: any) {
+        console.error('Exception lors de l\'opération Supabase:', dbError);
+        toast.error(`Exception lors de la création de la mission: ${dbError.message || 'Erreur inconnue'}`);
       }
     } catch (error: any) {
-      console.error('Erreur lors de la création de la mission:', error);
-      toast.error('Une erreur est survenue lors de la création de la mission: ' + (error.message || 'Erreur inconnue'));
+      console.error('Erreur globale lors de la création de la mission:', error);
+      toast.error(`Une erreur est survenue lors de la création de la mission: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }

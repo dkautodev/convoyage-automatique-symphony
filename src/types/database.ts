@@ -136,3 +136,5 @@ export function convertJsonToType<T>(json: Json | null): T {
   }
   return json as unknown as T;
 }
+
+export { Database };

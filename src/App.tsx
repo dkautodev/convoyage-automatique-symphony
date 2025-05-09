@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
+import Home from './pages/Home';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
@@ -14,20 +14,26 @@ import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import AdminInvitePage from './pages/AdminInvitePage';
 import CreateMissionPage from './pages/mission/CreateMission';
+import AuthCallback from './pages/auth/AuthCallback';
 
 function App() {
-  const isAdmin = window.location.pathname.startsWith('/admin');
-  const isClient = window.location.pathname.startsWith('/client');
-  const isDriver = window.location.pathname.startsWith('/driver');
-  
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<Home />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/register" element={<RegisterPage />} />
       
       {/* Admin routes */}
       <Route path="/admin" element={
+        <ProtectedRoute roles={['admin']}>
+          <DashboardLayout>
+            <AdminDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/dashboard" element={
         <ProtectedRoute roles={['admin']}>
           <DashboardLayout>
             <AdminDashboard />
@@ -64,6 +70,13 @@ function App() {
           </DashboardLayout>
         </ProtectedRoute>
       } />
+      <Route path="/client/dashboard" element={
+        <ProtectedRoute roles={['client']}>
+          <DashboardLayout>
+            <ClientDashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/client/missions" element={
         <ProtectedRoute roles={['client']}>
           <DashboardLayout>
@@ -80,15 +93,11 @@ function App() {
           </DashboardLayout>
         </ProtectedRoute>
       } />
-      
-      {/* General dashboard route - Redirects based on role */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Navigate to={
-            isAdmin ? '/admin' :
-            isClient ? '/client' :
-            isDriver ? '/driver' : '/login'
-          } replace />
+      <Route path="/driver/dashboard" element={
+        <ProtectedRoute roles={['chauffeur']}>
+          <DashboardLayout>
+            <DriverDashboard />
+          </DashboardLayout>
         </ProtectedRoute>
       } />
       
@@ -101,12 +110,11 @@ function App() {
         </ProtectedRoute>
       } />
       
-      {/* Default route - Redirect to dashboard if authenticated, otherwise to login */}
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Navigate to="/dashboard" replace />
-        </ProtectedRoute>
-      } />
+      {/* Default route - Redirect to login if not authenticated */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      
+      {/* Catch all other routes and redirect to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

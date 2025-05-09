@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
+import { toast } from 'sonner';
 
 export default function AuthCallback() {
   const [message, setMessage] = useState("Traitement de l'authentification...");
@@ -24,6 +25,7 @@ export default function AuthCallback() {
           }
 
           setMessage("Email confirmé avec succès! Redirection...");
+          toast.success("Email confirmé avec succès!");
           
           // Redirection basée sur le profil
           setTimeout(() => {
@@ -59,6 +61,7 @@ export default function AuthCallback() {
       } catch (error: any) {
         console.error("Erreur lors de la confirmation d'email:", error);
         setMessage(`Erreur: ${error.message}. Redirection...`);
+        toast.error(`Erreur lors de la confirmation d'email: ${error.message}`);
         setTimeout(() => navigate('/login'), 2000);
       }
     };

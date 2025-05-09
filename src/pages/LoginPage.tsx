@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Login from './Login';
+import Home from './Home';
 
 const LoginPage = () => {
-  return <Login />;
+  return <Home />;
 };
 
 export default LoginPage;

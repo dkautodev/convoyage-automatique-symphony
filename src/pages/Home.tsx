@@ -19,8 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const loginSchema = z.object({
@@ -35,40 +35,44 @@ export default function Home() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const { login, user, profile, loading, error } = useAuth();
+  const { login, user, profile, loading } = useAuth();
   
-  console.log("Home - État de l'authentification:", { user, profile, loading, error });
+  console.log("Home - État de l'authentification:", { user, profile, loading });
   
   // Si l'utilisateur est déjà connecté et a un profil, rediriger vers son tableau de bord
   useEffect(() => {
     if (!loading && user) {
-      if (profile && profile.profile_completed) {
-        console.log("Redirection depuis Home vers le tableau de bord:", profile.role);
-        switch (profile.role) {
-          case 'admin':
-            navigate('/admin/dashboard');
-            break;
-          case 'client':
-            navigate('/client/dashboard');
-            break;
-          case 'chauffeur':
-            navigate('/driver/dashboard');
-            break;
-          default:
-            navigate('/home');
-        }
-      } else if (profile) {
-        // Si l'utilisateur a un profil mais qu'il n'est pas complété
-        console.log("Profil non complété, redirection vers la page de complétion");
-        switch (profile.role) {
-          case 'client':
-            navigate('/complete-client-profile');
-            break;
-          case 'chauffeur':
-            navigate('/complete-driver-profile');
-            break;
-          default:
-            navigate('/home');
+      console.log("Utilisateur authentifié détecté dans Home:", user);
+      if (profile) {
+        console.log("Profil détecté dans Home:", profile);
+        if (profile.profile_completed) {
+          console.log("Profil complet, redirection vers le tableau de bord:", profile.role);
+          switch (profile.role) {
+            case 'admin':
+              navigate('/admin/dashboard');
+              break;
+            case 'client':
+              navigate('/client/dashboard');
+              break;
+            case 'chauffeur':
+              navigate('/driver/dashboard');
+              break;
+            default:
+              navigate('/home');
+          }
+        } else {
+          // Si l'utilisateur a un profil mais qu'il n'est pas complété
+          console.log("Profil non complété, redirection vers la page de complétion");
+          switch (profile.role) {
+            case 'client':
+              navigate('/complete-client-profile');
+              break;
+            case 'chauffeur':
+              navigate('/complete-driver-profile');
+              break;
+            default:
+              navigate('/home');
+          }
         }
       }
       // Si user existe mais pas profile, on reste sur la page Home pour attendre le chargement du profil
@@ -87,12 +91,14 @@ export default function Home() {
   const onSubmit = async (data: LoginFormData) => {
     setAuthError(null);
     try {
+      console.log("Tentative de connexion avec:", data.email);
       await login(data.email, data.password);
       // La redirection se fera dans l'effet useEffect ci-dessus
+      toast.success("Connexion en cours...");
     } catch (err: any) {
       console.error("Erreur lors de la connexion:", err);
       setAuthError(err.message || "Erreur lors de la connexion. Veuillez vérifier vos identifiants.");
-      toast.error("Erreur lors de la connexion. Veuillez vérifier vos identifiants.");
+      toast.error("Échec de la connexion. Veuillez vérifier vos identifiants.");
     }
   };
 
@@ -114,11 +120,16 @@ export default function Home() {
     <div className="min-h-screen bg-muted/30 flex flex-col">
       <div className="container mx-auto p-4">
         <div className="max-w-md mx-auto my-12">
+          <Link to="/" className="inline-flex items-center text-sm mb-6 hover:underline">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Retour à l'accueil
+          </Link>
+          
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">Connexion à votre compte</CardTitle>
+              <CardTitle className="text-2xl">Connexion</CardTitle>
               <CardDescription>
-                Entrez vos identifiants pour accéder à votre tableau de bord
+                Connectez-vous à votre compte pour accéder à votre tableau de bord
               </CardDescription>
             </CardHeader>
             

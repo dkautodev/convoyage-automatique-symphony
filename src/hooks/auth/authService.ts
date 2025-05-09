@@ -1,4 +1,3 @@
-
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -10,6 +9,7 @@ import {
 } from '@/types/auth';
 import { Json } from '@/integrations/supabase/types';
 import { Address } from '@/types/supabase';
+import { checkDriverFieldsConstraint } from './databaseFunctions';
 
 // Fonction utilitaire pour convertir une adresse en Json
 const convertAddressToJson = (address: Address): Json => {
@@ -124,6 +124,11 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
     const { email, password, role } = data;
     
     console.log("Tentative d'inscription avec:", { email, role });
+    
+    // Si c'est un chauffeur, désactiver temporairement la contrainte
+    if (role === 'chauffeur') {
+      await checkDriverFieldsConstraint();
+    }
     
     const { data: authData, error } = await supabase.auth.signUp({
       email,
@@ -285,6 +290,11 @@ export const registerLegacyUser = async (data: RegisterFormData) => {
     const { email, password, role, fullName } = data;
     
     console.log("Tentative d'inscription legacy avec:", { email, role, fullName });
+    
+    // Si c'est un chauffeur, désactiver temporairement la contrainte
+    if (role === 'chauffeur') {
+      await checkDriverFieldsConstraint();
+    }
     
     // Utiliser signUp avec les métadonnées appropriées
     const { data: authData, error } = await supabase.auth.signUp({

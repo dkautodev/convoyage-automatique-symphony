@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -83,12 +84,21 @@ const RegisterForm = () => {
       };
       
       await register(registerData);
-      toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vérifier votre email pour confirmer votre compte.`);
+      toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vous connecter pour accéder à votre compte.`);
       navigate('/login');
     } catch (err: any) {
       console.error("Erreur lors de l'inscription:", err);
-      setAuthError(err.message || "Erreur lors de l'inscription. Veuillez réessayer.");
-      toast.error("Erreur lors de l'inscription. Veuillez réessayer.");
+      let errorMessage = err.message || "Erreur lors de l'inscription. Veuillez réessayer.";
+      
+      // Vérification de messages d'erreur spécifiques pour des messages plus adaptés
+      if (errorMessage.includes("Database error")) {
+        errorMessage = "Erreur lors de la création du compte. Veuillez réessayer dans quelques instants.";
+      } else if (errorMessage.includes("User already registered")) {
+        errorMessage = "Cet email est déjà utilisé. Veuillez vous connecter ou utiliser un autre email.";
+      }
+      
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
     }
   };
   

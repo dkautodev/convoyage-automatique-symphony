@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ClientDashboard = () => {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +110,10 @@ const ClientDashboard = () => {
     fetchClientData();
   }, [user]);
 
+  const handleCreateNewMission = () => {
+    navigate('/mission/create');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -140,11 +145,9 @@ const ClientDashboard = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
-        <Button asChild>
-          <Link to="/client/missions/create">
-            <Plus size={16} className="mr-2" />
-            Nouvelle mission
-          </Link>
+        <Button onClick={handleCreateNewMission}>
+          <Plus size={16} className="mr-2" />
+          Nouvelle mission
         </Button>
       </div>
       
@@ -258,11 +261,9 @@ const ClientDashboard = () => {
               <div className="py-12 flex flex-col items-center justify-center">
                 <Package size={40} className="text-gray-300 mb-3" />
                 <p className="text-gray-500 text-center">Vous n'avez pas encore de missions</p>
-                <Button className="mt-4" asChild>
-                  <Link to="/client/missions/create">
-                    <Plus size={16} className="mr-2" />
-                    Créer une mission
-                  </Link>
+                <Button className="mt-4" onClick={handleCreateNewMission}>
+                  <Plus size={16} className="mr-2" />
+                  Créer une mission
                 </Button>
               </div>
             )}

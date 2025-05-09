@@ -13,7 +13,8 @@ import {
   Settings, 
   LogOut,
   UserPlus,
-  Shield
+  Shield,
+  Plus
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -38,6 +39,10 @@ const Dashboard = () => {
 
   const handleInviteAdmin = () => {
     navigate('/admin/invite');
+  };
+  
+  const handleCreateMission = () => {
+    navigate('/mission/create');
   };
   
   return (
@@ -80,6 +85,10 @@ const Dashboard = () => {
                     Invitations Admin
                   </Button>
                 </Link>
+                <Button variant="ghost" className="w-full justify-start" onClick={handleCreateMission}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Créer une mission
+                </Button>
               </>
             )}
             
@@ -92,6 +101,10 @@ const Dashboard = () => {
                 <Button variant="ghost" className="w-full justify-start">
                   <Calendar className="mr-2 h-4 w-4" />
                   Planning
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={handleCreateMission}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Créer une mission
                 </Button>
               </>
             )}
@@ -140,14 +153,37 @@ const Dashboard = () => {
           
           {/* Admin-specific quick action - improved visibility */}
           {userRole === 'admin' && (
-            <div className="mb-8">
+            <div className="mb-8 space-y-2">
               <Button 
                 variant="default" 
-                className="bg-primary text-white hover:bg-primary/90"
+                className="bg-primary text-white hover:bg-primary/90 mr-2"
                 onClick={handleInviteAdmin}
               >
                 <Shield className="mr-2 h-4 w-4" />
                 Inviter un nouvel administrateur
+              </Button>
+              
+              <Button 
+                variant="default" 
+                className="bg-primary text-white hover:bg-primary/90"
+                onClick={handleCreateMission}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Créer une nouvelle mission
+              </Button>
+            </div>
+          )}
+          
+          {/* Client-specific quick action */}
+          {userRole === 'client' && (
+            <div className="mb-8">
+              <Button 
+                variant="default" 
+                className="bg-client text-white hover:bg-client/90"
+                onClick={handleCreateMission}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Créer une nouvelle mission
               </Button>
             </div>
           )}

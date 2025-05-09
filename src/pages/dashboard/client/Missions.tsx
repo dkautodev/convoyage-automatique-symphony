@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Package, Plus, Search, Filter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ClientMissionsPage = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,24 +71,24 @@ const ClientMissionsPage = () => {
       <Package className="h-12 w-12 mx-auto text-neutral-300 mb-3" />
       <p className="font-medium">Aucune mission à afficher pour le moment.</p>
       <p className="text-sm mt-1">Demandez votre première mission en cliquant sur "Nouvelle mission"</p>
-      <Button className="mt-4" asChild>
-        <Link to="/client/missions/create">
-          <Plus className="mr-2 h-4 w-4" />
-          Nouvelle mission
-        </Link>
+      <Button className="mt-4" onClick={() => navigate('/mission/create')}>
+        <Plus className="mr-2 h-4 w-4" />
+        Nouvelle mission
       </Button>
     </div>
   );
+
+  const handleCreateNewMission = () => {
+    navigate('/mission/create');
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Mes missions</h2>
-        <Button asChild>
-          <Link to="/client/missions/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle mission
-          </Link>
+        <Button onClick={handleCreateNewMission}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouvelle mission
         </Button>
       </div>
 
@@ -163,6 +164,6 @@ const ClientMissionsPage = () => {
       </Card>
     </div>
   );
-};
+}
 
 export default ClientMissionsPage;

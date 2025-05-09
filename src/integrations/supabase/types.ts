@@ -267,15 +267,23 @@ export type Database = {
       missions: {
         Row: {
           chauffeur_id: string | null
+          chauffeur_price_ht: number | null
           client_id: string
           completion_date: string | null
+          contact_delivery_email: string | null
           contact_delivery_id: number | null
+          contact_delivery_name: string | null
+          contact_delivery_phone: string | null
+          contact_pickup_email: string | null
           contact_pickup_id: number | null
+          contact_pickup_name: string | null
+          contact_pickup_phone: string | null
           created_at: string
           created_by: string
           delivery_address: Json
           distance_km: number
           id: string
+          mission_type: string | null
           notes: string | null
           pickup_address: Json
           price_ht: number
@@ -284,19 +292,33 @@ export type Database = {
           status: Database["public"]["Enums"]["mission_status"]
           updated_at: string
           vat_rate: number
+          vehicle_fuel: string | null
           vehicle_id: number
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_registration: string | null
+          vehicle_vin: string | null
+          vehicle_year: number | null
         }
         Insert: {
           chauffeur_id?: string | null
+          chauffeur_price_ht?: number | null
           client_id: string
           completion_date?: string | null
+          contact_delivery_email?: string | null
           contact_delivery_id?: number | null
+          contact_delivery_name?: string | null
+          contact_delivery_phone?: string | null
+          contact_pickup_email?: string | null
           contact_pickup_id?: number | null
+          contact_pickup_name?: string | null
+          contact_pickup_phone?: string | null
           created_at?: string
           created_by: string
           delivery_address: Json
           distance_km: number
           id?: string
+          mission_type?: string | null
           notes?: string | null
           pickup_address: Json
           price_ht: number
@@ -305,19 +327,33 @@ export type Database = {
           status?: Database["public"]["Enums"]["mission_status"]
           updated_at?: string
           vat_rate?: number
+          vehicle_fuel?: string | null
           vehicle_id: number
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_registration?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
         }
         Update: {
           chauffeur_id?: string | null
+          chauffeur_price_ht?: number | null
           client_id?: string
           completion_date?: string | null
+          contact_delivery_email?: string | null
           contact_delivery_id?: number | null
+          contact_delivery_name?: string | null
+          contact_delivery_phone?: string | null
+          contact_pickup_email?: string | null
           contact_pickup_id?: number | null
+          contact_pickup_name?: string | null
+          contact_pickup_phone?: string | null
           created_at?: string
           created_by?: string
           delivery_address?: Json
           distance_km?: number
           id?: string
+          mission_type?: string | null
           notes?: string | null
           pickup_address?: Json
           price_ht?: number
@@ -326,7 +362,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["mission_status"]
           updated_at?: string
           vat_rate?: number
+          vehicle_fuel?: string | null
           vehicle_id?: number
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_registration?: string | null
+          vehicle_vin?: string | null
+          vehicle_year?: number | null
         }
         Relationships: [
           {
@@ -407,7 +449,6 @@ export type Database = {
           billing_address: Json | null
           company_name: string | null
           created_at: string
-          driver_license: string | null
           email: string
           full_name: string | null
           id: string
@@ -418,15 +459,12 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           siret: string | null
           tva_number: string | null
-          vehicle_registration: string | null
-          vehicle_type: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Insert: {
           active?: boolean
           billing_address?: Json | null
           company_name?: string | null
           created_at?: string
-          driver_license?: string | null
           email: string
           full_name?: string | null
           id: string
@@ -437,15 +475,12 @@ export type Database = {
           role: Database["public"]["Enums"]["user_role"]
           siret?: string | null
           tva_number?: string | null
-          vehicle_registration?: string | null
-          vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Update: {
           active?: boolean
           billing_address?: Json | null
           company_name?: string | null
           created_at?: string
-          driver_license?: string | null
           email?: string
           full_name?: string | null
           id?: string
@@ -456,8 +491,6 @@ export type Database = {
           role?: Database["public"]["Enums"]["user_role"]
           siret?: string | null
           tva_number?: string | null
-          vehicle_registration?: string | null
-          vehicle_type?: Database["public"]["Enums"]["vehicle_category"] | null
         }
         Relationships: []
       }

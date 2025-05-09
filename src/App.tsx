@@ -1,108 +1,114 @@
-import React, { useEffect } from 'react';
-import {
-  Routes,
-  Route,
-  useNavigate
-} from "react-router-dom";
-import { useTranslation } from 'react-i18next';
-import './App.css';
-import AuthLayout from './layouts/AuthLayout';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/dashboard/AdminDashboard';
+import ClientDashboard from './pages/dashboard/ClientDashboard';
+import DriverDashboard from './pages/dashboard/DriverDashboard';
+import PricingGridPage from './pages/dashboard/admin/PricingGrid';
+import MissionsPage from './pages/dashboard/admin/Missions';
+import ClientMissionsPage from './pages/dashboard/client/Missions';
+import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
-import Home from './pages/Home';
-import PricingGrid from './pages/dashboard/admin/PricingGrid';
-import { AuthProvider } from './hooks/auth';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import ClientDashboard from './pages/dashboard/client/ClientDashboard';
-import CompleteClientProfile from './pages/auth/CompleteClientProfile';
-import CompleteDriverProfile from './pages/auth/CompleteDriverProfile';
-import CompleteDriverConfig from './pages/auth/CompleteDriverConfig';
-import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
-import DriverDashboard from './components/dashboard/driver/DriverDashboard';
-import ClientsPage from './pages/dashboard/admin/Clients';
-import NotFound from './pages/NotFound';
+import AdminInvitePage from './pages/AdminInvitePage';
+import CreateMissionPage from './pages/mission/CreateMission';
 
 function App() {
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Détecter la langue du navigateur au chargement de l'application
-    const browserLanguage = navigator.language.split('-')[0]; // Récupère la partie principale de la langue (ex: "fr" de "fr-CA")
-    
-    // Vérifier si la langue actuelle est différente de la langue du navigateur
-    if (i18n.language !== browserLanguage && typeof i18n.changeLanguage === 'function') {
-      try {
-        i18n.changeLanguage(browserLanguage);
-      } catch (error) {
-        console.error('Error changing language:', error);
-      }
-    }
-  }, [i18n]);
-
+  const isAdmin = window.location.pathname.startsWith('/admin');
+  const isClient = window.location.pathname.startsWith('/client');
+  const isDriver = window.location.pathname.startsWith('/driver');
+  
   return (
-    <AuthProvider>
+    <BrowserRouter>
       <Routes>
-        {/* Pages publiques */}
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         
-        {/* Pages d'authentification et profil */}
-        <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
-        <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
-        <Route path="/complete-driver-config" element={<CompleteDriverConfig />} />
-        
-        {/* Pages du tableau de bord administrateur */}
-        <Route path="/admin/dashboard" element={
-          <DashboardLayout>
-            <AdminDashboard />
-          </DashboardLayout>
+        {/* Admin routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <AdminDashboard />
+            </DashboardLayout>
+          </ProtectedRoute>
         } />
         <Route path="/admin/pricing-grid" element={
-          <DashboardLayout>
-            <PricingGrid />
-          </DashboardLayout>
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <PricingGridPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         } />
-        <Route path="/admin/clients" element={
-          <DashboardLayout>
-            <ClientsPage />
-          </DashboardLayout>
+        <Route path="/admin/missions" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <MissionsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         } />
-        
-        {/* Pages client */}
-        <Route path="/client/dashboard" element={
-          <DashboardLayout>
-            <ClientDashboard />
-          </DashboardLayout>
-        } />
-        
-        {/* Pages chauffeur */}
-        <Route path="/driver/dashboard" element={
-          <DashboardLayout>
-            <DriverDashboard />
-          </DashboardLayout>
+        <Route path="/admin/invite" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <AdminInvitePage />
+            </DashboardLayout>
+          </ProtectedRoute>
         } />
         
-        {/* Pages utilisateur */}
-        <Route path="/profile" element={
-          <DashboardLayout>
-            <Profile />
-          </DashboardLayout>
+        {/* Client routes */}
+        <Route path="/client" element={
+          <ProtectedRoute roles={['client']}>
+            <DashboardLayout>
+              <ClientDashboard />
+            </DashboardLayout>
+          </ProtectedRoute>
         } />
-        <Route path="/settings" element={
-          <DashboardLayout>
-            <Settings />
-          </DashboardLayout>
+        <Route path="/client/missions" element={
+          <ProtectedRoute roles={['client']}>
+            <DashboardLayout>
+              <ClientMissionsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         } />
-
-        {/* Page 404 pour les routes non trouvées */}
-        <Route path="*" element={<NotFound />} />
+        
+        {/* Driver routes */}
+        <Route path="/driver" element={
+          <ProtectedRoute roles={['chauffeur']}>
+            <DashboardLayout>
+              <DriverDashboard />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        {/* General dashboard route - Redirects based on role */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Navigate to={
+              isAdmin ? '/admin' :
+              isClient ? '/client' :
+              isDriver ? '/driver' : '/login'
+            } replace />
+          </ProtectedRoute>
+        } />
+        
+        {/* Mission creation route */}
+        <Route path="/mission/create" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CreateMissionPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        
+        {/* Default route - Redirect to dashboard if authenticated, otherwise to login */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Navigate to="/dashboard" replace />
+          </ProtectedRoute>
+        } />
       </Routes>
-    </AuthProvider>
+    </BrowserRouter>
   );
 }
 

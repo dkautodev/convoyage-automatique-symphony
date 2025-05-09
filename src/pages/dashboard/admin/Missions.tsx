@@ -18,10 +18,38 @@ const MissionsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [clientsData, setClientsData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetchMissions();
   }, [activeTab]);
+  
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      const { data, error } = await typedSupabase
+        .from('profiles')
+        .select('id, company_name, full_name')
+        .eq('role', 'client');
+        
+      if (error) throw error;
+      
+      // Create a map of client ID to name for easy lookup
+      const clientMap: Record<string, any> = {};
+      data?.forEach(client => {
+        clientMap[client.id] = {
+          name: client.company_name || client.full_name || 'Client inconnu'
+        };
+      });
+      
+      setClientsData(clientMap);
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+    }
+  };
 
   const fetchMissions = async () => {
     try {
@@ -30,14 +58,13 @@ const MissionsPage = () => {
       
       let query = typedSupabase
         .from('missions')
-        .select('*, profiles(full_name, company_name)')
+        .select('*')
         .order('created_at', { ascending: false });
       
       // Filtrer par statut si un tab spécifique est sélectionné
       if (activeTab !== 'all') {
         // Convertir le tab actif en statut de mission valide
-        const tabAsStatus = activeTab as MissionStatus;
-        query = query.eq('status', tabAsStatus);
+        query = query.eq('status', activeTab);
       }
       
       const { data: missionsData, error: missionsError } = await query;
@@ -49,11 +76,9 @@ const MissionsPage = () => {
       
       const convertedMissions = (missionsData || []).map(mission => {
         const basicMission = convertMissionFromDB(mission as unknown as MissionFromDB);
-        // Sécuriser l'accès aux propriétés du profil client
-        const profileData = mission.profiles as any;
         return {
           ...basicMission,
-          client_name: profileData?.company_name || profileData?.full_name || 'Client inconnu'
+          client_name: clientsData[mission.client_id]?.name || 'Client inconnu'
         };
       });
       

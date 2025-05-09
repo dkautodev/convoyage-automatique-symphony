@@ -1,4 +1,3 @@
-
 // Import des types nécessaires
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -158,7 +157,7 @@ export type Database = {
       // Add additional tables as needed
     };
     Enums: {
-      mission_status: 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
+      mission_status: 'en_acceptation' | 'accepte' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
       user_role: 'admin' | 'client' | 'chauffeur';
     };
   };

@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -51,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Fonction utilitaire pour la redirection basée sur le rôle
   const handleRoleBasedRedirection = useCallback((role: string, isProfileCompleted: boolean) => {
     if (!isProfileCompleted) {
+      console.log(`User with role ${role} has incomplete profile, redirecting to profile completion page`);
       switch (role) {
         case 'client':
           navigate('/complete-client-profile');
@@ -64,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    console.log(`User with role ${role} has complete profile, redirecting to dashboard`);
     switch (role) {
       case 'admin':
         navigate('/admin/dashboard');

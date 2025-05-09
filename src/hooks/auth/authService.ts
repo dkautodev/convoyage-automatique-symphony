@@ -1,3 +1,4 @@
+
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from './types';
@@ -127,6 +128,7 @@ export const registerBasicUser = async (data: BasicRegisterFormData) => {
     
     // Si c'est un chauffeur, désactiver temporairement la contrainte
     if (role === 'chauffeur') {
+      console.log("Désactivation temporaire de la contrainte pour l'inscription d'un chauffeur");
       await checkDriverFieldsConstraint();
     }
     
@@ -293,6 +295,7 @@ export const registerLegacyUser = async (data: RegisterFormData) => {
     
     // Si c'est un chauffeur, désactiver temporairement la contrainte
     if (role === 'chauffeur') {
+      console.log("Désactivation temporaire de la contrainte pour l'inscription d'un chauffeur");
       await checkDriverFieldsConstraint();
     }
     
@@ -304,7 +307,8 @@ export const registerLegacyUser = async (data: RegisterFormData) => {
         data: {
           role,
           fullName
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
     

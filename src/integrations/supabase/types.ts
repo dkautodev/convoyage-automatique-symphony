@@ -542,6 +542,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_constraint_exists: {
+        Args: {
+          schema_name: string
+          table_name: string
+          constraint_name: string
+        }
+        Returns: boolean
+      }
+      disable_driver_fields_constraint: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string

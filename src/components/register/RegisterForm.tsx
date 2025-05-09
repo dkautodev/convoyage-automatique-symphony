@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -83,6 +82,7 @@ const RegisterForm = () => {
         role: data.role,
       };
       
+      console.log("Starting registration process with data:", registerData);
       await register(registerData);
       toast.success(`Compte ${data.role === 'client' ? 'client' : 'chauffeur'} créé avec succès ! Veuillez vous connecter pour accéder à votre compte.`);
       navigate('/login');

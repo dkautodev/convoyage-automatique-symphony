@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -92,6 +93,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
   const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [pickupAddressData, setPickupAddressData] = useState<any>(null);
   const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
 
@@ -120,6 +122,20 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       vehicle_id: null,
     },
   });
+
+  // Si le rôle est admin, initialiser le client_id avec undefined
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      form.setValue('client_id', undefined);
+    }
+  }, [profile, form]);
+
+  // Lorsqu'un client est sélectionné dans le dropdown
+  const handleClientChange = (clientId: string) => {
+    console.log('Client sélectionné:', clientId);
+    setSelectedClientId(clientId);
+    form.setValue('client_id', clientId);
+  };
 
   const currentSchema = (() => {
     switch (currentStep) {
@@ -259,19 +275,30 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         return;
       }
       
-      // Utiliser directement l'ID du profil connecté si c'est un client
-      // Pour les admins, on utilise la valeur sélectionnée dans le formulaire
+      // Déterminer le client_id à utiliser
       let clientId = null;
-      if (profile?.role === 'client' && user?.id) {
+      
+      if (profile?.role === 'admin') {
+        // Pour les admins: utiliser le client sélectionné dans le formulaire
+        if (selectedClientId) {
+          clientId = selectedClientId;
+          console.log("Admin: client_id sélectionné =", clientId);
+        } else if (values.client_id) {
+          clientId = values.client_id;
+          console.log("Admin: client_id from values =", clientId);
+        } else {
+          toast.error('Aucun client n\'a été sélectionné');
+          setIsSubmitting(false);
+          return;
+        }
+      } else if (profile?.role === 'client' && user?.id) {
+        // Pour les clients: utiliser leur propre ID
         clientId = user.id;
-        console.log("Client ID (utilisateur connecté):", clientId);
-      } else if (values.client_id) {
-        clientId = values.client_id;
-        console.log("Client ID (sélectionné par admin):", clientId);
-      } else if (user?.id) {
-        // Fallback: utiliser l'id de l'utilisateur connecté
-        clientId = user.id;
-        console.log("Client ID (fallback):", clientId);
+        console.log("Client: client_id (user.id) =", clientId);
+      } else {
+        toast.error('Impossible de déterminer le client pour cette mission');
+        setIsSubmitting(false);
+        return;
       }
       
       // Vérifier que nous avons un client_id valide
@@ -286,7 +313,6 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         values.chauffeur_id = null;
       }
       
-      console.log("User ID:", user?.id);
       console.log("Client ID final:", clientId);
       
       // Préparer les données d'adresse pour la base de données
@@ -315,7 +341,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         price_ht: values.price_ht,
         price_ttc: values.price_ttc,
         vehicle_category: values.vehicle_category,
-        vehicle_id: values.vehicle_id || null, // Utilisez le vehicle_id récupéré lors du calcul du prix
+        vehicle_id: values.vehicle_id || null,
         vehicle_make: values.vehicle_make,
         vehicle_model: values.vehicle_model,
         vehicle_fuel: values.vehicle_fuel,
@@ -334,7 +360,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         created_by: user?.id || '',
         scheduled_date: new Date().toISOString(),
         vat_rate: 20, // Taux de TVA par défaut
-        mission_type: values.mission_type || 'LIV' // S'assurer qu'une valeur par défaut existe
+        mission_type: values.mission_type || 'LIV'
       };
       
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
@@ -840,14 +866,17 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Client</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={(value) => handleClientChange(value)} 
+                        value={selectedClientId || undefined}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un client" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <ClientSelectItems />
+                          <ClientSelectItems onSelectClient={handleClientChange} />
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -983,7 +1012,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
 }
 
 // Composant helper pour lister les clients
-function ClientSelectItems() {
+function ClientSelectItems({ onSelectClient }: { onSelectClient: (clientId: string) => void }) {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -997,6 +1026,9 @@ function ClientSelectItems() {
 
         if (error) throw error;
         setClients(data || []);
+        
+        // Pour debugging
+        console.log("Clients récupérés:", data);
       } catch (error) {
         console.error('Erreur lors de la récupération des clients:', error);
       } finally {

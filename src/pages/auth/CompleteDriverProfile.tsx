@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -83,28 +84,31 @@ export default function CompleteDriverProfile() {
   const [mapCoords, setMapCoords] = useState<{lat: number; lng: number}>({ lat: 48.8566, lng: 2.3522 });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { completeDriverProfile, profile } = useAuth();
+  const [formInitialized, setFormInitialized] = useState(false);
   
   const form = useForm<FormData>({
     resolver: zodResolver(driverProfileSchema),
     defaultValues: {
-      companyName: profile?.company_name || '',
-      fullName: profile?.full_name || '',
+      companyName: '',
+      fullName: '',
       billingAddress: '',
       placeId: '',
-      siret: profile?.siret || '',
-      tvaApplicable: profile?.tva_applicable || false,
-      tvaNumb: profile?.tva_number || '',
-      phone1: profile?.phone_1 || '',
-      phone2: profile?.phone_2 || '',
-      licenseNumber: profile?.driver_license || '',
-      idNumber: profile?.vehicle_registration || '',
-      vehicleType: (profile?.vehicle_type as string) || '',
+      siret: '',
+      tvaApplicable: false,
+      tvaNumb: '',
+      phone1: '',
+      phone2: '',
+      licenseNumber: '',
+      idNumber: '',
+      vehicleType: '',
     },
   });
 
   // S'assurer que les valeurs du formulaire sont mises à jour quand le profil est chargé
   useEffect(() => {
-    if (profile) {
+    if (profile && !formInitialized) {
+      console.log("Setting form values from profile:", profile);
+      
       form.setValue('companyName', profile.company_name || '');
       form.setValue('fullName', profile.full_name || '');
       form.setValue('siret', profile.siret || '');
@@ -114,20 +118,34 @@ export default function CompleteDriverProfile() {
       form.setValue('phone2', profile.phone_2 || '');
       form.setValue('licenseNumber', profile.driver_license || '');
       form.setValue('idNumber', profile.vehicle_registration || '');
-      form.setValue('vehicleType', (profile.vehicle_type as string) || '');
+      
+      if (profile.vehicle_type) {
+        form.setValue('vehicleType', profile.vehicle_type as string);
+      }
       
       // Définir une adresse par défaut si elle est disponible
-      const address = profile.billing_address && typeof profile.billing_address === 'object' 
-        ? profile.billing_address.formatted_address 
-        : '';
-      
-      if (address) {
-        form.setValue('billingAddress', address);
+      if (profile.billing_address && typeof profile.billing_address === 'object') {
+        const address = profile.billing_address.formatted_address || '';
+        
+        if (address) {
+          form.setValue('billingAddress', address);
+          
+          // Si on a aussi les coordonnées, mettre à jour la carte
+          if (profile.billing_address.lat && profile.billing_address.lng) {
+            setMapCoords({
+              lat: profile.billing_address.lat,
+              lng: profile.billing_address.lng
+            });
+          }
+        }
       }
+      
+      setFormInitialized(true);
     }
-  }, [profile, form]);
+  }, [profile, form, formInitialized]);
   
   const onAddressSelect = async (address: string, placeId: string) => {
+    console.log("Address selected:", address, "placeId:", placeId);
     form.setValue('billingAddress', address);
     form.setValue('placeId', placeId);
     
@@ -204,17 +222,27 @@ export default function CompleteDriverProfile() {
         
         console.log("Driver profile completion result:", result);
         toast.success("Profil complété avec succès!");
+        
+        // Redirection vers le tableau de bord après quelques secondes
+        setTimeout(() => {
+          window.location.href = "/driver/dashboard";
+        }, 2000);
+        
       } catch (error: any) {
         console.error("Error submitting driver profile:", error);
         toast.error(`Erreur lors de la création du profil: ${error.message || 'Erreur inconnue'}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Form submission error:", error);
-      toast.error("Erreur lors de la soumission du formulaire, vérifiez les champs");
+      toast.error(`Erreur lors de la soumission du formulaire: ${error.message || 'Vérifiez les champs'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Débogage des valeurs du formulaire
+  console.log("Current form values:", form.getValues());
+  console.log("Form errors:", form.formState.errors);
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
@@ -289,8 +317,7 @@ export default function CompleteDriverProfile() {
                             <FormLabel>Type de véhicule</FormLabel>
                             <Select 
                               onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                              value={field.value || undefined}
+                              value={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>

@@ -195,6 +195,39 @@ export const completeClientProfileService = async (userId: string, data: ClientP
 const uploadDriverDocuments = async (userId: string, documents: Record<string, File>) => {
   try {
     const uploadedPaths: Record<string, string> = {};
+    console.log("Starting document upload process for driver:", userId);
+    
+    // Vérifier si le bucket existe
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    console.log("Existing buckets:", buckets);
+    
+    if (bucketsError) {
+      console.error("Error getting buckets:", bucketsError);
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === 'driver_documents');
+    console.log("Bucket 'driver_documents' exists:", bucketExists);
+    
+    if (!bucketExists) {
+      console.log("Attempting to create 'driver_documents' bucket");
+      try {
+        const { data, error } = await supabase.storage.createBucket('driver_documents', {
+          public: false,
+          allowedMimeTypes: ['application/pdf', 'image/jpeg', 'image/png'],
+          fileSizeLimit: 5242880 // 5MB
+        });
+        
+        if (error) {
+          console.error("Error creating bucket:", error);
+          throw error;
+        }
+        
+        console.log("Bucket created successfully:", data);
+      } catch (bucketErr) {
+        console.error("Error creating bucket:", bucketErr);
+        throw bucketErr;
+      }
+    }
     
     // Parcourir chaque document et le télécharger
     for (const [type, file] of Object.entries(documents)) {
@@ -204,6 +237,7 @@ const uploadDriverDocuments = async (userId: string, documents: Record<string, F
       const filePath = `drivers/${userId}/${type}_${Date.now()}.${fileExt}`;
       
       console.log(`Uploading ${type} document for driver ${userId}: ${filePath}`);
+      console.log(`File details: name=${file.name}, size=${file.size}, type=${file.type}`);
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('driver_documents')
@@ -221,6 +255,7 @@ const uploadDriverDocuments = async (userId: string, documents: Record<string, F
       uploadedPaths[type] = filePath;
     }
     
+    console.log("All documents uploaded successfully:", uploadedPaths);
     return uploadedPaths;
   } catch (err) {
     console.error("Error in uploadDriverDocuments:", err);
@@ -231,22 +266,26 @@ const uploadDriverDocuments = async (userId: string, documents: Record<string, F
 // Fonction pour compléter le profil chauffeur - Mise à jour pour créer l'entrée dans la table drivers
 export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData) => {
   try {
-    console.log("Completing driver profile for user:", userId, "with data:", data);
+    console.log("Starting driver profile completion for user:", userId);
+    console.log("Driver profile form data:", JSON.stringify(data, null, 2));
     
     let documentPaths: Record<string, string> = {};
     
     // Télécharger les documents si fournis
     if (data.documents && Object.keys(data.documents).length > 0) {
       try {
+        console.log("Uploading driver documents...");
         documentPaths = await uploadDriverDocuments(userId, data.documents);
         console.log("Documents uploaded successfully:", documentPaths);
       } catch (docError) {
         console.error("Error uploading documents, continuing with profile update:", docError);
       }
+    } else {
+      console.log("No documents provided to upload");
     }
     
-    // Commencer une transaction pour garantir l'intégrité des données
     // D'abord, mettre à jour le profil principal
+    console.log("Updating main profile record...");
     const { data: updatedProfile, error: profileError } = await supabase
       .from('profiles')
       .update({
@@ -257,14 +296,14 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
         tva_number: data.tvaNumb,
         tva_applicable: data.tvaApplicable,
         phone_1: data.phone1,
-        phone_2: data.phone2,
+        phone_2: data.phone2 || null,
         driver_license: data.licenseNumber,
         vehicle_type: data.vehicleType,
         vehicle_registration: data.idNumber,
         profile_completed: true
       })
       .eq('id', userId)
-      .select();
+      .select('*');
     
     if (profileError) {
       console.error("Error updating profile:", profileError);
@@ -274,13 +313,14 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
     console.log("Updated profile successfully:", updatedProfile);
     
     // Vérifier si le chauffeur existe déjà dans la table drivers
+    console.log("Checking if driver already exists in drivers table...");
     const { data: existingDriver, error: checkError } = await supabase
       .from('drivers')
       .select('id')
       .eq('id', userId)
       .maybeSingle();
       
-    if (checkError && checkError.code !== 'PGRST116') {
+    if (checkError) {
       console.error("Error checking driver:", checkError);
       throw checkError;
     }
@@ -297,7 +337,7 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       vat_applicable: data.tvaApplicable,
       vat_number: data.tvaNumb,
       phone1: data.phone1,
-      phone2: data.phone2,
+      phone2: data.phone2 || null,
       vehicle_type: data.vehicleType,
       // Ajouter les chemins des documents s'ils existent
       license_document_path: documentPaths.driverLicenseFront || null,
@@ -313,14 +353,34 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
     // Insérer ou mettre à jour dans la table des chauffeurs
     if (!existingDriver) {
       // Si le chauffeur n'existe pas, l'insérer
-      console.log("Creating new driver record in drivers table with data:", driverData);
+      console.log("Creating new driver record in drivers table");
       const { data: insertedDriver, error: driverError } = await supabase
         .from('drivers')
         .insert(driverData)
-        .select();
+        .select('*');
       
       if (driverError) {
         console.error("Error inserting driver:", driverError);
+        
+        // Vérification détaillée de l'erreur RLS
+        if (driverError.message.includes('violates row-level security policy')) {
+          console.error("RLS policy violation detected. Checking RLS policies...");
+          
+          // Vérifier la session courante
+          const { data: session } = await supabase.auth.getSession();
+          console.log("Current session:", session);
+          
+          // Vérifier les politiques RLS sur la table drivers
+          const { data: policies, error: policiesError } = await supabase
+            .rpc('get_policies', { table_name: 'drivers' });
+          
+          if (policiesError) {
+            console.error("Error fetching RLS policies:", policiesError);
+          } else {
+            console.log("RLS policies on drivers table:", policies);
+          }
+        }
+        
         throw driverError;
       }
       
@@ -328,12 +388,12 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       console.log("Driver inserted successfully:", insertedDriver);
     } else {
       // Si le chauffeur existe, le mettre à jour
-      console.log("Updating existing driver record in drivers table with data:", driverData);
+      console.log("Updating existing driver record in drivers table");
       const { data: updatedDriver, error: driverError } = await supabase
         .from('drivers')
         .update(driverData)
         .eq('id', userId)
-        .select();
+        .select('*');
       
       if (driverError) {
         console.error("Error updating driver:", driverError);

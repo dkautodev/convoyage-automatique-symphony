@@ -42,7 +42,7 @@ export const missionStatusColors: Record<MissionStatus, string> = {
 // UserRole type that matches exactly what's expected in the database
 export type UserRole = 'admin' | 'client' | 'chauffeur';
 
-// Modified Address interface to make formatted_address optional to allow empty objects
+// Modified Address interface to make formatted_address optional
 export interface Address {
   formatted_address?: string;
   place_id?: string;
@@ -126,6 +126,12 @@ export function convertMissionFromDB(mission: MissionFromDB): Mission {
   };
 }
 
+// Define a utility function to convert Json to a specific type
+export function convertJsonToType<T>(json: any): T | null {
+  if (!json) return null;
+  return json as unknown as T;
+}
+
 export interface Mission {
   id: string;
   status: MissionStatus;
@@ -138,7 +144,7 @@ export interface Mission {
   created_at: string;
   chauffeur_id: string | null;
   mission_type?: string | null;
-  vehicle_category?: string;
+  vehicle_category?: VehicleCategory;
   scheduled_date?: string;
   [key: string]: any;
 }

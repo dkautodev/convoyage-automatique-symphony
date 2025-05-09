@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -130,6 +131,17 @@ const MissionsPage = () => {
     </div>
   );
 
+  // Group all statuses into logical categories for better organization
+  const tabGroups = [
+    { id: 'all', label: 'Toutes', color: 'bg-primary text-white' },
+    { id: 'en_acceptation', label: 'En attente', color: 'bg-amber-600 text-white' },
+    { id: 'accepte', label: 'Accepté', color: 'bg-green-600 text-white' },
+    { id: 'prise_en_charge', label: 'En cours', color: 'bg-amber-700 text-white' },
+    { id: 'livre', label: 'Livrées', color: 'bg-blue-600 text-white' },
+    { id: 'termine', label: 'Terminées', color: 'bg-green-700 text-white' },
+    { id: 'annule', label: 'Annulées', color: 'bg-red-600 text-white' },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -164,49 +176,16 @@ const MissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
-        <TabsList className="w-full mb-4 grid grid-cols-3 sm:grid-cols-7 gap-1">
-          <TabsTrigger 
-            value="all" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white"
-          >
-            Toutes
-          </TabsTrigger>
-          <TabsTrigger 
-            value="en_acceptation" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-amber-600 data-[state=active]:text-white"
-          >
-            En attente
-          </TabsTrigger>
-          <TabsTrigger 
-            value="accepte" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-green-600 data-[state=active]:text-white"
-          >
-            Accepté
-          </TabsTrigger>
-          <TabsTrigger 
-            value="prise_en_charge" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-amber-700 data-[state=active]:text-white"
-          >
-            En cours
-          </TabsTrigger>
-          <TabsTrigger 
-            value="livre" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-          >
-            Livrées
-          </TabsTrigger>
-          <TabsTrigger 
-            value="termine" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-green-700 data-[state=active]:text-white"
-          >
-            Terminées
-          </TabsTrigger>
-          <TabsTrigger 
-            value="annule" 
-            className="py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:bg-red-600 data-[state=active]:text-white"
-          >
-            Annulées
-          </TabsTrigger>
+        <TabsList className="w-full mb-4 grid grid-cols-7 gap-1">
+          {tabGroups.map((tab) => (
+            <TabsTrigger 
+              key={tab.id}
+              value={tab.id} 
+              className={`py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:${tab.color}`}
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value={activeTab}>

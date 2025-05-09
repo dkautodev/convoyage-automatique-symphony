@@ -279,7 +279,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         { formatted_address: values.delivery_address };
       
       // Enregistrer la mission
-      const missionData: any = {
+      const missionData = {
         client_id: values.client_id || user?.id,
         status: values.status || 'en_acceptation',
         pickup_address: pickupAddressJson,
@@ -313,6 +313,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
       
       try {
+        console.log("Sending request to Supabase with data:", missionData);
         const { data, error } = await typedSupabase
           .from('missions')
           .insert(missionData)
@@ -321,6 +322,9 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         
         if (error) {
           console.error('Erreur Supabase lors de la création de la mission:', error);
+          console.error('Detail:', error.details);
+          console.error('Message:', error.message);
+          console.error('Hint:', error.hint);
           toast.error(`Erreur lors de la création de la mission: ${error.message}`);
           return;
         }
@@ -340,6 +344,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         }
       } catch (dbError: any) {
         console.error('Exception lors de l\'opération Supabase:', dbError);
+        console.error('Detail:', dbError.details || 'No details');
+        console.error('Message:', dbError.message || 'No message');
         toast.error(`Exception lors de la création de la mission: ${dbError.message || 'Erreur inconnue'}`);
       }
     } catch (error: any) {

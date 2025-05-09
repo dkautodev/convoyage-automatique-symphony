@@ -292,6 +292,9 @@ export type Database = {
           status: Database["public"]["Enums"]["mission_status"]
           updated_at: string
           vat_rate: number
+          vehicle_category:
+            | Database["public"]["Enums"]["vehicle_category"]
+            | null
           vehicle_fuel: string | null
           vehicle_id: number
           vehicle_make: string | null
@@ -327,6 +330,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["mission_status"]
           updated_at?: string
           vat_rate?: number
+          vehicle_category?:
+            | Database["public"]["Enums"]["vehicle_category"]
+            | null
           vehicle_fuel?: string | null
           vehicle_id: number
           vehicle_make?: string | null
@@ -362,6 +368,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["mission_status"]
           updated_at?: string
           vat_rate?: number
+          vehicle_category?:
+            | Database["public"]["Enums"]["vehicle_category"]
+            | null
           vehicle_fuel?: string | null
           vehicle_id?: number
           vehicle_make?: string | null

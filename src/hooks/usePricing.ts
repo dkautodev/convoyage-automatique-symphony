@@ -6,7 +6,7 @@ import { calculatePrice, fetchPricingGrid, PricingGridItem, calculateTTC, calcul
 export function usePricing() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [prices, setPrices] = useState<{ priceHT: number; priceTTC: number } | null>(null);
+  const [prices, setPrices] = useState<{ priceHT: number; priceTTC: number; vehicleId: number | null } | null>(null);
   const [pricingGridData, setPricingGridData] = useState<PricingGridItem[]>([]);
   const [simulatedDistance, setSimulatedDistance] = useState<number | null>(null);
   const [simulatedVehicleType, setSimulatedVehicleType] = useState<VehicleCategory | null>(null);

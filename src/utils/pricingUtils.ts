@@ -18,6 +18,7 @@ export interface PricingGridItem {
   created_at: string;
   updated_at: string;
   updated_by?: string;
+  vehicle_id?: number | null;
 }
 
 /**
@@ -76,10 +77,10 @@ export const fetchPricingGridByVehicleType = async (vehicleType: VehicleCategory
 export const calculatePrice = async (
   distance: number, 
   vehicleType: VehicleCategory
-): Promise<{ priceHT: number; priceTTC: number } | null> => {
+): Promise<{ priceHT: number; priceTTC: number; vehicleId: number | null } | null> => {
   try {
     if (distance <= 0) {
-      return { priceHT: 0, priceTTC: 0 };
+      return { priceHT: 0, priceTTC: 0, vehicleId: null };
     }
     
     const pricingItems = await fetchPricingGridByVehicleType(vehicleType);
@@ -99,17 +100,22 @@ export const calculatePrice = async (
       return null;
     }
     
+    // Récupérer le vehicle_id associé à cette grille tarifaire
+    const vehicleId = pricingItem.vehicle_id || null;
+    
     // Calcul en fonction du type de tarif (forfait ou km)
     if (pricingItem.type_tarif === 'forfait') {
       return {
         priceHT: pricingItem.price_ht,
-        priceTTC: pricingItem.price_ttc
+        priceTTC: pricingItem.price_ttc,
+        vehicleId
       };
     } else {
       // Pour le tarif au km, multiplier par la distance
       return {
         priceHT: Math.round(pricingItem.price_ht * distance * 100) / 100,
-        priceTTC: Math.round(pricingItem.price_ttc * distance * 100) / 100
+        priceTTC: Math.round(pricingItem.price_ttc * distance * 100) / 100,
+        vehicleId
       };
     }
   } catch (e) {

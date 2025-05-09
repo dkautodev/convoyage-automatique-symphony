@@ -203,6 +203,14 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       form.setValue('price_ht', priceResult.priceHT);
       form.setValue('price_ttc', priceResult.priceTTC);
       
+      // Ajouter le vehicle_id si disponible
+      if (priceResult.vehicleId) {
+        form.setValue('vehicle_id', priceResult.vehicleId);
+        console.log('Vehicle ID set to:', priceResult.vehicleId);
+      } else {
+        console.log('No vehicle ID found for the selected vehicle category');
+      }
+      
       console.log("Prix calculé:", priceResult);
       toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC`);
     } catch (error) {
@@ -305,6 +313,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         price_ht: values.price_ht,
         price_ttc: values.price_ttc,
         vehicle_category: values.vehicle_category,
+        vehicle_id: values.vehicle_id || null, // Utilisez le vehicle_id récupéré lors du calcul du prix
         vehicle_make: values.vehicle_make,
         vehicle_model: values.vehicle_model,
         vehicle_fuel: values.vehicle_fuel,
@@ -322,7 +331,6 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         chauffeur_price_ht: values.chauffeur_price_ht || 0,
         created_by: user?.id || '',
         scheduled_date: new Date().toISOString(),
-        vehicle_id: 1, // Valeur par défaut (assurez-vous qu'elle existe dans la table vehicles)
         vat_rate: 20, // Taux de TVA par défaut
         mission_type: values.mission_type || 'LIV' // S'assurer qu'une valeur par défaut existe
       };

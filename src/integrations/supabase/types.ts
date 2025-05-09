@@ -296,7 +296,7 @@ export type Database = {
             | Database["public"]["Enums"]["vehicle_category"]
             | null
           vehicle_fuel: string | null
-          vehicle_id: number
+          vehicle_id: number | null
           vehicle_make: string | null
           vehicle_model: string | null
           vehicle_registration: string | null
@@ -334,7 +334,7 @@ export type Database = {
             | Database["public"]["Enums"]["vehicle_category"]
             | null
           vehicle_fuel?: string | null
-          vehicle_id: number
+          vehicle_id?: number | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_registration?: string | null
@@ -372,7 +372,7 @@ export type Database = {
             | Database["public"]["Enums"]["vehicle_category"]
             | null
           vehicle_fuel?: string | null
-          vehicle_id?: number
+          vehicle_id?: number | null
           vehicle_make?: string | null
           vehicle_model?: string | null
           vehicle_registration?: string | null
@@ -401,13 +401,6 @@ export type Database = {
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "missions_vehicle_id_fkey"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       pricing_grids: {
@@ -423,6 +416,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           vehicle_category: Database["public"]["Enums"]["vehicle_category"]
+          vehicle_id: number | null
         }
         Insert: {
           active?: boolean
@@ -436,6 +430,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vehicle_category: Database["public"]["Enums"]["vehicle_category"]
+          vehicle_id?: number | null
         }
         Update: {
           active?: boolean
@@ -449,8 +444,17 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vehicle_category?: Database["public"]["Enums"]["vehicle_category"]
+          vehicle_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pricing_grids_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -586,6 +590,12 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_default_vehicle_id: {
+        Args: {
+          category_param: Database["public"]["Enums"]["vehicle_category"]
+        }
+        Returns: number
       }
       get_user_role: {
         Args: Record<PropertyKey, never> | { user_id: string }

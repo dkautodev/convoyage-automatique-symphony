@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -842,7 +843,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                       <FormLabel>Chauffeur (optionnel)</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value || ''}
+                        defaultValue={field.value || "no_driver_assigned"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -850,7 +851,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Pas de chauffeur assigné</SelectItem>
+                          <SelectItem value="no_driver_assigned">Pas de chauffeur assigné</SelectItem>
                           <DriverSelectItems />
                         </SelectContent>
                       </Select>
@@ -862,7 +863,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                   )}
                 />
 
-                {form.watch('chauffeur_id') && (
+                {form.watch('chauffeur_id') && form.watch('chauffeur_id') !== "no_driver_assigned" && (
                   <FormField
                     control={form.control}
                     name="chauffeur_price_ht"
@@ -926,7 +927,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
   );
 }
 
-// Composant helper pour lister les clients (à implémenter)
+// Composant helper pour lister les clients
 function ClientSelectItems() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -966,7 +967,7 @@ function ClientSelectItems() {
   ));
 }
 
-// Composant helper pour lister les chauffeurs (à implémenter)
+// Composant helper pour lister les chauffeurs
 function DriverSelectItems() {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

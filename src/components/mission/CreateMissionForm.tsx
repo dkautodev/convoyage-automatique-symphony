@@ -87,6 +87,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
   const { user, profile } = useAuth();
   const { computePrice, prices } = usePricing();
   const [calculatingPrice, setCalculatingPrice] = useState(false);
+  const [pickupAddressData, setPickupAddressData] = useState<any>(null);
+  const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
   
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
 
@@ -135,38 +137,65 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
   async function calculateDistance() {
     try {
       setCalculatingPrice(true);
-      const pickupAddress = form.getValues('pickup_address_data') as Address;
-      const deliveryAddress = form.getValues('delivery_address_data') as Address;
+      
+      // Vérifier si nous avons les données d'adresse nécessaires
+      if (!pickupAddressData || !deliveryAddressData) {
+        toast.error('Veuillez sélectionner des adresses valides avant de calculer le prix');
+        setCalculatingPrice(false);
+        return;
+      }
+      
       const vehicleCategory = form.getValues('vehicle_category') as VehicleCategory;
-
-      if (!pickupAddress?.lat || !pickupAddress?.lng || !deliveryAddress?.lat || !deliveryAddress?.lng || !vehicleCategory) {
-        toast.error('Veuillez saisir les adresses complètes et le type de véhicule avant de calculer le prix');
+      
+      if (!vehicleCategory) {
+        toast.error('Veuillez sélectionner un type de véhicule avant de calculer le prix');
+        setCalculatingPrice(false);
         return;
       }
 
+      // Extraire les coordonnées des adresses
+      const pickupCoords = {
+        lat: pickupAddressData.geometry?.location?.lat(),
+        lng: pickupAddressData.geometry?.location?.lng()
+      };
+      
+      const deliveryCoords = {
+        lat: deliveryAddressData.geometry?.location?.lat(),
+        lng: deliveryAddressData.geometry?.location?.lng()
+      };
+
+      if (!pickupCoords.lat || !pickupCoords.lng || !deliveryCoords.lat || !deliveryCoords.lng) {
+        toast.error('Les coordonnées des adresses sont invalides');
+        setCalculatingPrice(false);
+        return;
+      }
+      
+      console.log("Coordonnées de départ:", pickupCoords);
+      console.log("Coordonnées d'arrivée:", deliveryCoords);
+
       // Utiliser le hook Google Places pour calculer la distance
-      const { useGooglePlaces } = await import('@/hooks/useGooglePlaces');
       const { calculateDistance } = useGooglePlaces();
 
-      const result = await calculateDistance(
-        { lat: pickupAddress.lat, lng: pickupAddress.lng },
-        { lat: deliveryAddress.lat, lng: deliveryAddress.lng }
-      );
+      const result = await calculateDistance(pickupCoords, deliveryCoords);
 
       if (!result) {
         toast.error('Impossible de calculer la distance entre les adresses');
+        setCalculatingPrice(false);
         return;
       }
 
       // Extraire la distance en km du texte renvoyé (format "XX km")
       const distanceText = result.distance;
       const distanceKm = parseFloat(distanceText.replace(' km', ''));
+      
+      console.log("Distance calculée:", distanceKm, "km");
 
       // Calculer le prix basé sur la distance et le type de véhicule
       const priceResult = await computePrice(distanceKm, vehicleCategory);
 
       if (!priceResult) {
         toast.error('Impossible de calculer le prix pour cette distance');
+        setCalculatingPrice(false);
         return;
       }
 
@@ -174,7 +203,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       form.setValue('price_ht', priceResult.priceHT);
       form.setValue('price_ttc', priceResult.priceTTC);
       
-      toast.success('Prix calculé avec succès');
+      console.log("Prix calculé:", priceResult);
+      toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC`);
     } catch (error) {
       console.error('Erreur lors du calcul de la distance:', error);
       toast.error('Une erreur est survenue lors du calcul du prix');
@@ -194,12 +224,16 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const onSelectPickupAddress = (address: string, placeId: string) => {
+  const onSelectPickupAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('pickup_address', address);
+    setPickupAddressData(addressData);
+    form.setValue('pickup_address_data', addressData);
   };
 
-  const onSelectDeliveryAddress = (address: string, placeId: string) => {
+  const onSelectDeliveryAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('delivery_address', address);
+    setDeliveryAddressData(addressData);
+    form.setValue('delivery_address_data', addressData);
   };
 
   const onSubmit = async (values: any) => {
@@ -401,7 +435,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                             value={field.value}
                             onChange={(value) => field.onChange(value)}
                             onSelect={(address, placeId) => {
-                              onSelectPickupAddress(address, placeId);
+                              onSelectPickupAddress(address, placeId, window.selectedAddressData);
                             }}
                             placeholder="Saisissez l'adresse de départ"
                             error={form.formState.errors.pickup_address?.message}
@@ -423,7 +457,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                             value={field.value}
                             onChange={(value) => field.onChange(value)}
                             onSelect={(address, placeId) => {
-                              onSelectDeliveryAddress(address, placeId);
+                              onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
                             }}
                             placeholder="Saisissez l'adresse de livraison"
                             error={form.formState.errors.delivery_address?.message}

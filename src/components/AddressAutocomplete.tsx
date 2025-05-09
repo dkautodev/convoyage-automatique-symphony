@@ -9,10 +9,17 @@ import { X, MapPin } from 'lucide-react';
 interface AddressAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
-  onSelect: (address: string, placeId: string) => void;
+  onSelect: (address: string, placeId: string, addressData?: any) => void;
   placeholder?: string;
   className?: string;
   error?: string;
+}
+
+// Déclarer une variable globale pour stocker temporairement les données d'adresse
+declare global {
+  interface Window {
+    selectedAddressData: any;
+  }
 }
 
 export default function AddressAutocomplete({
@@ -54,10 +61,14 @@ export default function AddressAutocomplete({
       
       const details = await getPlaceDetails(prediction.place_id);
       if (details) {
+        // Stocker temporairement les données de l'adresse pour que le composant parent puisse les récupérer
+        window.selectedAddressData = details;
+        
         onChange(details.formatted_address);
+        
         // Attendre un court instant pour s'assurer que l'interface se met à jour correctement
         setTimeout(() => {
-          onSelect(details.formatted_address, prediction.place_id);
+          onSelect(details.formatted_address, prediction.place_id, details);
           // Enlever le focus de l'input pour éviter que les suggestions réapparaissent
           if (inputRef.current) {
             inputRef.current.blur();
@@ -75,6 +86,7 @@ export default function AddressAutocomplete({
     setShowSuggestions(false);
     setIsAddressSelected(false);
     clearPredictions();
+    window.selectedAddressData = null;
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -109,6 +121,7 @@ export default function AddressAutocomplete({
     // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
     if (isAddressSelected) {
       setIsAddressSelected(false);
+      window.selectedAddressData = null;
     }
   };
   

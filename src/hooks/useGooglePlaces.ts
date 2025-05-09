@@ -124,25 +124,19 @@ export const useGooglePlaces = () => {
             if (location) {
               // Handle location as a direct object with lat/lng properties
               if (typeof location === 'object') {
-                if ('lat' in location && 'lng' in location) {
-                  // First try using properties directly
-                  if (typeof location.lat === 'number' && typeof location.lng === 'number') {
-                    latitude = location.lat;
-                    longitude = location.lng;
+                // Si location.lat est une fonction
+                if (typeof location.lat === 'function' && typeof location.lng === 'function') {
+                  try {
+                    latitude = location.lat();
+                    longitude = location.lng();
+                  } catch (e) {
+                    console.error('Error calling lat/lng functions:', e);
                   }
-                  // Then try using as functions if properties are functions
-                  else if (typeof location.lat === 'function' && typeof location.lng === 'function') {
-                    try {
-                      // Use type assertion to tell TypeScript these are callable
-                      latitude = (location.lat as Function)();
-                      longitude = (location.lng as Function)();
-                    } catch (e) {
-                      console.error('Error calling lat/lng functions:', e);
-                      // Fallback
-                      latitude = 0;
-                      longitude = 0;
-                    }
-                  }
+                }
+                // Si location.lat est une propriété directe
+                else if (typeof location.lat === 'number' && typeof location.lng === 'number') {
+                  latitude = location.lat;
+                  longitude = location.lng;
                 }
               }
             }
@@ -155,7 +149,9 @@ export const useGooglePlaces = () => {
                 city: addressComponents.locality,
                 postal_code: addressComponents.postal_code,
                 country: addressComponents.country,
-              }
+              },
+              lat: latitude,
+              lng: longitude
             };
 
             setSelectedAddress(enhancedResult);
@@ -187,6 +183,12 @@ export const useGooglePlaces = () => {
     if (!window.google) return null;
     
     try {
+      if (!origin.lat || !origin.lng || !destination.lat || !destination.lng) {
+        console.error('Coordonnées d\'origine ou de destination invalides', origin, destination);
+        return null;
+      }
+
+      console.log('Calcul de distance entre:', origin, 'et', destination);
       const service = new window.google.maps.DistanceMatrixService();
       
       return new Promise<{distance: string, duration: string}>((resolve, reject) => {
@@ -198,21 +200,27 @@ export const useGooglePlaces = () => {
             unitSystem: window.google.maps.UnitSystem.METRIC,
           },
           (response: any, status: string) => {
-            if (status === 'OK' && response) {
+            console.log('Réponse DistanceMatrix:', response, 'Status:', status);
+            if (status === 'OK' && response && 
+                response.rows && response.rows[0] && 
+                response.rows[0].elements && response.rows[0].elements[0] &&
+                response.rows[0].elements[0].status === 'OK') {
               const distance = response.rows[0].elements[0].distance.text;
               const duration = response.rows[0].elements[0].duration.text;
+              console.log('Distance calculée:', distance, 'Durée:', duration);
               resolve({
                 distance,
                 duration
               });
             } else {
+              console.error('Erreur lors du calcul de la distance:', status, response);
               reject(new Error('Impossible de calculer la distance'));
             }
           }
         );
       });
     } catch (error) {
-      console.error('Erreur lors du calcul de la distance:', error);
+      console.error('Exception lors du calcul de la distance:', error);
       return null;
     }
   };

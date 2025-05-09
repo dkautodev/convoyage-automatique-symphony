@@ -1,5 +1,4 @@
-
-import { useEffect, useState, useCallback, ReactNode } from 'react';
+import React, { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,23 +34,6 @@ declare module '@/types/auth' {
   interface BasicRegisterFormData {
     adminToken?: string;
   }
-}
-
-// Helper function to convert between address types
-function convertAddressFormat(address: any): any {
-  // Ensure all required properties are present
-  if (!address) return null;
-  
-  return {
-    formatted_address: address.formatted_address || `${address.street || ''}, ${address.postal_code || ''} ${address.city || ''}, ${address.country || 'France'}`,
-    street: address.street || '',
-    city: address.city || '',
-    postal_code: address.postal_code || '',
-    country: address.country || 'France',
-    place_id: address.place_id,
-    lat: address.lat,
-    lng: address.lng
-  };
 }
 
 // Fournisseur du contexte d'authentification
@@ -499,6 +481,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  // Helper function to convert between address types
+  function convertAddressFormat(address: any): any {
+    // Ensure all required properties are present
+    if (!address) return null;
+    
+    return {
+      formatted_address: address.formatted_address || `${address.street || ''}, ${address.postal_code || ''} ${address.city || ''}, ${address.country || 'France'}`,
+      street: address.street || '',
+      city: address.city || '',
+      postal_code: address.postal_code || '',
+      country: address.country || 'France',
+      place_id: address.place_id,
+      lat: address.lat,
+      lng: address.lng
+    };
+  }
 
   // Contexte à partager
   const value: AuthContextType = {

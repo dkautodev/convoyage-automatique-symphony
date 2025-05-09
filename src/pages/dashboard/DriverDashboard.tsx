@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -104,6 +105,12 @@ const DriverDashboard = () => {
     
     fetchDriverData();
   }, [user]);
+
+  // Helper function to get a display friendly address string
+  const getAddressString = (address: any) => {
+    if (!address) return 'Adresse non spécifiée';
+    return address.city || address.formatted_address || 'Adresse incomplète';
+  };
 
   if (loading) {
     return (
@@ -212,16 +219,16 @@ const DriverDashboard = () => {
                 <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">Mission #{mission.id}</p>
+                      <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
                       <Badge className={missionStatusColors[mission.status]}>
                         {missionStatusLabels[mission.status]}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {mission.pickup_address.city} → {mission.delivery_address.city} · {mission.distance_km.toFixed(2)} km
+                      {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
-                      Prévue le {new Date(mission.scheduled_date).toLocaleDateString('fr-FR')}
+                      Prévue le {new Date(mission.scheduled_date || '').toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                   <div className="flex gap-2">

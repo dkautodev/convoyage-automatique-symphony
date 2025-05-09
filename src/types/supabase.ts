@@ -106,6 +106,7 @@ export interface MissionFromDB {
   created_by: string;
   updated_at: string;
   chauffeur_price_ht?: number | null;
+  mission_number?: string;
 }
 
 export function convertMissionFromDB(mission: MissionFromDB): Mission {
@@ -122,7 +123,8 @@ export function convertMissionFromDB(mission: MissionFromDB): Mission {
     chauffeur_id: mission.chauffeur_id || null,
     mission_type: mission.mission_type || null,
     vehicle_category: mission.vehicle_category,
-    scheduled_date: mission.scheduled_date || new Date().toISOString()
+    scheduled_date: mission.scheduled_date || new Date().toISOString(),
+    mission_number: mission.mission_number || null
   };
 }
 
@@ -146,5 +148,6 @@ export interface Mission {
   mission_type?: string | null;
   vehicle_category?: VehicleCategory;
   scheduled_date?: string;
+  mission_number?: string | null;
   [key: string]: any;
 }

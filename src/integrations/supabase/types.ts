@@ -283,6 +283,7 @@ export type Database = {
           delivery_address: Json
           distance_km: number
           id: string
+          mission_number: string | null
           mission_type: string | null
           notes: string | null
           pickup_address: Json
@@ -321,6 +322,7 @@ export type Database = {
           delivery_address: Json
           distance_km: number
           id?: string
+          mission_number?: string | null
           mission_type?: string | null
           notes?: string | null
           pickup_address: Json
@@ -359,6 +361,7 @@ export type Database = {
           delivery_address?: Json
           distance_km?: number
           id?: string
+          mission_number?: string | null
           mission_type?: string | null
           notes?: string | null
           pickup_address?: Json

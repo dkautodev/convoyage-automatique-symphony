@@ -52,15 +52,21 @@ const ClientMissionsPage = () => {
     fetchMissions();
   }, [user]);
 
+  // Helper function to get a display friendly address string
+  const getAddressString = (address: any) => {
+    if (!address) return 'Adresse non spécifiée';
+    return address.city || address.formatted_address || 'Adresse incomplète';
+  };
+
   // Filtered missions based on search query
   const filteredMissions = missions.filter(mission => {
     if (!searchQuery) return true;
     
     const searchLower = searchQuery.toLowerCase();
     return (
-      mission.id.toLowerCase().includes(searchLower) ||
-      mission.pickup_address?.city?.toLowerCase().includes(searchLower) ||
-      mission.delivery_address?.city?.toLowerCase().includes(searchLower) ||
+      (mission.mission_number || mission.id).toLowerCase().includes(searchLower) ||
+      (mission.pickup_address?.city || '').toLowerCase().includes(searchLower) ||
+      (mission.delivery_address?.city || '').toLowerCase().includes(searchLower) ||
       missionStatusLabels[mission.status].toLowerCase().includes(searchLower)
     );
   });
@@ -138,13 +144,13 @@ const ClientMissionsPage = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium">Mission #{mission.id}</p>
+                        <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
                         <Badge className={missionStatusColors[mission.status]}>
                           {missionStatusLabels[mission.status]}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {mission.pickup_address?.city || 'N/A'} → {mission.delivery_address?.city || 'N/A'} · {mission.distance_km?.toFixed(2) || '0'} km
+                        {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}

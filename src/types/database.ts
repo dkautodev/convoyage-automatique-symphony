@@ -70,7 +70,25 @@ export interface Database {
           price_ttc: number;
           created_at: string;
           mission_type: string | null;
-          // Add other mission fields as needed
+          vehicle_category: string;
+          vehicle_make: string | null;
+          vehicle_model: string | null;
+          vehicle_fuel: string | null;
+          vehicle_year: number | null;
+          vehicle_registration: string | null;
+          vehicle_vin: string | null;
+          contact_pickup_name: string | null;
+          contact_pickup_phone: string | null;
+          contact_pickup_email: string | null;
+          contact_delivery_name: string | null;
+          contact_delivery_phone: string | null;
+          contact_delivery_email: string | null;
+          notes: string | null;
+          chauffeur_price_ht: number | null;
+          created_by: string;
+          scheduled_date: string;
+          vehicle_id: number;
+          vat_rate: number;
         };
         Insert: {
           id?: string;
@@ -84,7 +102,25 @@ export interface Database {
           price_ttc: number;
           created_at?: string;
           mission_type?: string | null;
-          // Add other mission fields as needed
+          vehicle_category?: string;
+          vehicle_make?: string | null;
+          vehicle_model?: string | null;
+          vehicle_fuel?: string | null;
+          vehicle_year?: number | null;
+          vehicle_registration?: string | null;
+          vehicle_vin?: string | null;
+          contact_pickup_name?: string | null;
+          contact_pickup_phone?: string | null;
+          contact_pickup_email?: string | null;
+          contact_delivery_name?: string | null;
+          contact_delivery_phone?: string | null;
+          contact_delivery_email?: string | null;
+          notes?: string | null;
+          chauffeur_price_ht?: number | null;
+          created_by: string;
+          scheduled_date: string;
+          vehicle_id: number;
+          vat_rate?: number;
         };
         Update: {
           id?: string;
@@ -98,7 +134,25 @@ export interface Database {
           price_ttc?: number;
           created_at?: string;
           mission_type?: string | null;
-          // Add other mission fields as needed
+          vehicle_category?: string;
+          vehicle_make?: string | null;
+          vehicle_model?: string | null;
+          vehicle_fuel?: string | null;
+          vehicle_year?: number | null;
+          vehicle_registration?: string | null;
+          vehicle_vin?: string | null;
+          contact_pickup_name?: string | null;
+          contact_pickup_phone?: string | null;
+          contact_pickup_email?: string | null;
+          contact_delivery_name?: string | null;
+          contact_delivery_phone?: string | null;
+          contact_delivery_email?: string | null;
+          notes?: string | null;
+          chauffeur_price_ht?: number | null;
+          created_by?: string;
+          scheduled_date?: string;
+          vehicle_id?: number;
+          vat_rate?: number;
         };
       };
       // Add additional tables as needed
@@ -137,4 +191,5 @@ export function convertJsonToType<T>(json: Json | null): T {
   return json as unknown as T;
 }
 
-export { Database };
+// Fix the re-export with 'export type' to avoid the conflict
+export type { Database };

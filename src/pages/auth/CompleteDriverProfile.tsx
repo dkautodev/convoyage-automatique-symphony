@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -37,8 +38,6 @@ const driverBasicProfileSchema = z.object({
     message: 'Veuillez entrer un numéro de téléphone international valide',
   }),
   phone2: z.string().optional(),
-  licenseNumber: z.string().min(2, { message: 'Le numéro de permis est requis' }),
-  idNumber: z.string().min(2, { message: 'Le numéro de CNI/passeport est requis' }),
 });
 
 type FormData = z.infer<typeof driverBasicProfileSchema>;
@@ -61,8 +60,6 @@ export default function CompleteDriverProfile() {
       tvaNumb: '',
       phone1: '',
       phone2: '',
-      licenseNumber: '',
-      idNumber: '',
     },
   });
 
@@ -78,8 +75,6 @@ export default function CompleteDriverProfile() {
       form.setValue('tvaNumb', profile.tva_number || '');
       form.setValue('phone1', profile.phone_1 || '');
       form.setValue('phone2', profile.phone_2 || '');
-      form.setValue('licenseNumber', profile.driver_license || '');
-      form.setValue('idNumber', profile.vehicle_registration || '');
       
       // Définir une adresse par défaut si elle est disponible
       if (profile.billing_address && typeof profile.billing_address === 'object') {
@@ -154,8 +149,6 @@ export default function CompleteDriverProfile() {
           tvaNumb: data.tvaApplicable && data.tvaNumb ? data.tvaNumb : undefined,
           phone1: data.phone1,
           phone2: data.phone2 || undefined,
-          licenseNumber: data.licenseNumber,
-          idNumber: data.idNumber,
           documents: undefined
         });
         
@@ -207,36 +200,6 @@ export default function CompleteDriverProfile() {
                             <FormLabel>Nom complet</FormLabel>
                             <FormControl>
                               <Input placeholder="Jean Dupont" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Numéro CNI/Passeport */}
-                      <FormField
-                        control={form.control}
-                        name="idNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Numéro CNI/Passeport</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123456789012" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Numéro de permis */}
-                      <FormField
-                        control={form.control}
-                        name="licenseNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Numéro de permis de conduire</FormLabel>
-                            <FormControl>
-                              <Input placeholder="12AB34567890" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

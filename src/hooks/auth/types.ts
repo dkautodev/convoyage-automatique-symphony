@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 import { UserRole, VehicleCategory, Address } from '@/types/supabase';
 import { Session } from '@supabase/supabase-js';
@@ -67,14 +68,14 @@ export interface DriverProfileFormData {
   tvaNumb?: string;
   phone1: string;
   phone2?: string;
-  licenseNumber: string;
-  idNumber: string;
   documents?: Record<string, File>;
 }
 
 // Interface pour la seconde étape du profil chauffeur
 export interface DriverConfigFormData {
   legalStatus: LegalStatusType;
+  licenseNumber: string;
+  idNumber: string;
   documents?: Record<string, File>;
 }
 
@@ -121,7 +122,7 @@ export interface AuthContextType {
   completeClientProfile: (data: ClientProfileFormData) => Promise<void>;
   completeDriverProfile: (data: DriverProfileFormData) => Promise<void>;
   completeDriverBasicProfile: (data: DriverProfileFormData) => Promise<void>;
-  completeDriverConfig: (legalStatus: LegalStatusType, documents?: Record<string, File>) => Promise<void>;
+  completeDriverConfig: (data: DriverConfigFormData) => Promise<void>;
   register: (data: RegisterFormData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;

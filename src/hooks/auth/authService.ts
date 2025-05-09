@@ -1,6 +1,7 @@
+
 // Contient les services liés à l'authentification
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, LegalStatusType } from './types';
+import { Profile, LegalStatusType, DriverConfigFormData } from './types';
 import { 
   RegisterFormData, 
   BasicRegisterFormData, 
@@ -280,7 +281,6 @@ export const completeDriverBasicProfileService = async (userId: string, data: Dr
         tva_applicable: data.tvaApplicable,
         phone_1: data.phone1,
         phone_2: data.phone2 || null,
-        driver_license: data.licenseNumber,
         profile_completed: true
       })
       .eq('id', userId)
@@ -303,8 +303,7 @@ export const completeDriverBasicProfileService = async (userId: string, data: Dr
 // Fonction pour compléter la seconde étape du profil chauffeur (configuration)
 export const completeDriverConfigService = async (
   userId: string, 
-  legalStatus: LegalStatusType, 
-  documents: Record<string, File> = {}
+  data: DriverConfigFormData
 ) => {
   try {
     console.log("Starting driver config completion for user:", userId);
@@ -312,10 +311,10 @@ export const completeDriverConfigService = async (
     let documentPaths: Record<string, string> = {};
     
     // Télécharger les documents si fournis
-    if (documents && Object.keys(documents).length > 0) {
+    if (data.documents && Object.keys(data.documents).length > 0) {
       try {
         console.log("Uploading driver documents...");
-        documentPaths = await uploadDriverDocuments(userId, documents);
+        documentPaths = await uploadDriverDocuments(userId, data.documents);
         console.log("Documents uploaded successfully:", documentPaths);
       } catch (docError) {
         console.error("Error uploading documents:", docError);
@@ -325,7 +324,9 @@ export const completeDriverConfigService = async (
     // Créer ou mettre à jour l'entrée dans la table drivers_config
     const driverConfigData = {
       id: userId,
-      legal_status: legalStatus,
+      legal_status: data.legalStatus,
+      license_number: data.licenseNumber,
+      id_number: data.idNumber,
       kbis_document_path: documentPaths.kbis || null,
       vigilance_document_path: documentPaths.vigilanceAttestation || null,
       license_document_path: documentPaths.driverLicenseFront || null,

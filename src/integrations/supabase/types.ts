@@ -171,9 +171,11 @@ export type Database = {
           created_at: string
           id: string
           id_document_path: string | null
+          id_number: string | null
           kbis_document_path: string | null
           legal_status: Database["public"]["Enums"]["legal_status_type"]
           license_document_path: string | null
+          license_number: string | null
           updated_at: string
           vigilance_document_path: string | null
         }
@@ -181,9 +183,11 @@ export type Database = {
           created_at?: string
           id: string
           id_document_path?: string | null
+          id_number?: string | null
           kbis_document_path?: string | null
           legal_status: Database["public"]["Enums"]["legal_status_type"]
           license_document_path?: string | null
+          license_number?: string | null
           updated_at?: string
           vigilance_document_path?: string | null
         }
@@ -191,9 +195,11 @@ export type Database = {
           created_at?: string
           id?: string
           id_document_path?: string | null
+          id_number?: string | null
           kbis_document_path?: string | null
           legal_status?: Database["public"]["Enums"]["legal_status_type"]
           license_document_path?: string | null
+          license_number?: string | null
           updated_at?: string
           vigilance_document_path?: string | null
         }

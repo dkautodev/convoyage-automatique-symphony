@@ -1,3 +1,4 @@
+
 import { UserRole, VehicleCategory, Address } from '@/types/supabase';
 
 // Interface pour le résultat du geocoding de Google
@@ -61,8 +62,6 @@ export interface DriverProfileFormData {
   tvaNumb?: string;
   phone1: string;
   phone2?: string;
-  licenseNumber: string;
-  idNumber: string;
   documents?: Record<string, File>;
 }
 

@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { LegalStatusType } from '@/hooks/auth/types';
+import { LegalStatusType, DriverConfigFormData } from '@/hooks/auth/types';
 
 // Définir les types acceptés de fichiers
 const ACCEPTED_FILE_TYPES = {
@@ -45,6 +45,8 @@ const legalStatusLabels: Record<LegalStatusType, string> = {
 // Schema de validation pour la configuration du chauffeur
 const driverConfigSchema = z.object({
   legalStatus: z.string().min(1, 'Veuillez sélectionner un statut juridique'),
+  licenseNumber: z.string().min(2, { message: 'Le numéro de permis est requis' }),
+  idNumber: z.string().min(2, { message: 'Le numéro de CNI/passeport est requis' }),
   kbis: typeof window === 'undefined' 
     ? z.any() 
     : z.instanceof(File)
@@ -71,12 +73,14 @@ type FormData = z.infer<typeof driverConfigSchema>;
 
 export default function CompleteDriverConfig() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { completeDriverConfig } = useAuth();
+  const { completeDriverConfig, profile } = useAuth();
   
   const form = useForm<FormData>({
     resolver: zodResolver(driverConfigSchema),
     defaultValues: {
       legalStatus: '',
+      licenseNumber: '',
+      idNumber: '',
     },
   });
 
@@ -104,12 +108,18 @@ export default function CompleteDriverConfig() {
       
       // Envoyer la configuration
       try {
-        await completeDriverConfig(
-          data.legalStatus as LegalStatusType,
-          Object.keys(documents).length > 0 ? documents : undefined
-        );
+        const configFormData: DriverConfigFormData = {
+          legalStatus: data.legalStatus as LegalStatusType,
+          licenseNumber: data.licenseNumber,
+          idNumber: data.idNumber,
+          documents: Object.keys(documents).length > 0 ? documents : undefined
+        };
+
+        await completeDriverConfig(configFormData);
         
         toast.success("Configuration du chauffeur complétée avec succès!");
+        // Rediriger vers le tableau de bord ou une page de confirmation
+        window.location.href = '/dashboard';
         
       } catch (error: any) {
         console.error("Error submitting driver config:", error);
@@ -166,6 +176,42 @@ export default function CompleteDriverConfig() {
                         </FormItem>
                       )}
                     />
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-medium">Informations d'identification</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* Numéro de permis */}
+                      <FormField
+                        control={form.control}
+                        name="licenseNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Numéro de permis de conduire</FormLabel>
+                            <FormControl>
+                              <Input placeholder="12AB34567890" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {/* Numéro CNI/Passeport */}
+                      <FormField
+                        control={form.control}
+                        name="idNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Numéro CNI/Passeport</FormLabel>
+                            <FormControl>
+                              <Input placeholder="123456789012" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                   
                   <div className="space-y-4">

@@ -36,6 +36,8 @@ const ClientMissionsPage = () => {
           throw missionsError;
         }
         
+        console.log("Missions récupérées:", missionsData);
+        
         const convertedMissions = (missionsData || []).map(mission => 
           convertMissionFromDB(mission as unknown as MissionFromDB)
         );
@@ -53,9 +55,11 @@ const ClientMissionsPage = () => {
   }, [user]);
 
   // Helper function to get a display friendly address string
-  const getAddressString = (address: any) => {
-    if (!address) return 'Adresse non spécifiée';
-    return address.city || address.formatted_address || 'Adresse incomplète';
+  const getAddressDisplay = (address: any) => {
+    if (!address) return 'Non spécifié';
+    const postalCode = address.postal_code || '';
+    const city = address.city || '';
+    return (postalCode && city) ? `${postalCode} ${city}` : (city || postalCode || 'Adresse incomplète');
   };
 
   // Filtered missions based on search query
@@ -150,7 +154,7 @@ const ClientMissionsPage = () => {
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                        {getAddressDisplay(mission.pickup_address)} → {getAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}

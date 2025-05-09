@@ -118,10 +118,12 @@ const MissionsPage = () => {
     navigate('/admin/pricing-grid');
   };
 
-  // Helper function to get a display friendly address string
-  const getAddressString = (address: any) => {
-    if (!address) return 'Adresse non spécifiée';
-    return address.city || address.formatted_address || 'Adresse incomplète';
+  // Helper function to get a display friendly address string with postal code and city only
+  const getAddressDisplay = (address: any) => {
+    if (!address) return 'Non spécifié';
+    const postalCode = address.postal_code || '';
+    const city = address.city || '';
+    return (postalCode && city) ? `${postalCode} ${city}` : (city || postalCode || 'Adresse incomplète');
   };
 
   // Empty state component
@@ -230,7 +232,7 @@ const MissionsPage = () => {
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                            {getAddressDisplay(mission.pickup_address)} → {getAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             Client: {(mission as any).client_name || 'N/A'} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}

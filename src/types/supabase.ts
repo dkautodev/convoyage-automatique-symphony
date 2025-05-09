@@ -70,7 +70,43 @@ export interface Client {
   profile_completed?: boolean;
 }
 
-export type MissionFromDB = any; // À remplacer par le vrai type
+// Définition plus précise du type MissionFromDB pour mieux correspondre à la structure de la table
+export interface MissionFromDB {
+  id: string;
+  status: MissionStatus;
+  client_id: string;
+  pickup_address: Address | null;
+  delivery_address: Address | null;
+  distance_km: number;
+  price_ht: number;
+  price_ttc: number;
+  created_at: string;
+  chauffeur_id: string | null;
+  mission_type?: string | null;
+  vehicle_category?: string;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_fuel?: string | null;
+  vehicle_year?: number | null;
+  vehicle_registration?: string | null;
+  vehicle_id: number;
+  vehicle_vin?: string | null;
+  contact_pickup_name?: string | null;
+  contact_pickup_phone?: string | null;
+  contact_pickup_email?: string | null;
+  contact_pickup_id?: number | null;
+  contact_delivery_name?: string | null;
+  contact_delivery_phone?: string | null;
+  contact_delivery_email?: string | null;
+  contact_delivery_id?: number | null;
+  notes?: string | null;
+  scheduled_date: string;
+  completion_date?: string | null;
+  vat_rate: number;
+  created_by: string;
+  updated_at: string;
+  chauffeur_price_ht?: number | null;
+}
 
 export function convertMissionFromDB(mission: MissionFromDB): Mission {
   return {
@@ -84,7 +120,9 @@ export function convertMissionFromDB(mission: MissionFromDB): Mission {
     price_ttc: mission.price_ttc || 0,
     created_at: mission.created_at || new Date().toISOString(),
     chauffeur_id: mission.chauffeur_id || null,
-    mission_type: mission.mission_type || null
+    mission_type: mission.mission_type || null,
+    vehicle_category: mission.vehicle_category,
+    scheduled_date: mission.scheduled_date || new Date().toISOString()
   };
 }
 
@@ -100,5 +138,7 @@ export interface Mission {
   created_at: string;
   chauffeur_id: string | null;
   mission_type?: string | null;
+  vehicle_category?: string;
+  scheduled_date?: string;
   [key: string]: any;
 }

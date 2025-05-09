@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -283,7 +284,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         vehicle_make: values.vehicle_make,
         vehicle_model: values.vehicle_model,
         vehicle_fuel: values.vehicle_fuel,
-        vehicle_year: values.vehicle_year,
+        vehicle_year: values.vehicle_year ? parseInt(values.vehicle_year) : null,
         vehicle_registration: values.vehicle_registration,
         vehicle_vin: values.vehicle_vin,
         contact_pickup_name: values.contact_pickup_name,
@@ -296,11 +297,14 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         chauffeur_id: values.chauffeur_id || null,
         chauffeur_price_ht: values.chauffeur_price_ht || 0,
         created_by: user?.id || '',
-        scheduled_date: new Date().toISOString(),
-        vehicle_id: 1, // Valeur temporaire, à remplacer par une vraie sélection de véhicule
-        vat_rate: 20, // Taux de TVA par défaut
-        mission_type: values.mission_type
+        scheduled_date: new Date().toISOString(), // Utilisation d'une date valide
+        vehicle_id: 1, // Assurons-nous que cette valeur existe dans la table vehicles
+        vat_rate: 20 // Taux de TVA par défaut
       };
+      
+      if (values.mission_type) {
+        missionData.mission_type = values.mission_type;
+      }
       
       console.log("Mission data to save:", missionData);
       
@@ -328,9 +332,9 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
           navigate('/client/missions');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la création de la mission:', error);
-      toast.error('Une erreur est survenue lors de la création de la mission');
+      toast.error('Une erreur est survenue lors de la création de la mission: ' + (error.message || 'Erreur inconnue'));
     } finally {
       setIsSubmitting(false);
     }

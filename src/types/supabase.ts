@@ -2,7 +2,7 @@
 // Import des types nécessaires
 import { Database } from './database';
 
-export type MissionStatus = 'en_acceptation' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
+export type MissionStatus = 'en_acceptation' | 'accepte' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
 
 export type VehicleCategory = 'citadine' | 'berline' | '4x4_suv' | 'utilitaire_3_5m3' | 'utilitaire_6_12m3' | 'utilitaire_12_15m3' | 'utilitaire_15_20m3' | 'utilitaire_plus_20m3';
 
@@ -19,6 +19,7 @@ export const vehicleCategoryLabels: Record<VehicleCategory, string> = {
 
 export const missionStatusLabels: Record<MissionStatus, string> = {
   'en_acceptation': 'En cours d\'acceptation',
+  'accepte': 'Accepté',
   'prise_en_charge': 'En cours de prise en charge',
   'livraison': 'En cours de livraison',
   'livre': 'Livré',
@@ -29,6 +30,7 @@ export const missionStatusLabels: Record<MissionStatus, string> = {
 
 export const missionStatusColors: Record<MissionStatus, string> = {
   'en_acceptation': 'bg-gray-600 text-white',
+  'accepte': 'bg-green-500 text-white',
   'prise_en_charge': 'bg-amber-700 text-white',
   'livraison': 'bg-orange-500 text-white',
   'livre': 'bg-blue-500 text-white',

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,8 +65,8 @@ const contactsAndNotesSchema = z.object({
 // Étape 5: Attribution (Admin seulement)
 const attributionSchema = z.object({
   client_id: z.string().uuid().optional(),
-  status: z.enum(['en_acceptation', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident']).default('en_acceptation'),
-  chauffeur_id: z.string().uuid().nullable().optional(),
+  status: z.enum(['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident']).default('en_acceptation'),
+  chauffeur_id: z.string().nullable().optional(),
   chauffeur_price_ht: z.number().optional(),
 });
 
@@ -244,6 +243,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       // S'assurer que toutes les données requises sont présentes
       if (!values.distance_km || !values.price_ht || !values.price_ttc) {
         toast.error('Veuillez calculer le prix avant de créer la mission');
+        setIsSubmitting(false);
         return;
       }
       
@@ -252,9 +252,14 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         values.client_id = user.id;
       }
       
+      // S'assurer que chauffeur_id n'est pas "no_driver_assigned"
+      if (values.chauffeur_id === "no_driver_assigned") {
+        values.chauffeur_id = null;
+      }
+      
       // Préparer les données d'adresse pour la base de données
-      const pickupAddressData = form.getValues('pickup_address_data') as Address;
-      const deliveryAddressData = form.getValues('delivery_address_data') as Address;
+      const pickupAddressData = values.pickup_address_data as Address;
+      const deliveryAddressData = values.delivery_address_data as Address;
       
       // Convertir les objets Address en Json compatible avec Supabase
       const pickupAddressJson = pickupAddressData ? 
@@ -297,6 +302,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         mission_type: values.mission_type
       };
       
+      console.log("Mission data to save:", missionData);
+      
       const { data, error } = await typedSupabase
         .from('missions')
         .insert(missionData)
@@ -305,7 +312,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       
       if (error) {
         console.error('Erreur lors de la création de la mission:', error);
-        toast.error('Erreur lors de la création de la mission');
+        toast.error('Erreur lors de la création de la mission: ' + error.message);
         return;
       }
       
@@ -818,6 +825,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="en_acceptation">En cours d'acceptation</SelectItem>
+                          <SelectItem value="accepte">Accepté</SelectItem>
                           <SelectItem value="prise_en_charge">En cours de prise en charge</SelectItem>
                           <SelectItem value="livraison">En cours de livraison</SelectItem>
                           <SelectItem value="livre">Livré</SelectItem>

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, Link } from 'react-router-dom';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
+import { toast } from 'sonner';
 
 const MissionsPage = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const MissionsPage = () => {
   const fetchMissions = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       let query = typedSupabase
         .from('missions')
@@ -59,6 +61,7 @@ const MissionsPage = () => {
     } catch (err) {
       console.error('Error fetching missions:', err);
       setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
+      toast.error("Erreur lors du chargement des missions");
     } finally {
       setLoading(false);
     }
@@ -133,9 +136,10 @@ const MissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="all">Toutes</TabsTrigger>
           <TabsTrigger value="en_acceptation">En attente</TabsTrigger>
+          <TabsTrigger value="accepte">Accepté</TabsTrigger>
           <TabsTrigger value="prise_en_charge">En cours</TabsTrigger>
           <TabsTrigger value="livre">Livrées</TabsTrigger>
           <TabsTrigger value="termine">Terminées</TabsTrigger>

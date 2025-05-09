@@ -325,7 +325,7 @@ export const completeDriverConfigService = async (
     // Créer ou mettre à jour l'entrée dans la table drivers_config
     const driverConfigData = {
       id: userId,
-      legal_status: legalStatus as LegalStatusType,
+      legal_status: legalStatus,
       kbis_document_path: documentPaths.kbis || null,
       vigilance_document_path: documentPaths.vigilanceAttestation || null,
       license_document_path: documentPaths.driverLicenseFront || null,

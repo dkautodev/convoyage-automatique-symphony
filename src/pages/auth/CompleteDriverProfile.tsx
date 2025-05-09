@@ -90,7 +90,7 @@ export default function CompleteDriverProfile() {
         await completeDriverProfile({
           fullName: data.fullName,
           companyName: data.companyName,
-          // Pas besoin d'adresse dans cette version simplifiée
+          // Utiliser une adresse par défaut pour l'instant, elle sera mise à jour ultérieurement
           billingAddress: {
             street: "",
             city: "",

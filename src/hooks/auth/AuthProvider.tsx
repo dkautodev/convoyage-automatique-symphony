@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -265,18 +266,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await completeClientProfileService(user.id, data);
       
-      // Mettre à jour le profil localement
-      setProfile(prev => prev ? { 
-        ...prev, 
-        full_name: data.fullName, 
-        company_name: data.companyName,
-        billing_address: data.billingAddress,
-        siret: data.siret,
-        tva_number: data.tvaNumb,
-        phone_1: data.phone1,
-        phone_2: data.phone2,
-        profile_completed: true 
-      } : null);
+      // Mettre à jour le profil localement - using addressToJson to convert Address to Json
+      setProfile(prev => {
+        if (!prev) return null;
+        return { 
+          ...prev, 
+          full_name: data.fullName, 
+          company_name: data.companyName,
+          billing_address: addressToJson(data.billingAddress),
+          siret: data.siret,
+          tva_number: data.tvaNumb,
+          phone_1: data.phone1,
+          phone_2: data.phone2,
+          profile_completed: true 
+        };
+      });
       
       toast.success('Profil complété avec succès');
       navigate('/client/dashboard');
@@ -303,7 +307,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await completeDriverProfileService(user.id, data);
       
-      // Mettre à jour le profil localement - use addressToJson to convert Address to Json
+      // Mettre à jour le profil localement - using addressToJson to convert Address to Json
       setProfile(prev => {
         if (!prev) return null;
         return { 

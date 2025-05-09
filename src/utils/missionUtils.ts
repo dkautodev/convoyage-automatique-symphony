@@ -89,7 +89,7 @@ export const formatFullAddress = (address: Address | null | undefined): string =
 /**
  * Formate les informations de contact pour l'affichage
  */
-export const formatContactInfo = (contact: { name?: string | null, phone?: string | null, email?: string | null }): string => {
+export const formatContactInfo = (contact: { name?: string | null, phone?: string | null, email?: string | null } | null | undefined): string => {
   if (!contact || (!contact.name && !contact.phone && !contact.email)) {
     return "Aucun contact spécifié";
   }
@@ -101,4 +101,30 @@ export const formatContactInfo = (contact: { name?: string | null, phone?: strin
   if (contact.email) parts.push(contact.email);
   
   return parts.join(' • ');
+};
+
+/**
+ * Formate les informations de contact de la mission pour l'affichage (ramassage)
+ */
+export const formatPickupContactInfo = (mission: any): string => {
+  if (!mission) return "Aucun contact spécifié";
+  
+  return formatContactInfo({
+    name: mission.contact_pickup_name,
+    phone: mission.contact_pickup_phone,
+    email: mission.contact_pickup_email
+  });
+};
+
+/**
+ * Formate les informations de contact de la mission pour l'affichage (livraison)
+ */
+export const formatDeliveryContactInfo = (mission: any): string => {
+  if (!mission) return "Aucun contact spécifié";
+  
+  return formatContactInfo({
+    name: mission.contact_delivery_name,
+    phone: mission.contact_delivery_phone,
+    email: mission.contact_delivery_email
+  });
 };

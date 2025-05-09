@@ -11,9 +11,12 @@ import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
 import { toast } from 'sonner';
 
+// Define valid tab values type that includes 'all' and all mission statuses
+type MissionTab = 'all' | MissionStatus;
+
 const MissionsPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<MissionTab>('all');
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -63,9 +66,8 @@ const MissionsPage = () => {
       
       // Filtrer par statut si un tab spécifique est sélectionné
       if (activeTab !== 'all') {
-        // Safe type assertion using type guard
-        const missionStatus = activeTab as string;
-        query = query.eq('status', missionStatus);
+        // Type assertion for activeTab to MissionStatus
+        query = query.eq('status', activeTab);
       }
       
       const { data: missionsData, error: missionsError } = await query;
@@ -161,7 +163,7 @@ const MissionsPage = () => {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="all">Toutes</TabsTrigger>
           <TabsTrigger value="en_acceptation">En attente</TabsTrigger>

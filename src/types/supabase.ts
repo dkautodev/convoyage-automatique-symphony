@@ -42,9 +42,9 @@ export const missionStatusColors: Record<MissionStatus, string> = {
 // UserRole type that matches exactly what's expected in the database
 export type UserRole = 'admin' | 'client' | 'chauffeur';
 
-// Modified Address interface to ensure it's compatible with Json
+// Modified Address interface to make formatted_address optional to allow empty objects
 export interface Address {
-  formatted_address: string;
+  formatted_address?: string;
   place_id?: string;
   street?: string;
   street_number?: string;
@@ -83,13 +83,13 @@ export interface MissionFromDB {
   created_at: string;
   chauffeur_id: string | null;
   mission_type?: string | null;
-  vehicle_category?: string;
+  vehicle_category?: VehicleCategory;
   vehicle_make?: string | null;
   vehicle_model?: string | null;
   vehicle_fuel?: string | null;
   vehicle_year?: number | null;
   vehicle_registration?: string | null;
-  vehicle_id: number;
+  vehicle_id?: number;
   vehicle_vin?: string | null;
   contact_pickup_name?: string | null;
   contact_pickup_phone?: string | null;

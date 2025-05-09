@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -259,8 +258,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       }
       
       // Préparer les données d'adresse pour la base de données
-      const pickupAddressData = values.pickup_address_data as Address;
-      const deliveryAddressData = values.delivery_address_data as Address;
+      const pickupAddressData = values.pickup_address_data || { formatted_address: values.pickup_address };
+      const deliveryAddressData = values.delivery_address_data || { formatted_address: values.delivery_address };
       
       // Convertir les objets Address en Json compatible avec Supabase
       const pickupAddressJson = pickupAddressData ? 
@@ -272,7 +271,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         { formatted_address: values.delivery_address };
       
       // Enregistrer la mission
-      const missionData = {
+      const missionData: any = {
         client_id: values.client_id || user?.id,
         status: values.status || 'en_acceptation',
         pickup_address: pickupAddressJson,
@@ -299,12 +298,9 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         created_by: user?.id || '',
         scheduled_date: new Date().toISOString(), // Utilisation d'une date valide
         vehicle_id: 1, // Assurons-nous que cette valeur existe dans la table vehicles
-        vat_rate: 20 // Taux de TVA par défaut
+        vat_rate: 20, // Taux de TVA par défaut
+        mission_type: values.mission_type  // Ajout de mission_type au missionData
       };
-      
-      if (values.mission_type) {
-        missionData.mission_type = values.mission_type;
-      }
       
       console.log("Mission data to save:", missionData);
       

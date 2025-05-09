@@ -2,7 +2,7 @@
 // Import des types nécessaires
 import { Database } from './database';
 
-export type MissionStatus = Database["public"]["Enums"]["mission_status"] | 'accepte';
+export type MissionStatus = 'en_acceptation' | 'accepte' | 'prise_en_charge' | 'livraison' | 'livre' | 'termine' | 'annule' | 'incident';
 
 export type VehicleCategory = 'citadine' | 'berline' | '4x4_suv' | 'utilitaire_3_5m3' | 'utilitaire_6_12m3' | 'utilitaire_12_15m3' | 'utilitaire_15_20m3' | 'utilitaire_plus_20m3';
 

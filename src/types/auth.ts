@@ -65,6 +65,17 @@ export interface DriverProfileFormData {
   documents?: Record<string, File>;
 }
 
+// Type pour les statuts juridiques
+export type LegalStatusType = 'EI' | 'EURL' | 'SARL' | 'SA' | 'SAS' | 'SASU' | 'SNC' | 'Scop' | 'Association';
+
+// Interface pour la seconde étape du profil chauffeur
+export interface DriverConfigFormData {
+  legalStatus: LegalStatusType;
+  licenseNumber: string;
+  idNumber: string;
+  documents?: Record<string, File>;
+}
+
 // Interface pour les anciennes données d'inscription
 export interface RegisterFormData {
   email: string;

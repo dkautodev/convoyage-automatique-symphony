@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -28,7 +29,8 @@ import {
   BasicRegisterFormData, 
   ClientProfileFormData, 
   DriverProfileFormData,
-  DriverConfigFormData
+  DriverConfigFormData,
+  LegalStatusType as AuthLegalStatusType
 } from '@/types/auth';
 
 // Export the useAuth hook for external use

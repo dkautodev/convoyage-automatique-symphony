@@ -78,7 +78,7 @@ const MissionDetailsPage = () => {
       vehicle_registration: '',
       vehicle_vin: '',
       vehicle_fuel: '',
-      vehicle_year: ''
+      vehicle_year: ''  // This is a string in the form, will be transformed by Zod
     },
   });
   
@@ -143,7 +143,7 @@ const MissionDetailsPage = () => {
         vehicle_registration: missionObj.vehicle_registration || '',
         vehicle_vin: missionObj.vehicle_vin || '',
         vehicle_fuel: missionObj.vehicle_fuel || '',
-        vehicle_year: missionObj.vehicle_year ? missionObj.vehicle_year.toString() : ''
+        vehicle_year: missionObj.vehicle_year ? String(missionObj.vehicle_year) : ''  // Convert number to string for the form
       });
       
     } catch (error) {

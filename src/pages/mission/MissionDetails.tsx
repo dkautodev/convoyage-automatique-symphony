@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
-import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
+import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus, vehicleCategoryLabels } from '@/types/supabase';
 import { formatAddressDisplay, formatMissionNumber, formatFullAddress } from '@/utils/missionUtils';
 import { 
   Card, 
@@ -293,6 +293,11 @@ const MissionDetailsPage = () => {
         year: 'numeric' 
       }) 
     : 'Non planifiée';
+  
+  // Accéder à l'étiquette de la catégorie de véhicule
+  const vehicleCategory = mission.vehicle_category 
+    ? vehicleCategoryLabels[mission.vehicle_category] 
+    : 'Non spécifiée';
 
   return (
     <div className="space-y-6">
@@ -370,10 +375,10 @@ const MissionDetailsPage = () => {
                   <p className="text-lg font-medium">{mission.price_ttc.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Date prévue</h4>
+                  <h4 className="text-sm font-medium text-gray-500 mb-1">Catégorie de véhicule</h4>
                   <p className="text-lg font-medium flex items-center gap-1">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    {scheduledDate}
+                    <Truck className="h-4 w-4 text-gray-500" />
+                    {vehicleCategory}
                   </p>
                 </div>
                 <div>

@@ -757,7 +757,7 @@ export default function CreateMissionForm({
                 }) => <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Nom complet ou société" />
+                            <Input {...field} placeholder="Nom complet ou sociét��" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>} />
@@ -859,6 +859,112 @@ export default function CreateMissionForm({
                       <FormMessage />
                     </FormItem>} />
               </div>}
+
+            {/* Étape 5: Attribution (Admin seulement) */}
+            {currentStep === 5 && profile?.role === 'admin' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium">Attribution de la mission</h3>
+                
+                <FormField
+                  control={form.control}
+                  name="client_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          handleClientChange(value);
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un client" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {/* This would normally be populated from a database query */}
+                          <SelectItem value="no_client_selected">Aucun client</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Statut de la mission</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un statut" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="en_acceptation">En attente d'acceptation</SelectItem>
+                          <SelectItem value="accepte">Acceptée</SelectItem>
+                          <SelectItem value="prise_en_charge">Prise en charge</SelectItem>
+                          <SelectItem value="livraison">En livraison</SelectItem>
+                          <SelectItem value="livre">Livrée</SelectItem>
+                          <SelectItem value="termine">Terminée</SelectItem>
+                          <SelectItem value="annule">Annulée</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="chauffeur_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chauffeur</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value || "no_driver_assigned"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un chauffeur" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
+                          {/* This would normally be populated from a database query */}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="chauffeur_price_ht"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prix chauffeur HT (€)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01"
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             {/* Navigation */}
             <div className="flex justify-between pt-4 border-t mt-8">

@@ -98,21 +98,7 @@ const AdminDashboard = () => {
       
       {/* Cartes statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className="bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Missions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold">{loading ? "..." : stats.totalMissions}</p>
-              </div>
-              <div className="h-10 w-10 rounded-full bg-admin/10 flex items-center justify-center">
-                <Package size={20} className="text-admin" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
         
         <Card className="bg-white">
           <CardHeader className="pb-2">

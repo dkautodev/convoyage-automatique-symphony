@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { File, Download, Trash2, Loader2 } from 'lucide-react';
@@ -21,12 +22,14 @@ interface MissionAttachmentsProps {
   missionId?: string;
   showTitle?: boolean;
   className?: string;
+  onCountChanged?: (count: number) => void;
 }
 
 export default function MissionAttachments({ 
   missionId, 
   showTitle = true,
-  className = ''
+  className = '',
+  onCountChanged
 }: MissionAttachmentsProps) {
   const [documents, setDocuments] = useState<MissionDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -62,6 +65,11 @@ export default function MissionAttachments({
       })) : [];
       
       setDocuments(docsWithUrls as MissionDocument[]);
+      
+      // Call the onCountChanged callback if provided
+      if (onCountChanged) {
+        onCountChanged(docsWithUrls.length);
+      }
     } catch (error) {
       console.error("Error fetching mission documents:", error);
       toast.error("Erreur lors du chargement des documents");
@@ -127,7 +135,13 @@ export default function MissionAttachments({
       toast.success("Document supprimé avec succès");
       
       // Update the local state
-      setDocuments(documents.filter(doc => doc.id !== document.id));
+      const updatedDocuments = documents.filter(doc => doc.id !== document.id);
+      setDocuments(updatedDocuments);
+      
+      // Call the onCountChanged callback if provided
+      if (onCountChanged) {
+        onCountChanged(updatedDocuments.length);
+      }
     } catch (error) {
       console.error("Error deleting document:", error);
       toast.error("Erreur lors de la suppression du document");

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mission } from '@/types/supabase';
 import { formatFullAddress } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
-import { FileText, MapPin, Clock, Truck, Car, CreditCard, Info, Calendar } from 'lucide-react';
+import { FileText, MapPin, Clock, Truck, Car, Info, Calendar } from 'lucide-react';
 
 interface MissionGeneralInfoProps {
   mission: Mission;
@@ -43,12 +43,27 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Client and financial information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {/* Première ligne: Client, Type de mission, Catégorie de véhicule */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-1">Client</h4>
             <p className="font-medium">{clientName}</p>
           </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-500 mb-1">Type de mission</h4>
+            <p className="font-medium">{mission.mission_type || 'Non spécifié'}</p>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-500 mb-1">Catégorie de véhicule</h4>
+            <p className="font-medium flex items-center gap-1">
+              <Truck className="h-4 w-4 text-gray-500" />
+              {vehicleCategory}
+            </p>
+          </div>
+        </div>
+        
+        {/* Deuxième ligne: Distance, Prix HT, Prix TTC */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 border-t pt-6">
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-1">Distance</h4>
             <p className="font-medium">{mission.distance_km?.toFixed(2) || '0'} km</p>
@@ -63,17 +78,6 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
             <h4 className="text-sm font-medium text-gray-500 mb-1">Prix TTC</h4>
             <p className="font-medium">
               {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Type de mission</h4>
-            <p className="font-medium">{mission.mission_type || 'Non spécifié'}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Catégorie de véhicule</h4>
-            <p className="font-medium flex items-center gap-1">
-              <Truck className="h-4 w-4 text-gray-500" />
-              {vehicleCategory}
             </p>
           </div>
         </div>

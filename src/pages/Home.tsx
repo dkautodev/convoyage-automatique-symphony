@@ -58,7 +58,7 @@ export default function Home() {
               navigate('/driver/dashboard');
               break;
             default:
-              navigate('/home');
+              navigate('/client/dashboard'); // Default to client dashboard
           }
         } else {
           // Si l'utilisateur a un profil mais qu'il n'est pas complété

@@ -153,11 +153,11 @@ function App() {
         </ProtectedRoute>
       } />
       
-      {/* Default route - Redirect to login if not authenticated */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* Default route - Redirect to home if not authenticated */}
+      <Route path="/" element={<Navigate to="/home" replace />} />
       
-      {/* Catch all other routes and redirect to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Catch all other routes and redirect to home */}
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

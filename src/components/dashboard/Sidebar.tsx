@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
         return [
           { href: '/client/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
           { href: '/client/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Mes missions' },
-          { href: '/client/new-mission', icon: <FileText className="mr-2 h-4 w-4" />, label: 'Nouvelle mission' }
+          { href: '/mission/create', icon: <FileText className="mr-2 h-4 w-4" />, label: 'Nouvelle mission' }
         ];
       case 'chauffeur':
         return [

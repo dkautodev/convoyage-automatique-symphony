@@ -1,6 +1,6 @@
 
 import React, { ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -30,12 +30,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Vérifiez si l'utilisateur n'est pas authentifié
   if (!user) {
     // Redirigez l'utilisateur vers la page de connexion
+    console.log("DashboardLayout: Utilisateur non authentifié, redirection vers /login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Si l'utilisateur est authentifié mais n'a pas complété son profil
   if (profile && !profile.profile_completed) {
     // Rediriger vers la page appropriée pour compléter le profil
+    console.log("DashboardLayout: Profil incomplet, redirection pour compléter le profil");
     const redirectTo = profile.role === 'chauffeur' ? '/complete-driver-profile' : '/complete-client-profile';
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
@@ -45,20 +47,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     const path = location.pathname;
     const role = profile?.role || 'client';
     
+    console.log(`DashboardLayout: Path = ${path}, Role = ${role}`);
+    
     if (path.endsWith('/dashboard')) {
       switch (role) {
         case 'admin':
+          console.log("DashboardLayout: Rendering AdminDashboard");
           return <AdminDashboard />;
         case 'client':
+          console.log("DashboardLayout: Rendering ClientDashboard");
           return <ClientDashboard />;
         case 'chauffeur':
+          console.log("DashboardLayout: Rendering DriverDashboard");
           return <DriverDashboard />;
         default:
+          console.log("DashboardLayout: Rendering default ClientDashboard");
           return <ClientDashboard />;
       }
     }
     
     // For other paths, use the children prop instead of Outlet
+    console.log("DashboardLayout: Rendering children or Outlet");
     return children || <Outlet />;
   };
 

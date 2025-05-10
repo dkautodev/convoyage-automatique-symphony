@@ -55,15 +55,27 @@ export const useGooglePlaces = () => {
         serviceRef.current = new window.google.maps.places.AutocompleteService();
       }
       
+      // Modifier ici pour inclure les pays européens mais prioriser la France
       serviceRef.current.getPlacePredictions(
         { 
           input: query, 
-          types: ['address'], 
-          componentRestrictions: { country: 'fr' } 
+          types: ['address'],
+          // Ajouter plusieurs pays européens tout en priorisant la France
+          componentRestrictions: { country: ['fr', 'de', 'es', 'it', 'be', 'ch', 'nl', 'pt', 'gb', 'at', 'pl'] }
         },
         (results: GoogleAddressSuggestion[], status: string) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-            setPredictions(results);
+            // Trier les résultats pour prioriser les adresses françaises
+            const sortedResults = [...results].sort((a, b) => {
+              const aIsFrance = a.description.includes('France');
+              const bIsFrance = b.description.includes('France');
+              
+              if (aIsFrance && !bIsFrance) return -1;
+              if (!aIsFrance && bIsFrance) return 1;
+              return 0;
+            });
+            
+            setPredictions(sortedResults);
           } else {
             setPredictions([]);
           }
@@ -191,7 +203,7 @@ export const useGooglePlaces = () => {
       console.log('Calcul de distance entre:', origin, 'et', destination);
       const service = new window.google.maps.DistanceMatrixService();
       
-      return new Promise<{distance: string, duration: string}>((resolve, reject) => {
+      return new Promise<{distance: string, duration: string, distanceValue: number}>((resolve, reject) => {
         service.getDistanceMatrix(
           {
             origins: [new window.google.maps.LatLng(origin.lat, origin.lng)],
@@ -207,10 +219,13 @@ export const useGooglePlaces = () => {
                 response.rows[0].elements[0].status === 'OK') {
               const distance = response.rows[0].elements[0].distance.text;
               const duration = response.rows[0].elements[0].duration.text;
+              // IMPORTANT: Ajouter la valeur numérique de la distance en mètres
+              const distanceValue = response.rows[0].elements[0].distance.value;
               console.log('Distance calculée:', distance, 'Durée:', duration);
               resolve({
                 distance,
-                duration
+                duration,
+                distanceValue // Ajouter cette valeur
               });
             } else {
               console.error('Erreur lors du calcul de la distance:', status, response);

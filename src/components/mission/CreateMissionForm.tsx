@@ -236,9 +236,9 @@ export default function CreateMissionForm({
         return;
       }
 
-      // Extraire la distance en km du texte renvoyé (format "XX km")
-      const distanceText = result.distance;
-      const distanceKm = parseFloat(distanceText.replace(' km', ''));
+      // Utiliser la valeur numérique précise de la distance au lieu de parser le texte
+      // distanceValue est en mètres, on convertit en km
+      const distanceKm = result.distanceValue / 1000;
       console.log("Distance calculée:", distanceKm, "km");
 
       // Calculer le prix basé sur la distance et le type de véhicule

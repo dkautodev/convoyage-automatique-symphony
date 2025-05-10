@@ -2,22 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { typedSupabase } from '@/types/database';
+import { supabase } from '@/integrations/supabase/client';
 import { User, UserPlus } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-
-interface Contact {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  client_id: string;
-}
+import { Contact } from '@/types/contact';
 
 interface ContactSelectorProps {
   onSelectContact: (contact: Contact) => void;
@@ -46,7 +38,7 @@ export default function ContactSelector({
         // Use the provided clientId or the current user's ID
         const targetClientId = clientId || user?.id;
         
-        const { data, error } = await typedSupabase
+        const { data, error } = await supabase
           .from('contacts')
           .select('*')
           .eq('client_id', targetClientId);
@@ -56,7 +48,8 @@ export default function ContactSelector({
           return;
         }
         
-        setContacts(data as Contact[]);
+        // Cast the data to the Contact type
+        setContacts(data as unknown as Contact[]);
       } catch (error) {
         console.error('Exception fetching contacts:', error);
       } finally {
@@ -94,7 +87,7 @@ export default function ContactSelector({
                 >
                   <User className="h-4 w-4 mr-2" />
                   <div className="flex flex-col items-start">
-                    <span>{contact.first_name} {contact.last_name}</span>
+                    <span>{contact.name_s || 'Sans nom'}</span>
                     <span className="text-xs text-muted-foreground">
                       {contact.phone || contact.email || ''}
                     </span>

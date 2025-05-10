@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, Link } from 'react-router-dom';
 import { typedSupabase } from '@/types/database';
-import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
+import { Mission, MissionFromDB, convertMissionFromDB, MissionStatus } from '@/types/supabase';
 import { toast } from 'sonner';
 import { formatAddressDisplay, formatMissionNumber, formatClientName, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { 

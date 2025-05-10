@@ -43,6 +43,7 @@ const MissionDetailsPage = () => {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [documentsCount, setDocumentsCount] = useState(0);
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
+  const [driverName, setDriverName] = useState<string>('Non assigné');
   
   const isAdmin = profile?.role === 'admin';
   const isClient = profile?.role === 'client';
@@ -90,6 +91,19 @@ const MissionDetailsPage = () => {
         
         if (!clientError && clientData) {
           setClient(clientData);
+        }
+      }
+      
+      // Récupérer les informations du chauffeur si assigné
+      if (missionData.chauffeur_id) {
+        const { data: driverData, error: driverError } = await typedSupabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', missionData.chauffeur_id)
+          .single();
+          
+        if (!driverError && driverData) {
+          setDriverName(driverData.full_name || 'Chauffeur sans nom');
         }
       }
     } catch (error) {
@@ -301,8 +315,8 @@ const MissionDetailsPage = () => {
         </div>
       </div>
 
-      {/* General Information Section */}
-      <MissionGeneralInfoSection mission={mission} client={client} />
+      {/* General Information Section - Pass driverName */}
+      <MissionGeneralInfoSection mission={mission} client={client} driverName={driverName} />
       
       {/* Driver Section - Admin and Client versions */}
       {isAdmin ? (

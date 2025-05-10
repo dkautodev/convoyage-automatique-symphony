@@ -5,13 +5,18 @@ import { Mission } from '@/types/supabase';
 import { formatFullAddress } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
 import { FileText, MapPin, Clock, Truck, Car, Info, Calendar } from 'lucide-react';
+import { GenerateMissionSheetButton } from '../GenerateMissionSheetButton';
+
 interface MissionGeneralInfoProps {
   mission: Mission;
   client: any;
+  driverName?: string;
 }
+
 export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
   mission,
-  client
+  client,
+  driverName
 }) => {
   const clientName = client?.company_name || client?.full_name || 'Client inconnu';
   const vehicleCategory = mission.vehicle_category ? vehicleCategoryLabels[mission.vehicle_category] : 'Non spécifié';
@@ -29,16 +34,20 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
       return date;
     }
   };
+  
   const formatTimeSlot = (time: string | null) => {
     if (!time) return '';
     return time;
   };
-  return <Card className="mb-6">
-      <CardHeader>
+  
+  return (
+    <Card className="mb-6">
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
           Informations générales
         </CardTitle>
+        <GenerateMissionSheetButton mission={mission} driverName={driverName} />
       </CardHeader>
       <CardContent>
         {/* Première ligne: Client, Type de mission, Catégorie de véhicule */}
@@ -54,7 +63,6 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-1">Catégorie de véhicule</h4>
             <p className="font-medium flex items-center gap-1">
-              
               {vehicleCategory}
             </p>
           </div>
@@ -208,5 +216,6 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
             </div>
           </div>}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };

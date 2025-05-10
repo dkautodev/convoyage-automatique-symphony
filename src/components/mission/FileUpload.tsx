@@ -155,10 +155,10 @@ export default function FileUpload({
       
       // Upload each file
       for (const file of selectedFiles) {
-        // Create file path - important: ensure missionId is provided for mission uploads
+        // Create file path - directly use mission ID as path prefix
         let filePath;
         if (missionId) {
-          filePath = `mission-docs/${missionId}/${Date.now()}_${file.name}`;
+          filePath = `${missionId}/${Date.now()}_${file.name}`;
           console.log(`Creating mission document path: ${filePath}`);
         } else {
           filePath = `uploads/${Date.now()}_${file.name}`;

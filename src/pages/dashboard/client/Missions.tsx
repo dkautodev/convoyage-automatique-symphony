@@ -146,7 +146,7 @@ const ClientMissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-4 flex flex-wrap">
+        <TabsList className="w-full mb-4 flex flex-wrap">
           <TabsTrigger value={ALL_TABS_VALUE} className="flex gap-2">
             Toutes
             <Badge variant="secondary" className="ml-1">

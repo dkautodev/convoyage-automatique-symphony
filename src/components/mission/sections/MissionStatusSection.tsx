@@ -9,6 +9,16 @@ import { Mission, MissionStatus } from '@/types/supabase';
 import { typedSupabase } from '@/types/database';
 import { Clock, CheckCircle2, Ban } from 'lucide-react';
 import { missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 interface MissionStatusSectionProps {
   mission: Mission;
@@ -24,6 +34,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   const [updating, setUpdating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   // Fetch status history
   useEffect(() => {
@@ -80,7 +91,16 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
     }
   };
 
-  // Fonction pour annuler le devis
+  // Fonction pour ouvrir la boîte de dialogue de confirmation
+  const openCancelDialog = () => {
+    if (mission.status !== 'en_acceptation') {
+      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
+      return;
+    }
+    setCancelDialogOpen(true);
+  };
+
+  // Fonction pour annuler le devis après confirmation
   const handleCancelQuote = async () => {
     if (cancelling) return;
     if (mission.status !== 'en_acceptation') {
@@ -103,6 +123,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       toast.success('Le devis a été annulé avec succès');
       refetchMission();
       fetchStatusHistory();
+      setCancelDialogOpen(false);
     } catch (error: any) {
       console.error('Erreur lors de l\'annulation du devis:', error);
       toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);
@@ -154,7 +175,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
               
               {mission.status === 'en_acceptation' && (
                 <Button 
-                  onClick={handleCancelQuote} 
+                  onClick={openCancelDialog} 
                   disabled={cancelling || mission.status !== 'en_acceptation'} 
                   variant="destructive" 
                   className="w-full sm:w-auto"
@@ -166,6 +187,29 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Boîte de dialogue de confirmation pour l'annulation */}
+        <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Annuler le devis</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Une fois le devis annulé, il ne pourra plus être modifié.
+                Voulez-vous vraiment annuler ce devis ?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleCancelQuote} 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={cancelling}
+              >
+                {cancelling ? 'Annulation en cours...' : 'Confirmer l\'annulation'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

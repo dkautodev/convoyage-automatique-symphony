@@ -9,6 +9,16 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Package, History, Edit, Ban } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 // Import our section components
 import { MissionGeneralInfoSection } from '@/components/mission/sections/MissionGeneralInfoSection';
@@ -29,6 +39,7 @@ const MissionDetailsPage = () => {
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   
   const isAdmin = profile?.role === 'admin';
   const isClient = profile?.role === 'client';
@@ -115,7 +126,16 @@ const MissionDetailsPage = () => {
     setHistoryDrawerOpen(true);
   };
 
-  // Fonction pour annuler le devis (disponible pour les clients aussi)
+  // Fonction pour ouvrir la boîte de dialogue de confirmation
+  const openCancelDialog = () => {
+    if (!mission || mission.status !== 'en_acceptation') {
+      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
+      return;
+    }
+    setCancelDialogOpen(true);
+  };
+
+  // Fonction pour annuler le devis après confirmation
   const handleCancelQuote = async () => {
     if (cancelling || !mission) return;
     if (mission.status !== 'en_acceptation') {
@@ -137,6 +157,7 @@ const MissionDetailsPage = () => {
       toast.success('Le devis a été annulé avec succès');
       fetchMission();
       if (id) fetchStatusHistory(id);
+      setCancelDialogOpen(false);
     } catch (error: any) {
       console.error('Erreur lors de l\'annulation du devis:', error);
       toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);
@@ -208,7 +229,7 @@ const MissionDetailsPage = () => {
             </>
           )}
           {showCancelButton && (
-            <Button onClick={handleCancelQuote} disabled={cancelling} variant="destructive">
+            <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
               <Ban className="h-4 w-4 mr-2" />
               {cancelling ? 'Annulation...' : 'Annuler le devis'}
             </Button>
@@ -247,6 +268,29 @@ const MissionDetailsPage = () => {
           onMissionUpdated={fetchMission}
         />
       )}
+
+      {/* Boîte de dialogue de confirmation pour l'annulation */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler le devis</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Une fois le devis annulé, il ne pourra plus être modifié.
+              Voulez-vous vraiment annuler ce devis ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCancelQuote} 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={cancelling}
+            >
+              {cancelling ? 'Annulation en cours...' : 'Confirmer l\'annulation'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

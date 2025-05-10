@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,18 +9,18 @@ import { typedSupabase } from '@/types/database';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FileUpload from '@/components/mission/FileUpload';
 import { useAuth } from '@/hooks/auth';
-
 interface MissionDocumentsSectionProps {
   mission: Mission;
 }
-
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission
 }) => {
   const [attachmentsKey, setAttachmentsKey] = useState<number>(0);
   const [documentCount, setDocumentCount] = useState<number>(0);
   const [showUploadDialog, setShowUploadDialog] = useState<boolean>(false);
-  const { profile } = useAuth();
+  const {
+    profile
+  } = useAuth();
   const isAdmin = profile?.role === 'admin';
 
   // Fetch document count on load
@@ -30,7 +29,6 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       fetchDocumentCount();
     }
   }, [mission.id]);
-  
   const fetchDocumentCount = async () => {
     try {
       const {
@@ -51,11 +49,9 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const handleGenerateQuote = () => {
     toast.info('Génération de devis non implémentée');
   };
-  
   const handleGenerateMissionSheet = () => {
     toast.info('Génération de fiche de mission non implémentée');
   };
-  
   const handleGenerateInvoice = () => {
     toast.info('Génération de facture non implémentée');
   };
@@ -74,63 +70,8 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       description: "Les documents ont été attachés à la mission."
     });
   };
-  
   return <>
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Documents
-          <div className="ml-auto">
-            <FileUpload 
-              missionId={mission.id} 
-              onUploadComplete={handleDocumentUploaded} 
-              variant="outline"
-            />
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Afficher les boutons de génération de documents uniquement pour les administrateurs */}
-        {isAdmin && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="p-4 border rounded-lg flex flex-col items-center text-center">
-              <FileText className="h-10 w-10 text-blue-600 mb-2" />
-              <h3 className="text-lg font-medium mb-1">Devis</h3>
-              
-              <Button onClick={handleGenerateQuote} variant="outline" className="w-full">
-                Générer
-              </Button>
-            </div>
-            
-            <div className="p-4 border rounded-lg flex flex-col items-center text-center">
-              <FileCheck className="h-10 w-10 text-green-600 mb-2" />
-              <h3 className="text-lg font-medium mb-1">Fiche de mission</h3>
-              
-              <Button onClick={handleGenerateMissionSheet} variant="outline" className="w-full">
-                Générer
-              </Button>
-            </div>
-            
-            <div className="p-4 border rounded-lg flex flex-col items-center text-center">
-              <Receipt className="h-10 w-10 text-amber-600 mb-2" />
-              <h3 className="text-lg font-medium mb-1">Facture</h3>
-              
-              <Button onClick={handleGenerateInvoice} variant="outline" className="w-full">
-                Générer
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        {/* Afficher les pièces jointes pour tous les utilisateurs */}
-        <MissionAttachments 
-          key={attachmentsKey}
-          missionId={mission.id}
-          showTitle={true}
-        />
-      </CardContent>
-    </Card>
+    
     
     {/* Dialog for uploading files */}
     <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>

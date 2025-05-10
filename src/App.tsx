@@ -20,6 +20,8 @@ import AuthCallback from './pages/auth/AuthCallback';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import LoginPage from './pages/LoginPage';
+import AdminContactsPage from './pages/dashboard/admin/Contacts';
+import ClientContactsPage from './pages/dashboard/client/Contacts';
 
 function App() {
   return (
@@ -74,6 +76,13 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/contacts" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <AdminContactsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
         
         {/* Client routes */}
         <Route path="/client" element={
@@ -101,6 +110,13 @@ function App() {
           <ProtectedRoute roles={['client']}>
             <DashboardLayout>
               <MissionDetailsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/client/contacts" element={
+          <ProtectedRoute roles={['client']}>
+            <DashboardLayout>
+              <ClientContactsPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -17,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import FileUpload from '@/components/mission/FileUpload';
+import { associatePendingDocumentsWithMission } from '@/integrations/supabase/storage';
 
 // Create a context to store the document IDs during mission creation
 const DocumentUploadContext = React.createContext<{
@@ -77,7 +79,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   
   // Add state for tracking pending document IDs
   const [pendingDocuments, setPendingDocuments] = useState<string[]>([]);
@@ -112,9 +114,9 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         if (error) throw error;
         setClients(data || []);
         
-        // If user is a client, pre-select their client ID
-        if (user?.role === 'client' && user?.client_id) {
-          form.setValue('client_id', user.client_id);
+        // If user has a client_id in their profile, pre-select it
+        if (profile?.role === 'client' && profile?.client_id) {
+          form.setValue('client_id', profile.client_id);
         }
       } catch (error) {
         console.error('Error fetching clients:', error);
@@ -123,7 +125,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     };
     
     fetchClients();
-  }, [user]);
+  }, [profile]);
   
   // Handle form submission
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -135,36 +137,36 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     try {
       setSubmitting(true);
       
-      // Prepare mission data
-      const missionData = {
+      // Prepare mission data with required fields
+      const missionDataToInsert = {
         ...values,
         created_by: user.id,
         status: 'en_acceptation',
+        distance_km: 0, // Default value for required field
+        price_ht: 0,    // Default value for required field
+        price_ttc: 0    // Default value for required field
       };
       
       // Insert mission in database
-      const { data: missionData, error: missionError } = await typedSupabase
+      const { data, error: missionError } = await typedSupabase
         .from('missions')
-        .insert(missionData)
+        .insert(missionDataToInsert)
         .select('id')
         .single();
         
-      if (missionError || !missionData) {
+      if (missionError || !data) {
         throw new Error(missionError?.message || 'Erreur lors de la création de la mission');
       }
       
       // Now associate any pending documents with the mission
-      if (pendingDocuments.length > 0 && missionData?.id) {
-        const { error: docsError } = await typedSupabase
-          .from('mission_documents')
-          .update({ mission_id: missionData.id })
-          .in('id', pendingDocuments);
-          
-        if (docsError) {
-          console.error("Error associating documents with mission:", docsError);
+      if (pendingDocuments.length > 0 && data.id) {
+        const success = await associatePendingDocumentsWithMission(pendingDocuments, data.id);
+        
+        if (!success) {
+          console.error("Error associating documents with mission");
           toast.error("Erreur lors de l'association des documents à la mission");
         } else {
-          console.log(`${pendingDocuments.length} documents associés à la mission ${missionData.id}`);
+          console.log(`${pendingDocuments.length} documents associés à la mission ${data.id}`);
         }
       }
       
@@ -173,6 +175,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       // Reset form and go back to step 1
       form.reset();
       setCurrentStep(1);
+      setPendingDocuments([]); // Clear pending documents
       
       // Call success callback if provided
       if (onSuccess) {
@@ -832,11 +835,11 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                   
                   <FileUpload 
                     missionId={undefined} 
-                    onUploadComplete={(filePath, fileName, documentId) => {
+                    onDocumentUploaded={(documentId) => {
                       if (documentId) {
                         addPendingDocument(documentId);
+                        toast.success("Document ajouté avec succès");
                       }
-                      toast.success(`Document ajouté: ${fileName}`);
                     }} 
                     className="mb-2"
                     variant="default" 

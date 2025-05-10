@@ -7,13 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { vehicleCategoryLabels, VehicleCategory } from '@/types/supabase';
 import { usePricing } from '@/hooks/usePricing';
-import { calculateHT, calculateTTC } from '@/utils/pricingUtils';
 import { Euro, ArrowDown } from 'lucide-react';
 
 const PriceSimulator: React.FC = () => {
   const [distance, setDistance] = useState<string>('');
   const [vehicleType, setVehicleType] = useState<VehicleCategory | ''>('');
-  const { computePrice, loading, prices } = usePricing();
+  const { computePrice, loading, prices, error } = usePricing();
   
   const handleCalculatePrice = async () => {
     if (!distance || !vehicleType) return;
@@ -72,7 +71,9 @@ const PriceSimulator: React.FC = () => {
           <div className="bg-gray-50 p-6 rounded-md">
             <div className="text-center">
               <h3 className="text-lg font-medium mb-2">Résultat</h3>
-              {prices ? (
+              {error ? (
+                <p className="text-red-500">{error}</p>
+              ) : prices ? (
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <p className="text-sm text-gray-500">Prix HT</p>

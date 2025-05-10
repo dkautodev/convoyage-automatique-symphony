@@ -87,6 +87,7 @@ export const calculatePrice = async (
     
     if (pricingItems.length === 0) {
       console.error(`Pas de grille tarifaire trouvée pour ${vehicleType}`);
+      toast.error(`Aucun tarif trouvé pour le type de véhicule ${vehicleType}`);
       return null;
     }
     
@@ -97,6 +98,7 @@ export const calculatePrice = async (
     
     if (!pricingItem) {
       console.error(`Pas de tarif trouvé pour la distance ${distance}km et le type ${vehicleType}`);
+      toast.error(`Aucun tarif trouvé pour la distance ${distance}km et le type de véhicule sélectionné`);
       return null;
     }
     
@@ -120,6 +122,7 @@ export const calculatePrice = async (
     }
   } catch (e) {
     console.error('Erreur lors du calcul du prix:', e);
+    toast.error('Erreur lors du calcul du prix');
     return null;
   }
 };

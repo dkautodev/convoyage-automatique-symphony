@@ -21,8 +21,14 @@ export function usePricing() {
     setSimulatedVehicleType(vehicleType);
     try {
       const result = await calculatePrice(distance, vehicleType);
-      setPrices(result);
-      return result;
+      if (result) {
+        setPrices(result);
+        return result;
+      } else {
+        setError('Impossible de calculer le prix avec les paramètres fournis');
+        setPrices(null);
+        return null;
+      }
     } catch (err) {
       console.error('Erreur lors du calcul du prix:', err);
       setError('Erreur lors du calcul du prix');
@@ -41,6 +47,9 @@ export function usePricing() {
     setError(null);
     try {
       const data = await fetchPricingGrid();
+      if (data.length === 0) {
+        setError('Aucune donnée de tarification disponible');
+      }
       setPricingGridData(data);
       return data;
     } catch (err) {

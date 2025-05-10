@@ -7,7 +7,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package } from 'lucide-react';
+import { Package, History, Edit } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 
 // Import our section components
@@ -15,6 +15,8 @@ import { MissionGeneralInfoSection } from '@/components/mission/sections/Mission
 import { MissionDriverSection } from '@/components/mission/sections/MissionDriverSection';
 import { MissionStatusSection } from '@/components/mission/sections/MissionStatusSection';
 import { MissionDocumentsSection } from '@/components/mission/sections/MissionDocumentsSection';
+import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
+import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,12 +25,16 @@ const MissionDetailsPage = () => {
   const [mission, setMission] = useState<Mission | null>(null);
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [statusHistory, setStatusHistory] = useState<any[]>([]);
+  const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const isAdmin = profile?.role === 'admin';
   const userRole = profile?.role || 'client';
   
   useEffect(() => {
     fetchMission();
+    if (id) fetchStatusHistory(id);
   }, [id]);
   
   const fetchMission = async () => {
@@ -74,10 +80,37 @@ const MissionDetailsPage = () => {
       setLoading(false);
     }
   };
+
+  const fetchStatusHistory = async (missionId: string) => {
+    try {
+      const { data, error } = await typedSupabase
+        .from('mission_status_history')
+        .select('*')
+        .eq('mission_id', missionId)
+        .order('changed_at', { ascending: false });
+      
+      if (error) {
+        console.error('Erreur lors de la récupération de l\'historique:', error);
+        return;
+      }
+      
+      setStatusHistory(data || []);
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'historique:', error);
+    }
+  };
   
   const handleBack = () => {
     const basePath = userRole === 'admin' ? '/admin/missions' : '/client/missions';
     navigate(basePath);
+  };
+
+  const handleEditMission = () => {
+    setEditDialogOpen(true);
+  };
+
+  const handleShowHistory = () => {
+    setHistoryDrawerOpen(true);
   };
 
   if (loading) {
@@ -127,9 +160,23 @@ const MissionDetailsPage = () => {
           </h2>
           <p className="text-gray-500">Créée le {formattedDate}</p>
         </div>
-        <Button onClick={handleBack} variant="outline">
-          Retour aux missions
-        </Button>
+        <div className="flex gap-2">
+          {isAdmin && (
+            <>
+              <Button onClick={handleEditMission} variant="outline">
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier infos
+              </Button>
+              <Button onClick={handleShowHistory} variant="outline">
+                <History className="h-4 w-4 mr-2" />
+                Historique
+              </Button>
+            </>
+          )}
+          <Button onClick={handleBack} variant="outline">
+            Retour aux missions
+          </Button>
+        </div>
       </div>
 
       {/* General Information Section */}
@@ -143,6 +190,23 @@ const MissionDetailsPage = () => {
       
       {/* Documents Section */}
       {isAdmin && <MissionDocumentsSection mission={mission} />}
+      
+      {/* Status History Drawer */}
+      <MissionStatusHistoryDrawer 
+        statusHistory={statusHistory} 
+        isOpen={historyDrawerOpen} 
+        onClose={() => setHistoryDrawerOpen(false)} 
+      />
+      
+      {/* Edit Mission Dialog */}
+      {mission && editDialogOpen && (
+        <MissionEditDialog
+          mission={mission}
+          isOpen={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          onMissionUpdated={fetchMission}
+        />
+      )}
     </div>
   );
 };

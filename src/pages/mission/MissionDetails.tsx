@@ -26,6 +26,7 @@ import { MissionStatusSection } from '@/components/mission/sections/MissionStatu
 import { MissionDocumentsSection } from '@/components/mission/sections/MissionDocumentsSection';
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
+import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +41,7 @@ const MissionDetailsPage = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [documentsCount, setDocumentsCount] = useState(0);
+  const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   
   const isAdmin = profile?.role === 'admin';
   const isClient = profile?.role === 'client';
@@ -246,7 +248,7 @@ const MissionDetailsPage = () => {
               <Button 
                 variant="outline" 
                 className="relative"
-                onClick={() => document.getElementById("documents-section")?.scrollIntoView({ behavior: "smooth" })}
+                onClick={() => setDocumentsDialogOpen(true)}
               >
                 <Paperclip className="h-4 w-4" />
                 {documentsCount > 0 && (
@@ -306,6 +308,16 @@ const MissionDetailsPage = () => {
           isOpen={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
           onMissionUpdated={fetchMission}
+        />
+      )}
+      
+      {/* Documents Dialog */}
+      {mission && documentsDialogOpen && (
+        <MissionDocumentsDialog
+          mission={mission}
+          isOpen={documentsDialogOpen}
+          onClose={() => setDocumentsDialogOpen(false)}
+          onDocumentsUpdated={() => fetchDocumentsCount(mission.id)}
         />
       )}
 

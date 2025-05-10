@@ -38,9 +38,9 @@ interface CreateMissionFormProps {
 export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { getPriceEstimate } = usePricing();
-  const { geocodeAddress } = useGooglePlaces();
-  const { data: profiles, isLoading: loadingProfiles } = useProfiles();
+  const { computePrice } = usePricing();
+  const { getPlaceDetails } = useGooglePlaces();
+  const { profiles, loading: loadingProfiles } = useProfiles('client');
   
   const [currentStep, setCurrentStep] = useState(1);
   const [clientProfiles, setClientProfiles] = useState<ProfileOption[]>([]);
@@ -134,8 +134,9 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
       const filteredProfiles = profiles
         .filter(p => p.role === 'client' && p.active)
         .map(p => ({
-          value: p.id,
+          id: p.id,
           label: p.company_name || p.full_name || p.email,
+          email: p.email
         }))
         .sort((a, b) => a.label.localeCompare(b.label));
       
@@ -156,37 +157,46 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
         let deliveryCoords = { lat: deliveryAddress.latitude, lng: deliveryAddress.longitude };
         
         if (!pickupCoords.lat || !pickupCoords.lng) {
-          const geocodedPickup = await geocodeAddress(`${pickupAddress.street}, ${pickupAddress.postal_code} ${pickupAddress.city}, ${pickupAddress.country}`);
-          if (geocodedPickup) {
-            pickupCoords = { lat: geocodedPickup.lat, lng: geocodedPickup.lng };
-            form.setValue('pickup_address.latitude', geocodedPickup.lat);
-            form.setValue('pickup_address.longitude', geocodedPickup.lng);
+          const fullPickupAddress = `${pickupAddress.street}, ${pickupAddress.postal_code} ${pickupAddress.city}, ${pickupAddress.country}`;
+          try {
+            const geocodedPickup = await getPlaceDetails(fullPickupAddress);
+            if (geocodedPickup) {
+              pickupCoords = { lat: geocodedPickup.lat, lng: geocodedPickup.lng };
+              form.setValue('pickup_address.latitude', geocodedPickup.lat);
+              form.setValue('pickup_address.longitude', geocodedPickup.lng);
+            }
+          } catch (error) {
+            console.error('Error geocoding pickup address:', error);
           }
         }
         
         if (!deliveryCoords.lat || !deliveryCoords.lng) {
-          const geocodedDelivery = await geocodeAddress(`${deliveryAddress.street}, ${deliveryAddress.postal_code} ${deliveryAddress.city}, ${deliveryAddress.country}`);
-          if (geocodedDelivery) {
-            deliveryCoords = { lat: geocodedDelivery.lat, lng: geocodedDelivery.lng };
-            form.setValue('delivery_address.latitude', geocodedDelivery.lat);
-            form.setValue('delivery_address.longitude', geocodedDelivery.lng);
+          const fullDeliveryAddress = `${deliveryAddress.street}, ${deliveryAddress.postal_code} ${deliveryAddress.city}, ${deliveryAddress.country}`;
+          try {
+            const geocodedDelivery = await getPlaceDetails(fullDeliveryAddress);
+            if (geocodedDelivery) {
+              deliveryCoords = { lat: geocodedDelivery.lat, lng: geocodedDelivery.lng };
+              form.setValue('delivery_address.latitude', geocodedDelivery.lat);
+              form.setValue('delivery_address.longitude', geocodedDelivery.lng);
+            }
+          } catch (error) {
+            console.error('Error geocoding delivery address:', error);
           }
         }
         
         // Calculer la distance et le prix
         if (pickupCoords.lat && pickupCoords.lng && deliveryCoords.lat && deliveryCoords.lng) {
-          const result = await getPriceEstimate(
-            pickupCoords.lat,
-            pickupCoords.lng,
-            deliveryCoords.lat,
-            deliveryCoords.lng,
-            selectedVehicleCategory,
-            needsReturn
+          const result = await computePrice(
+            Math.sqrt(
+              Math.pow((deliveryCoords.lat - pickupCoords.lat) * 111, 2) + 
+              Math.pow((deliveryCoords.lng - pickupCoords.lng) * 111 * Math.cos(pickupCoords.lat * Math.PI / 180), 2)
+            ),
+            selectedVehicleCategory as VehicleCategory
           );
           
           if (result) {
-            setPriceEstimate(result.price);
-            setDistanceKm(result.distance);
+            setPriceEstimate(result.priceHT);
+            setDistanceKm(result.distance || 10); // Fallback to a default value
           }
         }
       } catch (error) {
@@ -203,7 +213,7 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [pickupAddress, deliveryAddress, selectedVehicleCategory, needsReturn, geocodeAddress, getPriceEstimate, form]);
+  }, [pickupAddress, deliveryAddress, selectedVehicleCategory, needsReturn, getPlaceDetails, computePrice, form]);
 
   // Mettre à jour les contacts en fonction du client sélectionné
   useEffect(() => {
@@ -238,7 +248,7 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
   // Mettre à jour les champs de contact lorsqu'un contact est sélectionné
   useEffect(() => {
     if (selectedContactPickup) {
-      form.setValue('contact_pickup_name', selectedContactPickup.name);
+      form.setValue('contact_pickup_name', selectedContactPickup.name_s || '');
       form.setValue('contact_pickup_phone', selectedContactPickup.phone || '');
       form.setValue('contact_pickup_email', selectedContactPickup.email || '');
     }
@@ -246,7 +256,7 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
   
   useEffect(() => {
     if (selectedContactDelivery) {
-      form.setValue('contact_delivery_name', selectedContactDelivery.name);
+      form.setValue('contact_delivery_name', selectedContactDelivery.name_s || '');
       form.setValue('contact_delivery_phone', selectedContactDelivery.phone || '');
       form.setValue('contact_delivery_email', selectedContactDelivery.email || '');
     }
@@ -304,7 +314,8 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
           full_address: `${data.delivery_address.street}, ${data.delivery_address.postal_code} ${data.delivery_address.city}, ${data.delivery_address.country}`
         },
         created_by: profile?.id,
-        price: priceEstimate || null,
+        price_ht: priceEstimate || null,
+        price_ttc: priceEstimate ? priceEstimate * 1.2 : null,
         distance_km: distanceKm || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -400,7 +411,7 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
                         </FormControl>
                         <SelectContent>
                           {clientProfiles.map((client) => (
-                            <SelectItem key={client.value} value={client.value}>
+                            <SelectItem key={client.id} value={client.id}>
                               {client.label}
                             </SelectItem>
                           ))}
@@ -553,19 +564,9 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <AddressAutocomplete
-                  onAddressSelect={(address) => {
-                    form.setValue('pickup_address.street', address.street);
-                    form.setValue('pickup_address.city', address.city);
-                    form.setValue('pickup_address.postal_code', address.postal_code);
-                    form.setValue('pickup_address.latitude', address.latitude);
-                    form.setValue('pickup_address.longitude', address.longitude);
-                    form.setValue('pickup_address.full_address', address.full_address);
-                  }}
-                  defaultValue=""
-                  label="Rechercher une adresse"
-                  description="Saisissez une adresse pour la rechercher automatiquement"
-                />
+                <div className="mb-4">
+                  Entrez manuellement les détails de l'adresse:
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
@@ -630,8 +631,8 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
                   
                   {contactsPickup.length > 0 && (
                     <ContactSelector
-                      contacts={contactsPickup}
-                      onContactSelect={(contact) => setSelectedContactPickup(contact)}
+                      onSelectContact={(contact) => setSelectedContactPickup(contact)}
+                      clientId={selectedClientId}
                       className="mb-4"
                     />
                   )}
@@ -707,19 +708,9 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <AddressAutocomplete
-                  onAddressSelect={(address) => {
-                    form.setValue('delivery_address.street', address.street);
-                    form.setValue('delivery_address.city', address.city);
-                    form.setValue('delivery_address.postal_code', address.postal_code);
-                    form.setValue('delivery_address.latitude', address.latitude);
-                    form.setValue('delivery_address.longitude', address.longitude);
-                    form.setValue('delivery_address.full_address', address.full_address);
-                  }}
-                  defaultValue=""
-                  label="Rechercher une adresse"
-                  description="Saisissez une adresse pour la rechercher automatiquement"
-                />
+                <div className="mb-4">
+                  Entrez manuellement les détails de l'adresse:
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
@@ -784,8 +775,8 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
                   
                   {contactsDelivery.length > 0 && (
                     <ContactSelector
-                      contacts={contactsDelivery}
-                      onContactSelect={(contact) => setSelectedContactDelivery(contact)}
+                      onSelectContact={(contact) => setSelectedContactDelivery(contact)}
+                      clientId={selectedClientId}
                       className="mb-4"
                     />
                   )}
@@ -898,12 +889,27 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
                   </Button>
                 </div>
 
-                <TempMissionAttachments 
-                  tempMissionId={tempMissionId}
-                  uploadedFiles={uploadedFiles}
-                  onUploadComplete={handleDocumentUploaded}
-                />
-
+                <div className="border rounded-md p-4 min-h-[200px]">
+                  {uploadedFiles.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-[150px] text-muted-foreground">
+                      <File className="h-12 w-12 mb-2 opacity-30" />
+                      <p>Aucun document ajouté</p>
+                      <p className="text-sm">Cliquez sur "Ajouter un document" pour commencer</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <h3 className="font-medium mb-2">Documents ajoutés</h3>
+                      <div className="space-y-1">
+                        {uploadedFiles.map((file, index) => (
+                          <div key={index} className="flex items-center p-2 bg-muted/50 rounded">
+                            <File className="h-4 w-4 mr-2" />
+                            <span className="text-sm truncate flex-1">{file.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button type="button" variant="outline" onClick={prevStep}>
@@ -1076,3 +1082,4 @@ export function CreateMissionForm({ onSuccess }: CreateMissionFormProps) {
     </div>
   );
 }
+

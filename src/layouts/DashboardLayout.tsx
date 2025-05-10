@@ -64,10 +64,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      <Sidebar userRole={profile?.role || 'client'} />
-      <div className="flex-1">
-        <DashboardHeader />
-        <div className="container mx-auto py-6">
+      {/* Fixed sidebar */}
+      <div className="fixed left-0 top-0 h-full z-10">
+        <Sidebar userRole={profile?.role || 'client'} />
+      </div>
+      
+      {/* Main content with left margin to accommodate fixed sidebar */}
+      <div className="flex-1 ml-64">
+        {/* Fixed header */}
+        <div className="fixed top-0 right-0 left-64 z-10 bg-white shadow-sm">
+          <DashboardHeader />
+        </div>
+        
+        {/* Content area with padding to accommodate fixed header */}
+        <div className="container mx-auto py-6 mt-16 px-6">
           {renderDashboardContent()}
         </div>
       </div>

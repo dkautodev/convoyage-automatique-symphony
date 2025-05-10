@@ -60,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   };
 
   return (
-    <div className="h-screen border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-64 flex flex-col">
+    <div className="h-screen w-64 flex flex-col border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="p-6">
         <NavLink to="/" className="flex items-center gap-2 font-bold text-xl">
           <ShieldCheck className="h-6 w-6" />
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
         </NavLink>
       </div>
       
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
         <div className="space-y-1">
           {getLinks().map((link, index) => (
             <NavLink

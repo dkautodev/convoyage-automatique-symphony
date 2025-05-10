@@ -114,9 +114,9 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         if (error) throw error;
         setClients(data || []);
         
-        // If user has a client_id in their profile, pre-select it
-        if (profile?.role === 'client' && profile?.client_id) {
-          form.setValue('client_id', profile.client_id);
+        // If user has a role of 'client', pre-select their ID
+        if (profile?.role === 'client' && profile?.id) {
+          form.setValue('client_id', profile.id);
         }
       } catch (error) {
         console.error('Error fetching clients:', error);
@@ -137,9 +137,10 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     try {
       setSubmitting(true);
       
-      // Prepare mission data with required fields
+      // Prepare mission data with all required fields
       const missionDataToInsert = {
         ...values,
+        client_id: values.client_id, // Explicitly set client_id to ensure it's not optional
         created_by: user.id,
         status: 'en_acceptation',
         distance_km: 0, // Default value for required field
@@ -257,7 +258,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
-                          disabled={user?.role === 'client'}
+                          disabled={profile?.role === 'client'}
                         >
                           <FormControl>
                             <SelectTrigger>

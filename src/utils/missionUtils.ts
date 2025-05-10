@@ -1,130 +1,70 @@
+import { Address, Mission } from '@/types/supabase';
 
-import { Address } from "@/types/supabase";
+// Original file imports and basic functions
+export const formatMissionNumber = (mission: Mission) => {
+  return mission.mission_number || mission.id.slice(0, 8);
+};
 
-/**
- * Retourne une chaîne formatée avec le code postal et la ville
- */
-export const formatAddressDisplay = (address: Address | null | undefined): string => {
+export const formatAddressDisplay = (address?: Address | null) => {
+  if (!address) return 'Adresse non spécifiée';
+  return address.city || 'Adresse inconnue';
+};
+
+export const formatFullAddress = (address?: Address | null) => {
   if (!address) return 'Adresse non spécifiée';
   
-  // Si l'adresse complète est disponible, l'utiliser en priorité
-  if (address.formatted_address) {
-    return address.formatted_address;
-  }
+  let parts = [];
+  if (address.street_number) parts.push(address.street_number);
+  if (address.street) parts.push(address.street);
   
-  // Sinon utiliser les composants individuels
-  const postalCode = address.postal_code || '';
-  const city = address.city || '';
+  let line1 = parts.join(' ');
+  let line2 = '';
   
-  if (postalCode && city) {
-    return `${postalCode} ${city}`;
-  } else if (city) {
-    return city;
-  } else if (postalCode) {
-    return postalCode;
-  } else {
-    return 'Adresse incomplète';
-  }
+  parts = [];
+  if (address.postal_code) parts.push(address.postal_code);
+  if (address.city) parts.push(address.city);
+  
+  line2 = parts.join(' ');
+  
+  return [line1, line2].filter(Boolean).join(', ');
 };
 
-/**
- * Formate le numéro de mission pour l'affichage
- */
-export const formatMissionNumber = (mission: any): string => {
-  if (mission?.mission_number) {
-    return mission.mission_number;
-  }
+export const formatClientName = (mission: Mission, clientsData: Record<string, any>) => {
+  if (!mission.client_id) return 'Client inconnu';
   
-  // Fallback sur l'ID si pas de numéro de mission formaté
-  return mission?.id ? mission.id.slice(0, 8) : 'N/A';
+  const clientInfo = clientsData[mission.client_id];
+  return clientInfo?.name || 'Client inconnu';
 };
 
-/**
- * Formate le nom du client pour l'affichage
- */
-export const formatClientName = (mission: any, clientsData: Record<string, any> = {}): string => {
-  if (!mission) return 'Client inconnu';
+export const formatContactInfo = (name?: string | null, phone?: string | null, email?: string | null) => {
+  if (!name && !phone && !email) return 'Aucun contact spécifié';
   
-  // Si on a les données client via clientsData
-  if (mission.client_id && clientsData[mission.client_id]) {
-    return clientsData[mission.client_id].name || 'Client inconnu';
-  }
+  let info = [];
+  if (name) info.push(name);
+  if (phone) info.push(phone);
+  if (email) info.push(email);
   
-  // Si le client_name est déjà sur la mission
-  if (mission.client_name) {
-    return mission.client_name;
-  }
-  
-  return 'Client inconnu';
+  return info.join(' • ');
 };
 
-/**
- * Formate l'adresse complète pour l'affichage
- */
-export const formatFullAddress = (address: Address | null | undefined): string => {
-  if (!address) return 'Adresse non spécifiée';
-  
-  if (address.formatted_address) {
-    return address.formatted_address;
-  }
-  
-  const components = [];
-  
-  if (address.street_number) components.push(address.street_number);
-  if (address.street) components.push(address.street);
-  
-  const cityParts = [];
-  if (address.postal_code) cityParts.push(address.postal_code);
-  if (address.city) cityParts.push(address.city);
-  
-  if (cityParts.length > 0) {
-    components.push(cityParts.join(' '));
-  }
-  
-  if (address.country) components.push(address.country);
-  
-  return components.length > 0 ? components.join(', ') : 'Adresse incomplète';
+export const missionStatusLabels = {
+  'en_acceptation': 'En cours d\'acceptation',
+  'accepte': 'Accepté',
+  'prise_en_charge': 'En cours de prise en charge',
+  'livraison': 'En cours de livraison',
+  'livre': 'Livré',
+  'termine': 'Terminé',
+  'annule': 'Annulé',
+  'incident': 'Incident'
 };
 
-/**
- * Formate les informations de contact pour l'affichage
- */
-export const formatContactInfo = (contact: { name?: string | null, phone?: string | null, email?: string | null } | null | undefined): string => {
-  if (!contact || (!contact.name && !contact.phone && !contact.email)) {
-    return "Aucun contact spécifié";
-  }
-  
-  const parts = [];
-  
-  if (contact.name) parts.push(contact.name);
-  if (contact.phone) parts.push(contact.phone);
-  if (contact.email) parts.push(contact.email);
-  
-  return parts.join(' • ');
-};
-
-/**
- * Formate les informations de contact de la mission pour l'affichage (ramassage)
- */
-export const formatPickupContactInfo = (mission: any): string => {
-  if (!mission) return "Aucun contact spécifié";
-  
-  return formatContactInfo({
-    name: mission.contact_pickup_name,
-    phone: mission.contact_pickup_phone,
-    email: mission.contact_pickup_email
-  });
-};
-
-/**
- * Formate les informations de contact de la mission pour l'affichage (livraison)
- */
-export const formatDeliveryContactInfo = (mission: any): string => {
-  if (!mission) return "Aucun contact spécifié";
-  
-  return formatContactInfo({
-    name: mission.contact_delivery_name,
-    phone: mission.contact_delivery_phone,
-    email: mission.contact_delivery_email
-  });
+export const missionStatusColors = {
+  'en_acceptation': 'bg-gray-600 text-white',
+  'accepte': 'bg-green-500 text-white',
+  'prise_en_charge': 'bg-amber-700 text-white',
+  'livraison': 'bg-orange-500 text-white',
+  'livre': 'bg-blue-500 text-white',
+  'termine': 'bg-green-700 text-white',
+  'annule': 'bg-red-600 text-white',
+  'incident': 'bg-orange-600 text-white'
 };

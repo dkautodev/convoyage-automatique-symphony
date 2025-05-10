@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 /**
@@ -10,10 +11,11 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
   try {
     console.log(`Uploading file to ${path}`);
     
-    // All files should now use the 'documents' bucket
+    // All files should use the 'documents' bucket
     const bucketName = 'documents';
     
-    // Keep the full path including mission-docs prefix
+    // Important: Ne pas préfixer le chemin avec mission-docs/
+    // Le chemin doit être directement utilisable dans le bucket
     const filePath = path;
     
     const { data, error } = await supabase.storage
@@ -29,7 +31,6 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
     }
     
     console.log("File uploaded successfully:", data?.path);
-    // Return the full path including bucket for consistency
     return data?.path || null;
   } catch (error) {
     console.error("Exception during file upload:", error);
@@ -66,8 +67,11 @@ export async function uploadMissionDocument(missionId: string, file: File, userI
   try {
     // Generate a unique file path
     const fileExt = file.name.split('.').pop();
-    const fileName = `${missionId}/${Date.now()}_${file.name}`;
-    const filePath = `mission-docs/${fileName}`;
+    const fileName = `${Date.now()}_${file.name}`;
+    
+    // Assurez-vous que le chemin commence par le missionId
+    // Au lieu de mission-docs/uploads, utilisez directement missionId/
+    const filePath = `${missionId}/${fileName}`;
     
     // Upload the file to storage
     const storagePath = await uploadFile(filePath, file);

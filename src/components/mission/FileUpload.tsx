@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -102,13 +101,10 @@ export default function FileUpload({
       
       // Upload each file
       for (const file of selectedFiles) {
-        // Generate a unique file path using the mission ID
-        const fileName = missionId 
+        // Utiliser directement l'ID de mission comme préfixe de chemin
+        const filePath = missionId 
           ? `${missionId}/${Date.now()}_${file.name}`
           : `uploads/${Date.now()}_${file.name}`;
-        
-        // Use the mission-docs path for all mission documents
-        const filePath = `mission-docs/${fileName}`;
         
         // Upload the file to storage
         const storagePath = await uploadFile(filePath, file);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import FileUpload from '@/components/mission/FileUpload';
 import { associatePendingDocumentsWithMission } from '@/integrations/supabase/storage';
-import { Address, MissionStatus } from '@/types/supabase';
+import { Address, MissionStatus, VehicleCategory } from '@/types/supabase';
 
 // Create a context to store the document IDs during mission creation
 const DocumentUploadContext = React.createContext<{
@@ -166,7 +165,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         pickup_address: pickupAddress,
         delivery_address: deliveryAddress,
         mission_type: values.mission_type,
-        vehicle_category: values.vehicle_category,
+        vehicle_category: values.vehicle_category as VehicleCategory, // Cast to VehicleCategory type
         scheduled_date: values.scheduled_date,
         vehicle_make: values.vehicle_make,
         vehicle_model: values.vehicle_model,

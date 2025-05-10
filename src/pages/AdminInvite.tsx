@@ -277,9 +277,7 @@ export default function AdminInvite() {
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Historique des tokens d'invitation</CardTitle>
-              <CardDescription>
-                Liste des tokens d'invitation avec leur statut (email, token, utilisé ou non, date de validité)
-              </CardDescription>
+              
             </CardHeader>
             <CardContent>
               {loadingTokens ? <div className="flex justify-center py-8">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,11 @@ import { toast } from 'sonner';
 import { typedSupabase } from '@/types/database';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FileUpload from '@/components/mission/FileUpload';
+
 interface MissionDocumentsSectionProps {
   mission: Mission;
 }
+
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission
 }) => {
@@ -24,6 +27,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       fetchDocumentCount();
     }
   }, [mission.id]);
+  
   const fetchDocumentCount = async () => {
     try {
       const {
@@ -44,9 +48,11 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const handleGenerateQuote = () => {
     toast.info('Génération de devis non implémentée');
   };
+  
   const handleGenerateMissionSheet = () => {
     toast.info('Génération de fiche de mission non implémentée');
   };
+  
   const handleGenerateInvoice = () => {
     toast.info('Génération de facture non implémentée');
   };
@@ -65,12 +71,20 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       description: "Les documents ont été attachés à la mission."
     });
   };
+  
   return <>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
           Documents
+          <div className="ml-auto">
+            <FileUpload 
+              missionId={mission.id} 
+              onUploadComplete={handleDocumentUploaded} 
+              variant="outline"
+            />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -102,9 +116,6 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
             </Button>
           </div>
         </div>
-        
-        {/* Documents section */}
-        
       </CardContent>
     </Card>
     

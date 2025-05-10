@@ -1,11 +1,11 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { uploadFile } from '@/integrations/supabase/storage';
-import { Upload, Loader2, File as FileIcon, X, AlertCircle } from 'lucide-react';
+import { Upload, Loader2, File as FileIcon, X, AlertCircle, PaperclipIcon } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
+import { cn } from '@/lib/utils';
 
 // File limitation constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
@@ -42,6 +42,7 @@ export default function FileUpload({
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [showFileDialog, setShowFileDialog] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
@@ -237,40 +238,37 @@ export default function FileUpload({
     }
   };
   
+  const toggleFileDialog = () => {
+    setShowFileDialog(!showFileDialog);
+  };
+  
   return (
     <>
-      <div className={`flex flex-col ${className}`}>
+      <div className={`relative ${className}`}>
         <input 
           type="file" 
           className="hidden" 
           ref={fileInputRef}
           onChange={handleFileChange}
           multiple={multiple}
-          accept=".pdf,.jpg,.jpeg,.png"  // Limité aux formats demandés
+          accept=".pdf,.jpg,.jpeg,.png"
         />
         
         {selectedFiles.length === 0 ? (
-          <div 
-            ref={dropZoneRef}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-md p-4 flex flex-col items-center cursor-pointer transition-colors mb-2 ${
-              isDragging 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/20 hover:border-primary/50'
-            }`}
+          <Button
+            type="button"
+            variant={variant}
+            size={size}
             onClick={() => fileInputRef.current?.click()}
+            className="relative"
           >
-            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm font-medium">
-              {multiple ? 'Déposez vos fichiers ici ou cliquez pour parcourir' : 'Déposez votre fichier ici ou cliquez pour parcourir'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              PDF, JPG, JPEG, PNG • Max 10 Mo
-            </p>
-          </div>
+            <PaperclipIcon className="h-4 w-4" />
+            {/* Badge that shows a dot */}
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+            </span>
+          </Button>
         ) : (
           <div className="border rounded-md p-3 bg-muted/30 mb-2">
             <div className="flex justify-between items-center mb-2">

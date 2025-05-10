@@ -14,6 +14,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const ALL_TABS_VALUE = 'all';
 
+// Define the order of statuses as shown in the attached image
+const ORDERED_STATUSES: MissionStatus[] = [
+  'en_acceptation',
+  'accepte',
+  'prise_en_charge',
+  'livraison',
+  'livre',
+  'termine',
+  'annule',
+  'incident'
+];
+
 const ClientMissionsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -57,9 +69,6 @@ const ClientMissionsPage = () => {
     acc[mission.status] = (acc[mission.status] || 0) + 1;
     return acc;
   }, {} as Record<MissionStatus, number>);
-
-  // Get unique statuses from missions
-  const uniqueStatuses = [...new Set(missions.map(mission => mission.status))];
 
   // Filter missions based on active tab and search query
   const filteredMissions = missions.filter(mission => {
@@ -144,7 +153,9 @@ const ClientMissionsPage = () => {
               {missions.length}
             </Badge>
           </TabsTrigger>
-          {uniqueStatuses.map(status => (
+          
+          {/* Always display all statuses in the defined order, even if count is 0 */}
+          {ORDERED_STATUSES.map(status => (
             <TabsTrigger key={status} value={status} className="flex gap-2">
               {missionStatusLabels[status]}
               <Badge variant="secondary" className="ml-1">

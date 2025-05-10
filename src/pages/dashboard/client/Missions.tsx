@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
@@ -105,16 +104,11 @@ const ClientMissionsPage = () => {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
-  // Empty state component
+  // Modified Empty state component - removed the "Demandez votre première mission" text and button
   const EmptyState = () => (
     <div className="text-center py-10 text-neutral-500">
       <Package className="h-12 w-12 mx-auto text-neutral-300 mb-3" />
       <p className="font-medium">Aucune mission à afficher pour le moment.</p>
-      <p className="text-sm mt-1">Demandez votre première mission en cliquant sur "Nouvelle mission"</p>
-      <Button className="mt-4" onClick={() => navigate('/mission/create')}>
-        <Plus className="mr-2 h-4 w-4" />
-        Nouvelle mission
-      </Button>
     </div>
   );
 

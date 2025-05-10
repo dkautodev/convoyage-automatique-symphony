@@ -1,9 +1,7 @@
 
 export interface Contact {
   id: number;
-  first_name: string;
-  last_name: string;
-  company_name?: string | null;
+  name_s: string | null;
   email?: string | null;
   phone?: string | null;
   client_id: string;
@@ -12,9 +10,7 @@ export interface Contact {
 }
 
 export type ContactFormData = {
-  first_name: string;
-  last_name: string;
-  company_name?: string;
+  name_s: string;
   email?: string;
   phone?: string;
 };

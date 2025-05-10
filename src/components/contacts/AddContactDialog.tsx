@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ContactFormData } from '@/types/contact';
 import { UserPlus } from 'lucide-react';
 import {
@@ -33,9 +32,7 @@ export const AddContactDialog: React.FC<AddContactDialogProps> = ({ onAddContact
   
   const form = useForm<ContactFormData>({
     defaultValues: {
-      first_name: '',
-      last_name: '',
-      company_name: '',
+      name_s: '',
       email: '',
       phone: ''
     }
@@ -64,51 +61,18 @@ export const AddContactDialog: React.FC<AddContactDialogProps> = ({ onAddContact
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="first_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prénom</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Jean" 
-                        {...field} 
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="last_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nom</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Dupont" 
-                        {...field} 
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
             <FormField
               control={form.control}
-              name="company_name"
+              name="name_s"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Société (optionnel)</FormLabel>
+                  <FormLabel>Nom complet / société</FormLabel>
                   <FormControl>
-                    <Input placeholder="Entreprise SA" {...field} />
+                    <Input 
+                      placeholder="Jean Dupont ou Entreprise SA" 
+                      {...field} 
+                      required
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

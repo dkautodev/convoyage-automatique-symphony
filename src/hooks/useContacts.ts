@@ -26,7 +26,7 @@ export const useContacts = (clientId?: string) => {
       }
       
       // Add ordering
-      query = query.order('last_name', { ascending: true });
+      query = query.order('name_s', { ascending: true });
       
       const { data, error } = await query;
       

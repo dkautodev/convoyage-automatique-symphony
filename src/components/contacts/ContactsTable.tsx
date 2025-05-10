@@ -51,8 +51,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nom</TableHead>
-            <TableHead>Société</TableHead>
+            <TableHead>Nom complet / société</TableHead>
             <TableHead>Téléphone</TableHead>
             <TableHead>Email</TableHead>
             {showClientInfo && <TableHead>Client</TableHead>}
@@ -63,9 +62,8 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
           {contacts.map((contact) => (
             <TableRow key={contact.id}>
               <TableCell className="font-medium">
-                {contact.first_name} {contact.last_name}
+                {contact.name_s || '-'}
               </TableCell>
-              <TableCell>{contact.company_name || '-'}</TableCell>
               <TableCell>{contact.phone || '-'}</TableCell>
               <TableCell>{contact.email || '-'}</TableCell>
               {showClientInfo && (

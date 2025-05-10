@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Printer } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { pdf } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
 import { MissionSheetPDF } from './MissionSheetPDF';

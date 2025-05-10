@@ -2,7 +2,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
-import { formatMissionNumber, formatFullAddress, missionStatusLabels } from '@/utils/missionUtils';
+import { formatFullAddress } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
 
 // Enregistrer les polices
@@ -69,14 +69,6 @@ const styles = StyleSheet.create({
   halfColumn: {
     width: '50%',
   },
-  status: {
-    marginTop: 10,
-    padding: 8,
-    backgroundColor: '#e6f7ff',
-    borderRadius: 4,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -89,17 +81,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
 });
-
-// Fonction pour déterminer le préfixe du numéro de mission
-const getMissionPrefix = (missionType?: string | null): string => {
-  if (missionType?.toLowerCase().includes('livraison')) {
-    return 'LIV';
-  } else if (missionType?.toLowerCase().includes('restitution')) {
-    return 'RES';
-  } else {
-    return 'MIS';
-  }
-};
 
 // Formater la date
 const formatDate = (dateStr?: string | null): string => {
@@ -128,9 +109,10 @@ interface MissionSheetPDFProps {
 }
 
 export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, driverName = 'Non assigné' }) => {
-  const missionNumber = formatMissionNumber(mission);
-  const prefix = getMissionPrefix(mission.mission_type);
-  const fullMissionNumber = `${prefix}-${missionNumber}`;
+  // Utiliser directement le mission_type et mission_number de la mission
+  const missionType = mission.mission_type || 'MIS';
+  const missionNumber = mission.mission_number || '';
+  const fullMissionNumber = `${missionType}-${missionNumber}`;
   
   // Catégorie de véhicule
   const vehicleCategory = mission.vehicle_category 
@@ -144,11 +126,6 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
         <View style={styles.header}>
           <Text style={styles.title}>FICHE DE MISSION</Text>
           <Text style={styles.subtitle}>{fullMissionNumber}</Text>
-        </View>
-
-        {/* Statut de la mission */}
-        <View style={styles.status}>
-          <Text>Statut: {missionStatusLabels[mission.status]}</Text>
         </View>
 
         {/* Adresses */}
@@ -270,26 +247,6 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
               </View>
             </View>
           )}
-        </View>
-
-        {/* Information chauffeur */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Information chauffeur</Text>
-          <View style={styles.row}>
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Chauffeur assigné:</Text>
-              <Text>{driverName}</Text>
-            </View>
-            {mission.chauffeur_price_ht !== undefined && mission.chauffeur_price_ht > 0 && (
-              <View style={styles.halfColumn}>
-                <Text style={{fontWeight: 'bold'}}>Rémunération chauffeur (HT):</Text>
-                <Text>{mission.chauffeur_price_ht.toLocaleString('fr-FR', {
-                  style: 'currency',
-                  currency: 'EUR'
-                })}</Text>
-              </View>
-            )}
-          </View>
         </View>
 
         {/* Distance */}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   createBrowserRouter,
@@ -29,15 +30,15 @@ import Clients from '@/pages/dashboard/admin/Clients';
 import Drivers from '@/pages/dashboard/admin/Drivers';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
 import ClientMissions from '@/pages/dashboard/client/ClientMissions';
+import AdminInvite from '@/pages/AdminInvite';
+import PricingGridPage from '@/pages/dashboard/admin/PricingGrid';
 
 // Mission pages
 import CreateMissionPage from '@/pages/mission/CreateMission';
 import MissionDetailsPage from '@/pages/mission/MissionDetails';
 import AdminMissionsPage from '@/pages/mission/AdminMissionsPage';
 import ClientMissionsPage from '@/pages/mission/ClientMissionsPage';
-
-// Admin pages
-import AdminInvitePage from '@/pages/admin/AdminInvitePage';
+import Missions from '@/pages/dashboard/admin/Missions';
 
 // Contacts pages
 import AdminContactsPage from '@/pages/contacts/AdminContactsPage';
@@ -58,6 +59,7 @@ const router = createBrowserRouter(
       <Route path="register" element={<Register />} />
       <Route path="complete-driver-profile" element={<CompleteDriverProfile />} />
       <Route path="complete-client-profile" element={<CompleteClientProfile />} />
+      <Route path="admin-invite" element={<AdminInvite />} />
 
       {/* Admin dashboard routes */}
       <Route element={<DashboardLayout children={<Outlet />} />}>
@@ -79,15 +81,15 @@ const router = createBrowserRouter(
         />
         <Route
           path="/admin/missions"
-          element={<ProtectedRoute roles={["admin"]}><AdminMissionsPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={["admin"]}><Missions /></ProtectedRoute>}
         />
         <Route
-          path="/admin/missions/:missionId"
-          element={<ProtectedRoute roles={["admin"]}><MissionDetailsPage /></ProtectedRoute>}
+          path="/admin/pricing-grid"
+          element={<ProtectedRoute roles={["admin"]}><PricingGridPage /></ProtectedRoute>}
         />
         <Route
           path="/admin/invite"
-          element={<ProtectedRoute roles={["admin"]}><AdminInvitePage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={["admin"]}><AdminInvite /></ProtectedRoute>}
         />
       </Route>
 
@@ -105,10 +107,6 @@ const router = createBrowserRouter(
           path="/client/contacts"
           element={<ProtectedRoute roles={["client"]}><ClientContactsPage /></ProtectedRoute>}
         />
-        <Route
-          path="/client/missions/:missionId"
-          element={<ProtectedRoute roles={["client"]}><MissionDetailsPage /></ProtectedRoute>}
-        />
       </Route>
 
       {/* Driver dashboard routes */}
@@ -116,10 +114,6 @@ const router = createBrowserRouter(
         <Route
           path="/driver/dashboard"
           element={<ProtectedRoute roles={["chauffeur"]}><Dashboard /></ProtectedRoute>}
-        />
-        <Route
-          path="/driver/missions/:missionId"
-          element={<ProtectedRoute roles={["chauffeur"]}><MissionDetailsPage /></ProtectedRoute>}
         />
       </Route>
 

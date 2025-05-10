@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
 import { formatFullAddress } from '@/utils/missionUtils';
-import { vehicleCategoryLabels } from '@/types/supabase';
 
 // Enregistrer les polices
 Font.register({
@@ -69,6 +68,17 @@ const styles = StyleSheet.create({
   halfColumn: {
     width: '50%',
   },
+  contactBlock: {
+    marginTop: 8,
+    paddingLeft: 0,
+  },
+  contactLabel: {
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  contactInfo: {
+    marginBottom: 2,
+  },
   footer: {
     position: 'absolute',
     bottom: 30,
@@ -113,11 +123,7 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
   const missionType = mission.mission_type || 'MIS';
   const missionNumber = mission.mission_number || '';
   const fullMissionNumber = `${missionType}-${missionNumber}`;
-  
-  // Catégorie de véhicule
-  const vehicleCategory = mission.vehicle_category 
-    ? vehicleCategoryLabels[mission.vehicle_category] 
-    : 'Non spécifiée';
+  const distanceKm = mission.distance_km?.toFixed(2) || '0';
 
   return (
     <Document>
@@ -128,20 +134,20 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
           <Text style={styles.subtitle}>{fullMissionNumber}</Text>
         </View>
 
-        {/* Adresses */}
+        {/* Adresses avec distance */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Adresses</Text>
+          <Text style={styles.sectionTitle}>Adresses ({distanceKm} km)</Text>
           <View style={styles.row}>
             <View style={styles.halfColumn}>
               <Text style={{...styles.label, marginBottom: 5}}>Adresse de départ:</Text>
               <Text>{formatFullAddress(mission.pickup_address)}</Text>
               
               {(mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email) && (
-                <View style={{marginTop: 8}}>
-                  <Text style={{fontWeight: 'bold', marginBottom: 3}}>Contact:</Text>
-                  {mission.contact_pickup_name && <Text>{mission.contact_pickup_name}</Text>}
-                  {mission.contact_pickup_phone && <Text>{mission.contact_pickup_phone}</Text>}
-                  {mission.contact_pickup_email && <Text>{mission.contact_pickup_email}</Text>}
+                <View style={styles.contactBlock}>
+                  <Text style={styles.contactLabel}>Contact:</Text>
+                  {mission.contact_pickup_name && <Text style={styles.contactInfo}>{mission.contact_pickup_name}</Text>}
+                  {mission.contact_pickup_phone && <Text style={styles.contactInfo}>{mission.contact_pickup_phone}</Text>}
+                  {mission.contact_pickup_email && <Text style={styles.contactInfo}>{mission.contact_pickup_email}</Text>}
                 </View>
               )}
             </View>
@@ -151,11 +157,11 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
               <Text>{formatFullAddress(mission.delivery_address)}</Text>
               
               {(mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email) && (
-                <View style={{marginTop: 8}}>
-                  <Text style={{fontWeight: 'bold', marginBottom: 3}}>Contact:</Text>
-                  {mission.contact_delivery_name && <Text>{mission.contact_delivery_name}</Text>}
-                  {mission.contact_delivery_phone && <Text>{mission.contact_delivery_phone}</Text>}
-                  {mission.contact_delivery_email && <Text>{mission.contact_delivery_email}</Text>}
+                <View style={styles.contactBlock}>
+                  <Text style={styles.contactLabel}>Contact:</Text>
+                  {mission.contact_delivery_name && <Text style={styles.contactInfo}>{mission.contact_delivery_name}</Text>}
+                  {mission.contact_delivery_phone && <Text style={styles.contactInfo}>{mission.contact_delivery_phone}</Text>}
+                  {mission.contact_delivery_email && <Text style={styles.contactInfo}>{mission.contact_delivery_email}</Text>}
                 </View>
               )}
             </View>
@@ -191,50 +197,29 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
           </View>
         </View>
 
-        {/* Informations véhicule */}
+        {/* Informations véhicule (simplifiées) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informations véhicule</Text>
           <View style={styles.row}>
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Type de mission:</Text>
-              <Text>{mission.mission_type || 'Non spécifié'}</Text>
-            </View>
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Catégorie de véhicule:</Text>
-              <Text>{vehicleCategory}</Text>
-            </View>
+            {mission.vehicle_make && (
+              <View style={styles.halfColumn}>
+                <Text style={{fontWeight: 'bold'}}>Marque:</Text>
+                <Text>{mission.vehicle_make}</Text>
+              </View>
+            )}
+            {mission.vehicle_model && (
+              <View style={styles.halfColumn}>
+                <Text style={{fontWeight: 'bold'}}>Modèle:</Text>
+                <Text>{mission.vehicle_model}</Text>
+              </View>
+            )}
           </View>
           
-          {(mission.vehicle_make || mission.vehicle_model || mission.vehicle_year || mission.vehicle_registration) && (
-            <View style={{marginTop: 10}}>
-              <View style={styles.row}>
-                {mission.vehicle_make && (
-                  <View style={styles.halfColumn}>
-                    <Text style={{fontWeight: 'bold'}}>Marque:</Text>
-                    <Text>{mission.vehicle_make}</Text>
-                  </View>
-                )}
-                {mission.vehicle_model && (
-                  <View style={styles.halfColumn}>
-                    <Text style={{fontWeight: 'bold'}}>Modèle:</Text>
-                    <Text>{mission.vehicle_model}</Text>
-                  </View>
-                )}
-              </View>
-              
-              <View style={styles.row}>
-                {mission.vehicle_year && (
-                  <View style={styles.halfColumn}>
-                    <Text style={{fontWeight: 'bold'}}>Année:</Text>
-                    <Text>{mission.vehicle_year}</Text>
-                  </View>
-                )}
-                {mission.vehicle_registration && (
-                  <View style={styles.halfColumn}>
-                    <Text style={{fontWeight: 'bold'}}>Immatriculation:</Text>
-                    <Text>{mission.vehicle_registration}</Text>
-                  </View>
-                )}
+          {mission.vehicle_registration && (
+            <View style={styles.row}>
+              <View style={styles.halfColumn}>
+                <Text style={{fontWeight: 'bold'}}>Immatriculation:</Text>
+                <Text>{mission.vehicle_registration}</Text>
               </View>
             </View>
           )}
@@ -247,12 +232,6 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
               </View>
             </View>
           )}
-        </View>
-
-        {/* Distance */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Distance</Text>
-          <Text>{mission.distance_km?.toFixed(2) || '0'} km</Text>
         </View>
 
         {/* Notes */}

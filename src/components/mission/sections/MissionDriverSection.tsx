@@ -98,7 +98,7 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
                   <SelectValue placeholder="Choisir un chauffeur" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun chauffeur assigné</SelectItem>
+                  <SelectItem value="no_driver">Aucun chauffeur assigné</SelectItem>
                   {loading ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (

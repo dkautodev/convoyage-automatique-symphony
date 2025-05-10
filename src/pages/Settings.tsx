@@ -17,7 +17,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { toast } from 'sonner';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader2, Save, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 
@@ -42,7 +42,7 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const Settings = () => {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<PasswordFormValues>({
@@ -55,34 +55,29 @@ const Settings = () => {
   });
 
   const onSubmit = async (data: PasswordFormValues) => {
-    if (!user) {
-      toast.error("Vous devez être connecté pour modifier votre mot de passe");
-      return;
-    }
+    if (!user) return;
     
     try {
       setIsLoading(true);
-      console.log("Tentative de mise à jour du mot de passe...");
       
-      if (!session) {
-        toast.error("Session expirée. Veuillez vous reconnecter.");
-        setIsLoading(false);
-        return;
-      }
-      
-      // Vérification du mot de passe actuel via l'API Supabase
-      // Nous allons utiliser Admin API pour éviter les problèmes de vérification
-      const { data: userData, error: signInError } = await typedSupabase.auth.getUser();
+      // Utiliser la méthode correcte pour vérifier l'ancien mot de passe
+      const { error: signInError } = await typedSupabase.auth.signInWithPassword({
+        email: user.email || '',
+        password: data.currentPassword,
+      });
       
       if (signInError) {
-        console.error("Erreur lors de la récupération de l'utilisateur:", signInError);
-        toast.error("Erreur lors de la vérification de l'utilisateur");
+        toast.error('Le mot de passe actuel est incorrect');
+        form.setError('currentPassword', {
+          type: 'manual',
+          message: 'Mot de passe incorrect',
+        });
         setIsLoading(false);
         return;
       }
       
-      // Si l'utilisateur est bien authentifié, nous pouvons procéder à la mise à jour du mot de passe
-      const { data: updateData, error: updateError } = await typedSupabase.auth.updateUser({
+      // Si l'ancien mot de passe est correct, mettre à jour le mot de passe
+      const { error: updateError } = await typedSupabase.auth.updateUser({
         password: data.newPassword,
       });
       
@@ -90,7 +85,6 @@ const Settings = () => {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         toast.error(`Erreur lors de la mise à jour du mot de passe: ${updateError.message}`);
       } else {
-        console.log("Mot de passe mis à jour avec succès:", updateData);
         toast.success('Mot de passe mis à jour avec succès');
         form.reset();
       }

@@ -217,13 +217,13 @@ export default function FileUpload({
   const toggleFileDialog = () => {
     setShowFileDialog(!showFileDialog);
   };
-  return <>
+  return (
+    <>
       <div className={`relative ${className}`}>
         <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} multiple={multiple} accept=".pdf,.jpg,.jpeg,.png" />
         
-        {selectedFiles.length === 0 ? <Button type="button" variant={variant} size={size} onClick={() => fileInputRef.current?.click()} className="relative">
-            <PaperclipIcon className="h-4 w-4" />
-          </Button> : <div className="border rounded-md p-3 bg-muted/30 mb-2">
+        {selectedFiles.length > 0 && (
+          <div className="border rounded-md p-3 bg-muted/30 mb-2">
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium">
                 {selectedFiles.length} fichier{selectedFiles.length > 1 ? 's' : ''} sélectionné{selectedFiles.length > 1 ? 's' : ''}
@@ -234,36 +234,51 @@ export default function FileUpload({
             </div>
             
             <div className="max-h-32 overflow-y-auto">
-              {selectedFiles.map((file, index) => <div key={index} className="flex items-center text-xs p-1 mb-1 bg-background rounded">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="flex items-center text-xs p-1 mb-1 bg-background rounded">
                   <FileIcon className="h-3 w-3 mr-2 shrink-0" />
                   <span className="truncate">{file.name}</span>
                   <span className="ml-auto text-muted-foreground shrink-0">
                     {(file.size / 1024).toFixed(1)} Ko
                   </span>
-                </div>)}
+                </div>
+              ))}
             </div>
             
             <Button type="button" onClick={handleFileUpload} disabled={isUploading} variant="default" size="sm" className="w-full mt-2">
-              {isUploading ? <>
+              {isUploading ? (
+                <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Téléchargement...
-                </> : <>
+                </>
+              ) : (
+                <>
                   <Upload className="h-4 w-4 mr-2" />
                   Télécharger
-                </>}
+                </>
+              )}
             </Button>
-          </div>}
+          </div>
+        )}
         
-        {isUploading && uploadProgress > 0 && <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-            <div className="bg-primary h-full transition-all duration-300 ease-in-out" style={{
-          width: `${uploadProgress}%`
-        }}></div>
-          </div>}
+        {isUploading && uploadProgress > 0 && (
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+            <div 
+              className="bg-primary h-full transition-all duration-300 ease-in-out" 
+              style={{
+                width: `${uploadProgress}%`
+              }}
+            ></div>
+          </div>
+        )}
         
-        {error && <div className="flex items-center text-xs text-destructive gap-1 mt-1">
+        {error && (
+          <div className="flex items-center text-xs text-destructive gap-1 mt-1">
             <AlertCircle className="h-3 w-3" />
             <span>{error}</span>
-          </div>}
+          </div>
+        )}
       </div>
-    </>;
+    </>
+  );
 }

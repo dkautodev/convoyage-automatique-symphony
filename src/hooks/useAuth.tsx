@@ -1,5 +1,5 @@
 
-// Ce fichier est gardé pour la rétrocompatibilité
-// Il réexporte le nouveau système d'authentification modulaire
+// This file is kept for backward compatibility
+// It re-exports the new modular authentication system
 export { useAuth, AuthProvider } from './auth';
 export type { Profile, AuthContextType } from './auth/types';

@@ -18,6 +18,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { profile, user, loading } = useAuth();
   const location = useLocation();
   
+  // Adding debug logging to trace authentication state
+  console.log("DashboardLayout auth state:", { user, profile, loading });
+  
   // Afficher un écran de chargement pendant la vérification de l'authentification
   if (loading) {
     return (

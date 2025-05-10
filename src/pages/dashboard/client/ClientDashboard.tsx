@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -259,7 +258,7 @@ const ClientDashboard = () => {
                       {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'} → {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                      Départ: {mission.D1_PEC ? new Date(mission.D1_PEC).toLocaleDateString('fr-FR') : 'Non spécifié'} · Livraison: {mission.D2_LIV ? new Date(mission.D2_LIV).toLocaleDateString('fr-FR') : 'Non spécifié'}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" asChild>
@@ -270,14 +269,7 @@ const ClientDashboard = () => {
                 </div>
               ))
             ) : (
-              <div className="py-12 flex flex-col items-center justify-center">
-                <Package size={40} className="text-gray-300 mb-3" />
-                <p className="text-gray-500 text-center">Vous n'avez pas encore de missions</p>
-                <Button className="mt-4" onClick={handleCreateNewMission}>
-                  <Plus size={16} className="mr-2" />
-                  Créer une mission
-                </Button>
-              </div>
+              <EmptyMissionsState />
             )}
           </div>
         </CardContent>

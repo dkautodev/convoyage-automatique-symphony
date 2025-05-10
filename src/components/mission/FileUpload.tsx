@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -154,13 +155,16 @@ export default function FileUpload({
       
       // Upload each file
       for (const file of selectedFiles) {
-        // Create file path - directly use mission ID as path prefix
+        // Create sanitized file name to prevent path issues
+        const fileId = Date.now(); // Unique identifier
+        const sanitizedName = file.name.replace(/[^\w\d.-]/g, '_'); // Remove special chars
+        
         let filePath;
         if (missionId) {
-          filePath = `${missionId}/${Date.now()}_${file.name}`;
+          filePath = `${missionId}/${fileId}_${sanitizedName}`;
           console.log(`Creating mission document path: ${filePath}`);
         } else {
-          filePath = `uploads/${Date.now()}_${file.name}`;
+          filePath = `uploads/${fileId}_${sanitizedName}`;
           console.log(`Creating general upload path: ${filePath}`);
         }
         
@@ -180,7 +184,7 @@ export default function FileUpload({
             .insert({
               mission_id: missionId,
               file_name: file.name,
-              file_path: filePath,
+              file_path: storagePath,
               file_type: file.type,
               uploaded_by: user.id
             });
@@ -197,7 +201,7 @@ export default function FileUpload({
         
         // Call the callback if provided
         if (onUploadComplete) {
-          onUploadComplete(filePath, file.name);
+          onUploadComplete(storagePath, file.name);
         }
       }
       

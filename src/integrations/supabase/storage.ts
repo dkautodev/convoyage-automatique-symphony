@@ -14,10 +14,14 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
     // All files should use the 'documents' bucket
     const bucketName = 'documents';
     
+    // Sanitize the file path to avoid special characters
+    const sanitizedPath = sanitizeStoragePath(path);
+    console.log(`Using sanitized path: ${sanitizedPath}`);
+    
     // Upload file to the bucket
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(path, file, {
+      .upload(sanitizedPath, file, {
         cacheControl: '3600',
         upsert: true // Change to true to overwrite existing files with the same name
       });
@@ -33,6 +37,23 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
     console.error("Exception during file upload:", error);
     return null;
   }
+}
+
+/**
+ * Sanitize file path for storage
+ * @param path The original path
+ * @returns A sanitized path safe for storage
+ */
+function sanitizeStoragePath(path: string): string {
+  // Replace spaces and special characters
+  let sanitized = path.replace(/[^\w\d.-]/g, '_');
+  
+  // Ensure path doesn't start with slash
+  if (sanitized.startsWith('/')) {
+    sanitized = sanitized.substring(1);
+  }
+  
+  return sanitized;
 }
 
 /**
@@ -62,18 +83,26 @@ export function getPublicUrl(path: string): string | null {
  */
 export async function uploadMissionDocument(missionId: string, file: File, userId: string): Promise<string | null> {
   try {
-    // Generate a unique file path
-    const fileName = `${Date.now()}_${file.name}`;
+    // Generate a unique file identifier
+    const fileId = Date.now();
     
-    // Use directly the mission ID as the path prefix
-    const filePath = `${missionId}/${fileName}`;
+    // Sanitize the original filename
+    const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
+    
+    // Create a path pattern that won't have special characters
+    const filePath = `${missionId}/${fileId}_${sanitizedFileName}`;
+    
+    console.log(`Attempting to upload file to path: ${filePath}`);
     
     // Upload the file to storage
     const storagePath = await uploadFile(filePath, file);
     
     if (!storagePath) {
+      console.error("File upload failed, no storage path returned");
       return null;
     }
+    
+    console.log(`File uploaded successfully to: ${storagePath}`);
     
     // Save the document reference in the database
     const { data, error } = await supabase
@@ -81,7 +110,7 @@ export async function uploadMissionDocument(missionId: string, file: File, userI
       .insert({
         mission_id: missionId,
         file_name: file.name,
-        file_path: filePath,
+        file_path: storagePath, // Use the sanitized path returned from uploadFile
         file_type: file.type,
         uploaded_by: userId
       })

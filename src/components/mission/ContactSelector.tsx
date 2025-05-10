@@ -22,9 +22,16 @@ interface Contact {
 interface ContactSelectorProps {
   onSelectContact: (contact: Contact) => void;
   clientId?: string;
+  variant?: "outline" | "default" | "secondary";
+  size?: "sm" | "default";
 }
 
-export default function ContactSelector({ onSelectContact, clientId }: ContactSelectorProps) {
+export default function ContactSelector({ 
+  onSelectContact, 
+  clientId,
+  variant = "outline",
+  size = "sm"
+}: ContactSelectorProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -63,7 +70,7 @@ export default function ContactSelector({ onSelectContact, clientId }: ContactSe
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8">
+        <Button variant={variant} size={size} className="h-8">
           <UserPlus className="h-3.5 w-3.5 mr-1" />
           Contact existant
         </Button>

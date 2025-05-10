@@ -11,9 +11,19 @@ interface FileUploadProps {
   onUploadComplete?: (filePath: string, fileName: string) => void;
   missionId?: string;
   className?: string;
+  variant?: "outline" | "default" | "secondary";
+  size?: "sm" | "default";
+  label?: string;
 }
 
-export default function FileUpload({ onUploadComplete, missionId, className }: FileUploadProps) {
+export default function FileUpload({ 
+  onUploadComplete, 
+  missionId, 
+  className,
+  variant = "outline",
+  size = "sm",
+  label = "Sélectionner un document"
+}: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,55 +104,54 @@ export default function FileUpload({ onUploadComplete, missionId, className }: F
   };
   
   return (
-    <div className={`flex flex-col space-y-2 ${className}`}>
-      <div className="flex items-center gap-2">
-        <input 
-          type="file" 
-          className="hidden" 
-          ref={fileInputRef}
-          onChange={handleFileChange}
-        />
-        
-        {!selectedFile ? (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <input 
+        type="file" 
+        className="hidden" 
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+      
+      {!selectedFile ? (
+        <Button 
+          type="button" 
+          variant={variant} 
+          size={size}
+          onClick={() => fileInputRef.current?.click()}
+          className="h-8"
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          {label}
+        </Button>
+      ) : (
+        <div className="flex items-center gap-2 border rounded-md p-2 bg-muted/30 h-8">
+          <FileIcon className="h-4 w-4 shrink-0" />
+          <span className="text-xs truncate max-w-[100px]">{selectedFile.name}</span>
           <Button 
             type="button" 
-            variant="outline" 
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1"
+            variant="ghost" 
+            size="sm" 
+            onClick={clearSelectedFile}
+            className="h-6 w-6 p-0"
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Sélectionner un document
+            <X className="h-4 w-4" />
           </Button>
-        ) : (
-          <div className="flex flex-1 items-center gap-2 border rounded-md p-2 bg-muted/30">
-            <FileIcon className="h-4 w-4 shrink-0" />
-            <span className="text-sm truncate flex-1">{selectedFile.name}</span>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearSelectedFile}
-              className="h-6 w-6 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-        
-        <Button
-          type="button"
-          onClick={handleFileUpload}
-          disabled={!selectedFile || isUploading}
-          variant="default"
-        >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Upload className="h-4 w-4 mr-2" />
-          )}
-          Télécharger
-        </Button>
-      </div>
+          <Button
+            type="button"
+            onClick={handleFileUpload}
+            disabled={isUploading}
+            variant="default"
+            size="sm"
+            className="h-6"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

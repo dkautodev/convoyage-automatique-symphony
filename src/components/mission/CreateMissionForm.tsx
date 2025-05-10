@@ -433,6 +433,22 @@ export default function CreateMissionForm({
       setIsSubmitting(false);
     }
   };
+
+  // Fonctions pour gérer les contacts sélectionnés
+  const handlePickupContactSelect = (contact: any) => {
+    form.setValue('contact_pickup_name', contact.first_name + ' ' + contact.last_name);
+    if (contact.email) form.setValue('contact_pickup_email', contact.email);
+    if (contact.phone) form.setValue('contact_pickup_phone', contact.phone);
+    toast.success(`Contact de départ sélectionné: ${contact.first_name} ${contact.last_name}`);
+  };
+
+  const handleDeliveryContactSelect = (contact: any) => {
+    form.setValue('contact_delivery_name', contact.first_name + ' ' + contact.last_name);
+    if (contact.email) form.setValue('contact_delivery_email', contact.email);
+    if (contact.phone) form.setValue('contact_delivery_phone', contact.phone);
+    toast.success(`Contact de livraison sélectionné: ${contact.first_name} ${contact.last_name}`);
+  };
+
   return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Créer une nouvelle mission</CardTitle>
@@ -654,7 +670,14 @@ export default function CreateMissionForm({
                 {/* Contact au lieu de départ et créneau horaire */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
+                      <ContactSelector 
+                        onSelectContact={handlePickupContactSelect}
+                        clientId={selectedClientId || undefined}
+                      />
+                    </div>
+                    
                     <FormField control={form.control} name="contact_pickup_name" render={({
                   field
                 }) => <FormItem>
@@ -751,13 +774,20 @@ export default function CreateMissionForm({
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
+                      <ContactSelector 
+                        onSelectContact={handleDeliveryContactSelect}
+                        clientId={selectedClientId || undefined}
+                      />
+                    </div>
+                    
                     <FormField control={form.control} name="contact_delivery_name" render={({
                   field
                 }) => <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Nom complet ou sociét���" />
+                            <Input {...field} placeholder="Nom complet ou société" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>} />
@@ -845,6 +875,18 @@ export default function CreateMissionForm({
                             </FormItem>} />
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Pièces jointes */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-2">Pièces jointes</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <FileUpload
+                      label="Ajouter une pièce jointe"
+                      variant="outline"
+                      size="sm"
+                    />
                   </div>
                 </div>
 
@@ -985,25 +1027,44 @@ export default function CreateMissionForm({
               </div>
             )}
 
-            {/* Navigation */}
+            {/* Navigation - MISE À JOUR */}
             <div className="flex justify-between pt-4 border-t mt-8">
               <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1} className="flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Retour
               </Button>
               
-              {currentStep < totalSteps ? <Button type="button" onClick={nextStep} className="flex items-center gap-2">
-                  Suivant
-                  <ArrowRight className="h-4 w-4" />
-                </Button> : <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
-                  {isSubmitting ? <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Création en cours...
-                    </> : <>
-                      <Check className="h-4 w-4" />
-                      Créer la mission
-                    </>}
-                </Button>}
+              <div className="flex items-center gap-2">
+                {/* Quand on est à l'étape 4, on montre le bouton de pièce jointe à côté de Suivant */}
+                {currentStep === 4 && (
+                  <FileUpload
+                    label="PJ"
+                    variant="outline"
+                    size="sm"
+                  />
+                )}
+                
+                {currentStep < totalSteps ? (
+                  <Button type="button" onClick={nextStep} className="flex items-center gap-2">
+                    Suivant
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Création en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Créer la mission
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </form>
         </Form>

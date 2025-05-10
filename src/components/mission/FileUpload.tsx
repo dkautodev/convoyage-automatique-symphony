@@ -263,11 +263,6 @@ export default function FileUpload({
             className="relative"
           >
             <PaperclipIcon className="h-4 w-4" />
-            {/* Badge that shows a dot */}
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-            </span>
           </Button>
         ) : (
           <div className="border rounded-md p-3 bg-muted/30 mb-2">

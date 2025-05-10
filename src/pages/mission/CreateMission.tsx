@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { CreateMissionForm } from '@/components/mission/CreateMissionForm';
+import CreateMissionForm from '@/components/mission/CreateMissionForm';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function CreateMissionPage() {

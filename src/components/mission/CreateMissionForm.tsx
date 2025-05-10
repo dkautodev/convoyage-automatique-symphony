@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Save, Calculator, Calendar, Clock, FileText, File } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Save, Calculator, Calendar, Clock, FileText, File, PaperclipIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -885,8 +885,27 @@ export default function CreateMissionForm({
                   </div>
                 </div>
 
-                {/* Pièces jointes */}
-                
+                {/* Pièces jointes - NOUVELLE SECTION */}
+                <div className="space-y-4 border-t pt-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Pièces jointes</h3>
+                    
+                    <FileUpload 
+                      missionId={undefined} 
+                      onUploadComplete={(filePath, fileName) => {
+                        toast.success(`Document ajouté: ${fileName}`);
+                      }} 
+                      className="mb-2"
+                      variant="default" 
+                      size="sm"
+                      label="Ajouter un document"
+                      multiple={true}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Les documents seront associés à la mission après sa création.
+                  </p>
+                </div>
 
                 {/* Notes */}
                 <FormField control={form.control} name="notes" render={({
@@ -993,11 +1012,14 @@ export default function CreateMissionForm({
                 {currentStep === 4 && 
                   <FileUpload 
                     missionId={undefined} 
-                    variant="outline" 
-                    size="sm" 
-                    onUploadComplete={(path, fileName) => {
+                    onUploadComplete={(filePath, fileName) => {
                       toast.success(`Document ajouté: ${fileName}`);
                     }} 
+                    className="mb-2"
+                    variant="default" 
+                    size="sm"
+                    label="Ajouter un document"
+                    multiple={true}
                   />
                 }
                 

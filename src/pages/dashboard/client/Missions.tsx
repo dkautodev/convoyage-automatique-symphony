@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Package, Plus, Search, Filter } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils';
+import { formatAddressDisplay } from '@/utils/missionUtils';
 
 const ClientMissionsPage = () => {
   const navigate = useNavigate();
@@ -69,6 +69,17 @@ const ClientMissionsPage = () => {
       missionStatusLabels[mission.status].toLowerCase().includes(searchLower)
     );
   });
+
+  // Format the mission number for display
+  const formatMissionNumber = (mission: Mission) => {
+    return mission.mission_number || mission.id.slice(0, 8);
+  };
+
+  // Format the dates for display
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "Non spécifié";
+    return new Date(dateString).toLocaleDateString('fr-FR');
+  };
 
   // Empty state component
   const EmptyState = () => (
@@ -140,7 +151,7 @@ const ClientMissionsPage = () => {
             <div className="space-y-4">
               {filteredMissions.map((mission) => (
                 <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
@@ -149,13 +160,13 @@ const ClientMissionsPage = () => {
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                        {mission.pickup_address?.formatted_address || formatAddressDisplay(mission.pickup_address)} → {mission.delivery_address?.formatted_address || formatAddressDisplay(mission.delivery_address)}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                        Départ: {formatDate(mission.D1_PEC)} · Livraison: {formatDate(mission.D2_LIV)}
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="md:self-center mt-2 md:mt-0">
                       <Link to={`/client/missions/${mission.id}`}>
                         Détails
                       </Link>
@@ -169,6 +180,6 @@ const ClientMissionsPage = () => {
       </Card>
     </div>
   );
-}
+};
 
 export default ClientMissionsPage;

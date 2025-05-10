@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Address } from '@/types/supabase';
 import { Loader2, Save } from 'lucide-react';
 import { Json } from '@/integrations/supabase/types';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 // Helper function to convert JSON to Address
 function jsonToAddress(json: Json | null): Address {
@@ -91,6 +92,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 const Profile = () => {
   const { profile, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [addressInput, setAddressInput] = useState('');
 
   // Initialiser le formulaire avec React Hook Form
   const form = useForm<ProfileFormValues>({
@@ -116,6 +118,9 @@ const Profile = () => {
       // Convert billing_address from Json to Address type
       const billingAddress = jsonToAddress(profile.billing_address);
       
+      // Set the formatted address for the autocomplete input
+      setAddressInput(billingAddress.formatted_address || '');
+      
       form.reset({
         full_name: profile.full_name || '',
         email: profile.email || '',
@@ -133,6 +138,17 @@ const Profile = () => {
     }
   }, [profile, form]);
 
+  // Handle address selection from Google Maps autocomplete
+  const handleAddressSelect = (address: string, placeId: string, addressData?: any) => {
+    // Update the form fields with the selected address data
+    if (addressData && addressData.extracted_data) {
+      form.setValue('street', addressData.extracted_data.street);
+      form.setValue('city', addressData.extracted_data.city);
+      form.setValue('postal_code', addressData.extracted_data.postal_code);
+      form.setValue('country', addressData.extracted_data.country);
+    }
+  };
+
   // Fonction de soumission du formulaire
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -140,7 +156,7 @@ const Profile = () => {
 
       // Construire l'objet d'adresse
       const billingAddress: Address = {
-        formatted_address: `${data.street || ''}, ${data.postal_code || ''} ${data.city || ''}, ${data.country || 'France'}`,
+        formatted_address: addressInput || `${data.street || ''}, ${data.postal_code || ''} ${data.city || ''}, ${data.country || 'France'}`,
         street: data.street || '',
         city: data.city || '',
         postal_code: data.postal_code || '',
@@ -306,6 +322,20 @@ const Profile = () => {
                 
                 <h3 className="text-lg font-medium">Adresse de facturation</h3>
                 
+                <div className="grid gap-6">
+                  <FormItem>
+                    <FormLabel>Adresse</FormLabel>
+                    <AddressAutocomplete
+                      value={addressInput}
+                      onChange={setAddressInput}
+                      onSelect={handleAddressSelect}
+                      placeholder="Recherchez une adresse..."
+                      className="w-full"
+                      error={form.formState.errors.street?.message}
+                    />
+                  </FormItem>
+                </div>
+
                 <div className="grid gap-6">
                   <FormField
                     control={form.control}

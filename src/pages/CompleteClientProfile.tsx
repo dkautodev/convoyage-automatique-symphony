@@ -1,34 +1,21 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/auth';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const CompleteClientProfile: React.FC = () => {
-  const navigate = useNavigate();
-  const { profile } = useAuth();
-
-  // Redirect to dashboard if profile is already completed
-  React.useEffect(() => {
-    if (profile?.profile_completed) {
-      navigate('/client/dashboard');
-    }
-  }, [profile, navigate]);
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-semibold mb-6 text-center">
-          Complétez votre profil client
-        </h1>
-        
-        <p className="text-gray-600 mb-8 text-center">
-          Vous allez être redirigé vers le formulaire d'inscription complet pour clients.
-        </p>
-
-        <div className="text-center mt-6">
-          <p>Redirection en cours...</p>
-        </div>
-      </div>
+    <div className="container mx-auto px-4 py-8 max-w-lg">
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">Complétez votre profil</CardTitle>
+          <CardDescription>Veuillez remplir les informations de votre profil client</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground py-8">
+            Le formulaire de complétion de profil client sera disponible prochainement.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit } from 'lucide-react';
+import { Package, History, Edit, Ban } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 
 // Import our section components
@@ -25,11 +25,13 @@ const MissionDetailsPage = () => {
   const [mission, setMission] = useState<Mission | null>(null);
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const isAdmin = profile?.role === 'admin';
+  const isClient = profile?.role === 'client';
   const userRole = profile?.role || 'client';
   
   useEffect(() => {
@@ -113,6 +115,36 @@ const MissionDetailsPage = () => {
     setHistoryDrawerOpen(true);
   };
 
+  // Fonction pour annuler le devis (disponible pour les clients aussi)
+  const handleCancelQuote = async () => {
+    if (cancelling || !mission) return;
+    if (mission.status !== 'en_acceptation') {
+      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ status: 'annule' })
+        .eq('id', mission.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Le devis a été annulé avec succès');
+      fetchMission();
+      if (id) fetchStatusHistory(id);
+    } catch (error: any) {
+      console.error('Erreur lors de l\'annulation du devis:', error);
+      toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -147,6 +179,8 @@ const MissionDetailsPage = () => {
       }) 
     : 'Date inconnue';
 
+  const showCancelButton = mission.status === 'en_acceptation' && (isAdmin || (isClient && user?.id === mission.client_id));
+
   return (
     <div className="space-y-6 overflow-y-auto pb-8">
       <div className="flex items-center justify-between">
@@ -172,6 +206,12 @@ const MissionDetailsPage = () => {
                 Historique
               </Button>
             </>
+          )}
+          {showCancelButton && (
+            <Button onClick={handleCancelQuote} disabled={cancelling} variant="destructive">
+              <Ban className="h-4 w-4 mr-2" />
+              {cancelling ? 'Annulation...' : 'Annuler le devis'}
+            </Button>
           )}
           <Button onClick={handleBack} variant="outline">
             Retour aux missions

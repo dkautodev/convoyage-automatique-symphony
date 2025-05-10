@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Mission, MissionStatus } from '@/types/supabase';
 import { typedSupabase } from '@/types/database';
-import { Clock, CheckCircle2 } from 'lucide-react';
+import { Clock, CheckCircle2, Ban } from 'lucide-react';
 import { missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
+
 interface MissionStatusSectionProps {
   mission: Mission;
   refetchMission: () => void;
 }
+
 export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   mission,
   refetchMission
@@ -20,11 +23,13 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [updating, setUpdating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Fetch status history
   useEffect(() => {
     fetchStatusHistory();
   }, [mission.id]);
+
   const fetchStatusHistory = async () => {
     if (!mission.id) return;
     try {
@@ -46,6 +51,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       setLoading(false);
     }
   };
+
   const handleUpdateStatus = async () => {
     if (updating) return;
     if (selectedStatus === mission.status) {
@@ -74,9 +80,41 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
     }
   };
 
+  // Fonction pour annuler le devis
+  const handleCancelQuote = async () => {
+    if (cancelling) return;
+    if (mission.status !== 'en_acceptation') {
+      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      const {
+        error
+      } = await typedSupabase.from('missions').update({
+        status: 'annule'
+      }).eq('id', mission.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Le devis a été annulé avec succès');
+      refetchMission();
+      fetchStatusHistory();
+    } catch (error: any) {
+      console.error('Erreur lors de l\'annulation du devis:', error);
+      toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   // All possible mission statuses for the dropdown
   const statuses: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
-  return <Card className="mb-6">
+  return (
+    <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5" />
@@ -109,13 +147,26 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
               </div>
             </div>
             
-            <Button onClick={handleUpdateStatus} disabled={updating || selectedStatus === mission.status} className="w-full sm:w-auto">
-              {updating ? 'Mise à jour...' : 'Mettre à jour le statut'}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={handleUpdateStatus} disabled={updating || selectedStatus === mission.status} className="w-full sm:w-auto">
+                {updating ? 'Mise à jour...' : 'Mettre à jour le statut'}
+              </Button>
+              
+              {mission.status === 'en_acceptation' && (
+                <Button 
+                  onClick={handleCancelQuote} 
+                  disabled={cancelling || mission.status !== 'en_acceptation'} 
+                  variant="destructive" 
+                  className="w-full sm:w-auto"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  {cancelling ? 'Annulation en cours...' : 'Annuler le devis'}
+                </Button>
+              )}
+            </div>
           </div>
-          
-          
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };

@@ -123,9 +123,14 @@ export default function CreateMissionForm({
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
 
-  const { profiles: clientProfiles, loading: loadingClients } = useProfiles('client');
-  const { profiles: driverProfiles, loading: loadingDrivers } = useProfiles('chauffeur');
-
+  const {
+    profiles: clientProfiles,
+    loading: loadingClients
+  } = useProfiles('client');
+  const {
+    profiles: driverProfiles,
+    loading: loadingDrivers
+  } = useProfiles('chauffeur');
   const form = useForm<CreateMissionFormValues>({
     resolver: zodResolver(createMissionSchema),
     defaultValues: {
@@ -396,10 +401,12 @@ export default function CreateMissionForm({
         mission_type: values.mission_type || 'LIV'
       };
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
-      
       try {
         console.log("Sending request to Supabase with data:", missionData);
-        const { data, error } = await typedSupabase.from('missions').insert(missionData).select('id').single();
+        const {
+          data,
+          error
+        } = await typedSupabase.from('missions').insert(missionData).select('id').single();
         if (error) {
           console.error('Erreur Supabase lors de la création de la mission:', error);
           console.error('Detail:', error.details);
@@ -441,14 +448,12 @@ export default function CreateMissionForm({
     if (contact.phone) form.setValue('contact_pickup_phone', contact.phone);
     toast.success(`Contact de départ sélectionné: ${contact.first_name} ${contact.last_name}`);
   };
-
   const handleDeliveryContactSelect = (contact: any) => {
     form.setValue('contact_delivery_name', contact.first_name + ' ' + contact.last_name);
     if (contact.email) form.setValue('contact_delivery_email', contact.email);
     if (contact.phone) form.setValue('contact_delivery_phone', contact.phone);
     toast.success(`Contact de livraison sélectionné: ${contact.first_name} ${contact.last_name}`);
   };
-
   return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Créer une nouvelle mission</CardTitle>
@@ -672,10 +677,7 @@ export default function CreateMissionForm({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
-                      <ContactSelector 
-                        onSelectContact={handlePickupContactSelect}
-                        clientId={selectedClientId || undefined}
-                      />
+                      <ContactSelector onSelectContact={handlePickupContactSelect} clientId={selectedClientId || undefined} />
                     </div>
                     
                     <FormField control={form.control} name="contact_pickup_name" render={({
@@ -776,10 +778,7 @@ export default function CreateMissionForm({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
-                      <ContactSelector 
-                        onSelectContact={handleDeliveryContactSelect}
-                        clientId={selectedClientId || undefined}
-                      />
+                      <ContactSelector onSelectContact={handleDeliveryContactSelect} clientId={selectedClientId || undefined} />
                     </div>
                     
                     <FormField control={form.control} name="contact_delivery_name" render={({
@@ -879,16 +878,7 @@ export default function CreateMissionForm({
                 </div>
 
                 {/* Pièces jointes */}
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Pièces jointes</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <FileUpload
-                      label="Ajouter une pièce jointe"
-                      variant="outline"
-                      size="sm"
-                    />
-                  </div>
-                </div>
+                
 
                 {/* Notes */}
                 <FormField control={form.control} name="notes" render={({
@@ -903,51 +893,33 @@ export default function CreateMissionForm({
               </div>}
 
             {/* Étape 5: Attribution (Admin seulement) */}
-            {currentStep === 5 && profile?.role === 'admin' && (
-              <div className="space-y-6">
+            {currentStep === 5 && profile?.role === 'admin' && <div className="space-y-6">
                 <h3 className="text-lg font-medium">Attribution de la mission</h3>
                 
-                <FormField
-                  control={form.control}
-                  name="client_id"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="client_id" render={({
+              field
+            }) => <FormItem>
                       <FormLabel>Client</FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          handleClientChange(value);
-                        }}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={value => {
+                handleClientChange(value);
+              }} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un client" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {loadingClients ? (
-                            <SelectItem value="loading">Chargement...</SelectItem>
-                          ) : clientProfiles.length === 0 ? (
-                            <SelectItem value="no_clients">Aucun client disponible</SelectItem>
-                          ) : (
-                            clientProfiles.map((client) => (
-                              <SelectItem key={client.id} value={client.id}>
+                          {loadingClients ? <SelectItem value="loading">Chargement...</SelectItem> : clientProfiles.length === 0 ? <SelectItem value="no_clients">Aucun client disponible</SelectItem> : clientProfiles.map(client => <SelectItem key={client.id} value={client.id}>
                                 {client.label} ({client.email})
-                              </SelectItem>
-                            ))
-                          )}
+                              </SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="status" render={({
+              field
+            }) => <FormItem>
                       <FormLabel>Statut de la mission</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -966,20 +938,13 @@ export default function CreateMissionForm({
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
                 
-                <FormField
-                  control={form.control}
-                  name="chauffeur_id"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="chauffeur_id" render={({
+              field
+            }) => <FormItem>
                       <FormLabel>Chauffeur</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value || "no_driver_assigned"}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value || "no_driver_assigned"}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un chauffeur" />
@@ -987,45 +952,24 @@ export default function CreateMissionForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
-                          {loadingDrivers ? (
-                            <SelectItem value="loading">Chargement...</SelectItem>
-                          ) : driverProfiles.length === 0 ? (
-                            <SelectItem value="no_drivers">Aucun chauffeur disponible</SelectItem>
-                          ) : (
-                            driverProfiles.map((driver) => (
-                              <SelectItem key={driver.id} value={driver.id}>
+                          {loadingDrivers ? <SelectItem value="loading">Chargement...</SelectItem> : driverProfiles.length === 0 ? <SelectItem value="no_drivers">Aucun chauffeur disponible</SelectItem> : driverProfiles.map(driver => <SelectItem key={driver.id} value={driver.id}>
                                 {driver.label} ({driver.email})
-                              </SelectItem>
-                            ))
-                          )}
+                              </SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
                 
-                <FormField
-                  control={form.control}
-                  name="chauffeur_price_ht"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="chauffeur_price_ht" render={({
+              field
+            }) => <FormItem>
                       <FormLabel>Prix chauffeur HT (€)</FormLabel>
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          step="0.01"
-                          value={field.value || ''} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
+                        <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+                    </FormItem>} />
+              </div>}
 
             {/* Navigation - MISE À JOUR */}
             <div className="flex justify-between pt-4 border-t mt-8">
@@ -1036,34 +980,20 @@ export default function CreateMissionForm({
               
               <div className="flex items-center gap-2">
                 {/* Quand on est à l'étape 4, on montre le bouton de pièce jointe à côté de Suivant */}
-                {currentStep === 4 && (
-                  <FileUpload
-                    label="PJ"
-                    variant="outline"
-                    size="sm"
-                  />
-                )}
+                {currentStep === 4 && <FileUpload label="PJ" variant="outline" size="sm" />}
                 
-                {currentStep < totalSteps ? (
-                  <Button type="button" onClick={nextStep} className="flex items-center gap-2">
+                {currentStep < totalSteps ? <Button type="button" onClick={nextStep} className="flex items-center gap-2">
                     Suivant
                     <ArrowRight className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
-                    {isSubmitting ? (
-                      <>
+                  </Button> : <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+                    {isSubmitting ? <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Création en cours...
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <Check className="h-4 w-4" />
                         Créer la mission
-                      </>
-                    )}
-                  </Button>
-                )}
+                      </>}
+                  </Button>}
               </div>
             </div>
           </form>

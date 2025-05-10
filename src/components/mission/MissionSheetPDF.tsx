@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
 import { formatFullAddress } from '@/utils/missionUtils';
 
@@ -85,10 +85,20 @@ const styles = StyleSheet.create({
     left: 30,
     right: 30,
     textAlign: 'center',
-    fontSize: 10,
-    color: '#666',
     borderTop: '1pt solid #ccc',
     paddingTop: 10,
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  logo: {
+    width: 150,
+    height: 'auto',
   },
   addressRow: {
     flexDirection: 'row',
@@ -146,6 +156,9 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
   const missionNumber = mission.mission_number || '';
   const fullMissionNumber = `${missionType}-${missionNumber}`;
   const distanceKm = mission.distance_km?.toFixed(2) || '0';
+
+  // Convertir le logo en noir et blanc est géré au niveau de l'image elle-même
+  const logoPath = '/lovable-uploads/6a1b152c-305a-4a80-ae16-b6aef3bd1683.png';
 
   return (
     <Document>
@@ -252,9 +265,11 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
           </View>
         )}
 
-        {/* Pied de page */}
+        {/* Pied de page avec logo */}
         <View style={styles.footer}>
-          <Text>Document généré le {new Date().toLocaleDateString('fr-FR')} à {new Date().toLocaleTimeString('fr-FR')}</Text>
+          <View style={styles.logoContainer}>
+            <Image src={logoPath} style={styles.logo} />
+          </View>
         </View>
       </Page>
     </Document>

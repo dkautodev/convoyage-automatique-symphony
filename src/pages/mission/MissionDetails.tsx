@@ -22,6 +22,7 @@ import {
 // Import our section components
 import { MissionGeneralInfoSection } from '@/components/mission/sections/MissionGeneralInfoSection';
 import { MissionDriverSection } from '@/components/mission/sections/MissionDriverSection';
+import { ClientMissionDriverSection } from '@/components/mission/sections/ClientMissionDriverSection';
 import { MissionStatusSection } from '@/components/mission/sections/MissionStatusSection';
 import { MissionDocumentsSection } from '@/components/mission/sections/MissionDocumentsSection';
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
@@ -268,6 +269,26 @@ const MissionDetailsPage = () => {
               </Button>
             </>
           )}
+          {/* Ajout du bouton documents pour les clients */}
+          {isClient && (
+            <Button 
+              variant="outline" 
+              className="relative"
+              onClick={() => setDocumentsDialogOpen(true)}
+            >
+              <Paperclip className="h-4 w-4" />
+              {documentsCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                  {documentsCount}
+                </span>
+              )}
+              {documentsCount === 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                  0
+                </span>
+              )}
+            </Button>
+          )}
           {showCancelButton && (
             <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
               <Ban className="h-4 w-4 mr-2" />
@@ -283,16 +304,20 @@ const MissionDetailsPage = () => {
       {/* General Information Section */}
       <MissionGeneralInfoSection mission={mission} client={client} />
       
-      {/* Driver Management Section (Admin only) */}
-      {isAdmin && <MissionDriverSection mission={mission} refetchMission={fetchMission} />}
+      {/* Driver Section - Admin and Client versions */}
+      {isAdmin ? (
+        <MissionDriverSection mission={mission} refetchMission={fetchMission} />
+      ) : (
+        <ClientMissionDriverSection mission={mission} />
+      )}
       
-      {/* Status Management Section */}
+      {/* Status Management Section (Admin only) */}
       {isAdmin && <MissionStatusSection mission={mission} refetchMission={fetchMission} />}
       
-      {/* Documents Section */}
-      {isAdmin && <div id="documents-section">
+      {/* Documents Section - For both Admin and Client */}
+      <div id="documents-section">
         <MissionDocumentsSection mission={mission} />
-      </div>}
+      </div>
       
       {/* Status History Drawer */}
       <MissionStatusHistoryDrawer 
@@ -311,7 +336,7 @@ const MissionDetailsPage = () => {
         />
       )}
       
-      {/* Documents Dialog */}
+      {/* Documents Dialog - Pour les deux rôles */}
       {mission && documentsDialogOpen && (
         <MissionDocumentsDialog
           mission={mission}

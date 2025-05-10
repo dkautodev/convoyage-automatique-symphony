@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { typedSupabase } from '@/types/database';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FileUpload from '@/components/mission/FileUpload';
+import { useAuth } from '@/hooks/auth';
 
 interface MissionDocumentsSectionProps {
   mission: Mission;
@@ -20,6 +21,8 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const [attachmentsKey, setAttachmentsKey] = useState<number>(0);
   const [documentCount, setDocumentCount] = useState<number>(0);
   const [showUploadDialog, setShowUploadDialog] = useState<boolean>(false);
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === 'admin';
 
   // Fetch document count on load
   useEffect(() => {
@@ -44,7 +47,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
     }
   };
 
-  // Placeholder functions for document generation
+  // Placeholder functions for document generation (admin only)
   const handleGenerateQuote = () => {
     toast.info('Génération de devis non implémentée');
   };
@@ -88,34 +91,44 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="p-4 border rounded-lg flex flex-col items-center text-center">
-            <FileText className="h-10 w-10 text-blue-600 mb-2" />
-            <h3 className="text-lg font-medium mb-1">Devis</h3>
+        {/* Afficher les boutons de génération de documents uniquement pour les administrateurs */}
+        {isAdmin && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 border rounded-lg flex flex-col items-center text-center">
+              <FileText className="h-10 w-10 text-blue-600 mb-2" />
+              <h3 className="text-lg font-medium mb-1">Devis</h3>
+              
+              <Button onClick={handleGenerateQuote} variant="outline" className="w-full">
+                Générer
+              </Button>
+            </div>
             
-            <Button onClick={handleGenerateQuote} variant="outline" className="w-full">
-              Générer
-            </Button>
-          </div>
-          
-          <div className="p-4 border rounded-lg flex flex-col items-center text-center">
-            <FileCheck className="h-10 w-10 text-green-600 mb-2" />
-            <h3 className="text-lg font-medium mb-1">Fiche de mission</h3>
+            <div className="p-4 border rounded-lg flex flex-col items-center text-center">
+              <FileCheck className="h-10 w-10 text-green-600 mb-2" />
+              <h3 className="text-lg font-medium mb-1">Fiche de mission</h3>
+              
+              <Button onClick={handleGenerateMissionSheet} variant="outline" className="w-full">
+                Générer
+              </Button>
+            </div>
             
-            <Button onClick={handleGenerateMissionSheet} variant="outline" className="w-full">
-              Générer
-            </Button>
+            <div className="p-4 border rounded-lg flex flex-col items-center text-center">
+              <Receipt className="h-10 w-10 text-amber-600 mb-2" />
+              <h3 className="text-lg font-medium mb-1">Facture</h3>
+              
+              <Button onClick={handleGenerateInvoice} variant="outline" className="w-full">
+                Générer
+              </Button>
+            </div>
           </div>
-          
-          <div className="p-4 border rounded-lg flex flex-col items-center text-center">
-            <Receipt className="h-10 w-10 text-amber-600 mb-2" />
-            <h3 className="text-lg font-medium mb-1">Facture</h3>
-            
-            <Button onClick={handleGenerateInvoice} variant="outline" className="w-full">
-              Générer
-            </Button>
-          </div>
-        </div>
+        )}
+        
+        {/* Afficher les pièces jointes pour tous les utilisateurs */}
+        <MissionAttachments 
+          key={attachmentsKey}
+          missionId={mission.id}
+          showTitle={true}
+        />
       </CardContent>
     </Card>
     

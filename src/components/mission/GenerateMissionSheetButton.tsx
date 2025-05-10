@@ -17,6 +17,9 @@ export const GenerateMissionSheetButton: React.FC<GenerateMissionSheetButtonProp
   driverName 
 }) => {
   const [generating, setGenerating] = useState(false);
+  
+  // Check if the mission is cancelled
+  const isMissionCancelled = mission.status === 'annule';
 
   const handleGeneratePDF = async () => {
     try {
@@ -46,8 +49,9 @@ export const GenerateMissionSheetButton: React.FC<GenerateMissionSheetButtonProp
     <Button 
       onClick={handleGeneratePDF} 
       className="flex gap-2 items-center"
-      disabled={generating}
+      disabled={generating || isMissionCancelled}
       variant="outline"
+      title={isMissionCancelled ? "Impossible de générer une fiche pour une mission annulée" : "Générer la fiche de mission"}
     >
       {generating ? (
         <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

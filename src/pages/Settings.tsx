@@ -17,7 +17,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { toast } from 'sonner';
-import { Loader2, Save, Lock } from 'lucide-react';
+import { Loader2, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 
@@ -55,10 +55,22 @@ const Settings = () => {
   });
 
   const onSubmit = async (data: PasswordFormValues) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Vous devez être connecté pour modifier votre mot de passe");
+      return;
+    }
     
     try {
       setIsLoading(true);
+      console.log("Tentative de mise à jour du mot de passe...");
+      
+      // Vérifier d'abord si l'utilisateur est bien connecté
+      const { data: sessionData } = await typedSupabase.auth.getSession();
+      if (!sessionData.session) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        setIsLoading(false);
+        return;
+      }
       
       // Utiliser la méthode correcte pour vérifier l'ancien mot de passe
       const { error: signInError } = await typedSupabase.auth.signInWithPassword({
@@ -67,6 +79,7 @@ const Settings = () => {
       });
       
       if (signInError) {
+        console.error("Erreur de vérification du mot de passe:", signInError);
         toast.error('Le mot de passe actuel est incorrect');
         form.setError('currentPassword', {
           type: 'manual',
@@ -77,7 +90,7 @@ const Settings = () => {
       }
       
       // Si l'ancien mot de passe est correct, mettre à jour le mot de passe
-      const { error: updateError } = await typedSupabase.auth.updateUser({
+      const { data: updateData, error: updateError } = await typedSupabase.auth.updateUser({
         password: data.newPassword,
       });
       
@@ -85,6 +98,7 @@ const Settings = () => {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         toast.error(`Erreur lors de la mise à jour du mot de passe: ${updateError.message}`);
       } else {
+        console.log("Mot de passe mis à jour avec succès:", updateData);
         toast.success('Mot de passe mis à jour avec succès');
         form.reset();
       }

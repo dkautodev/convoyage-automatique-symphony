@@ -235,38 +235,4 @@ export default function MissionAttachments({
       )}
     </div>
   );
-
-  function getFileIcon(fileName: string) {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    
-    switch(extension) {
-      case 'pdf':
-        return <File className="h-5 w-5 text-red-500" />;
-      case 'doc':
-      case 'docx':
-        return <File className="h-5 w-5 text-blue-500" />;
-      case 'xls':
-      case 'xlsx':
-        return <File className="h-5 w-5 text-green-500" />;
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-      case 'webp':
-        return <File className="h-5 w-5 text-purple-500" />;
-      default:
-        return <File className="h-5 w-5 text-gray-500" />;
-    }
-  }
-  
-  function getRelativeTime(dateString: string) {
-    try {
-      return formatDistance(new Date(dateString), new Date(), {
-        addSuffix: true,
-        locale: fr
-      });
-    } catch (e) {
-      return "Date inconnue";
-    }
-  }
 }

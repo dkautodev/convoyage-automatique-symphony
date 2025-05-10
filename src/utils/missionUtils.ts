@@ -1,3 +1,4 @@
+
 import { Address, Mission } from '@/types/supabase';
 
 // Original file imports and basic functions

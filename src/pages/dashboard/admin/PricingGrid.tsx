@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import PricingGridEditForm from '@/components/PricingGridEditForm';
 import { usePricing } from '@/hooks/usePricing';
 import PriceSimulator from '@/components/PriceSimulator';
-
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -22,7 +20,6 @@ const formatPrice = (price: number): string => {
     maximumFractionDigits: 2
   }).format(price);
 };
-
 const PricingGridPage: React.FC = () => {
   const [pricingData, setPricingData] = useState<PricingGridItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -30,7 +27,6 @@ const PricingGridPage: React.FC = () => {
   const [searchDistance, setSearchDistance] = useState<string>('');
   const [editingItem, setEditingItem] = useState<PricingGridItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-
   const loadPricingData = async () => {
     setLoading(true);
     try {
@@ -52,7 +48,6 @@ const PricingGridPage: React.FC = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     loadPricingData();
   }, []);
@@ -66,19 +61,15 @@ const PricingGridPage: React.FC = () => {
 
   // Grouper les données par type de véhicule pour les onglets
   const vehicleTypes = Array.from(new Set(pricingData.map(item => item.vehicle_category))).sort();
-
   const handleEditClick = (item: PricingGridItem) => {
     setEditingItem(item);
     setIsDialogOpen(true);
   };
-
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setEditingItem(null);
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Grille Tarifaire</h2>
         <Button onClick={loadPricingData} variant="outline" className="gap-2">
@@ -95,14 +86,14 @@ const PricingGridPage: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les véhicules</SelectItem>
-              {vehicleTypes.map(type => (
-                <SelectItem key={type} value={type}>
+              {vehicleTypes.map(type => <SelectItem key={type} value={type}>
                   {vehicleCategoryLabels[type as VehicleCategory]}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
         </div>
+
+        
       </div>
 
       <Card>
@@ -114,10 +105,9 @@ const PricingGridPage: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          {loading ? (
-            <div className="text-center py-6">Chargement des données...</div>
-          ) : (
-            <Tabs defaultValue="all" className="w-full">
+          {loading ? <div className="text-center py-6">Chargement des données...</div> : <Tabs defaultValue="all" className="w-full">
+              
+
               <TabsContent value="all" className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -131,9 +121,7 @@ const PricingGridPage: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.length > 0 ? (
-                      filteredData.map(item => (
-                        <TableRow key={item.id}>
+                    {filteredData.length > 0 ? filteredData.map(item => <TableRow key={item.id}>
                           <TableCell>{vehicleCategoryLabels[item.vehicle_category]}</TableCell>
                           <TableCell>
                             {item.min_distance}-{item.max_distance === 9999 ? '+' : item.max_distance}
@@ -150,21 +138,16 @@ const PricingGridPage: React.FC = () => {
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
+                        </TableRow>) : <TableRow>
                         <TableCell colSpan={6} className="text-center py-4">
                           Aucun tarif correspondant aux critères.
                         </TableCell>
-                      </TableRow>
-                    )}
+                      </TableRow>}
                   </TableBody>
                 </Table>
               </TabsContent>
 
-              {vehicleTypes.map(type => (
-                <TabsContent key={type} value={type} className="overflow-x-auto">
+              {vehicleTypes.map(type => <TabsContent key={type} value={type} className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -176,10 +159,7 @@ const PricingGridPage: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pricingData
-                        .filter(item => item.vehicle_category === type)
-                        .map(item => (
-                          <TableRow key={item.id}>
+                      {pricingData.filter(item => item.vehicle_category === type).map(item => <TableRow key={item.id}>
                             <TableCell>
                               {item.min_distance}-{item.max_distance === 9999 ? '+' : item.max_distance}
                             </TableCell>
@@ -195,27 +175,17 @@ const PricingGridPage: React.FC = () => {
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </TableCell>
-                          </TableRow>
-                        ))}
+                          </TableRow>)}
                     </TableBody>
                   </Table>
-                </TabsContent>
-              ))}
-            </Tabs>
-          )}
+                </TabsContent>)}
+            </Tabs>}
         </CardContent>
       </Card>
 
       <PriceSimulator />
 
-      <PricingGridEditForm
-        item={editingItem}
-        open={isDialogOpen}
-        onClose={handleDialogClose}
-        onSave={loadPricingData}
-      />
-    </div>
-  );
+      <PricingGridEditForm item={editingItem} open={isDialogOpen} onClose={handleDialogClose} onSave={loadPricingData} />
+    </div>;
 };
-
 export default PricingGridPage;

@@ -1,5 +1,6 @@
 
-// Export all authentication related hooks and components
+// Re-exporter le nouveau système d'authentification modulaire
 export { AuthProvider } from './AuthProvider';
 export { useAuth } from './useAuth';
-export type { AuthContextType } from './types';
+export type { Profile, AuthContextType } from './types';
+export { setupDatabaseFunctions, checkDriverFieldsConstraint } from './databaseFunctions';

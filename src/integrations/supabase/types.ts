@@ -81,43 +81,49 @@ export type Database = {
       contacts: {
         Row: {
           client_id: string
-          company_name: string | null
           created_at: string
+          created_by: string
           email: string | null
           first_name: string
           id: number
+          is_primary: boolean
           last_name: string
+          notes: string | null
           phone: string | null
-          updated_at: string
+          position: string | null
         }
         Insert: {
           client_id: string
-          company_name?: string | null
           created_at?: string
+          created_by: string
           email?: string | null
           first_name: string
           id?: number
+          is_primary?: boolean
           last_name: string
+          notes?: string | null
           phone?: string | null
-          updated_at?: string
+          position?: string | null
         }
         Update: {
           client_id?: string
-          company_name?: string | null
           created_at?: string
+          created_by?: string
           email?: string | null
           first_name?: string
           id?: number
+          is_primary?: boolean
           last_name?: string
+          notes?: string | null
           phone?: string | null
-          updated_at?: string
+          position?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "contacts_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]

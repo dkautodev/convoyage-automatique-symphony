@@ -36,21 +36,18 @@ export default function FileUpload({
   };
   
   const handleFileUpload = async () => {
-    if (!selectedFile || !user?.id) {
-      console.error("Missing file or user ID");
-      return;
-    }
+    if (!selectedFile || !user?.id) return;
     
     try {
       setIsUploading(true);
       
       // Generate a unique file path
+      const fileExt = selectedFile.name.split('.').pop();
       const fileName = missionId 
         ? `${missionId}/${Date.now()}_${selectedFile.name}`
         : `uploads/${Date.now()}_${selectedFile.name}`;
       
       const filePath = `mission-docs/${fileName}`;
-      console.log("Uploading file to path:", filePath);
       
       // Upload the file to storage
       const storagePath = await uploadFile(filePath, selectedFile);
@@ -60,11 +57,8 @@ export default function FileUpload({
         return;
       }
       
-      console.log("File uploaded successfully, storage path:", storagePath);
-      
       // If we have a mission ID, save the reference in the database
       if (missionId) {
-        console.log("Saving document reference for mission:", missionId);
         const { error } = await typedSupabase
           .from('mission_documents')
           .insert({
@@ -80,8 +74,6 @@ export default function FileUpload({
           toast.error("Échec de l'enregistrement du document");
           return;
         }
-        
-        console.log("Document reference saved successfully");
       }
       
       toast.success("Document téléchargé avec succès");

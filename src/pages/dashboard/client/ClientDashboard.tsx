@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatMissionNumber, formatAddressDisplay, formatFullAddress } from '@/utils/missionUtils';
+
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const {
@@ -23,6 +24,7 @@ const ClientDashboard = () => {
     totalSpent: 0,
     pendingMissions: 0
   });
+
   useEffect(() => {
     const fetchClientData = async () => {
       if (!user?.id) return;
@@ -100,14 +102,17 @@ const ClientDashboard = () => {
     };
     fetchClientData();
   }, [user]);
+
   const handleCreateNewMission = () => {
     navigate('/mission/create');
   };
+
   if (loading) {
     return <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-client"></div>
       </div>;
   }
+  
   if (error) {
     return <div className="flex flex-col items-center justify-center h-full p-6">
         <div className="text-red-500 mb-4">
@@ -140,6 +145,7 @@ const ClientDashboard = () => {
       <FileText size={40} className="text-gray-300 mx-auto mb-3" />
       <p className="text-gray-500">Vos documents apparaîtront ici</p>
     </div>;
+
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
@@ -243,10 +249,10 @@ const ClientDashboard = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'} → {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'} · {mission.distance_km?.toFixed(2) || '0'} km
+                      {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'} → {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Départ: {mission.D1_PEC ? new Date(mission.D1_PEC).toLocaleDateString('fr-FR') : 'Non spécifié'} · Livraison: {mission.D2_LIV ? new Date(mission.D2_LIV).toLocaleDateString('fr-FR') : 'Non spécifié'} · {mission.distance_km?.toFixed(2) || '0'} km
+                      Départ: {mission.D1_PEC ? new Date(mission.D1_PEC).toLocaleDateString('fr-FR') : 'Non spécifié'} · Livraison: {mission.D2_LIV ? new Date(mission.D2_LIV).toLocaleDateString('fr-FR') : 'Non spécifié'}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" asChild>

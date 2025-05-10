@@ -102,11 +102,12 @@ export default function FileUpload({
       
       // Upload each file
       for (const file of selectedFiles) {
-        // Generate a unique file path
+        // Generate a unique file path using the mission ID
         const fileName = missionId 
           ? `${missionId}/${Date.now()}_${file.name}`
           : `uploads/${Date.now()}_${file.name}`;
         
+        // Use the mission-docs path for all mission documents
         const filePath = `mission-docs/${fileName}`;
         
         // Upload the file to storage
@@ -124,7 +125,7 @@ export default function FileUpload({
             .insert({
               mission_id: missionId,
               file_name: file.name,
-              file_path: storagePath,
+              file_path: filePath,
               file_type: file.type,
               uploaded_by: user.id
             });
@@ -141,7 +142,7 @@ export default function FileUpload({
         
         // Call the callback if provided
         if (onUploadComplete) {
-          onUploadComplete(storagePath, file.name);
+          onUploadComplete(filePath, file.name);
         }
       }
       

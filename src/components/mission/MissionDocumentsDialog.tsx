@@ -82,7 +82,7 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
         throw new Error('Impossible de récupérer les informations du document');
       }
       
-      // Supprimer le fichier du stockage
+      // Supprimer le fichier du stockage (toujours du bucket 'documents')
       const { error: storageError } = await typedSupabase.storage
         .from('documents')
         .remove([documentData.file_path]);

@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 /**
@@ -11,9 +10,11 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
   try {
     console.log(`Uploading file to ${path}`);
     
-    // Check which bucket to use based on the file path prefix
-    const bucketName = path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
-    const filePath = path.startsWith('mission-docs/') ? path.replace('mission-docs/', '') : path;
+    // All files should now use the 'documents' bucket
+    const bucketName = 'documents';
+    
+    // Keep the full path including mission-docs prefix
+    const filePath = path;
     
     const { data, error } = await supabase.storage
       .from(bucketName)
@@ -28,8 +29,8 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
     }
     
     console.log("File uploaded successfully:", data?.path);
-    // Return the full path including bucket prefix for consistency
-    return bucketName + '/' + data?.path || null;
+    // Return the full path including bucket for consistency
+    return data?.path || null;
   } catch (error) {
     console.error("Exception during file upload:", error);
     return null;
@@ -43,11 +44,10 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
  */
 export function getPublicUrl(path: string): string | null {
   try {
-    // Check which bucket the file is in
-    const bucketName = path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
-    const filePath = path.replace(bucketName + '/', '');
+    // All files use the 'documents' bucket now
+    const bucketName = 'documents';
     
-    const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
     return data.publicUrl;
   } catch (error) {
     console.error("Error getting public URL:", error);
@@ -82,7 +82,7 @@ export async function uploadMissionDocument(missionId: string, file: File, userI
       .insert({
         mission_id: missionId,
         file_name: file.name,
-        file_path: storagePath,
+        file_path: filePath,
         file_type: file.type,
         uploaded_by: userId
       })

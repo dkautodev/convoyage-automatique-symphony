@@ -73,14 +73,13 @@ export default function MissionAttachments({
   
   const handleDownload = async (doc: MissionDocument) => {
     try {
-      // Determine which bucket to use based on the file path
-      const bucketName = doc.file_path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
-      const filePath = doc.file_path.replace(`${bucketName}/`, '');
+      // Use documents bucket for all files
+      const bucketName = 'documents';
       
       const { data, error } = await typedSupabase
         .storage
         .from(bucketName)
-        .download(filePath);
+        .download(doc.file_path);
         
       if (error) throw error;
       
@@ -107,15 +106,14 @@ export default function MissionAttachments({
     try {
       setDeleting(document.id);
       
-      // Determine which bucket to use based on the file path
-      const bucketName = document.file_path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
-      const storagePath = document.file_path.replace(`${bucketName}/`, '');
+      // Use documents bucket for all files
+      const bucketName = 'documents';
       
       // Delete the file from storage
       const { error: storageError } = await typedSupabase
         .storage
         .from(bucketName)
-        .remove([storagePath]);
+        .remove([document.file_path]);
         
       if (storageError) throw storageError;
       
@@ -237,4 +235,38 @@ export default function MissionAttachments({
       )}
     </div>
   );
+
+  function getFileIcon(fileName: string) {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    
+    switch(extension) {
+      case 'pdf':
+        return <File className="h-5 w-5 text-red-500" />;
+      case 'doc':
+      case 'docx':
+        return <File className="h-5 w-5 text-blue-500" />;
+      case 'xls':
+      case 'xlsx':
+        return <File className="h-5 w-5 text-green-500" />;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp':
+        return <File className="h-5 w-5 text-purple-500" />;
+      default:
+        return <File className="h-5 w-5 text-gray-500" />;
+    }
+  }
+  
+  function getRelativeTime(dateString: string) {
+    try {
+      return formatDistance(new Date(dateString), new Date(), {
+        addSuffix: true,
+        locale: fr
+      });
+    } catch (e) {
+      return "Date inconnue";
+    }
+  }
 }

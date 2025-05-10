@@ -93,10 +93,7 @@ const PricingGridPage: React.FC = () => {
           </Select>
         </div>
 
-        <div className="relative flex-1">
-          <Input type="number" placeholder="Filtrer par distance (km)" value={searchDistance} onChange={e => setSearchDistance(e.target.value)} className="pl-8" />
-          <Filter className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-        </div>
+        
       </div>
 
       <Card>

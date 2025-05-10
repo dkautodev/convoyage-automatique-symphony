@@ -8,6 +8,7 @@ import MissionAttachments from '@/components/mission/MissionAttachments';
 import FileUpload from '@/components/mission/FileUpload';
 import { toast } from 'sonner';
 import { typedSupabase } from '@/types/database';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface MissionDocumentsSectionProps {
   mission: Mission;
@@ -18,6 +19,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
 }) => {
   const [attachmentsKey, setAttachmentsKey] = useState<number>(0);
   const [documentCount, setDocumentCount] = useState<number>(0);
+  const [showUploadDialog, setShowUploadDialog] = useState<boolean>(false);
 
   // Charger le nombre de documents au chargement
   useEffect(() => {
@@ -56,9 +58,20 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
     // Force refresh the attachments list
     setAttachmentsKey(prev => prev + 1);
     fetchDocumentCount();
+    
+    // Close dialog if open
+    if (showUploadDialog) {
+      setShowUploadDialog(false);
+    }
+    
+    toast.success(
+      "Document(s) ajouté(s) avec succès", 
+      { description: "Les documents ont été attachés à la mission." }
+    );
   };
   
-  return <Card>
+  return <>
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
@@ -95,7 +108,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
           </div>
         </div>
         
-        {/* Documents section with multi-upload */}
+        {/* Documents section */}
         <div className="mt-6 border-t pt-4">
           <div className="flex justify-between items-center mb-4">
             <div>
@@ -104,13 +117,17 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
                 {documentCount} document{documentCount !== 1 ? 's' : ''} attaché{documentCount !== 1 ? 's' : ''}
               </p>
             </div>
-            <FileUpload
-              missionId={mission.id}
-              onUploadComplete={handleDocumentUploaded}
-              variant="default"
-              label="Ajouter des documents"
-              multiple={true}
-            />
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowUploadDialog(true)}
+                variant="default" 
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                <Upload className="h-4 w-4" />
+                Ajouter des fichiers
+              </Button>
+            </div>
           </div>
           
           {/* Liste des documents */}
@@ -122,7 +139,46 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
               className="p-4"
             />
           </div>
+          
+          {/* Message d'indication */}
+          <div className="mt-4 text-center p-2 bg-muted/30 rounded-md">
+            <p className="text-sm text-muted-foreground">
+              Formats acceptés: PDF, images (JPG, PNG, GIF, etc.) • Taille max: 10 Mo
+            </p>
+          </div>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+    
+    {/* Dialog for uploading files */}
+    <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ajouter des documents</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <FileUpload
+            missionId={mission.id}
+            onUploadComplete={handleDocumentUploaded}
+            variant="default"
+            label="Sélectionner des fichiers"
+            multiple={true}
+            className="w-full"
+          />
+          
+          <div className="bg-muted/30 p-3 rounded-md">
+            <p className="text-sm text-muted-foreground">
+              Formats acceptés: PDF, images (JPG, PNG, GIF, etc.) • Taille max: 10 Mo
+            </p>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              Fermer
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>;
 };

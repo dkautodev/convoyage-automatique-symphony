@@ -65,10 +65,14 @@ export default function MissionAttachments({
   
   const handleDownload = async (doc: MissionDocument) => {
     try {
+      // Determine which bucket to use based on the file path
+      const bucketName = doc.file_path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
+      const filePath = doc.file_path.replace(`${bucketName}/`, '');
+      
       const { data, error } = await typedSupabase
         .storage
-        .from('mission-docs')
-        .download(doc.file_path.replace('mission-docs/', ''));
+        .from(bucketName)
+        .download(filePath);
         
       if (error) throw error;
       
@@ -95,11 +99,14 @@ export default function MissionAttachments({
     try {
       setDeleting(document.id);
       
+      // Determine which bucket to use based on the file path
+      const bucketName = document.file_path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
+      const storagePath = document.file_path.replace(`${bucketName}/`, '');
+      
       // Delete the file from storage
-      const storagePath = document.file_path.replace('mission-docs/', '');
       const { error: storageError } = await typedSupabase
         .storage
-        .from('mission-docs')
+        .from(bucketName)
         .remove([storagePath]);
         
       if (storageError) throw storageError;

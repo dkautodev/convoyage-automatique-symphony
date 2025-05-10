@@ -10,9 +10,14 @@ import { supabase } from './client';
 export async function uploadFile(path: string, file: File): Promise<string | null> {
   try {
     console.log(`Uploading file to ${path}`);
+    
+    // Check if we're uploading to the mission-docs bucket
+    const bucketName = path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
+    const filePath = path.startsWith('mission-docs/') ? path.replace('mission-docs/', '') : path;
+    
     const { data, error } = await supabase.storage
-      .from('documents')
-      .upload(path, file);
+      .from(bucketName)
+      .upload(filePath, file);
       
     if (error) {
       console.error("Error uploading file:", error);
@@ -20,7 +25,8 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
     }
     
     console.log("File uploaded successfully:", data?.path);
-    return data?.path || null;
+    // Return the full path including bucket prefix for consistency
+    return bucketName + '/' + data?.path || null;
   } catch (error) {
     console.error("Exception during file upload:", error);
     return null;
@@ -34,7 +40,11 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
  */
 export function getPublicUrl(path: string): string | null {
   try {
-    const { data } = supabase.storage.from('documents').getPublicUrl(path);
+    // Check which bucket the file is in
+    const bucketName = path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
+    const filePath = path.replace(bucketName + '/', '');
+    
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
     return data.publicUrl;
   } catch (error) {
     console.error("Error getting public URL:", error);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -7,7 +6,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit, Ban } from 'lucide-react';
+import { Package, History, Edit, Ban, Paperclip } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { 
   AlertDialog,
@@ -40,6 +39,7 @@ const MissionDetailsPage = () => {
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [documentsCount, setDocumentsCount] = useState(0);
   
   const isAdmin = profile?.role === 'admin';
   const isClient = profile?.role === 'client';
@@ -47,7 +47,10 @@ const MissionDetailsPage = () => {
   
   useEffect(() => {
     fetchMission();
-    if (id) fetchStatusHistory(id);
+    if (id) {
+      fetchStatusHistory(id);
+      fetchDocumentsCount(id);
+    }
   }, [id]);
   
   const fetchMission = async () => {
@@ -110,6 +113,24 @@ const MissionDetailsPage = () => {
       setStatusHistory(data || []);
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique:', error);
+    }
+  };
+
+  const fetchDocumentsCount = async (missionId: string) => {
+    try {
+      const { count, error } = await typedSupabase
+        .from('mission_documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('mission_id', missionId);
+      
+      if (error) {
+        console.error('Erreur lors de la récupération du nombre de documents:', error);
+        return;
+      }
+      
+      setDocumentsCount(count || 0);
+    } catch (error) {
+      console.error('Erreur lors de la récupération du nombre de documents:', error);
     }
   };
   
@@ -222,6 +243,23 @@ const MissionDetailsPage = () => {
                 <Edit className="h-4 w-4 mr-2" />
                 Modifier infos
               </Button>
+              <Button 
+                variant="outline" 
+                className="relative"
+                onClick={() => document.getElementById("documents-section")?.scrollIntoView({ behavior: "smooth" })}
+              >
+                <Paperclip className="h-4 w-4" />
+                {documentsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                    {documentsCount}
+                  </span>
+                )}
+                {documentsCount === 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                    0
+                  </span>
+                )}
+              </Button>
               <Button onClick={handleShowHistory} variant="outline">
                 <History className="h-4 w-4 mr-2" />
                 Historique
@@ -250,7 +288,9 @@ const MissionDetailsPage = () => {
       {isAdmin && <MissionStatusSection mission={mission} refetchMission={fetchMission} />}
       
       {/* Documents Section */}
-      {isAdmin && <MissionDocumentsSection mission={mission} />}
+      {isAdmin && <div id="documents-section">
+        <MissionDocumentsSection mission={mission} />
+      </div>}
       
       {/* Status History Drawer */}
       <MissionStatusHistoryDrawer 

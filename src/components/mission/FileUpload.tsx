@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { uploadFile } from '@/integrations/supabase/storage';
+import { uploadFile, uploadMissionDocument } from '@/integrations/supabase/storage';
 import { Upload, Loader2, File as FileIcon, X, AlertCircle, PaperclipIcon } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
 import { cn } from '@/lib/utils';
 
@@ -22,13 +22,14 @@ const ALLOWED_FILE_TYPES = ['application/pdf',
 'image/svg+xml' // SVG
 ];
 interface FileUploadProps {
-  onUploadComplete?: (filePath?: string, fileName?: string) => void;
+  onUploadComplete?: (filePath?: string, fileName?: string, documentId?: string) => void;
   missionId?: string;
   className?: string;
   variant?: "outline" | "default" | "secondary";
   size?: "sm" | "default";
   label?: string;
   multiple?: boolean;
+  onDocumentUploaded?: (documentId: string) => void; // New callback for document ID
 }
 export default function FileUpload({
   onUploadComplete,
@@ -37,7 +38,8 @@ export default function FileUpload({
   variant = "outline",
   size = "sm",
   label = "Sélectionner un document",
-  multiple = false
+  multiple = false,
+  onDocumentUploaded
 }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -47,9 +49,8 @@ export default function FileUpload({
   const [showFileDialog, setShowFileDialog] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
-  const {
-    user
-  } = useAuth();
+  const [uploadedDocumentIds, setUploadedDocumentIds] = useState<string[]>([]);
+  const { user } = useAuth();
   
   const validateFile = (file: File): string | null => {
     // Check file size
@@ -131,62 +132,43 @@ export default function FileUpload({
   
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0 || !user?.id) return;
+    
     try {
       setIsUploading(true);
       setUploadProgress(0);
       const totalFiles = selectedFiles.length;
       let uploadedCount = 0;
+      const newDocumentIds: string[] = [];
+      
       console.log("Uploading files, total count:", totalFiles);
-      if (missionId) {
-        console.log("Mission ID for uploads:", missionId);
-      }
+      console.log("Mission ID for uploads:", missionId ? missionId : "undefined (pending)");
 
       // Upload each file
       for (const file of selectedFiles) {
-        // Create sanitized file name to prevent path issues
-        const fileId = Date.now(); // Unique identifier
-        const sanitizedName = file.name.replace(/[^\w\d.-]/g, '_'); // Remove special chars
-
-        let filePath;
-        if (missionId) {
-          filePath = `${missionId}/${fileId}_${sanitizedName}`;
-          console.log(`Creating mission document path: ${filePath}`);
-        } else {
-          filePath = `uploads/${fileId}_${sanitizedName}`;
-          console.log(`Creating general upload path: ${filePath}`);
-        }
-
-        // Upload the file to storage
-        const storagePath = await uploadFile(filePath, file);
-        if (!storagePath) {
+        // Upload file and save to mission_documents table (with or without missionId)
+        const documentId = await uploadMissionDocument(missionId, file, user.id);
+        
+        if (!documentId) {
           toast.error(`Échec du téléchargement: ${file.name}`);
           continue;
         }
-
-        // If we have a mission ID, save the reference in the database
-        if (missionId) {
-          console.log(`Saving reference to database for mission ${missionId}`);
-          const {
-            error
-          } = await typedSupabase.from('mission_documents').insert({
-            mission_id: missionId,
-            file_name: file.name,
-            file_path: storagePath,
-            file_type: file.type,
-            uploaded_by: user.id
-          });
-          if (error) {
-            console.error("Error saving document reference:", error);
-            toast.error(`Échec de l'enregistrement du document: ${file.name}`);
-            continue;
-          }
-        }
+        
+        // Add to our list of document IDs
+        newDocumentIds.push(documentId);
         uploadedCount++;
         setUploadProgress(Math.round(uploadedCount / totalFiles * 100));
 
-        // Call the callback if provided
+        // Store uploaded document ID for later association
+        setUploadedDocumentIds(prev => [...prev, documentId]);
+        
+        // Call the callback for each document uploaded
+        if (onDocumentUploaded) {
+          onDocumentUploaded(documentId);
+        }
+        
+        // Call the upload complete callback if provided
         if (onUploadComplete) {
-          onUploadComplete(storagePath, file.name);
+          onUploadComplete(null, file.name, documentId);
         }
       }
 
@@ -210,6 +192,7 @@ export default function FileUpload({
       setUploadProgress(0);
     }
   };
+  
   const clearSelectedFiles = () => {
     setSelectedFiles([]);
     setError(null);
@@ -217,9 +200,17 @@ export default function FileUpload({
       fileInputRef.current.value = '';
     }
   };
+  
   const toggleFileDialog = () => {
     setShowFileDialog(!showFileDialog);
   };
+  
+  // Expose uploaded document IDs for parent components
+  React.useEffect(() => {
+    return () => {
+      // Clean up any resources if needed when component unmounts
+    };
+  }, [uploadedDocumentIds]);
   
   return (
     <>

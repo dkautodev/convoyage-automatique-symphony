@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -90,6 +89,17 @@ const styles = StyleSheet.create({
     borderTop: '1pt solid #ccc',
     paddingTop: 10,
   },
+  addressRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  addressColumn: {
+    width: '50%',
+  },
+  addressLabel: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
 });
 
 // Formater la date
@@ -134,23 +144,23 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
           <Text style={styles.subtitle}>{fullMissionNumber}</Text>
         </View>
 
-        {/* Adresses avec distance */}
+        {/* Adresses avec distance sur une seule ligne */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Adresses ({distanceKm} km)</Text>
-          <View style={styles.row}>
-            <View style={styles.halfColumn}>
-              <Text style={{...styles.label, marginBottom: 5}}>Adresse de départ:</Text>
+          <View style={styles.addressRow}>
+            <View style={styles.addressColumn}>
+              <Text style={styles.addressLabel}>Adresse de départ:</Text>
               <Text>{formatFullAddress(mission.pickup_address)}</Text>
             </View>
             
-            <View style={styles.halfColumn}>
-              <Text style={{...styles.label, marginBottom: 5}}>Adresse de livraison:</Text>
+            <View style={styles.addressColumn}>
+              <Text style={styles.addressLabel}>Adresse de livraison:</Text>
               <Text>{formatFullAddress(mission.delivery_address)}</Text>
             </View>
           </View>
         </View>
 
-        {/* Rendez-vous (ancien Dates et créneaux) */}
+        {/* Rendez-vous */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>RDV</Text>
           <View style={styles.row}>

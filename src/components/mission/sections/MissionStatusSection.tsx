@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Mission } from '@/types/supabase';
+import { Mission, MissionStatus } from '@/types/supabase';
 import { typedSupabase } from '@/types/database';
 import { Clock, CheckCircle2 } from 'lucide-react';
 import { missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
@@ -19,7 +19,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   mission, 
   refetchMission 
 }) => {
-  const [selectedStatus, setSelectedStatus] = useState<string>(mission.status);
+  const [selectedStatus, setSelectedStatus] = useState<MissionStatus>(mission.status);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [updating, setUpdating] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -85,7 +85,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   };
 
   // All possible mission statuses for the dropdown
-  const statuses = [
+  const statuses: MissionStatus[] = [
     'en_acceptation',
     'accepte',
     'prise_en_charge',
@@ -119,7 +119,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
                 <label className="text-sm font-medium block mb-2">Changer le statut</label>
                 <Select 
                   value={selectedStatus} 
-                  onValueChange={(value) => setSelectedStatus(value)}
+                  onValueChange={(value) => setSelectedStatus(value as MissionStatus)}
                   disabled={updating}
                 >
                   <SelectTrigger>

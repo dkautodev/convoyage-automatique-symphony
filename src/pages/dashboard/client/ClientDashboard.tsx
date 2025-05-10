@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatMissionNumber, formatAddressDisplay, formatFullAddress } from '@/utils/missionUtils';
-
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const {
@@ -24,33 +23,28 @@ const ClientDashboard = () => {
     totalSpent: 0,
     pendingMissions: 0
   });
-
   useEffect(() => {
     const fetchClientData = async () => {
       if (!user?.id) return;
-      
       try {
         setLoading(true);
-        
+
         // Récupérer les missions du client
-        const { data: missionsData, error: missionsError } = await typedSupabase
-          .from('missions')
-          .select('*')
-          .eq('client_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
+        const {
+          data: missionsData,
+          error: missionsError
+        } = await typedSupabase.from('missions').select('*').eq('client_id', user.id).order('created_at', {
+          ascending: false
+        }).limit(5);
         if (missionsError) {
           console.error('Erreur lors de la récupération des missions:', missionsError);
           throw missionsError;
         }
-        
+
         // Convertir les données de la DB en missions UI
-        const convertedMissions = (missionsData || []).map(mission => 
-          convertMissionFromDB(mission as unknown as MissionFromDB)
-        );
+        const convertedMissions = (missionsData || []).map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
         setMissions(convertedMissions);
-        
+
         // Récupérer les statistiques du client
         try {
           // 1. Nombre de missions actives
@@ -104,14 +98,11 @@ const ClientDashboard = () => {
         setLoading(false);
       }
     };
-    
     fetchClientData();
   }, [user]);
-
   const handleCreateNewMission = () => {
     navigate('/mission/create');
   };
-
   if (loading) {
     return <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-client"></div>
@@ -149,7 +140,6 @@ const ClientDashboard = () => {
       <FileText size={40} className="text-gray-300 mx-auto mb-3" />
       <p className="text-gray-500">Vos documents apparaîtront ici</p>
     </div>;
-    
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
@@ -244,9 +234,7 @@ const ClientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {missions.length > 0 ? (
-              missions.map((mission) => (
-                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
+            {missions.length > 0 ? missions.map(mission => <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
@@ -266,28 +254,13 @@ const ClientDashboard = () => {
                       Détails
                     </Link>
                   </Button>
-                </div>
-              ))
-            ) : (
-              <EmptyMissionsState />
-            )}
+                </div>) : <EmptyMissionsState />}
           </div>
         </CardContent>
       </Card>
       
       {/* Documents récents */}
-      <Card className="bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Documents récents</CardTitle>
-            <CardDescription>Vos derniers devis et factures</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <EmptyDocumentsState />
-        </CardContent>
-      </Card>
+      
     </div>;
 };
-
 export default ClientDashboard;

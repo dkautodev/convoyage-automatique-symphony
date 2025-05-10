@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -31,7 +30,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Mail, AlertCircle, Copy, Check } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 
 // Schéma de validation pour le formulaire de création de token
 const inviteFormSchema = z.object({

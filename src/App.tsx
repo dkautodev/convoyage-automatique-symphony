@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -14,7 +13,7 @@ import ClientMissionsPage from './pages/dashboard/client/Missions';
 import MissionDetailsPage from './pages/mission/MissionDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
-import AdminInvitePage from './pages/AdminInvitePage';
+import AdminInvite from './pages/AdminInvite';
 import CreateMissionPage from './pages/mission/CreateMission';
 import AuthCallback from './pages/auth/AuthCallback';
 import Profile from './pages/Profile';
@@ -70,7 +69,7 @@ function App() {
         <Route path="/admin/invite" element={
           <ProtectedRoute roles={['admin']}>
             <DashboardLayout>
-              <AdminInvitePage />
+              <AdminInvite />
             </DashboardLayout>
           </ProtectedRoute>
         } />

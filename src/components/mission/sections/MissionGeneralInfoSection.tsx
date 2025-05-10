@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mission } from '@/types/supabase';
@@ -97,15 +98,6 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
               <p className="font-medium">
                 {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'}
               </p>
-              
-              <div className="mt-4">
-                <h5 className="text-sm font-medium text-gray-500 mb-1">Contact départ</h5>
-                {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? <div>
-                    {mission.contact_pickup_name && <p className="font-medium">{mission.contact_pickup_name}</p>}
-                    {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
-                    {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
-                  </div> : <p className="text-sm text-gray-500">Aucun contact spécifié</p>}
-              </div>
             </div>
             
             <div>
@@ -113,15 +105,33 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
               <p className="font-medium">
                 {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'}
               </p>
-              
-              <div className="mt-4">
-                <h5 className="text-sm font-medium text-gray-500 mb-1">Contact livraison</h5>
-                {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? <div>
-                    {mission.contact_delivery_name && <p className="font-medium">{mission.contact_delivery_name}</p>}
-                    {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
-                    {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
-                  </div> : <p className="text-sm text-gray-500">Aucun contact spécifié</p>}
-              </div>
+            </div>
+          </div>
+          
+          {/* Contact section - aligned in a row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div>
+              <h5 className="text-sm font-medium text-gray-500 mb-1">Contact départ</h5>
+              {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? 
+                <div>
+                  {mission.contact_pickup_name && <p className="font-medium">{mission.contact_pickup_name}</p>}
+                  {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
+                  {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
+                </div> : 
+                <p className="text-sm text-gray-500">Aucun contact spécifié</p>
+              }
+            </div>
+            
+            <div>
+              <h5 className="text-sm font-medium text-gray-500 mb-1">Contact livraison</h5>
+              {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? 
+                <div>
+                  {mission.contact_delivery_name && <p className="font-medium">{mission.contact_delivery_name}</p>}
+                  {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
+                  {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
+                </div> : 
+                <p className="text-sm text-gray-500">Aucun contact spécifié</p>
+              }
             </div>
           </div>
         </div>

@@ -990,20 +990,37 @@ export default function CreateMissionForm({
               
               <div className="flex items-center gap-2">
                 {/* Quand on est à l'étape 4, on montre le bouton de pièce jointe avec pastille */}
-                {currentStep === 4 && <FileUpload label="PJ" variant="outline" size="sm" />}
+                {currentStep === 4 && 
+                  <FileUpload 
+                    missionId={undefined} 
+                    variant="outline" 
+                    size="sm" 
+                    onUploadComplete={(path, fileName) => {
+                      toast.success(`Document ajouté: ${fileName}`);
+                    }} 
+                  />
+                }
                 
-                {currentStep < totalSteps ? <Button type="button" onClick={nextStep} className="flex items-center gap-2">
+                {currentStep < totalSteps ? 
+                  <Button type="button" onClick={nextStep} className="flex items-center gap-2">
                     Suivant
                     <ArrowRight className="h-4 w-4" />
-                  </Button> : <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
-                    {isSubmitting ? <>
+                  </Button> 
+                  : 
+                  <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+                    {isSubmitting ? 
+                      <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Création en cours...
-                      </> : <>
+                      </> 
+                      : 
+                      <>
                         <Check className="h-4 w-4" />
                         Créer la mission
-                      </>}
-                  </Button>}
+                      </>
+                    }
+                  </Button>
+                }
               </div>
             </div>
           </form>

@@ -6,8 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { formatMissionNumber, formatAddressDisplay } from '@/utils/missionUtils';
+
 const ClientDashboard = () => {
+  const navigate = useNavigate();
   const {
     user,
     profile
@@ -21,28 +24,33 @@ const ClientDashboard = () => {
     totalSpent: 0,
     pendingMissions: 0
   });
+
   useEffect(() => {
     const fetchClientData = async () => {
       if (!user?.id) return;
+      
       try {
         setLoading(true);
-
+        
         // Récupérer les missions du client
-        const {
-          data: missionsData,
-          error: missionsError
-        } = await typedSupabase.from('missions').select('*').eq('client_id', user.id).order('created_at', {
-          ascending: false
-        }).limit(5);
+        const { data: missionsData, error: missionsError } = await typedSupabase
+          .from('missions')
+          .select('*')
+          .eq('client_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
         if (missionsError) {
           console.error('Erreur lors de la récupération des missions:', missionsError);
           throw missionsError;
         }
-
+        
         // Convertir les données de la DB en missions UI
-        const convertedMissions = (missionsData || []).map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
+        const convertedMissions = (missionsData || []).map(mission => 
+          convertMissionFromDB(mission as unknown as MissionFromDB)
+        );
         setMissions(convertedMissions);
-
+        
         // Récupérer les statistiques du client
         try {
           // 1. Nombre de missions actives
@@ -96,8 +104,14 @@ const ClientDashboard = () => {
         setLoading(false);
       }
     };
+    
     fetchClientData();
   }, [user]);
+
+  const handleCreateNewMission = () => {
+    navigate('/mission/create');
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-client"></div>
@@ -124,11 +138,9 @@ const ClientDashboard = () => {
   const EmptyMissionsState = () => <div className="py-12 flex flex-col items-center justify-center">
       <Package size={40} className="text-gray-300 mb-3" />
       <p className="text-gray-500 text-center">Vous n'avez pas encore de missions</p>
-      <Button className="mt-4" asChild>
-        <Link to="/client/missions/create">
-          <Plus size={16} className="mr-2" />
-          Créer une mission
-        </Link>
+      <Button className="mt-4" onClick={handleCreateNewMission}>
+        <Plus size={16} className="mr-2" />
+        Créer une mission
       </Button>
     </div>;
 
@@ -140,11 +152,9 @@ const ClientDashboard = () => {
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
-        <Button asChild>
-          <Link to="/client/missions/create">
-            <Plus size={16} className="mr-2" />
-            Nouvelle mission
-          </Link>
+        <Button onClick={handleCreateNewMission}>
+          <Plus size={16} className="mr-2" />
+          Nouvelle mission
         </Button>
       </div>
       
@@ -233,22 +243,21 @@ const ClientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {missions.length > 0 ? missions.map(mission => <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
+            {missions.length > 0 ? (
+              missions.map((mission) => (
+                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium">Mission #{mission.id}</p>
+                      <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
                       <Badge className={missionStatusColors[mission.status]}>
                         {missionStatusLabels[mission.status]}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {mission.pickup_address?.city || 'N/A'} → {mission.delivery_address?.city || 'N/A'} · {mission.distance_km?.toFixed(2) || '0'} km
+                      {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', {
-                  style: 'currency',
-                  currency: 'EUR'
-                }) || '0 €'}
+                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" asChild>
@@ -256,7 +265,18 @@ const ClientDashboard = () => {
                       Détails
                     </Link>
                   </Button>
-                </div>) : <EmptyMissionsState />}
+                </div>
+              ))
+            ) : (
+              <div className="py-12 flex flex-col items-center justify-center">
+                <Package size={40} className="text-gray-300 mb-3" />
+                <p className="text-gray-500 text-center">Vous n'avez pas encore de missions</p>
+                <Button className="mt-4" onClick={handleCreateNewMission}>
+                  <Plus size={16} className="mr-2" />
+                  Créer une mission
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -265,4 +285,5 @@ const ClientDashboard = () => {
       
     </div>;
 };
+
 export default ClientDashboard;

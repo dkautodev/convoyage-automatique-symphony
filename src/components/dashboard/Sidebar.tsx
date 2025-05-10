@@ -3,7 +3,7 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Truck, Home, Package, Users, Tag, UserPlus, 
-  Contact, BarChart3, FileText, Settings, User
+  Contact, FileText, Settings, User
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -16,6 +16,22 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   // Helper function to determine if a link is active
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+  
+  // Function to get the proper color class based on user role
+  const getRoleColorClass = (type: 'text' | 'bg' | 'hover-bg') => {
+    if (userRole === 'admin') {
+      return type === 'text' ? 'text-admin' : 
+             type === 'bg' ? 'bg-admin-light' : 'hover:bg-admin-light';
+    } else if (userRole === 'client') {
+      return type === 'text' ? 'text-client' : 
+             type === 'bg' ? 'bg-client-light' : 'hover:bg-client-light';
+    } else if (userRole === 'chauffeur') {
+      return type === 'text' ? 'text-driver' : 
+             type === 'bg' ? 'bg-driver-light' : 'hover:bg-driver-light';
+    }
+    return type === 'text' ? 'text-neutral-600' : 
+           type === 'bg' ? 'bg-gray-100' : 'hover:bg-gray-100';
   };
   
   // Common navigation items
@@ -112,8 +128,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     <div className="bg-white w-64 h-full shadow-lg">
       {/* Logo Section */}
       <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-        <Truck className={`h-6 w-6 text-${userRole}`} />
-        <span className={`ml-2 text-lg font-bold text-${userRole}`}>ConvoySync</span>
+        <Truck className={`h-6 w-6 ${getRoleColorClass('text')}`} />
+        <span className={`ml-2 text-lg font-bold ${getRoleColorClass('text')}`}>ConvoySync</span>
       </div>
       
       {/* Navigation Section */}
@@ -126,8 +142,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
                 className={({ isActive }) =>
                   `flex items-center px-4 py-2 rounded-md transition-colors ${
                     isActive
-                      ? `bg-${userRole}-50 text-${userRole}`
-                      : 'text-neutral-600 hover:bg-gray-100'
+                      ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}`
+                      : `text-neutral-600 ${getRoleColorClass('hover-bg')}`
                   }`
                 }
               >

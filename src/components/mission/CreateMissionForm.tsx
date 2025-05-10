@@ -25,6 +25,7 @@ import { format } from 'date-fns';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import FileUpload from './FileUpload';
 import ContactSelector from './ContactSelector';
+import { Contact } from '@/types/contact';
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({
@@ -442,17 +443,18 @@ export default function CreateMissionForm({
   };
 
   // Fonctions pour gérer les contacts sélectionnés
-  const handlePickupContactSelect = (contact: any) => {
-    form.setValue('contact_pickup_name', contact.first_name + ' ' + contact.last_name);
+  const handlePickupContactSelect = (contact: Contact) => {
+    form.setValue('contact_pickup_name', contact.name_s || '');
     if (contact.email) form.setValue('contact_pickup_email', contact.email);
     if (contact.phone) form.setValue('contact_pickup_phone', contact.phone);
-    toast.success(`Contact de départ sélectionné: ${contact.first_name} ${contact.last_name}`);
+    toast.success(`Contact de départ sélectionné: ${contact.name_s || 'Sans nom'}`);
   };
-  const handleDeliveryContactSelect = (contact: any) => {
-    form.setValue('contact_delivery_name', contact.first_name + ' ' + contact.last_name);
+  
+  const handleDeliveryContactSelect = (contact: Contact) => {
+    form.setValue('contact_delivery_name', contact.name_s || '');
     if (contact.email) form.setValue('contact_delivery_email', contact.email);
     if (contact.phone) form.setValue('contact_delivery_phone', contact.phone);
-    toast.success(`Contact de livraison sélectionné: ${contact.first_name} ${contact.last_name}`);
+    toast.success(`Contact de livraison sélectionné: ${contact.name_s || 'Sans nom'}`);
   };
   return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -677,7 +679,10 @@ export default function CreateMissionForm({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
-                      <ContactSelector onSelectContact={handlePickupContactSelect} clientId={selectedClientId || undefined} />
+                      <ContactSelector 
+                        onSelectContact={handlePickupContactSelect} 
+                        clientId={selectedClientId || undefined} 
+                      />
                     </div>
                     
                     <FormField control={form.control} name="contact_pickup_name" render={({
@@ -778,7 +783,10 @@ export default function CreateMissionForm({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
-                      <ContactSelector onSelectContact={handleDeliveryContactSelect} clientId={selectedClientId || undefined} />
+                      <ContactSelector 
+                        onSelectContact={handleDeliveryContactSelect} 
+                        clientId={selectedClientId || undefined} 
+                      />
                     </div>
                     
                     <FormField control={form.control} name="contact_delivery_name" render={({

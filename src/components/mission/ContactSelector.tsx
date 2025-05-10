@@ -10,6 +10,7 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover';
 import { Contact } from '@/types/contact';
+import { useContacts } from '@/hooks/useContacts';
 
 interface ContactSelectorProps {
   onSelectContact: (contact: Contact) => void;
@@ -48,8 +49,7 @@ export default function ContactSelector({
           return;
         }
         
-        // Cast the data to the Contact type
-        setContacts(data as unknown as Contact[]);
+        setContacts(data as Contact[]);
       } catch (error) {
         console.error('Exception fetching contacts:', error);
       } finally {

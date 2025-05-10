@@ -15,11 +15,13 @@ import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 interface MissionDocumentsSectionProps {
   mission: Mission;
   client?: any;
+  adminProfile?: any;
 }
 
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission,
-  client
+  client,
+  adminProfile
 }) => {
   const [attachmentsKey, setAttachmentsKey] = useState<number>(0);
   const [documentCount, setDocumentCount] = useState<number>(0);
@@ -50,19 +52,6 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
     } catch (error) {
       console.error("Error fetching document count:", error);
     }
-  };
-
-  // Placeholder functions for document generation (admin only)
-  const handleGenerateQuote = () => {
-    toast.info('Génération de devis non implémentée');
-  };
-  
-  const handleGenerateMissionSheet = () => {
-    toast.info('Génération de fiche de mission non implémentée');
-  };
-  
-  const handleGenerateInvoice = () => {
-    toast.info('Génération de facture non implémentée');
   };
 
   // Handle document upload completion
@@ -99,12 +88,18 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
           
           {isAdmin && (
             <>
-              <Button variant="outline" size="sm" onClick={handleGenerateMissionSheet}>
+              <GenerateQuoteButton 
+                mission={mission} 
+                client={client} 
+                adminProfile={adminProfile || profile} 
+              />
+              
+              <Button variant="outline" size="sm">
                 <FileCheck className="h-4 w-4 mr-2" />
                 Fiche mission
               </Button>
               
-              <Button variant="outline" size="sm" onClick={handleGenerateInvoice}>
+              <Button variant="outline" size="sm">
                 <Receipt className="h-4 w-4 mr-2" />
                 Facture
               </Button>

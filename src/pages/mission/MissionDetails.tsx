@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -36,6 +37,7 @@ const MissionDetailsPage = () => {
   const { user, profile } = useAuth();
   const [mission, setMission] = useState<Mission | null>(null);
   const [client, setClient] = useState<any>(null);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
@@ -56,7 +58,29 @@ const MissionDetailsPage = () => {
       fetchStatusHistory(id);
       fetchDocumentsCount(id);
     }
-  }, [id]);
+    
+    // Fetch admin profile for quote generation if user is admin
+    if (isAdmin) {
+      fetchAdminProfile();
+    }
+  }, [id, isAdmin]);
+  
+  const fetchAdminProfile = async () => {
+    try {
+      const { data, error } = await typedSupabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'admin')
+        .limit(1)
+        .single();
+        
+      if (!error && data) {
+        setAdminProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching admin profile:', error);
+    }
+  };
   
   const fetchMission = async () => {
     if (!id) return;
@@ -281,6 +305,7 @@ const MissionDetailsPage = () => {
               <GenerateQuoteButton 
                 mission={mission} 
                 client={client} 
+                adminProfile={adminProfile}
               />
               <Button onClick={handleShowHistory} variant="outline">
                 <History className="h-4 w-4 mr-2" />
@@ -341,7 +366,11 @@ const MissionDetailsPage = () => {
       
       {/* Documents Section - For both Admin and Client */}
       <div id="documents-section">
-        <MissionDocumentsSection mission={mission} />
+        <MissionDocumentsSection 
+          mission={mission} 
+          client={client}
+          adminProfile={adminProfile}
+        />
       </div>
       
       {/* Status History Drawer */}

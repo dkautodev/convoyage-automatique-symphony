@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { formatMissionNumber, formatAddressDisplay } from '@/utils/missionUtils';
+import { formatMissionNumber, formatAddressDisplay, formatFullAddress } from '@/utils/missionUtils';
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
@@ -149,6 +150,7 @@ const ClientDashboard = () => {
       <FileText size={40} className="text-gray-300 mx-auto mb-3" />
       <p className="text-gray-500">Vos documents apparaîtront ici</p>
     </div>;
+    
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
@@ -254,7 +256,7 @@ const ClientDashboard = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                      {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'} → {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}

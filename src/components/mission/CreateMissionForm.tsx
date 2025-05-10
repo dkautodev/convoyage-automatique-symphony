@@ -901,7 +901,8 @@ export default function CreateMissionForm({
               </div>}
 
             {/* Étape 5: Attribution (Admin seulement) */}
-            {currentStep === 5 && profile?.role === 'admin' && <div className="space-y-6">
+            {currentStep === 5 && profile?.role === 'admin' && 
+              <div className="space-y-6">
                 <h3 className="text-lg font-medium">Attribution de la mission</h3>
                 
                 <FormField control={form.control} name="client_id" render={({
@@ -977,7 +978,8 @@ export default function CreateMissionForm({
                       </FormControl>
                       <FormMessage />
                     </FormItem>} />
-              </div>}
+              </div>
+            }
 
             {/* Navigation - MISE À JOUR */}
             <div className="flex justify-between pt-4 border-t mt-8">
@@ -987,7 +989,7 @@ export default function CreateMissionForm({
               </Button>
               
               <div className="flex items-center gap-2">
-                {/* Quand on est à l'étape 4, on montre le bouton de pièce jointe à côté de Suivant */}
+                {/* Quand on est à l'étape 4, on montre le bouton de pièce jointe avec pastille */}
                 {currentStep === 4 && <FileUpload label="PJ" variant="outline" size="sm" />}
                 
                 {currentStep < totalSteps ? <Button type="button" onClick={nextStep} className="flex items-center gap-2">

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -99,6 +100,17 @@ const styles = StyleSheet.create({
   addressLabel: {
     fontWeight: 'bold',
     marginBottom: 5,
+  },
+  vehicleRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  vehicleColumn: {
+    width: '33%',
+  },
+  vehicleLabel: {
+    fontWeight: 'bold',
+    marginBottom: 3,
   },
 });
 
@@ -208,37 +220,28 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
           </View>
         </View>
 
-        {/* Informations véhicule (simplifiées) */}
+        {/* Informations véhicule (sur une seule ligne en 3 colonnes) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informations véhicule</Text>
-          
-          {/* Véhicule: marque + modèle combinés */}
-          {(mission.vehicle_make || mission.vehicle_model) && (
-            <View style={styles.row}>
-              <View style={styles.column}>
-                <Text style={{fontWeight: 'bold'}}>Véhicule:</Text>
-                <Text>{[mission.vehicle_make, mission.vehicle_model].filter(Boolean).join(' ')}</Text>
-              </View>
+          <View style={styles.vehicleRow}>
+            {/* Colonne 1: Véhicule */}
+            <View style={styles.vehicleColumn}>
+              <Text style={styles.vehicleLabel}>Véhicule:</Text>
+              <Text>{[mission.vehicle_make, mission.vehicle_model].filter(Boolean).join(' ')}</Text>
             </View>
-          )}
-          
-          {mission.vehicle_registration && (
-            <View style={styles.row}>
-              <View style={styles.halfColumn}>
-                <Text style={{fontWeight: 'bold'}}>Immatriculation:</Text>
-                <Text>{mission.vehicle_registration}</Text>
-              </View>
+            
+            {/* Colonne 2: Immatriculation */}
+            <View style={styles.vehicleColumn}>
+              <Text style={styles.vehicleLabel}>Immatriculation:</Text>
+              <Text>{mission.vehicle_registration || 'Non spécifiée'}</Text>
             </View>
-          )}
-          
-          {mission.vehicle_vin && (
-            <View style={styles.row}>
-              <View style={styles.column}>
-                <Text style={{fontWeight: 'bold'}}>VIN:</Text>
-                <Text>{mission.vehicle_vin}</Text>
-              </View>
+            
+            {/* Colonne 3: VIN */}
+            <View style={styles.vehicleColumn}>
+              <Text style={styles.vehicleLabel}>VIN:</Text>
+              <Text>{mission.vehicle_vin || 'Non spécifié'}</Text>
             </View>
-          )}
+          </View>
         </View>
 
         {/* Notes */}

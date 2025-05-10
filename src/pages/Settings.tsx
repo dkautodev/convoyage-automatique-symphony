@@ -1,45 +1,41 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { useAuth } from '@/hooks/useAuth';
+import { typedSupabase } from '@/types/database';
+import { toast } from 'sonner';
+import { Loader2, Save, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Lock, KeyRound } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
-import { checkPasswordStrength } from '@/utils/validation';
 
-// Définition du schéma de validation pour le formulaire
+// Schéma de validation pour le formulaire de changement de mot de passe
 const passwordSchema = z.object({
-  currentPassword: z.string().min(6, { 
-    message: 'Le mot de passe actuel est requis' 
-  }),
-  newPassword: z.string().min(8, { 
-    message: 'Le nouveau mot de passe doit contenir au moins 8 caractères' 
-  }),
-  confirmPassword: z.string().min(8, { 
-    message: 'La confirmation du mot de passe est requise' 
-  }),
-}).refine(data => data.newPassword === data.confirmPassword, {
-  message: "Les mots de passe ne correspondent pas",
-  path: ["confirmPassword"],
-}).refine(data => checkPasswordStrength(data.newPassword) !== 'weak', {
-  message: "Le mot de passe doit être plus fort (inclure majuscules, minuscules, chiffres et caractères spéciaux)",
-  path: ["newPassword"],
+  currentPassword: z
+    .string()
+    .min(1, { message: 'Le mot de passe actuel est requis' }),
+  newPassword: z
+    .string()
+    .min(8, { message: 'Le nouveau mot de passe doit contenir au moins 8 caractères' })
+    .regex(/[A-Z]/, { message: 'Le mot de passe doit contenir au moins une majuscule' })
+    .regex(/[0-9]/, { message: 'Le mot de passe doit contenir au moins un chiffre' }),
+  confirmPassword: z
+    .string()
+    .min(1, { message: 'Veuillez confirmer votre mot de passe' }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas',
+  path: ['confirmPassword'],
 });
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
@@ -58,30 +54,38 @@ const Settings = () => {
   });
 
   const onSubmit = async (data: PasswordFormValues) => {
+    if (!user) return;
+    
     try {
       setIsLoading(true);
       
-      // Vérifier d'abord que le mot de passe actuel est correct
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user?.email || '',
+      // Vérifier d'abord l'ancien mot de passe en tentant de se connecter
+      const { error: signInError } = await typedSupabase.auth.signInWithPassword({
+        email: user.email || '',
         password: data.currentPassword,
       });
       
       if (signInError) {
-        throw new Error('Le mot de passe actuel est incorrect');
+        toast.error('Le mot de passe actuel est incorrect');
+        form.setError('currentPassword', {
+          type: 'manual',
+          message: 'Mot de passe incorrect',
+        });
+        setIsLoading(false);
+        return;
       }
       
-      // Mettre à jour le mot de passe
-      const { error: updateError } = await supabase.auth.updateUser({ 
-        password: data.newPassword 
+      // Si l'ancien mot de passe est correct, mettre à jour le mot de passe
+      const { error: updateError } = await typedSupabase.auth.updateUser({
+        password: data.newPassword,
       });
       
       if (updateError) {
-        throw updateError;
+        toast.error(`Erreur lors de la mise à jour du mot de passe: ${updateError.message}`);
+      } else {
+        toast.success('Mot de passe mis à jour avec succès');
+        form.reset();
       }
-      
-      toast.success('Mot de passe mis à jour avec succès');
-      form.reset();
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du mot de passe:', error);
       toast.error(`Erreur: ${error.message || 'Une erreur est survenue'}`);
@@ -89,96 +93,72 @@ const Settings = () => {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Paramètres du compte</h1>
+      <h1 className="text-2xl font-bold mb-6">Paramètres</h1>
       
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Changer le mot de passe</CardTitle>
+            <CardTitle>Sécurité du compte</CardTitle>
             <CardDescription>
-              Mettez à jour votre mot de passe pour sécuriser votre compte.
+              Mettez à jour votre mot de passe et les paramètres de sécurité de votre compte
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="currentPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mot de passe actuel</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Separator className="my-4" />
-                
-                <FormField
-                  control={form.control}
-                  name="newPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nouveau mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <PasswordStrengthMeter password={field.value} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                          <Input
-                            type="password"
-                            placeholder="••••••••"
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4">
+                  <FormField
+                    control={form.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mot de passe actuel</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Separator />
+                  
+                  <FormField
+                    control={form.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nouveau mot de passe</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <div className="flex justify-end">
                   <Button 
                     type="submit" 
                     disabled={isLoading}
-                    className="w-full sm:w-auto"
                   >
                     {isLoading ? (
                       <>
@@ -195,6 +175,21 @@ const Settings = () => {
                 </div>
               </form>
             </Form>
+          </CardContent>
+        </Card>
+        
+        {/* Section pour les préférences de notification (pour une future extension) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Préférences de notification</CardTitle>
+            <CardDescription>
+              Contrôlez quand et comment vous recevez des notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center py-12 text-muted-foreground">
+            <div className="text-center">
+              <p>Les préférences de notification seront disponibles prochainement</p>
+            </div>
           </CardContent>
         </Card>
       </div>

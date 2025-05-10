@@ -17,12 +17,14 @@ import AdminInvitePage from './pages/AdminInvitePage';
 import CreateMissionPage from './pages/mission/CreateMission';
 import AuthCallback from './pages/auth/AuthCallback';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login" element={<Home />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/home" element={<Home />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/register" element={<RegisterPage />} />
@@ -138,6 +140,15 @@ function App() {
         <ProtectedRoute>
           <DashboardLayout>
             <Profile />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Settings route - accessible by all authenticated users */}
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Settings />
           </DashboardLayout>
         </ProtectedRoute>
       } />

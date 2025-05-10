@@ -1,8 +1,10 @@
+
 import { Address, Mission } from '@/types/supabase';
 
 // Original file imports and basic functions
-export const formatMissionNumber = (mission: Mission) => {
-  return mission.mission_number || mission.id.slice(0, 8);
+export const formatMissionNumber = (mission: Mission | null | undefined) => {
+  if (!mission) return 'N/A';
+  return mission.mission_number || (mission.id ? mission.id.slice(0, 8) : 'N/A');
 };
 
 export const formatAddressDisplay = (address?: Address | null) => {

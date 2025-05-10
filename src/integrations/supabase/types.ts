@@ -226,6 +226,44 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_documents: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_type: string | null
+          id: string
+          mission_id: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_type?: string | null
+          id?: string
+          mission_id: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          mission_id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_documents_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_status_history: {
         Row: {
           changed_at: string

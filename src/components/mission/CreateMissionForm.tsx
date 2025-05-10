@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Save, Calculator, Calendar, Clock } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Save, Calculator, Calendar, Clock, FileText, File } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -23,6 +23,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
+import FileUpload from './FileUpload';
+import ContactSelector from './ContactSelector';
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({

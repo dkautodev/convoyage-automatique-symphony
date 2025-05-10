@@ -19,7 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import FileUpload from '@/components/mission/FileUpload';
 import { associatePendingDocumentsWithMission } from '@/integrations/supabase/storage';
-import { Address } from '@/types/supabase';
+import { Address, MissionStatus } from '@/types/supabase';
 
 // Create a context to store the document IDs during mission creation
 const DocumentUploadContext = React.createContext<{
@@ -159,7 +159,7 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
       const missionData = {
         client_id: values.client_id,
         created_by: user.id,
-        status: 'en_acceptation',
+        status: 'en_acceptation' as MissionStatus, // Explicitly cast to MissionStatus type
         distance_km: 0, // Default value for required field
         price_ht: 0,    // Default value for required field
         price_ttc: 0,   // Default value for required field
@@ -180,7 +180,8 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
         contact_delivery_name: values.contact_delivery_name,
         contact_delivery_phone: values.contact_delivery_phone,
         contact_delivery_email: values.contact_delivery_email,
-        notes: values.notes
+        notes: values.notes,
+        vat_rate: 20 // Adding the required vat_rate field with default value
       };
       
       // Insert mission in database

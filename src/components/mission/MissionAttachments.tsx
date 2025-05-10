@@ -62,21 +62,21 @@ export default function MissionAttachments({
     }
   };
   
-  const handleDownload = async (document: MissionDocument) => {
+  const handleDownload = async (doc: MissionDocument) => {
     try {
       const { data, error } = await typedSupabase
         .storage
         .from('mission-docs')
-        .download(document.file_path.replace('mission-docs/', ''));
+        .download(doc.file_path.replace('mission-docs/', ''));
         
       if (error) throw error;
       
       // Create a download link and trigger download
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.file_name;
-      document.body.appendChild(a);
+      a.download = doc.file_name;
+      window.document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);

@@ -6,7 +6,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit, Ban, Paperclip } from 'lucide-react';
+import { Package, History, Edit, Ban, Paperclip, FileText } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { 
   AlertDialog,
@@ -28,6 +28,7 @@ import { MissionDocumentsSection } from '@/components/mission/sections/MissionDo
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
+import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -277,31 +278,41 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
+              <GenerateQuoteButton 
+                mission={mission} 
+                client={client} 
+              />
               <Button onClick={handleShowHistory} variant="outline">
                 <History className="h-4 w-4 mr-2" />
                 Historique
               </Button>
             </>
           )}
-          {/* Ajout du bouton documents pour les clients */}
+          {/* Client buttons */}
           {isClient && (
-            <Button 
-              variant="outline" 
-              className="relative"
-              onClick={() => setDocumentsDialogOpen(true)}
-            >
-              <Paperclip className="h-4 w-4" />
-              {documentsCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
-                  {documentsCount}
-                </span>
-              )}
-              {documentsCount === 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
-                  0
-                </span>
-              )}
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                className="relative"
+                onClick={() => setDocumentsDialogOpen(true)}
+              >
+                <Paperclip className="h-4 w-4" />
+                {documentsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                    {documentsCount}
+                  </span>
+                )}
+                {documentsCount === 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                    0
+                  </span>
+                )}
+              </Button>
+              <GenerateQuoteButton 
+                mission={mission} 
+                client={client} 
+              />
+            </>
           )}
           {showCancelButton && (
             <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">

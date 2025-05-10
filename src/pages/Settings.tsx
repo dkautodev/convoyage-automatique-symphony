@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,11 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { toast } from 'sonner';
-import { Loader2, Save, Lock } from 'lucide-react';
+import { Loader2, Save, Lock, CheckCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 import { useNavigate } from 'react-router-dom';
+import { useAlert } from '@/components/providers/AlertProvider';
 
 // Schéma de validation pour le formulaire de changement de mot de passe
 const passwordSchema = z.object({
@@ -45,6 +47,8 @@ const Settings = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const { showAlert } = useAlert();
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -86,11 +90,22 @@ const Settings = () => {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         toast.error(`Erreur lors de la mise à jour du mot de passe: ${updateError.message}`);
       } else {
-        // Message de succès avec toast
-        toast.success('Mot de passe mis à jour avec succès');
+        // Afficher un message de succès visible
+        toast.success('Mot de passe mis à jour avec succès', {
+          duration: 5000, // Durée plus longue
+          position: 'top-center', // Position plus visible
+          icon: <CheckCircle className="text-green-500" />,
+        });
+        
+        // Afficher également une alerte pour plus de visibilité
+        showAlert('Mot de passe mis à jour avec succès', 'success', 'Modification réussie');
+        
+        // Montrer l'état de succès dans le composant
+        setShowSuccess(true);
         form.reset();
         
         // Rediriger vers le tableau de bord approprié en fonction du rôle de l'utilisateur
+        console.log("Redirection planifiée pour le rôle:", profile?.role);
         setTimeout(() => {
           if (profile?.role === 'admin') {
             navigate('/admin/dashboard');
@@ -100,7 +115,7 @@ const Settings = () => {
             // Par défaut, rediriger vers le tableau de bord client
             navigate('/client/dashboard');
           }
-        }, 1500); // Attendre 1.5 secondes pour que l'utilisateur puisse voir le message de succès
+        }, 2000); // Attendre 2 secondes pour que l'utilisateur puisse voir les messages
       }
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du mot de passe:', error);
@@ -113,6 +128,16 @@ const Settings = () => {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Paramètres</h1>
+      
+      {showSuccess && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center">
+          <CheckCircle className="mr-2" />
+          <div>
+            <p className="font-semibold">Mot de passe mis à jour avec succès</p>
+            <p>Vous allez être redirigé vers votre tableau de bord...</p>
+          </div>
+        </div>
+      )}
       
       <div className="grid gap-6">
         <Card>
@@ -175,12 +200,17 @@ const Settings = () => {
                 <div className="flex justify-end">
                   <Button 
                     type="submit" 
-                    disabled={isLoading}
+                    disabled={isLoading || showSuccess}
                   >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                         Mise à jour...
+                      </>
+                    ) : showSuccess ? (
+                      <>
+                        <CheckCircle className="mr-2 h-4 w-4" /> 
+                        Mis à jour
                       </>
                     ) : (
                       <>

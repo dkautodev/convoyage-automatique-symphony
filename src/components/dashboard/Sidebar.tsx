@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, 
   Building, Truck, PackageOpen, Euro, ShieldCheck, 
-  ChevronDown, ChevronRight
+  ChevronDown, ChevronRight, UserPlus
 } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
@@ -28,7 +28,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
           { href: '/admin/clients', icon: <Building className="mr-2 h-4 w-4" />, label: 'Clients' },
           { href: '/admin/drivers', icon: <Truck className="mr-2 h-4 w-4" />, label: 'Chauffeurs' },
           { href: '/admin/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Missions' },
-          { href: '/admin/pricing-grid', icon: <Euro className="mr-2 h-4 w-4" />, label: 'Tarifs' }
+          { href: '/admin/pricing-grid', icon: <Euro className="mr-2 h-4 w-4" />, label: 'Tarifs' },
+          { href: '/admin/invite', icon: <UserPlus className="mr-2 h-4 w-4" />, label: 'Invitations Admin' }
         ];
       case 'client':
         return [

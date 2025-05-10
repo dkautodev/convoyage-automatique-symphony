@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,8 @@ import {
   LogOut,
   UserPlus,
   Shield,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -43,6 +43,16 @@ const Dashboard = () => {
   
   const handleCreateMission = () => {
     navigate('/mission/create');
+  };
+  
+  const handleContactClick = () => {
+    if (userRole === 'admin') {
+      navigate('/admin/contact');
+    } else if (userRole === 'client') {
+      navigate('/client/contact');
+    } else {
+      navigate('/contact');
+    }
   };
   
   return (
@@ -121,6 +131,11 @@ const Dashboard = () => {
                 </Button>
               </>
             )}
+            
+            <Button variant="ghost" className="w-full justify-start" onClick={handleContactClick}>
+              <Mail className="mr-2 h-4 w-4" />
+              Contact
+            </Button>
             
             <Button variant="ghost" className="w-full justify-start">
               <Settings className="mr-2 h-4 w-4" />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 const ClientDashboard = () => {
-  const { user, profile } = useAuth();
+  const {
+    user,
+    profile
+  } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -20,73 +21,64 @@ const ClientDashboard = () => {
     totalSpent: 0,
     pendingMissions: 0
   });
-
   useEffect(() => {
     const fetchClientData = async () => {
       if (!user?.id) return;
-      
       try {
         setLoading(true);
-        
+
         // Récupérer les missions du client
-        const { data: missionsData, error: missionsError } = await typedSupabase
-          .from('missions')
-          .select('*')
-          .eq('client_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
+        const {
+          data: missionsData,
+          error: missionsError
+        } = await typedSupabase.from('missions').select('*').eq('client_id', user.id).order('created_at', {
+          ascending: false
+        }).limit(5);
         if (missionsError) {
           console.error('Erreur lors de la récupération des missions:', missionsError);
           throw missionsError;
         }
-        
+
         // Convertir les données de la DB en missions UI
-        const convertedMissions = (missionsData || []).map(mission => 
-          convertMissionFromDB(mission as unknown as MissionFromDB)
-        );
+        const convertedMissions = (missionsData || []).map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
         setMissions(convertedMissions);
-        
+
         // Récupérer les statistiques du client
         try {
           // 1. Nombre de missions actives
-          const { count: activeMissions, error: activeMissionsError } = await typedSupabase
-            .from('missions')
-            .select('*', { count: 'exact' })
-            .eq('client_id', user.id)
-            .not('status', 'in', '(termine,annule)');
-          
+          const {
+            count: activeMissions,
+            error: activeMissionsError
+          } = await typedSupabase.from('missions').select('*', {
+            count: 'exact'
+          }).eq('client_id', user.id).not('status', 'in', '(termine,annule)');
           if (activeMissionsError) throw activeMissionsError;
-          
+
           // 2. Nombre de missions complétées
-          const { count: completedMissions, error: completedMissionsError } = await typedSupabase
-            .from('missions')
-            .select('*', { count: 'exact' })
-            .eq('client_id', user.id)
-            .eq('status', 'termine');
-          
+          const {
+            count: completedMissions,
+            error: completedMissionsError
+          } = await typedSupabase.from('missions').select('*', {
+            count: 'exact'
+          }).eq('client_id', user.id).eq('status', 'termine');
           if (completedMissionsError) throw completedMissionsError;
-          
+
           // 3. Total des dépenses
-          const { data: allMissions, error: allMissionsError } = await typedSupabase
-            .from('missions')
-            .select('price_ttc')
-            .eq('client_id', user.id)
-            .eq('status', 'termine');
-          
+          const {
+            data: allMissions,
+            error: allMissionsError
+          } = await typedSupabase.from('missions').select('price_ttc').eq('client_id', user.id).eq('status', 'termine');
           if (allMissionsError) throw allMissionsError;
-          
           const totalSpent = allMissions?.reduce((sum, mission) => sum + (mission.price_ttc || 0), 0) || 0;
-          
+
           // 4. Nombre de missions en attente
-          const { count: pendingMissions, error: pendingMissionsError } = await typedSupabase
-            .from('missions')
-            .select('*', { count: 'exact' })
-            .eq('client_id', user.id)
-            .eq('status', 'en_acceptation');
-          
+          const {
+            count: pendingMissions,
+            error: pendingMissionsError
+          } = await typedSupabase.from('missions').select('*', {
+            count: 'exact'
+          }).eq('client_id', user.id).eq('status', 'en_acceptation');
           if (pendingMissionsError) throw pendingMissionsError;
-          
           setStats({
             activeMissions: activeMissions || 0,
             completedMissions: completedMissions || 0,
@@ -97,7 +89,6 @@ const ClientDashboard = () => {
           console.error('Erreur lors de la récupération des statistiques:', statsError);
           // Continue execution even if stats fail
         }
-        
       } catch (err) {
         console.error('Error fetching client dashboard data:', err);
         setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
@@ -105,21 +96,15 @@ const ClientDashboard = () => {
         setLoading(false);
       }
     };
-    
     fetchClientData();
   }, [user]);
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
+    return <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-client"></div>
-      </div>
-    );
+      </div>;
   }
-
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6">
+    return <div className="flex flex-col items-center justify-center h-full p-6">
         <div className="text-red-500 mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
@@ -132,13 +117,11 @@ const ClientDashboard = () => {
         <Button onClick={() => window.location.reload()}>
           Réessayer
         </Button>
-      </div>
-    );
+      </div>;
   }
 
   // Component for empty missions state
-  const EmptyMissionsState = () => (
-    <div className="py-12 flex flex-col items-center justify-center">
+  const EmptyMissionsState = () => <div className="py-12 flex flex-col items-center justify-center">
       <Package size={40} className="text-gray-300 mb-3" />
       <p className="text-gray-500 text-center">Vous n'avez pas encore de missions</p>
       <Button className="mt-4" asChild>
@@ -147,19 +130,14 @@ const ClientDashboard = () => {
           Créer une mission
         </Link>
       </Button>
-    </div>
-  );
+    </div>;
 
   // Component for empty documents state
-  const EmptyDocumentsState = () => (
-    <div className="text-center py-12">
+  const EmptyDocumentsState = () => <div className="text-center py-12">
       <FileText size={40} className="text-gray-300 mx-auto mb-3" />
       <p className="text-gray-500">Vos documents apparaîtront ici</p>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
+    </div>;
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
         <Button asChild>
@@ -227,7 +205,10 @@ const ClientDashboard = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.totalSpent.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
+                <p className="text-2xl font-bold">{stats.totalSpent.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                })}</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <FileText size={20} className="text-blue-600" />
@@ -252,9 +233,7 @@ const ClientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {missions.length > 0 ? (
-              missions.map((mission) => (
-                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
+            {missions.length > 0 ? missions.map(mission => <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium">Mission #{mission.id}</p>
@@ -266,7 +245,10 @@ const ClientDashboard = () => {
                       {mission.pickup_address?.city || 'N/A'} → {mission.delivery_address?.city || 'N/A'} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                }) || '0 €'}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" asChild>
@@ -274,27 +256,13 @@ const ClientDashboard = () => {
                       Détails
                     </Link>
                   </Button>
-                </div>
-              ))
-            ) : (
-              <EmptyMissionsState />
-            )}
+                </div>) : <EmptyMissionsState />}
           </div>
         </CardContent>
       </Card>
       
       {/* Documents récents */}
-      <Card className="bg-white">
-        <CardHeader>
-          <CardTitle>Documents récents</CardTitle>
-          <CardDescription>Vos derniers devis et factures</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <EmptyDocumentsState />
-        </CardContent>
-      </Card>
-    </div>
-  );
+      
+    </div>;
 };
-
 export default ClientDashboard;

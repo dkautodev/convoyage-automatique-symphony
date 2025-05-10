@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,13 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
   const [selectedDriverId, setSelectedDriverId] = useState(mission.chauffeur_id || '');
   const [driverPrice, setDriverPrice] = useState(mission.chauffeur_price_ht?.toString() || '0');
   const [updating, setUpdating] = useState(false);
+
+  // S'assurer que le prix du chauffeur est correctement initialisé
+  useEffect(() => {
+    if (mission.chauffeur_price_ht !== undefined && mission.chauffeur_price_ht !== null) {
+      setDriverPrice(mission.chauffeur_price_ht.toString());
+    }
+  }, [mission]);
 
   // Find the current driver
   const currentDriver = driverProfiles.find(driver => driver.id === mission.chauffeur_id);
@@ -68,9 +75,15 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Chauffeur actuellement assigné</h4>
-            <p className="font-medium">{currentDriverName}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Chauffeur actuellement assigné</h4>
+              <p className="font-medium">{currentDriverName}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Prix chauffeur actuel (HT)</h4>
+              <p className="font-medium">{mission.chauffeur_price_ht ? `${mission.chauffeur_price_ht.toFixed(2)} €` : '0.00 €'}</p>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -85,7 +98,7 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
                   <SelectValue placeholder="Choisir un chauffeur" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Aucun chauffeur assigné</SelectItem>
+                  <SelectItem value="">Aucun chauffeur assigné</SelectItem>
                   {loading ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mission } from '@/types/supabase';
 import { formatFullAddress } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
-import { FileText, MapPin, Clock, Truck, Car, CreditCard } from 'lucide-react';
+import { FileText, MapPin, Clock, Truck, Car, CreditCard, Info, Calendar } from 'lucide-react';
 
 interface MissionGeneralInfoProps {
   mission: Mission;
@@ -79,57 +79,61 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
         </div>
 
         {/* Vehicle information */}
-        {(mission.vehicle_make || mission.vehicle_model || mission.vehicle_registration || mission.vehicle_year) && (
-          <div className="mb-6">
-            <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-              <Car className="h-4 w-4" />
-              Informations véhicule
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {mission.vehicle_make && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Marque</h4>
-                  <p className="font-medium">{mission.vehicle_make}</p>
-                </div>
-              )}
-              {mission.vehicle_model && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Modèle</h4>
-                  <p className="font-medium">{mission.vehicle_model}</p>
-                </div>
-              )}
-              {mission.vehicle_year && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Année</h4>
-                  <p className="font-medium">{mission.vehicle_year}</p>
-                </div>
-              )}
-              {mission.vehicle_fuel && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Carburant</h4>
-                  <p className="font-medium">{mission.vehicle_fuel}</p>
-                </div>
-              )}
-              {mission.vehicle_registration && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">Immatriculation</h4>
-                  <p className="font-medium">{mission.vehicle_registration}</p>
-                </div>
-              )}
-              {mission.vehicle_vin && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-1">VIN</h4>
-                  <p className="font-medium">{mission.vehicle_vin}</p>
-                </div>
-              )}
-            </div>
+        <div className="mb-6 border-t pt-6">
+          <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
+            <Car className="h-5 w-5" />
+            Informations véhicule
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {mission.vehicle_make && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Marque</h4>
+                <p className="font-medium">{mission.vehicle_make}</p>
+              </div>
+            )}
+            {mission.vehicle_model && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Modèle</h4>
+                <p className="font-medium">{mission.vehicle_model}</p>
+              </div>
+            )}
+            {mission.vehicle_year && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Année</h4>
+                <p className="font-medium">{mission.vehicle_year}</p>
+              </div>
+            )}
+            {mission.vehicle_fuel && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Carburant</h4>
+                <p className="font-medium">{mission.vehicle_fuel}</p>
+              </div>
+            )}
+            {mission.vehicle_registration && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Immatriculation</h4>
+                <p className="font-medium">{mission.vehicle_registration}</p>
+              </div>
+            )}
+            {mission.vehicle_vin && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">VIN</h4>
+                <p className="font-medium">{mission.vehicle_vin}</p>
+              </div>
+            )}
+            {!mission.vehicle_make && !mission.vehicle_model && !mission.vehicle_year && 
+             !mission.vehicle_fuel && !mission.vehicle_registration && !mission.vehicle_vin && (
+              <div className="col-span-3">
+                <p className="text-gray-500 text-center">Aucune information véhicule spécifiée</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Time slots */}
-        <div className="mb-6">
+        <div className="mb-6 border-t pt-6">
           <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+            <Calendar className="h-5 w-5" />
             Dates et créneaux
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -155,9 +159,9 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
         </div>
 
         {/* Addresses */}
-        <div className="mb-6">
+        <div className="mb-6 border-t pt-6">
           <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
+            <MapPin className="h-5 w-5" />
             Adresses
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -201,9 +205,9 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
 
         {/* Notes */}
         {mission.notes && (
-          <div>
-            <h3 className="text-md font-semibold mb-2 flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+          <div className="border-t pt-6">
+            <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
+              <Info className="h-5 w-5" />
               Notes complémentaires
             </h3>
             <div className="bg-gray-50 p-4 rounded-md">

@@ -50,15 +50,17 @@ const MissionDetailsPage = () => {
       }
       
       console.log('Mission data retrieved:', missionData);
-      const missionObj = convertMissionFromDB(missionData as unknown as MissionFromDB);
-      setMission(missionObj);
+      
+      // S'assurer que toutes les données de mission sont correctement incluses
+      // Ne pas utiliser convertMissionFromDB pour préserver toutes les propriétés
+      setMission(missionData as unknown as Mission);
       
       // Récupérer les informations du client
-      if (missionObj.client_id) {
+      if (missionData.client_id) {
         const { data: clientData, error: clientError } = await typedSupabase
           .from('profiles')
           .select('*')
-          .eq('id', missionObj.client_id)
+          .eq('id', missionData.client_id)
           .single();
         
         if (!clientError && clientData) {

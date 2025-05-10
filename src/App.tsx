@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -22,7 +21,9 @@ import Settings from './pages/Settings';
 import LoginPage from './pages/LoginPage';
 import AdminContactsPage from './pages/dashboard/admin/Contacts';
 import ClientContactsPage from './pages/dashboard/client/Contacts';
-import ClientsPage from './pages/dashboard/admin/Clients'; // Assurez-vous que cette importation est présente
+import ClientsPage from './pages/dashboard/admin/Clients';
+import AdminInvoicesPage from './pages/dashboard/admin/Invoices';
+import ClientInvoicesPage from './pages/dashboard/client/Invoices';
 
 function App() {
   return (
@@ -84,11 +85,17 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-        {/* Ajout de la route pour la page Clients */}
         <Route path="/admin/clients" element={
           <ProtectedRoute roles={['admin']}>
             <DashboardLayout>
               <ClientsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/invoices" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <AdminInvoicesPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />
@@ -126,6 +133,13 @@ function App() {
           <ProtectedRoute roles={['client']}>
             <DashboardLayout>
               <ClientContactsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/client/invoices" element={
+          <ProtectedRoute roles={['client']}>
+            <DashboardLayout>
+              <ClientInvoicesPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

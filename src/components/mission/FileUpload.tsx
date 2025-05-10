@@ -1,8 +1,9 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { uploadFile } from '@/integrations/supabase/storage';
-import { Upload, Loader2, File as FileIcon, X, AlertCircle, PaperclipIcon } from 'lucide-react';
+import { Upload, Loader2, File as FileIcon, X, AlertCircle, PaperclipIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { cn } from '@/lib/utils';
@@ -210,6 +211,15 @@ export default function FileUpload({
       setUploadProgress(0);
     }
   };
+  
+  // New function to delete a single file from the selected files
+  const handleDeleteFile = (index: number) => {
+    const newFiles = [...selectedFiles];
+    newFiles.splice(index, 1);
+    setSelectedFiles(newFiles);
+    toast.success("Fichier retiré");
+  };
+  
   const clearSelectedFiles = () => {
     setSelectedFiles([]);
     setError(null);
@@ -217,6 +227,7 @@ export default function FileUpload({
       fileInputRef.current.value = '';
     }
   };
+  
   const toggleFileDialog = () => {
     setShowFileDialog(!showFileDialog);
   };
@@ -252,9 +263,18 @@ export default function FileUpload({
                 <div key={index} className="flex items-center text-xs p-1 mb-1 bg-background rounded">
                   <FileIcon className="h-3 w-3 mr-2 shrink-0" />
                   <span className="truncate">{file.name}</span>
-                  <span className="ml-auto text-muted-foreground shrink-0">
+                  <span className="ml-auto text-muted-foreground shrink-0 mr-2">
                     {(file.size / 1024).toFixed(1)} Ko
                   </span>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleDeleteFile(index)} 
+                    className="h-5 w-5 p-0"
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -296,3 +316,4 @@ export default function FileUpload({
     </>
   );
 }
+

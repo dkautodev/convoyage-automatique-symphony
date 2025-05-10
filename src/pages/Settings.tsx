@@ -19,6 +19,7 @@ import { typedSupabase } from '@/types/database';
 import { toast } from 'sonner';
 import { Loader2, Save, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 
 // Schéma de validation pour le formulaire de changement de mot de passe
 const passwordSchema = z.object({
@@ -59,7 +60,7 @@ const Settings = () => {
     try {
       setIsLoading(true);
       
-      // Vérifier d'abord l'ancien mot de passe en tentant de se connecter
+      // Utiliser la méthode correcte pour vérifier l'ancien mot de passe
       const { error: signInError } = await typedSupabase.auth.signInWithPassword({
         email: user.email || '',
         password: data.currentPassword,
@@ -81,6 +82,7 @@ const Settings = () => {
       });
       
       if (updateError) {
+        console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         toast.error(`Erreur lors de la mise à jour du mot de passe: ${updateError.message}`);
       } else {
         toast.success('Mot de passe mis à jour avec succès');
@@ -135,6 +137,7 @@ const Settings = () => {
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
                         </FormControl>
+                        <PasswordStrengthMeter password={field.value} />
                         <FormMessage />
                       </FormItem>
                     )}

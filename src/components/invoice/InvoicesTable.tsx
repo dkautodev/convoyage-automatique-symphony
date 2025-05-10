@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +20,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 }) => {
   if (isLoading) {
     return <div className="flex justify-center py-8">
-        <div className={`animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-${userRole}`}></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-700"></div>
       </div>;
   }
   if (missions.length === 0) {

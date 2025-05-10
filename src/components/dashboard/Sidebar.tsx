@@ -21,17 +21,17 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   // Function to get the proper color class based on user role
   const getRoleColorClass = (type: 'text' | 'bg' | 'hover-bg') => {
     if (userRole === 'admin') {
-      return type === 'text' ? 'text-admin' : 
-             type === 'bg' ? 'bg-admin-light' : 'hover:bg-admin-light';
+      return type === 'text' ? 'text-neutral-900' : 
+             type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
     } else if (userRole === 'client') {
-      return type === 'text' ? 'text-client' : 
-             type === 'bg' ? 'bg-client-light' : 'hover:bg-client-light';
+      return type === 'text' ? 'text-neutral-800' : 
+             type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
     } else if (userRole === 'chauffeur') {
-      return type === 'text' ? 'text-driver' : 
-             type === 'bg' ? 'bg-driver-light' : 'hover:bg-driver-light';
+      return type === 'text' ? 'text-neutral-700' : 
+             type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
     }
     return type === 'text' ? 'text-neutral-600' : 
-           type === 'bg' ? 'bg-gray-100' : 'hover:bg-gray-100';
+           type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
   };
   
   // Common navigation items

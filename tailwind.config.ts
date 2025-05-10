@@ -63,20 +63,21 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// Replacing colored role-specific themes with neutral gray tones
 				client: {
-					DEFAULT: '#0EA5E9',
-					light: '#BAE6FD',
-					dark: '#0369A1',
+					DEFAULT: '#333333',
+					light: '#F1F1F1',
+					dark: '#222222',
 				},
 				driver: {
-					DEFAULT: '#F59E0B',
-					light: '#FDE68A',
-					dark: '#B45309',
+					DEFAULT: '#555555',
+					light: '#F6F6F7',
+					dark: '#333333',
 				},
 				admin: {
-					DEFAULT: '#8B5CF6',
-					light: '#DDD6FE',
-					dark: '#6D28D9',
+					DEFAULT: '#000000',
+					light: '#F1F1F1',
+					dark: '#222222',
 				},
 			},
 			borderRadius: {

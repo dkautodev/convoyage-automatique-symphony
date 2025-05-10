@@ -72,7 +72,7 @@ const ClientInvoicesPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-client">Mes factures</h1>
+      <h1 className="text-3xl font-bold text-neutral-900">Mes factures</h1>
       
       <div className="flex gap-4 mb-4">
         <div className="relative flex-1">

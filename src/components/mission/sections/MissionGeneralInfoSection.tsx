@@ -87,7 +87,9 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de départ</h4>
-              <p className="font-medium">{formatFullAddress(mission.pickup_address)}</p>
+              <p className="font-medium">
+                {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'}
+              </p>
               
               <div className="mt-4">
                 <h5 className="text-sm font-medium text-gray-500 mb-1">Contact départ</h5>
@@ -105,7 +107,9 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
             
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de livraison</h4>
-              <p className="font-medium">{formatFullAddress(mission.delivery_address)}</p>
+              <p className="font-medium">
+                {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'}
+              </p>
               
               <div className="mt-4">
                 <h5 className="text-sm font-medium text-gray-500 mb-1">Contact livraison</h5>

@@ -25,6 +25,7 @@ interface FileUploadProps {
   variant?: "outline" | "default" | "secondary";
   size?: "sm" | "default";
   label?: string;
+  multiple?: boolean;
 }
 
 export default function FileUpload({ 
@@ -33,23 +34,25 @@ export default function FileUpload({
   className,
   variant = "outline",
   size = "sm",
-  label = "Sélectionner un document"
+  label = "Sélectionner un document",
+  multiple = false
 }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   
   const validateFile = (file: File): string | null => {
     // Vérification de la taille du fichier
     if (file.size > MAX_FILE_SIZE) {
-      return `Fichier trop volumineux (max: 10 Mo)`;
+      return `Fichier trop volumineux (max: 10 Mo): ${file.name}`;
     }
     
     // Vérification du type de fichier
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      return 'Format de fichier non supporté (formats acceptés: PDF et images)';
+      return `Format non supporté (${file.name}). Formats acceptés: PDF et images`;
     }
     
     return null;
@@ -58,85 +61,116 @@ export default function FileUpload({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const validationError = validateFile(file);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles: File[] = [];
+      let hasError = false;
       
-      if (validationError) {
-        setError(validationError);
+      // Vérifier chaque fichier sélectionné
+      for (let i = 0; i < e.target.files.length; i++) {
+        const file = e.target.files[i];
+        const validationError = validateFile(file);
+        
+        if (validationError) {
+          setError(validationError);
+          hasError = true;
+          break;
+        }
+        
+        newFiles.push(file);
+      }
+      
+      if (!hasError) {
+        setSelectedFiles(newFiles);
+      } else {
+        // Réinitialiser le champ de fichier en cas d'erreur
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        return;
       }
-      
-      setSelectedFile(file);
     }
   };
   
   const handleFileUpload = async () => {
-    if (!selectedFile || !user?.id) return;
+    if (selectedFiles.length === 0 || !user?.id) return;
     
     try {
       setIsUploading(true);
+      setUploadProgress(0);
       
-      // Generate a unique file path
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = missionId 
-        ? `${missionId}/${Date.now()}_${selectedFile.name}`
-        : `uploads/${Date.now()}_${selectedFile.name}`;
+      const totalFiles = selectedFiles.length;
+      let uploadedCount = 0;
       
-      const filePath = `mission-docs/${fileName}`;
-      
-      // Upload the file to storage
-      const storagePath = await uploadFile(filePath, selectedFile);
-      
-      if (!storagePath) {
-        toast.error("Échec du téléchargement");
-        return;
-      }
-      
-      // If we have a mission ID, save the reference in the database
-      if (missionId) {
-        const { error } = await typedSupabase
-          .from('mission_documents')
-          .insert({
-            mission_id: missionId,
-            file_name: selectedFile.name,
-            file_path: storagePath,
-            file_type: selectedFile.type,
-            uploaded_by: user.id
-          });
-          
-        if (error) {
-          console.error("Error saving document reference:", error);
-          toast.error("Échec de l'enregistrement du document");
-          return;
+      // Télécharger chaque fichier
+      for (const file of selectedFiles) {
+        // Generate a unique file path
+        const fileName = missionId 
+          ? `${missionId}/${Date.now()}_${file.name}`
+          : `uploads/${Date.now()}_${file.name}`;
+        
+        const filePath = `mission-docs/${fileName}`;
+        
+        // Upload the file to storage
+        const storagePath = await uploadFile(filePath, file);
+        
+        if (!storagePath) {
+          toast.error(`Échec du téléchargement: ${file.name}`);
+          continue;
+        }
+        
+        // If we have a mission ID, save the reference in the database
+        if (missionId) {
+          const { error } = await typedSupabase
+            .from('mission_documents')
+            .insert({
+              mission_id: missionId,
+              file_name: file.name,
+              file_path: storagePath,
+              file_type: file.type,
+              uploaded_by: user.id
+            });
+            
+          if (error) {
+            console.error("Error saving document reference:", error);
+            toast.error(`Échec de l'enregistrement du document: ${file.name}`);
+            continue;
+          }
+        }
+        
+        uploadedCount++;
+        setUploadProgress(Math.round((uploadedCount / totalFiles) * 100));
+        
+        // Call the callback if provided
+        if (onUploadComplete) {
+          onUploadComplete(storagePath, file.name);
         }
       }
       
-      toast.success("Document téléchargé avec succès");
-      
-      // Call the callback if provided
-      if (onUploadComplete) {
-        onUploadComplete(storagePath, selectedFile.name);
+      // Message de succès adapté au nombre de fichiers téléchargés
+      if (uploadedCount === totalFiles) {
+        toast.success(totalFiles > 1 
+          ? `${totalFiles} documents téléchargés avec succès` 
+          : "Document téléchargé avec succès"
+        );
+      } else if (uploadedCount > 0) {
+        toast.success(`${uploadedCount}/${totalFiles} documents téléchargés`);
       }
       
       // Reset the file input
-      setSelectedFile(null);
+      setSelectedFiles([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
-      toast.error("Erreur lors du téléchargement du document");
+      console.error("Error uploading files:", error);
+      toast.error("Erreur lors du téléchargement des documents");
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
   
-  const clearSelectedFile = () => {
-    setSelectedFile(null);
+  const clearSelectedFiles = () => {
+    setSelectedFiles([]);
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -151,10 +185,11 @@ export default function FileUpload({
           className="hidden" 
           ref={fileInputRef}
           onChange={handleFileChange}
+          multiple={multiple}
           accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.svg" // Restriction des types via HTML
         />
         
-        {!selectedFile ? (
+        {selectedFiles.length === 0 ? (
           <Button 
             type="button" 
             variant={variant} 
@@ -166,14 +201,18 @@ export default function FileUpload({
             {label}
           </Button>
         ) : (
-          <div className="flex items-center gap-2 border rounded-md p-2 bg-muted/30 h-8">
+          <div className="flex items-center gap-2 border rounded-md p-2 bg-muted/30 min-h-8">
             <FileIcon className="h-4 w-4 shrink-0" />
-            <span className="text-xs truncate max-w-[100px]">{selectedFile.name}</span>
+            <span className="text-xs truncate max-w-[150px]">
+              {selectedFiles.length === 1 
+                ? selectedFiles[0].name 
+                : `${selectedFiles.length} fichiers sélectionnés`}
+            </span>
             <Button 
               type="button" 
               variant="ghost" 
               size="sm" 
-              onClick={clearSelectedFile}
+              onClick={clearSelectedFiles}
               className="h-6 w-6 p-0"
             >
               <X className="h-4 w-4" />
@@ -195,6 +234,15 @@ export default function FileUpload({
           </div>
         )}
       </div>
+      
+      {isUploading && uploadProgress > 0 && (
+        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+          <div 
+            className="bg-primary h-full transition-all duration-300 ease-in-out" 
+            style={{ width: `${uploadProgress}%` }}
+          ></div>
+        </div>
+      )}
       
       {error && (
         <div className="flex items-center text-xs text-destructive gap-1 mt-1">

@@ -49,7 +49,8 @@ export default function MissionAttachments({
       const { data, error } = await typedSupabase
         .from('mission_documents')
         .select('*')
-        .eq('mission_id', missionId);
+        .eq('mission_id', missionId)
+        .order('uploaded_at', { ascending: false });
         
       if (error) throw error;
       
@@ -138,6 +139,8 @@ export default function MissionAttachments({
       case 'jpg':
       case 'jpeg':
       case 'png':
+      case 'gif':
+      case 'webp':
         return <File className="h-5 w-5 text-purple-500" />;
       default:
         return <File className="h-5 w-5 text-gray-500" />;
@@ -169,11 +172,13 @@ export default function MissionAttachments({
           <span className="ml-2 text-sm text-muted-foreground">Chargement des documents...</span>
         </div>
       ) : documents.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-2">Aucun document</p>
+        <p className="text-sm text-muted-foreground py-4 text-center">
+          Aucun document attaché à cette mission
+        </p>
       ) : (
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
           {documents.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md">
+            <div key={doc.id} className="flex items-center justify-between bg-muted/30 p-2 rounded-md hover:bg-muted/50 transition-colors">
               <div className="flex items-center overflow-hidden">
                 {getFileIcon(doc.file_name)}
                 <div className="ml-2 overflow-hidden">
@@ -192,6 +197,7 @@ export default function MissionAttachments({
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => handleDownload(doc)}
+                  title="Télécharger"
                 >
                   <Download className="h-4 w-4" />
                 </Button>
@@ -201,6 +207,7 @@ export default function MissionAttachments({
                   className="h-7 w-7 hover:text-destructive"
                   onClick={() => handleDelete(doc)}
                   disabled={deleting === doc.id}
+                  title="Supprimer"
                 >
                   {deleting === doc.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

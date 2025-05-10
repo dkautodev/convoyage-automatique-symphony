@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, FileCheck, Receipt, PaperclipIcon } from 'lucide-react';
+import { FileText, FileCheck, Receipt, PaperclipIcon, Upload } from 'lucide-react';
 import { Mission } from '@/types/supabase';
 import MissionAttachments from '@/components/mission/MissionAttachments';
 import FileUpload from '@/components/mission/FileUpload';
 import { toast } from 'sonner';
+import { typedSupabase } from '@/types/database';
 
 interface MissionDocumentsSectionProps {
   mission: Mission;
@@ -16,6 +17,28 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   mission
 }) => {
   const [attachmentsKey, setAttachmentsKey] = useState<number>(0);
+  const [documentCount, setDocumentCount] = useState<number>(0);
+
+  // Charger le nombre de documents au chargement
+  useEffect(() => {
+    if (mission.id) {
+      fetchDocumentCount();
+    }
+  }, [mission.id]);
+
+  const fetchDocumentCount = async () => {
+    try {
+      const { count, error } = await typedSupabase
+        .from('mission_documents')
+        .select('id', { count: 'exact', head: true })
+        .eq('mission_id', mission.id);
+        
+      if (error) throw error;
+      setDocumentCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching document count:", error);
+    }
+  };
 
   // Placeholder functions for document generation
   const handleGenerateQuote = () => {
@@ -32,7 +55,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const handleDocumentUploaded = () => {
     // Force refresh the attachments list
     setAttachmentsKey(prev => prev + 1);
-    toast.success("Document ajouté avec succès");
+    fetchDocumentCount();
   };
   
   return <Card>
@@ -72,22 +95,33 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
           </div>
         </div>
         
-        {/* Attachments section */}
+        {/* Documents section with multi-upload */}
         <div className="mt-6 border-t pt-4">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-lg font-medium">Pièces jointes</h3>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-lg font-medium">Pièces jointes</h3>
+              <p className="text-sm text-muted-foreground">
+                {documentCount} document{documentCount !== 1 ? 's' : ''} attaché{documentCount !== 1 ? 's' : ''}
+              </p>
+            </div>
             <FileUpload
               missionId={mission.id}
               onUploadComplete={handleDocumentUploaded}
-              variant="outline"
-              label="Ajouter un document"
+              variant="default"
+              label="Ajouter des documents"
+              multiple={true}
             />
           </div>
-          <MissionAttachments 
-            key={attachmentsKey}
-            missionId={mission.id} 
-            showTitle={false} 
-          />
+          
+          {/* Liste des documents */}
+          <div className="border rounded-lg overflow-hidden">
+            <MissionAttachments 
+              key={attachmentsKey}
+              missionId={mission.id} 
+              showTitle={false} 
+              className="p-4"
+            />
+          </div>
         </div>
       </CardContent>
     </Card>;

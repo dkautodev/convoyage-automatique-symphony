@@ -81,7 +81,7 @@ export function getPublicUrl(path: string): string | null {
  * @param userId The user ID of the uploader
  * @returns The document ID if successful, null if failed
  */
-export async function uploadMissionDocument(missionId: string | undefined, file: File, userId: string): Promise<string | null> {
+export async function uploadMissionDocument(missionId: string, file: File, userId: string): Promise<string | null> {
   try {
     // Generate a unique file identifier
     const fileId = Date.now();
@@ -90,9 +90,7 @@ export async function uploadMissionDocument(missionId: string | undefined, file:
     const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
     
     // Create a path pattern that won't have special characters
-    const filePath = missionId 
-      ? `${missionId}/${fileId}_${sanitizedFileName}` 
-      : `pending/${fileId}_${sanitizedFileName}`;
+    const filePath = `${missionId}/${fileId}_${sanitizedFileName}`;
     
     console.log(`Attempting to upload file to path: ${filePath}`);
     
@@ -106,48 +104,25 @@ export async function uploadMissionDocument(missionId: string | undefined, file:
     
     console.log(`File uploaded successfully to: ${storagePath}`);
     
-    // If there's no mission ID, this is a pending document for a mission being created
-    // Let's save it to mission_documents with a null mission_id, we'll update it later
-    if (!missionId) {
-      const { data, error } = await supabase
-        .from('mission_documents')
-        .insert({
-          mission_id: null,  // This will be updated once the mission is created
-          file_name: file.name,
-          file_path: storagePath,
-          file_type: file.type,
-          uploaded_by: userId
-        })
-        .select('id')
-        .single();
-        
-      if (error) {
-        console.error("Error saving pending document:", error);
-        return null;
-      }
+    // Save the document reference in the database
+    const { data, error } = await supabase
+      .from('mission_documents')
+      .insert({
+        mission_id: missionId,
+        file_name: file.name,
+        file_path: storagePath, // Use the sanitized path returned from uploadFile
+        file_type: file.type,
+        uploaded_by: userId
+      })
+      .select('id')
+      .single();
       
-      return data.id;
-    } else {
-      // Save the document reference in the database with the mission ID
-      const { data, error } = await supabase
-        .from('mission_documents')
-        .insert({
-          mission_id: missionId,
-          file_name: file.name,
-          file_path: storagePath,
-          file_type: file.type,
-          uploaded_by: userId
-        })
-        .select('id')
-        .single();
-        
-      if (error) {
-        console.error("Error saving document reference:", error);
-        return null;
-      }
-      
-      return data.id;
+    if (error) {
+      console.error("Error saving document reference:", error);
+      return null;
     }
+    
+    return data.id;
   } catch (error) {
     console.error("Exception during mission document upload:", error);
     return null;
@@ -180,32 +155,5 @@ export async function getMissionDocuments(missionId: string) {
   } catch (error) {
     console.error("Exception during fetching mission documents:", error);
     return [];
-  }
-}
-
-/**
- * Associate pending documents with a new mission
- * @param pendingDocumentIds Array of document IDs to associate
- * @param missionId The mission ID to associate with
- * @returns true if successful, false if failed
- */
-export async function associatePendingDocumentsWithMission(pendingDocumentIds: string[], missionId: string): Promise<boolean> {
-  if (!pendingDocumentIds.length) return true;
-  
-  try {
-    const { error } = await supabase
-      .from('mission_documents')
-      .update({ mission_id: missionId })
-      .in('id', pendingDocumentIds);
-      
-    if (error) {
-      console.error("Error associating pending documents with mission:", error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Exception during document association:", error);
-    return false;
   }
 }

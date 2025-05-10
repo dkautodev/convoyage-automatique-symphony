@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -26,14 +27,14 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ userRole, collapsed, onToggle }) => {
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
 
   const isActive = (href: string) => {
     return location.pathname === href;
   };
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
   };
 
   // Sidebar items based on user role

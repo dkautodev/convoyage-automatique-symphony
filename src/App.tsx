@@ -5,7 +5,7 @@ import Home from './pages/Home';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
-import ClientDashboard from './pages/dashboard/ClientDashboard';
+import ClientDashboard from './pages/dashboard/client/ClientDashboard';
 import DriverDashboard from './pages/dashboard/DriverDashboard';
 import PricingGridPage from './pages/dashboard/admin/PricingGrid';
 import MissionsPage from './pages/dashboard/admin/Missions';
@@ -16,6 +16,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import AdminInvitePage from './pages/AdminInvitePage';
 import CreateMissionPage from './pages/mission/CreateMission';
 import AuthCallback from './pages/auth/AuthCallback';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -128,6 +129,15 @@ function App() {
         <ProtectedRoute>
           <DashboardLayout>
             <CreateMissionPage />
+          </DashboardLayout>
+        </ProtectedRoute>
+      } />
+      
+      {/* Profile route - accessible by all authenticated users */}
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Profile />
           </DashboardLayout>
         </ProtectedRoute>
       } />

@@ -7,7 +7,14 @@ export const formatMissionNumber = (mission: Mission) => {
 
 export const formatAddressDisplay = (address?: Address | null) => {
   if (!address) return 'Adresse non spécifiée';
-  return address.city || 'Adresse inconnue';
+  
+  // Amélioration pour éviter "Adresse inconnue"
+  if (address.formatted_address) return address.formatted_address.split(',')[0];
+  if (address.extracted_data?.city) return address.extracted_data.city;
+  if (address.city) return address.city;
+  
+  // Si aucune donnée valide n'est trouvée
+  return 'Adresse indisponible';
 };
 
 export const formatFullAddress = (address?: Address | null) => {

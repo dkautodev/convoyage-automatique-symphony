@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Search, Filter, FileText } from 'lucide-react';
+import { Package, Plus, Search, Filter, FileText, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,6 +11,14 @@ import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors, MissionStatus } from '@/types/supabase';
 import { toast } from 'sonner';
 import { formatAddressDisplay, formatMissionNumber, formatClientName } from '@/utils/missionUtils';
+import { 
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Define valid tab values type that includes 'all' and all mission statuses
 type MissionTab = 'all' | MissionStatus;
@@ -22,6 +31,12 @@ const MissionsPage = () => {
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [clientsData, setClientsData] = useState<Record<string, any>>({});
+  
+  // État pour la boîte de dialogue de changement de statut
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [newStatus, setNewStatus] = useState<MissionStatus | ''>('');
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     fetchMissions();
@@ -96,6 +111,37 @@ const MissionsPage = () => {
     }
   };
 
+  // Nouvelle fonction pour ouvrir la boîte de dialogue de changement de statut
+  const openStatusDialog = (mission: Mission) => {
+    setSelectedMission(mission);
+    setNewStatus(mission.status);
+    setStatusDialogOpen(true);
+  };
+
+  // Nouvelle fonction pour mettre à jour le statut d'une mission
+  const updateMissionStatus = async () => {
+    if (!selectedMission || !newStatus || newStatus === selectedMission.status || updatingStatus) return;
+    
+    try {
+      setUpdatingStatus(true);
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ status: newStatus })
+        .eq('id', selectedMission.id);
+      
+      if (error) throw error;
+      
+      toast.success(`Statut mis à jour: ${missionStatusLabels[newStatus as MissionStatus]}`);
+      fetchMissions(); // Rafraîchir la liste des missions
+      setStatusDialogOpen(false);
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour du statut:', err);
+      toast.error('Erreur lors de la mise à jour du statut');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   // Filtered missions based on search query
   const filteredMissions = missions.filter(mission => {
     if (!searchQuery) return true;
@@ -141,6 +187,9 @@ const MissionsPage = () => {
     { id: 'termine', label: 'Terminées', color: 'bg-green-700 text-white' },
     { id: 'annule', label: 'Annulées', color: 'bg-red-600 text-white' },
   ];
+  
+  // Tous les statuts disponibles pour la boîte de dialogue de changement de statut
+  const allStatuses: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
 
   return (
     <div className="space-y-6">
@@ -224,17 +273,27 @@ const MissionsPage = () => {
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                            {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            Client: {formatClientName(mission, clientsData)} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                            Client: {formatClientName(mission, clientsData)} · {mission.distance_km?.toFixed(2) || '0'} km · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                           </p>
                         </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/admin/missions/${mission.id}`}>
-                            Détails
-                          </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openStatusDialog(mission)}
+                            title="Modifier le statut"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/admin/missions/${mission.id}`}>
+                              Détails
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -244,6 +303,48 @@ const MissionsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Boîte de dialogue pour modifier rapidement le statut */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifier le statut de la mission</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="font-medium">Mission:</div>
+              <div>#{formatMissionNumber(selectedMission || {} as Mission)}</div>
+            </div>
+            <Select value={newStatus} onValueChange={(value) => setNewStatus(value as MissionStatus)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                {allStatuses.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {missionStatusLabels[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setStatusDialogOpen(false)}
+              disabled={updatingStatus}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={updateMissionStatus}
+              disabled={!newStatus || newStatus === selectedMission?.status || updatingStatus}
+            >
+              {updatingStatus ? 'Mise à jour...' : 'Mettre à jour'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

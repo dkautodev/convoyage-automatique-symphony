@@ -1,134 +1,101 @@
-
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useMemo } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { 
-  LayoutDashboard, Users, FileText, Settings, LogOut, 
-  Building, Truck, PackageOpen, Euro, ShieldCheck, 
-  ChevronDown, ChevronRight
+  Home, 
+  Clipboard, 
+  Truck, 
+  MapPin, 
+  Calendar, 
+  Settings, 
+  LogOut,
+  UserPlus,
+  Shield,
+  Plus,
+  Building,
+  User
 } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
-import { toast } from 'sonner';
 
 interface SidebarProps {
-  userRole: string;
+  userRole: string | undefined;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  
-  // Définir les liens en fonction du rôle de l'utilisateur
-  const getLinks = () => {
-    switch (userRole) {
-      case 'admin':
-        return [
-          { href: '/admin/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
-          { href: '/admin/clients', icon: <Building className="mr-2 h-4 w-4" />, label: 'Clients' },
-          { href: '/admin/drivers', icon: <Truck className="mr-2 h-4 w-4" />, label: 'Chauffeurs' },
-          { href: '/admin/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Missions' },
-          { href: '/admin/pricing-grid', icon: <Euro className="mr-2 h-4 w-4" />, label: 'Tarifs' }
-        ];
-      case 'client':
-        return [
-          { href: '/client/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
-          { href: '/client/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Mes missions' },
-          { href: '/mission/create', icon: <FileText className="mr-2 h-4 w-4" />, label: 'Nouvelle mission' }
-        ];
-      case 'chauffeur':
-        return [
-          { href: '/driver/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
-          { href: '/driver/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Missions' }
-        ];
-      default:
-        return [
-          { href: '/client/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' }
-        ];
-    }
+const Sidebar: React.FC<SidebarProps> = ({ userRole, collapsed, onToggle }) => {
+  const location = useLocation();
+  const { signOut } = useAuth();
+
+  const isActive = (href: string) => {
+    return location.pathname === href;
   };
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success('Déconnexion réussie');
-      navigate('/home');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      toast.error('Erreur lors de la déconnexion');
-    }
+    await signOut();
   };
 
+  // Sidebar items based on user role
+  const sidebarItems = useMemo(() => {
+    switch (userRole) {
+      case 'admin':
+        return [
+          { label: 'Tableau de bord', icon: Home, href: '/admin/dashboard' },
+          { label: 'Clients', icon: Building, href: '/admin/clients' },
+          { label: 'Chauffeurs', icon: Truck, href: '/admin/drivers' },
+          { label: 'Contacts', icon: User, href: '/admin/contacts' },
+          { label: 'Missions', icon: Clipboard, href: '/admin/missions' },
+          { label: 'Invitations Admin', icon: Shield, href: '/admin/invite' },
+        ];
+      
+      case 'client':
+        return [
+          { label: 'Tableau de bord', icon: Home, href: '/client/dashboard' },
+          { label: 'Missions', icon: Clipboard, href: '/client/missions' },
+          { label: 'Contacts', icon: User, href: '/client/contacts' },
+        ];
+      
+      case 'chauffeur':
+        return [
+          { label: 'Tableau de bord', icon: Home, href: '/driver/dashboard' },
+          { label: 'Missions', icon: Calendar, href: '/driver/missions' },
+          { label: 'Itinéraires', icon: MapPin, href: '/driver/itineraires' },
+        ];
+      
+      default:
+        return [];
+    }
+  }, [userRole]);
+
   return (
-    <div className="h-screen w-64 flex flex-col border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="p-6">
-        <NavLink to="/" className="flex items-center gap-2 font-bold text-xl">
-          <ShieldCheck className="h-6 w-6" />
-          <span>ConvoySync</span>
-        </NavLink>
+    <div
+      className={cn(
+        "fixed left-0 top-0 h-full w-64 bg-white border-r flex flex-col transition-transform duration-200 ease-in-out z-50",
+        collapsed ? "-translate-x-64" : "translate-x-0"
+      )}
+    >
+      <div className="flex items-center gap-2 mb-8 p-4">
+        <MapPin className="h-6 w-6 text-primary" />
+        <h1 className="text-xl font-bold">ConvoySync</h1>
       </div>
       
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        <div className="space-y-1">
-          {getLinks().map((link, index) => (
-            <NavLink
-              key={index}
-              to={link.href}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center rounded-md px-3 py-2 text-sm font-medium",
-                  isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "hover:bg-accent hover:text-accent-foreground"
-                )
-              }
-            >
-              {link.icon}
-              {link.label}
-            </NavLink>
-          ))}
-        </div>
+      <nav className="space-y-1 flex-1 p-4">
+        {sidebarItems.map((item) => (
+          <Link key={item.label} to={item.href} className="w-full">
+            <Button variant="ghost" className={cn("w-full justify-start", isActive(item.href) ? "font-semibold" : "")}>
+              <item.icon className="mr-2 h-4 w-4" />
+              {item.label}
+            </Button>
+          </Link>
+        ))}
       </nav>
       
-      <div className="p-4 border-t">
-        <div className="space-y-1">
-          <NavLink
-            to="/profile"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center rounded-md px-3 py-2 text-sm font-medium",
-                isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )
-            }
-          >
-            <Users className="mr-2 h-4 w-4" />
-            Profile
-          </NavLink>
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center rounded-md px-3 py-2 text-sm font-medium",
-                isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )
-            }
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Paramètres
-          </NavLink>
-          <Button 
-            variant="ghost"
-            className="w-full justify-start px-3 py-2 text-sm font-medium"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Déconnexion
-          </Button>
-        </div>
+      <div className="border-t pt-4 mt-4 p-4">
+        <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Déconnexion
+        </Button>
       </div>
     </div>
   );

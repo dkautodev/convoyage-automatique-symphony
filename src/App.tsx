@@ -1,167 +1,140 @@
-
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import RootLayout from './layouts/RootLayout';
-import Home from './pages/Home';
-import RegisterPage from './pages/RegisterPage';
-import Dashboard from './pages/Dashboard';
-import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
-import ClientDashboard from './pages/dashboard/client/ClientDashboard';
-import DriverDashboard from './pages/dashboard/DriverDashboard';
-import PricingGridPage from './pages/dashboard/admin/PricingGrid';
-import MissionsPage from './pages/dashboard/admin/Missions';
-import ClientMissionsPage from './pages/dashboard/client/Missions';
-import MissionDetailsPage from './pages/mission/MissionDetails';
-import ProtectedRoute from './components/ProtectedRoute';
-import DashboardLayout from './layouts/DashboardLayout';
-import AdminInvitePage from './pages/AdminInvitePage';
-import CreateMissionPage from './pages/mission/CreateMission';
-import AuthCallback from './pages/auth/AuthCallback';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import LoginPage from './pages/LoginPage';
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Route,
+  RouterProvider,
+  Outlet
+} from 'react-router-dom';
+import './App.css';
+import RootLayout from '@/layouts/RootLayout';
+import DashboardLayout from '@/layouts/DashboardLayout';
+import ProtectedRoute from '@/components/ProtectedRoute';
+
+// Public pages
+import Home from '@/pages/Home';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import Pricing from '@/pages/Pricing';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ErrorPage from '@/pages/ErrorPage';
+import CompleteDriverProfile from '@/pages/CompleteDriverProfile';
+import CompleteClientProfile from '@/pages/CompleteClientProfile';
+
+// Dashboard pages
+import Dashboard from '@/pages/Dashboard';
+import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
+import Clients from '@/pages/dashboard/admin/Clients';
+import Drivers from '@/pages/dashboard/admin/Drivers';
+import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
+import ClientMissions from '@/pages/dashboard/client/ClientMissions';
+
+// Mission pages
+import CreateMissionPage from '@/pages/mission/CreateMission';
+import MissionDetailsPage from '@/pages/mission/MissionDetails';
+import AdminMissionsPage from '@/pages/mission/AdminMissionsPage';
+import ClientMissionsPage from '@/pages/mission/ClientMissionsPage';
+
+// Admin pages
+import AdminInvitePage from '@/pages/admin/AdminInvitePage';
+
+// Contacts pages
+import AdminContactsPage from '@/pages/contacts/AdminContactsPage';
+import ClientContactsPage from '@/pages/contacts/ClientContactsPage';
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<RootLayout />}>
+      {/* Public routes */}
+      <Route index element={<Home />} />
+      <Route path="about" element={<About />} />
+      <Route path="contact" element={<Contact />} />
+      <Route path="pricing" element={<Pricing />} />
+      <Route path="*" element={<ErrorPage />} />
+
+      {/* Auth routes */}
+      <Route path="login" element={<Login />} />
+      <Route path="register" element={<Register />} />
+      <Route path="complete-driver-profile" element={<CompleteDriverProfile />} />
+      <Route path="complete-client-profile" element={<CompleteClientProfile />} />
+
+      {/* Admin dashboard routes */}
+      <Route element={<DashboardLayout children={<Outlet />} />}>
+        <Route
+          path="/admin/dashboard"
+          element={<ProtectedRoute roles={["admin"]}><AdminDashboard /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/clients"
+          element={<ProtectedRoute roles={["admin"]}><Clients /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/drivers"
+          element={<ProtectedRoute roles={["admin"]}><Drivers /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/contacts"
+          element={<ProtectedRoute roles={["admin"]}><AdminContactsPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/missions"
+          element={<ProtectedRoute roles={["admin"]}><AdminMissionsPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/missions/:missionId"
+          element={<ProtectedRoute roles={["admin"]}><MissionDetailsPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/admin/invite"
+          element={<ProtectedRoute roles={["admin"]}><AdminInvitePage /></ProtectedRoute>}
+        />
+      </Route>
+
+      {/* Client dashboard routes */}
+      <Route element={<DashboardLayout children={<Outlet />} />}>
+        <Route
+          path="/client/dashboard"
+          element={<ProtectedRoute roles={["client"]}><ClientDashboard /></ProtectedRoute>}
+        />
+        <Route
+          path="/client/missions"
+          element={<ProtectedRoute roles={["client"]}><ClientMissionsPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/client/contacts"
+          element={<ProtectedRoute roles={["client"]}><ClientContactsPage /></ProtectedRoute>}
+        />
+        <Route
+          path="/client/missions/:missionId"
+          element={<ProtectedRoute roles={["client"]}><MissionDetailsPage /></ProtectedRoute>}
+        />
+      </Route>
+
+      {/* Driver dashboard routes */}
+      <Route element={<DashboardLayout children={<Outlet />} />}>
+        <Route
+          path="/driver/dashboard"
+          element={<ProtectedRoute roles={["chauffeur"]}><Dashboard /></ProtectedRoute>}
+        />
+        <Route
+          path="/driver/missions/:missionId"
+          element={<ProtectedRoute roles={["chauffeur"]}><MissionDetailsPage /></ProtectedRoute>}
+        />
+      </Route>
+
+      {/* Shared routes */}
+      <Route path="/mission/create" element={<ProtectedRoute><CreateMissionPage /></ProtectedRoute>} />
+
+      {/* 404 route */}
+      <Route path="*" element={<ErrorPage />} />
+    </Route>
+  )
+);
 
 function App() {
   return (
-    <Routes>
-      <Route element={<RootLayout />}>
-        {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/register" element={<RegisterPage />} />
-        
-        {/* Admin routes */}
-        <Route path="/admin" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <AdminDashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/dashboard" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <AdminDashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/pricing-grid" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <PricingGridPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/missions" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <MissionsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/missions/:id" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <MissionDetailsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/invite" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <AdminInvitePage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Client routes */}
-        <Route path="/client" element={
-          <ProtectedRoute roles={['client']}>
-            <DashboardLayout>
-              <ClientDashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/client/dashboard" element={
-          <ProtectedRoute roles={['client']}>
-            <DashboardLayout>
-              <ClientDashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/client/missions" element={
-          <ProtectedRoute roles={['client']}>
-            <DashboardLayout>
-              <ClientMissionsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/client/missions/:id" element={
-          <ProtectedRoute roles={['client']}>
-            <DashboardLayout>
-              <MissionDetailsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Driver routes */}
-        <Route path="/driver" element={
-          <ProtectedRoute roles={['chauffeur']}>
-            <DashboardLayout>
-              <DriverDashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/driver/dashboard" element={
-          <ProtectedRoute roles={['chauffeur']}>
-            <DashboardLayout>
-              <DriverDashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/driver/missions/:id" element={
-          <ProtectedRoute roles={['chauffeur']}>
-            <DashboardLayout>
-              <MissionDetailsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Mission creation route */}
-        <Route path="/mission/create" element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <CreateMissionPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Profile route - accessible by all authenticated users */}
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Profile />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-
-        {/* Settings route - accessible by all authenticated users */}
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Settings />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        
-        {/* Default route - Redirect to home if not authenticated */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        
-        {/* Catch all other routes and redirect to home */}
-        <Route path="*" element={<Navigate to="/home" replace />} />
-      </Route>
-    </Routes>
+    <RouterProvider router={router} />
   );
 }
 

@@ -82,7 +82,18 @@ export default function ContactSelector({
           {loading ? (
             <p className="text-sm text-muted-foreground">Chargement des contacts...</p>
           ) : contacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun contact trouvé</p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Aucun contact trouvé</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full"
+                onClick={() => window.open(user?.role === 'admin' ? '/admin/contacts' : '/client/contacts', '_blank')}
+              >
+                <UserPlus className="h-3.5 w-3.5 mr-2" />
+                Gérer les contacts
+              </Button>
+            </div>
           ) : (
             <div className="max-h-56 overflow-y-auto space-y-1">
               {contacts.map((contact) => (
@@ -101,6 +112,15 @@ export default function ContactSelector({
                   </div>
                 </Button>
               ))}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={() => window.open(user?.role === 'admin' ? '/admin/contacts' : '/client/contacts', '_blank')}
+              >
+                <UserPlus className="h-3.5 w-3.5 mr-2" />
+                Gérer les contacts
+              </Button>
             </div>
           )}
         </div>

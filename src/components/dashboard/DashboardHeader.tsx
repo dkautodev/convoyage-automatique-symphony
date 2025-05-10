@@ -50,7 +50,7 @@ const DashboardHeader = () => {
     <header className="bg-white border-b px-6 py-3 flex items-center justify-between h-16">
       {/* Titre de la page */}
       <h1 className="text-xl font-bold text-neutral-800">
-        {dashboardTitle}
+        APP DKAUTOMOTIVE - {dashboardTitle}
       </h1>
       
       {/* Actions utilisateur */}

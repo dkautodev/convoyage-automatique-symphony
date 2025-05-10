@@ -23,8 +23,8 @@ const Header = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <Truck className="h-6 w-6 text-blue-500" />
-          <Link to="/" className="text-xl font-bold">ConvoySync</Link>
+          <img src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png" alt="DK Automotive Logo" className="h-6" />
+          <Link to="/" className="text-xl font-bold">APP DKAUTOMOTIVE</Link>
         </div>
         
         {/* Navigation */}

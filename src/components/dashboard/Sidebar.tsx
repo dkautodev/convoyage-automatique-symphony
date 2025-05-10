@@ -128,8 +128,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     <div className="bg-white w-64 h-full shadow-lg">
       {/* Logo Section */}
       <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-        <Truck className={`h-6 w-6 ${getRoleColorClass('text')}`} />
-        <span className={`ml-2 text-lg font-bold ${getRoleColorClass('text')}`}>ConvoySync</span>
+        <img src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png" alt="DK Automotive Logo" className="h-8" />
+        <span className={`ml-2 text-lg font-bold ${getRoleColorClass('text')}`}>APP DKAUTOMOTIVE</span>
       </div>
       
       {/* Navigation Section */}

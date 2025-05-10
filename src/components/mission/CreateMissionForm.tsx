@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import FileUpload from '@/components/mission/FileUpload';
 import { associatePendingDocumentsWithMission } from '@/integrations/supabase/storage';
+import { Address } from '@/types/supabase';
 
 // Create a context to store the document IDs during mission creation
 const DocumentUploadContext = React.createContext<{
@@ -137,21 +138,55 @@ export default function CreateMissionForm({ onSuccess }: { onSuccess?: () => voi
     try {
       setSubmitting(true);
       
+      // Format address objects for database
+      const pickupAddress: Address = {
+        street: values.pickup_address,
+        city: values.pickup_city,
+        postal_code: values.pickup_postal_code,
+        country: values.pickup_country,
+        formatted_address: `${values.pickup_address}, ${values.pickup_postal_code} ${values.pickup_city}, ${values.pickup_country}`
+      };
+      
+      const deliveryAddress: Address = {
+        street: values.delivery_address,
+        city: values.delivery_city,
+        postal_code: values.delivery_postal_code,
+        country: values.delivery_country,
+        formatted_address: `${values.delivery_address}, ${values.delivery_postal_code} ${values.delivery_city}, ${values.delivery_country}`
+      };
+      
       // Prepare mission data with all required fields
-      const missionDataToInsert = {
-        ...values,
-        client_id: values.client_id, // Explicitly set client_id to ensure it's not optional
+      const missionData = {
+        client_id: values.client_id,
         created_by: user.id,
         status: 'en_acceptation',
         distance_km: 0, // Default value for required field
         price_ht: 0,    // Default value for required field
-        price_ttc: 0    // Default value for required field
+        price_ttc: 0,   // Default value for required field
+        pickup_address: pickupAddress,
+        delivery_address: deliveryAddress,
+        mission_type: values.mission_type,
+        vehicle_category: values.vehicle_category,
+        scheduled_date: values.scheduled_date,
+        vehicle_make: values.vehicle_make,
+        vehicle_model: values.vehicle_model,
+        vehicle_registration: values.vehicle_registration,
+        vehicle_vin: values.vehicle_vin,
+        vehicle_year: values.vehicle_year ? parseInt(values.vehicle_year) : undefined,
+        vehicle_fuel: values.vehicle_fuel,
+        contact_pickup_name: values.contact_pickup_name,
+        contact_pickup_phone: values.contact_pickup_phone,
+        contact_pickup_email: values.contact_pickup_email,
+        contact_delivery_name: values.contact_delivery_name,
+        contact_delivery_phone: values.contact_delivery_phone,
+        contact_delivery_email: values.contact_delivery_email,
+        notes: values.notes
       };
       
       // Insert mission in database
       const { data, error: missionError } = await typedSupabase
         .from('missions')
-        .insert(missionDataToInsert)
+        .insert(missionData)
         .select('id')
         .single();
         

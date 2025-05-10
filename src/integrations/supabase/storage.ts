@@ -12,7 +12,10 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
     console.log(`Uploading file to ${path}`);
     const { data, error } = await supabase.storage
       .from('documents')
-      .upload(path, file);
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
       
     if (error) {
       console.error("Error uploading file:", error);
@@ -52,7 +55,6 @@ export function getPublicUrl(path: string): string | null {
 export async function uploadMissionDocument(missionId: string, file: File, userId: string): Promise<string | null> {
   try {
     // Generate a unique file path
-    const fileExt = file.name.split('.').pop();
     const fileName = `${missionId}/${Date.now()}_${file.name}`;
     const filePath = `mission-docs/${fileName}`;
     
@@ -60,8 +62,11 @@ export async function uploadMissionDocument(missionId: string, file: File, userI
     const storagePath = await uploadFile(filePath, file);
     
     if (!storagePath) {
+      console.error("Failed to upload file to storage");
       return null;
     }
+    
+    console.log("File uploaded to storage, path:", storagePath);
     
     // Save the document reference in the database
     const { data, error } = await supabase
@@ -81,6 +86,7 @@ export async function uploadMissionDocument(missionId: string, file: File, userI
       return null;
     }
     
+    console.log("Document reference saved:", data);
     return data.id;
   } catch (error) {
     console.error("Exception during mission document upload:", error);

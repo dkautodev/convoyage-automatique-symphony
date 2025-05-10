@@ -50,6 +50,7 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
     try {
       setLoading(true);
       const docs = await getMissionDocuments(mission.id);
+      console.log("Fetched documents:", docs);
       setDocuments(docs as MissionDocument[]);
     } catch (error) {
       console.error('Erreur lors de la récupération des documents:', error);
@@ -81,6 +82,8 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
       if (fetchError || !documentData) {
         throw new Error('Impossible de récupérer les informations du document');
       }
+      
+      console.log("Deleting document from storage:", documentData.file_path);
       
       // Supprimer le fichier du stockage
       const { error: storageError } = await typedSupabase.storage

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { File, Download, Trash2, Loader2 } from 'lucide-react';

@@ -164,11 +164,11 @@ export default function AddressAutocomplete({
                   e.preventDefault();
                   handleSelect(prediction);
                 }}
-                className="px-4 py-2 hover:bg-muted cursor-pointer flex items-start gap-2"
+                className="px-4 py-3 hover:bg-muted cursor-pointer flex items-start gap-2 border-b last:border-0 border-gray-100"
               >
-                <MapPin size={16} className="mt-1 text-muted-foreground flex-shrink-0" />
+                <MapPin size={18} className="mt-1 text-primary flex-shrink-0" />
                 <div>
-                  <p className="font-medium">{prediction.structured_formatting.main_text}</p>
+                  <p className="font-medium text-gray-800">{prediction.structured_formatting.main_text}</p>
                   <p className="text-sm text-muted-foreground">{prediction.structured_formatting.secondary_text}</p>
                 </div>
               </li>

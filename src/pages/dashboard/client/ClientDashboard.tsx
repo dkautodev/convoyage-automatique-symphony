@@ -258,7 +258,7 @@ const ClientDashboard = () => {
                       {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'} → {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
-                      Départ: {mission.D1_PEC ? new Date(mission.D1_PEC).toLocaleDateString('fr-FR') : 'Non spécifié'} · Livraison: {mission.D2_LIV ? new Date(mission.D2_LIV).toLocaleDateString('fr-FR') : 'Non spécifié'}
+                      Départ: {mission.D1_PEC ? new Date(mission.D1_PEC).toLocaleDateString('fr-FR') : 'Non spécifié'} · Livraison: {mission.D2_LIV ? new Date(mission.D2_LIV).toLocaleDateString('fr-FR') : 'Non spécifié'} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                   </div>
                   <Button variant="outline" size="sm" asChild>
@@ -276,7 +276,17 @@ const ClientDashboard = () => {
       </Card>
       
       {/* Documents récents */}
-      
+      <Card className="bg-white">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Documents récents</CardTitle>
+            <CardDescription>Vos derniers devis et factures</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <EmptyDocumentsState />
+        </CardContent>
+      </Card>
     </div>;
 };
 

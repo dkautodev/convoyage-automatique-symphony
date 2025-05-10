@@ -157,3 +157,30 @@ export async function getMissionDocuments(missionId: string) {
     return [];
   }
 }
+
+/**
+ * Update mission_id for documents from a temporary ID to a permanent one
+ * @param tempId The temporary ID used during form creation
+ * @param permanentId The permanent mission ID after creation
+ * @returns boolean indicating success
+ */
+export async function updateDocumentMissionId(tempId: string, permanentId: string): Promise<boolean> {
+  try {
+    console.log(`Updating document references from temp ID ${tempId} to permanent ID ${permanentId}`);
+    
+    const { error } = await supabase
+      .from('mission_documents')
+      .update({ mission_id: permanentId })
+      .eq('mission_id', tempId);
+      
+    if (error) {
+      console.error("Error updating document mission IDs:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Exception during document mission ID update:", error);
+    return false;
+  }
+}

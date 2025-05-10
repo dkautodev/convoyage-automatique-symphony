@@ -50,6 +50,7 @@ export default function FileUpload({
   const {
     user
   } = useAuth();
+  
   const validateFile = (file: File): string | null => {
     // Check file size
     if (file.size > MAX_FILE_SIZE) {
@@ -89,6 +90,7 @@ export default function FileUpload({
       }
     }
   };
+  
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -126,6 +128,7 @@ export default function FileUpload({
       }
     }
   }, [multiple]);
+  
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0 || !user?.id) return;
     try {
@@ -217,12 +220,23 @@ export default function FileUpload({
   const toggleFileDialog = () => {
     setShowFileDialog(!showFileDialog);
   };
+  
   return (
     <>
       <div className={`relative ${className}`}>
         <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} multiple={multiple} accept=".pdf,.jpg,.jpeg,.png" />
         
-        {selectedFiles.length > 0 && (
+        {selectedFiles.length === 0 ? (
+          <Button 
+            type="button" 
+            variant={variant} 
+            size={size} 
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <PaperclipIcon className="h-4 w-4 mr-2" />
+            {label}
+          </Button>
+        ) : (
           <div className="border rounded-md p-3 bg-muted/30 mb-2">
             <div className="flex justify-between items-center mb-2">
               <h4 className="text-sm font-medium">

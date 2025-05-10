@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, Users, FileText, Settings, LogOut, 
   Building, Truck, PackageOpen, Euro, ShieldCheck, 
-  ChevronDown, ChevronRight, UserPlus, MessageSquare
+  ChevronDown, ChevronRight, UserPlus
 } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { toast } from 'sonner';
@@ -29,15 +29,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
           { href: '/admin/drivers', icon: <Truck className="mr-2 h-4 w-4" />, label: 'Chauffeurs' },
           { href: '/admin/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Missions' },
           { href: '/admin/pricing-grid', icon: <Euro className="mr-2 h-4 w-4" />, label: 'Tarifs' },
-          { href: '/admin/invite', icon: <UserPlus className="mr-2 h-4 w-4" />, label: 'Invitations Admin' },
-          { href: '/admin/contact', icon: <MessageSquare className="mr-2 h-4 w-4" />, label: 'Contact' }
+          { href: '/admin/invite', icon: <UserPlus className="mr-2 h-4 w-4" />, label: 'Invitations Admin' }
         ];
       case 'client':
         return [
           { href: '/client/dashboard', icon: <LayoutDashboard className="mr-2 h-4 w-4" />, label: 'Tableau de bord' },
           { href: '/client/missions', icon: <PackageOpen className="mr-2 h-4 w-4" />, label: 'Mes missions' },
-          { href: '/mission/create', icon: <FileText className="mr-2 h-4 w-4" />, label: 'Nouvelle mission' },
-          { href: '/client/contact', icon: <MessageSquare className="mr-2 h-4 w-4" />, label: 'Contact' }
+          { href: '/mission/create', icon: <FileText className="mr-2 h-4 w-4" />, label: 'Nouvelle mission' }
         ];
       case 'chauffeur':
         return [

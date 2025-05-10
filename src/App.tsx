@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -19,7 +20,6 @@ import AuthCallback from './pages/auth/AuthCallback';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import LoginPage from './pages/LoginPage';
-import Contact from './pages/Contact';
 
 function App() {
   return (
@@ -30,7 +30,6 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/contact" element={<Contact />} />
         
         {/* Admin routes */}
         <Route path="/admin" element={
@@ -75,13 +74,6 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-        <Route path="/admin/contact" element={
-          <ProtectedRoute roles={['admin']}>
-            <DashboardLayout>
-              <Contact />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
         
         {/* Client routes */}
         <Route path="/client" element={
@@ -109,13 +101,6 @@ function App() {
           <ProtectedRoute roles={['client']}>
             <DashboardLayout>
               <MissionDetailsPage />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/client/contact" element={
-          <ProtectedRoute roles={['client']}>
-            <DashboardLayout>
-              <Contact />
             </DashboardLayout>
           </ProtectedRoute>
         } />

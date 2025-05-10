@@ -102,7 +102,7 @@ type CreateMissionFormValues = z.infer<typeof createMissionSchema>;
 export default function CreateMissionForm({
   onSuccess
 }: {
-  onSuccess?: () => void;
+  onSuccess?: (missionId: string) => void;
 }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -418,8 +418,8 @@ export default function CreateMissionForm({
         }
         console.log("Mission créée avec succès, données retournées:", data);
         toast.success('Mission créée avec succès');
-        if (onSuccess) {
-          onSuccess();
+        if (onSuccess && data?.id) {
+          onSuccess(data.id);
         } else {
           // Rediriger vers la page appropriée en fonction du rôle
           if (profile?.role === 'admin') {

@@ -22,6 +22,7 @@ import Settings from './pages/Settings';
 import LoginPage from './pages/LoginPage';
 import AdminContactsPage from './pages/dashboard/admin/Contacts';
 import ClientContactsPage from './pages/dashboard/client/Contacts';
+import ClientsPage from './pages/dashboard/admin/Clients'; // Assurez-vous que cette importation est présente
 
 function App() {
   return (
@@ -80,6 +81,14 @@ function App() {
           <ProtectedRoute roles={['admin']}>
             <DashboardLayout>
               <AdminContactsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        {/* Ajout de la route pour la page Clients */}
+        <Route path="/admin/clients" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <ClientsPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

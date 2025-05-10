@@ -141,6 +141,29 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
             <View style={styles.halfColumn}>
               <Text style={{...styles.label, marginBottom: 5}}>Adresse de départ:</Text>
               <Text>{formatFullAddress(mission.pickup_address)}</Text>
+            </View>
+            
+            <View style={styles.halfColumn}>
+              <Text style={{...styles.label, marginBottom: 5}}>Adresse de livraison:</Text>
+              <Text>{formatFullAddress(mission.delivery_address)}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Rendez-vous (ancien Dates et créneaux) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>RDV</Text>
+          <View style={styles.row}>
+            <View style={styles.halfColumn}>
+              <Text style={{fontWeight: 'bold'}}>Départ:</Text>
+              <Text>
+                {mission.D1_PEC ? formatDate(mission.D1_PEC) : 'Non spécifiée'}
+                {mission.H1_PEC && mission.H2_PEC 
+                  ? ` entre ${formatTime(mission.H1_PEC)} et ${formatTime(mission.H2_PEC)}` 
+                  : mission.H1_PEC 
+                    ? ` à partir de ${formatTime(mission.H1_PEC)}` 
+                    : ''}
+              </Text>
               
               {(mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email) && (
                 <View style={styles.contactBlock}>
@@ -153,8 +176,15 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
             </View>
             
             <View style={styles.halfColumn}>
-              <Text style={{...styles.label, marginBottom: 5}}>Adresse de livraison:</Text>
-              <Text>{formatFullAddress(mission.delivery_address)}</Text>
+              <Text style={{fontWeight: 'bold'}}>Livraison:</Text>
+              <Text>
+                {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Non spécifiée'}
+                {mission.H1_LIV && mission.H2_LIV 
+                  ? ` entre ${formatTime(mission.H1_LIV)} et ${formatTime(mission.H2_LIV)}` 
+                  : mission.H1_LIV 
+                    ? ` à partir de ${formatTime(mission.H1_LIV)}` 
+                    : ''}
+              </Text>
               
               {(mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email) && (
                 <View style={styles.contactBlock}>
@@ -168,52 +198,19 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
           </View>
         </View>
 
-        {/* Dates et créneaux */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dates et créneaux</Text>
-          <View style={styles.row}>
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Date de départ:</Text>
-              <Text>
-                {mission.D1_PEC ? formatDate(mission.D1_PEC) : 'Non spécifiée'}
-                {mission.H1_PEC && mission.H2_PEC 
-                  ? ` entre ${formatTime(mission.H1_PEC)} et ${formatTime(mission.H2_PEC)}` 
-                  : mission.H1_PEC 
-                    ? ` à partir de ${formatTime(mission.H1_PEC)}` 
-                    : ''}
-              </Text>
-            </View>
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Date de livraison:</Text>
-              <Text>
-                {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Non spécifiée'}
-                {mission.H1_LIV && mission.H2_LIV 
-                  ? ` entre ${formatTime(mission.H1_LIV)} et ${formatTime(mission.H2_LIV)}` 
-                  : mission.H1_LIV 
-                    ? ` à partir de ${formatTime(mission.H1_LIV)}` 
-                    : ''}
-              </Text>
-            </View>
-          </View>
-        </View>
-
         {/* Informations véhicule (simplifiées) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informations véhicule</Text>
-          <View style={styles.row}>
-            {mission.vehicle_make && (
-              <View style={styles.halfColumn}>
-                <Text style={{fontWeight: 'bold'}}>Marque:</Text>
-                <Text>{mission.vehicle_make}</Text>
+          
+          {/* Véhicule: marque + modèle combinés */}
+          {(mission.vehicle_make || mission.vehicle_model) && (
+            <View style={styles.row}>
+              <View style={styles.column}>
+                <Text style={{fontWeight: 'bold'}}>Véhicule:</Text>
+                <Text>{[mission.vehicle_make, mission.vehicle_model].filter(Boolean).join(' ')}</Text>
               </View>
-            )}
-            {mission.vehicle_model && (
-              <View style={styles.halfColumn}>
-                <Text style={{fontWeight: 'bold'}}>Modèle:</Text>
-                <Text>{mission.vehicle_model}</Text>
-              </View>
-            )}
-          </View>
+            </View>
+          )}
           
           {mission.vehicle_registration && (
             <View style={styles.row}>

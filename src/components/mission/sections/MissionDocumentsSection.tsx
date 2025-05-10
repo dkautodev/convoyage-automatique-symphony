@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, FileCheck, Receipt } from 'lucide-react';
+import { FileText, FileCheck, Receipt, PaperclipIcon } from 'lucide-react';
 import { Mission } from '@/types/supabase';
 import MissionAttachments from '@/components/mission/MissionAttachments';
+import FileUpload from '@/components/mission/FileUpload';
+import { toast } from 'sonner';
 
 interface MissionDocumentsSectionProps {
   mission: Mission;
@@ -13,6 +15,8 @@ interface MissionDocumentsSectionProps {
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission
 }) => {
+  const [attachmentsKey, setAttachmentsKey] = useState<number>(0);
+
   // Placeholder functions for document generation
   const handleGenerateQuote = () => {
     alert('Génération de devis non implémentée');
@@ -22,6 +26,13 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   };
   const handleGenerateInvoice = () => {
     alert('Génération de facture non implémentée');
+  };
+  
+  // Handle document upload completion
+  const handleDocumentUploaded = () => {
+    // Force refresh the attachments list
+    setAttachmentsKey(prev => prev + 1);
+    toast.success("Document ajouté avec succès");
   };
   
   return <Card>
@@ -63,13 +74,21 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
         
         {/* Attachments section */}
         <div className="mt-6 border-t pt-4">
-          <h3 className="text-lg font-medium mb-3">Pièces jointes</h3>
-          <MissionAttachments missionId={mission.id} showTitle={false} />
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-medium">Pièces jointes</h3>
+            <FileUpload
+              missionId={mission.id}
+              onUploadComplete={handleDocumentUploaded}
+              variant="outline"
+              label="Ajouter un document"
+            />
+          </div>
+          <MissionAttachments 
+            key={attachmentsKey}
+            missionId={mission.id} 
+            showTitle={false} 
+          />
         </div>
-        
-        <p className="text-sm text-gray-500 text-center mt-4">
-          Cette fonctionnalité sera disponible prochainement.
-        </p>
       </CardContent>
     </Card>;
 };

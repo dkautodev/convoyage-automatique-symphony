@@ -49,14 +49,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     
     console.log(`DashboardLayout: Path = ${path}, Role = ${role}`);
     
+    // Check for both specific client path and generic dashboard path
+    if (path.includes('/client/dashboard') || (path.endsWith('/dashboard') && role === 'client')) {
+      console.log("DashboardLayout: Rendering ClientDashboard");
+      return <ClientDashboard />;
+    }
+    
+    // Handle other role-specific dashboards
     if (path.endsWith('/dashboard')) {
       switch (role) {
         case 'admin':
           console.log("DashboardLayout: Rendering AdminDashboard");
           return <AdminDashboard />;
-        case 'client':
-          console.log("DashboardLayout: Rendering ClientDashboard");
-          return <ClientDashboard />;
         case 'chauffeur':
           console.log("DashboardLayout: Rendering DriverDashboard");
           return <DriverDashboard />;

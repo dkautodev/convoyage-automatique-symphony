@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { uploadFile } from '@/integrations/supabase/storage';
@@ -41,7 +41,9 @@ export default function FileUpload({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   
   const validateFile = (file: File): string | null => {
@@ -90,6 +92,52 @@ export default function FileUpload({
     }
   };
   
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+  
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+  
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+  
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    setError(null);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      const newFiles: File[] = [];
+      let hasError = false;
+      
+      for (const file of droppedFiles) {
+        const validationError = validateFile(file);
+        
+        if (validationError) {
+          setError(validationError);
+          hasError = true;
+          break;
+        }
+        
+        newFiles.push(file);
+      }
+      
+      if (!hasError) {
+        setSelectedFiles(multiple ? newFiles : [newFiles[0]]);
+      }
+    }
+  }, [multiple]);
+  
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0 || !user?.id) return;
     
@@ -110,7 +158,7 @@ export default function FileUpload({
         // Create file path - important: ensure missionId is provided for mission uploads
         let filePath;
         if (missionId) {
-          filePath = `${missionId}/${Date.now()}_${file.name}`;
+          filePath = `mission-docs/${missionId}/${Date.now()}_${file.name}`;
           console.log(`Creating mission document path: ${filePath}`);
         } else {
           filePath = `uploads/${Date.now()}_${file.name}`;
@@ -188,77 +236,106 @@ export default function FileUpload({
   
   return (
     <>
-      <div className={`flex items-center gap-2 ${className}`}>
+      <div className={`flex flex-col ${className}`}>
         <input 
           type="file" 
           className="hidden" 
           ref={fileInputRef}
           onChange={handleFileChange}
           multiple={multiple}
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.svg" 
+          accept=".pdf,.jpg,.jpeg,.png"  // Limité aux formats demandés
         />
         
         {selectedFiles.length === 0 ? (
-          <Button 
-            type="button" 
-            variant={variant} 
-            size={size}
+          <div 
+            ref={dropZoneRef}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-md p-4 flex flex-col items-center cursor-pointer transition-colors mb-2 ${
+              isDragging 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted-foreground/20 hover:border-primary/50'
+            }`}
             onClick={() => fileInputRef.current?.click()}
-            className="h-8"
           >
-            <Upload className="h-4 w-4 mr-2" />
-            {label}
-          </Button>
+            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm font-medium">
+              {multiple ? 'Déposez vos fichiers ici ou cliquez pour parcourir' : 'Déposez votre fichier ici ou cliquez pour parcourir'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              PDF, JPG, JPEG, PNG • Max 10 Mo
+            </p>
+          </div>
         ) : (
-          <div className="flex items-center gap-2 border rounded-md p-2 bg-muted/30 min-h-8">
-            <FileIcon className="h-4 w-4 shrink-0" />
-            <span className="text-xs truncate max-w-[150px]">
-              {selectedFiles.length === 1 
-                ? selectedFiles[0].name 
-                : `${selectedFiles.length} fichiers sélectionnés`}
-            </span>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearSelectedFiles}
-              className="h-6 w-6 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <div className="border rounded-md p-3 bg-muted/30 mb-2">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium">
+                {selectedFiles.length} fichier{selectedFiles.length > 1 ? 's' : ''} sélectionné{selectedFiles.length > 1 ? 's' : ''}
+              </h4>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearSelectedFiles}
+                className="h-6 p-1"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="max-h-32 overflow-y-auto">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="flex items-center text-xs p-1 mb-1 bg-background rounded">
+                  <FileIcon className="h-3 w-3 mr-2 shrink-0" />
+                  <span className="truncate">{file.name}</span>
+                  <span className="ml-auto text-muted-foreground shrink-0">
+                    {(file.size / 1024).toFixed(1)} Ko
+                  </span>
+                </div>
+              ))}
+            </div>
+            
             <Button
               type="button"
               onClick={handleFileUpload}
               disabled={isUploading}
               variant="default"
               size="sm"
-              className="h-6"
+              className="w-full mt-2"
             >
               {isUploading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Téléchargement...
+                </>
               ) : (
-                <Upload className="h-4 w-4" />
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Télécharger
+                </>
               )}
             </Button>
           </div>
         )}
+        
+        {isUploading && uploadProgress > 0 && (
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+            <div 
+              className="bg-primary h-full transition-all duration-300 ease-in-out" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="flex items-center text-xs text-destructive gap-1 mt-1">
+            <AlertCircle className="h-3 w-3" />
+            <span>{error}</span>
+          </div>
+        )}
       </div>
-      
-      {isUploading && uploadProgress > 0 && (
-        <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-          <div 
-            className="bg-primary h-full transition-all duration-300 ease-in-out" 
-            style={{ width: `${uploadProgress}%` }}
-          ></div>
-        </div>
-      )}
-      
-      {error && (
-        <div className="flex items-center text-xs text-destructive gap-1 mt-1">
-          <AlertCircle className="h-3 w-3" />
-          <span>{error}</span>
-        </div>
-      )}
     </>
   );
 }

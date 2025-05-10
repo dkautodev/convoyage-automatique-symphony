@@ -10,11 +10,12 @@ export default function CreateMissionPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   
-  const handleSuccess = () => {
+  const handleSuccess = (missionId: string) => {
+    // Redirect to mission details page with the new mission ID
     if (profile?.role === 'admin') {
-      navigate('/admin/missions');
+      navigate(`/admin/missions/${missionId}`);
     } else {
-      navigate('/client/missions');
+      navigate(`/client/missions/${missionId}`);
     }
   };
   

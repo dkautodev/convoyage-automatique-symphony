@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -99,12 +100,22 @@ export default function FileUpload({
       const totalFiles = selectedFiles.length;
       let uploadedCount = 0;
       
+      console.log("Uploading files, total count:", totalFiles);
+      if (missionId) {
+        console.log("Mission ID for uploads:", missionId);
+      }
+      
       // Upload each file
       for (const file of selectedFiles) {
-        // Utiliser directement l'ID de mission comme préfixe de chemin
-        const filePath = missionId 
-          ? `${missionId}/${Date.now()}_${file.name}`
-          : `uploads/${Date.now()}_${file.name}`;
+        // Create file path - important: ensure missionId is provided for mission uploads
+        let filePath;
+        if (missionId) {
+          filePath = `${missionId}/${Date.now()}_${file.name}`;
+          console.log(`Creating mission document path: ${filePath}`);
+        } else {
+          filePath = `uploads/${Date.now()}_${file.name}`;
+          console.log(`Creating general upload path: ${filePath}`);
+        }
         
         // Upload the file to storage
         const storagePath = await uploadFile(filePath, file);
@@ -116,6 +127,7 @@ export default function FileUpload({
         
         // If we have a mission ID, save the reference in the database
         if (missionId) {
+          console.log(`Saving reference to database for mission ${missionId}`);
           const { error } = await typedSupabase
             .from('mission_documents')
             .insert({

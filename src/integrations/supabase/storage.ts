@@ -22,7 +22,7 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: true // Change to true to overwrite existing files with the same name
       });
       
     if (error) {

@@ -78,6 +78,51 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
           </div>
         </div>
 
+        {/* Addresses */}
+        <div className="mb-6 border-t pt-6">
+          <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Adresses
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de départ</h4>
+              <p className="font-medium">{formatFullAddress(mission.pickup_address)}</p>
+              
+              <div className="mt-4">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Contact départ</h5>
+                {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? (
+                  <div>
+                    {mission.contact_pickup_name && <p className="font-medium">{mission.contact_pickup_name}</p>}
+                    {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
+                    {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Aucun contact spécifié</p>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de livraison</h4>
+              <p className="font-medium">{formatFullAddress(mission.delivery_address)}</p>
+              
+              <div className="mt-4">
+                <h5 className="text-sm font-medium text-gray-500 mb-1">Contact livraison</h5>
+                {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? (
+                  <div>
+                    {mission.contact_delivery_name && <p className="font-medium">{mission.contact_delivery_name}</p>}
+                    {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
+                    {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Aucun contact spécifié</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Vehicle information */}
         <div className="mb-6 border-t pt-6">
           <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
@@ -154,51 +199,6 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({ m
                   ` entre ${formatTimeSlot(mission.H1_LIV)} et ${formatTimeSlot(mission.H2_LIV)}` : 
                   mission.H1_LIV ? ` à partir de ${formatTimeSlot(mission.H1_LIV)}` : ''}
               </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Addresses */}
-        <div className="mb-6 border-t pt-6">
-          <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Adresses
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de départ</h4>
-              <p className="font-medium">{formatFullAddress(mission.pickup_address)}</p>
-              
-              <div className="mt-4">
-                <h5 className="text-sm font-medium text-gray-500 mb-1">Contact départ</h5>
-                {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? (
-                  <div>
-                    {mission.contact_pickup_name && <p className="font-medium">{mission.contact_pickup_name}</p>}
-                    {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
-                    {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Aucun contact spécifié</p>
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de livraison</h4>
-              <p className="font-medium">{formatFullAddress(mission.delivery_address)}</p>
-              
-              <div className="mt-4">
-                <h5 className="text-sm font-medium text-gray-500 mb-1">Contact livraison</h5>
-                {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? (
-                  <div>
-                    {mission.contact_delivery_name && <p className="font-medium">{mission.contact_delivery_name}</p>}
-                    {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
-                    {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Aucun contact spécifié</p>
-                )}
-              </div>
             </div>
           </div>
         </div>

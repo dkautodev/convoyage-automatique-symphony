@@ -1,4 +1,3 @@
-
 import { Address, Mission } from '@/types/supabase';
 
 // Original file imports and basic functions
@@ -14,6 +13,33 @@ export const formatAddressDisplay = (address?: Address | null) => {
 export const formatFullAddress = (address?: Address | null) => {
   if (!address) return 'Adresse non spécifiée';
   
+  // If the formatted_address exists, use it directly
+  if (address.formatted_address) {
+    return address.formatted_address;
+  }
+  
+  // Check if address has extracted_data
+  if (address.extracted_data) {
+    const extractedData = address.extracted_data;
+    let parts = [];
+    
+    // Build address from extracted_data fields
+    if (extractedData.street) {
+      parts.push(extractedData.street);
+    }
+    
+    let line2 = '';
+    if (extractedData.postal_code || extractedData.city) {
+      let cityParts = [];
+      if (extractedData.postal_code) cityParts.push(extractedData.postal_code);
+      if (extractedData.city) cityParts.push(extractedData.city);
+      line2 = cityParts.join(' ');
+    }
+    
+    return [parts.join(' '), line2].filter(Boolean).join(', ');
+  }
+  
+  // Fallback to the original behavior for backward compatibility
   let parts = [];
   if (address.street_number) parts.push(address.street_number);
   if (address.street) parts.push(address.street);

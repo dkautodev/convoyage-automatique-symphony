@@ -31,7 +31,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Mail, AlertCircle, Copy, Check } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 
 // Schéma de validation pour le formulaire de création de token
 const inviteFormSchema = z.object({
@@ -97,6 +97,7 @@ export default function AdminInvite() {
       
       if (error) throw error;
       
+      console.log("Tokens récupérés:", data);
       setTokens(data || []);
     } catch (err: any) {
       console.error("Erreur lors du chargement des tokens:", err);
@@ -330,30 +331,32 @@ export default function AdminInvite() {
         
         {/* Liste des tokens */}
         <div className="md:col-span-7">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
-              <CardTitle>Tokens d'invitation</CardTitle>
+              <CardTitle>Historique des tokens d'invitation</CardTitle>
               <CardDescription>
-                Liste des tokens d'invitation créés
+                Liste des tokens d'invitation avec leur statut (email, token, utilisé ou non, date de validité)
               </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingTokens ? (
-                <div className="text-center py-4">Chargement des tokens...</div>
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                </div>
               ) : tokens.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  Aucun token d'invitation créé
+                <div className="text-center py-8 text-muted-foreground">
+                  Aucun token d'invitation trouvé dans l'historique
                 </div>
               ) : (
                 <div className="rounded-md border overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Token</TableHead>
-                        <TableHead>Expire le</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="font-bold">Email</TableHead>
+                        <TableHead className="font-bold">Token</TableHead>
+                        <TableHead className="font-bold">Expire le</TableHead>
+                        <TableHead className="font-bold">Statut</TableHead>
+                        <TableHead className="font-bold">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

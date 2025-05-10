@@ -25,40 +25,9 @@ export default function ContactSelector({
   variant = "outline",
   size = "sm"
 }: ContactSelectorProps) {
-  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  
-  useEffect(() => {
-    const fetchContacts = async () => {
-      if (!user?.id && !clientId) return;
-      
-      try {
-        setLoading(true);
-        
-        // Use the provided clientId or the current user's ID
-        const targetClientId = clientId || user?.id;
-        
-        const { data, error } = await supabase
-          .from('contacts')
-          .select('*')
-          .eq('client_id', targetClientId);
-          
-        if (error) {
-          console.error('Error fetching contacts:', error);
-          return;
-        }
-        
-        setContacts(data as Contact[]);
-      } catch (error) {
-        console.error('Exception fetching contacts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchContacts();
-  }, [clientId, user]);
+  const { contacts, loading: contactsLoading } = useContacts(clientId);
   
   return (
     <Popover>
@@ -72,7 +41,7 @@ export default function ContactSelector({
         <div className="space-y-2">
           <h4 className="font-medium">Sélectionner un contact</h4>
           
-          {loading ? (
+          {contactsLoading ? (
             <p className="text-sm text-muted-foreground">Chargement des contacts...</p>
           ) : contacts.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucun contact trouvé</p>

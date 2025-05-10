@@ -1,11 +1,15 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, FileCheck, Receipt } from 'lucide-react';
 import { Mission } from '@/types/supabase';
+import MissionAttachments from '@/components/mission/MissionAttachments';
+
 interface MissionDocumentsSectionProps {
   mission: Mission;
 }
+
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission
 }) => {
@@ -19,6 +23,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const handleGenerateInvoice = () => {
     alert('Génération de facture non implémentée');
   };
+  
   return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -54,6 +59,12 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
               Générer
             </Button>
           </div>
+        </div>
+        
+        {/* Attachments section */}
+        <div className="mt-6 border-t pt-4">
+          <h3 className="text-lg font-medium mb-3">Pièces jointes</h3>
+          <MissionAttachments missionId={mission.id} showTitle={false} />
         </div>
         
         <p className="text-sm text-gray-500 text-center mt-4">

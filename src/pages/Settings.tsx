@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import { toast } from 'sonner';
 import { Loader2, Save, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
+import { useNavigate } from 'react-router-dom';
 
 // Schéma de validation pour le formulaire de changement de mot de passe
 const passwordSchema = z.object({
@@ -42,7 +42,8 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<PasswordFormValues>({
@@ -85,8 +86,21 @@ const Settings = () => {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         toast.error(`Erreur lors de la mise à jour du mot de passe: ${updateError.message}`);
       } else {
+        // Message de succès avec toast
         toast.success('Mot de passe mis à jour avec succès');
         form.reset();
+        
+        // Rediriger vers le tableau de bord approprié en fonction du rôle de l'utilisateur
+        setTimeout(() => {
+          if (profile?.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else if (profile?.role === 'chauffeur') {
+            navigate('/driver/dashboard');
+          } else {
+            // Par défaut, rediriger vers le tableau de bord client
+            navigate('/client/dashboard');
+          }
+        }, 1500); // Attendre 1.5 secondes pour que l'utilisateur puisse voir le message de succès
       }
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du mot de passe:', error);

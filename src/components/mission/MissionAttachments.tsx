@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatDistance } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { getPublicUrl } from '@/integrations/supabase/storage';
 
 interface MissionDocument {
   id: string;
@@ -14,6 +15,7 @@ interface MissionDocument {
   file_type: string | null;
   uploaded_at: string;
   uploaded_by: string;
+  publicUrl?: string | null;
 }
 
 interface MissionAttachmentsProps {
@@ -54,7 +56,13 @@ export default function MissionAttachments({
         
       if (error) throw error;
       
-      setDocuments(data as MissionDocument[]);
+      // Add public URLs to documents
+      const docsWithUrls = data ? data.map(doc => ({
+        ...doc,
+        publicUrl: getPublicUrl(doc.file_path)
+      })) : [];
+      
+      setDocuments(docsWithUrls as MissionDocument[]);
     } catch (error) {
       console.error("Error fetching mission documents:", error);
       toast.error("Erreur lors du chargement des documents");

@@ -7,8 +7,8 @@ import { Upload, Loader2, File as FileIcon, X, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 
-// Constantes pour les limitations
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo en octets
+// File limitation constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
 const ALLOWED_FILE_TYPES = [
   'application/pdf', // PDF
   'image/jpeg',      // JPEG
@@ -19,7 +19,7 @@ const ALLOWED_FILE_TYPES = [
 ];
 
 interface FileUploadProps {
-  onUploadComplete?: (filePath: string, fileName: string) => void;
+  onUploadComplete?: (filePath?: string, fileName?: string) => void;
   missionId?: string;
   className?: string;
   variant?: "outline" | "default" | "secondary";
@@ -31,7 +31,7 @@ interface FileUploadProps {
 export default function FileUpload({ 
   onUploadComplete, 
   missionId, 
-  className,
+  className = '',
   variant = "outline",
   size = "sm",
   label = "Sélectionner un document",
@@ -45,12 +45,12 @@ export default function FileUpload({
   const { user } = useAuth();
   
   const validateFile = (file: File): string | null => {
-    // Vérification de la taille du fichier
+    // Check file size
     if (file.size > MAX_FILE_SIZE) {
       return `Fichier trop volumineux (max: 10 Mo): ${file.name}`;
     }
     
-    // Vérification du type de fichier
+    // Check file type
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       return `Format non supporté (${file.name}). Formats acceptés: PDF et images`;
     }
@@ -65,7 +65,7 @@ export default function FileUpload({
       const newFiles: File[] = [];
       let hasError = false;
       
-      // Vérifier chaque fichier sélectionné
+      // Check each selected file
       for (let i = 0; i < e.target.files.length; i++) {
         const file = e.target.files[i];
         const validationError = validateFile(file);
@@ -82,7 +82,7 @@ export default function FileUpload({
       if (!hasError) {
         setSelectedFiles(newFiles);
       } else {
-        // Réinitialiser le champ de fichier en cas d'erreur
+        // Reset the file input in case of error
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
@@ -100,7 +100,7 @@ export default function FileUpload({
       const totalFiles = selectedFiles.length;
       let uploadedCount = 0;
       
-      // Télécharger chaque fichier
+      // Upload each file
       for (const file of selectedFiles) {
         // Generate a unique file path
         const fileName = missionId 
@@ -145,7 +145,7 @@ export default function FileUpload({
         }
       }
       
-      // Message de succès adapté au nombre de fichiers téléchargés
+      // Success message adapted to the number of uploaded files
       if (uploadedCount === totalFiles) {
         toast.success(totalFiles > 1 
           ? `${totalFiles} documents téléchargés avec succès` 
@@ -178,7 +178,7 @@ export default function FileUpload({
   };
   
   return (
-    <div className="flex flex-col gap-2">
+    <>
       <div className={`flex items-center gap-2 ${className}`}>
         <input 
           type="file" 
@@ -186,7 +186,7 @@ export default function FileUpload({
           ref={fileInputRef}
           onChange={handleFileChange}
           multiple={multiple}
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.svg" // Restriction des types via HTML
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.svg" 
         />
         
         {selectedFiles.length === 0 ? (
@@ -250,10 +250,6 @@ export default function FileUpload({
           <span>{error}</span>
         </div>
       )}
-      
-      <div className="text-xs text-muted-foreground mt-1">
-        Formats acceptés: PDF, images (JPG, PNG, GIF, etc.) • Taille max: 10 Mo
-      </div>
-    </div>
+    </>
   );
 }

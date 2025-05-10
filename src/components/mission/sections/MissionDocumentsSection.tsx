@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { FileText, FileCheck, Receipt, PaperclipIcon, Upload } from 'lucide-react';
 import { Mission } from '@/types/supabase';
 import MissionAttachments from '@/components/mission/MissionAttachments';
-import FileUpload from '@/components/mission/FileUpload';
 import { toast } from 'sonner';
 import { typedSupabase } from '@/types/database';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import FileUpload from '@/components/mission/FileUpload';
 
 interface MissionDocumentsSectionProps {
   mission: Mission;
@@ -21,7 +21,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const [documentCount, setDocumentCount] = useState<number>(0);
   const [showUploadDialog, setShowUploadDialog] = useState<boolean>(false);
 
-  // Charger le nombre de documents au chargement
+  // Fetch document count on load
   useEffect(() => {
     if (mission.id) {
       fetchDocumentCount();
@@ -44,13 +44,15 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
 
   // Placeholder functions for document generation
   const handleGenerateQuote = () => {
-    alert('Génération de devis non implémentée');
+    toast.info('Génération de devis non implémentée');
   };
+  
   const handleGenerateMissionSheet = () => {
-    alert('Génération de fiche de mission non implémentée');
+    toast.info('Génération de fiche de mission non implémentée');
   };
+  
   const handleGenerateInvoice = () => {
-    alert('Génération de facture non implémentée');
+    toast.info('Génération de facture non implémentée');
   };
   
   // Handle document upload completion
@@ -130,7 +132,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
             </div>
           </div>
           
-          {/* Liste des documents */}
+          {/* Document list */}
           <div className="border rounded-lg overflow-hidden">
             <MissionAttachments 
               key={attachmentsKey}
@@ -140,7 +142,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
             />
           </div>
           
-          {/* Message d'indication */}
+          {/* Message with file limitations */}
           <div className="mt-4 text-center p-2 bg-muted/30 rounded-md">
             <p className="text-sm text-muted-foreground">
               Formats acceptés: PDF, images (JPG, PNG, GIF, etc.) • Taille max: 10 Mo

@@ -11,13 +11,16 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
   try {
     console.log(`Uploading file to ${path}`);
     
-    // Check if we're uploading to the mission-docs bucket
+    // Check which bucket to use based on the file path prefix
     const bucketName = path.startsWith('mission-docs/') ? 'mission-docs' : 'documents';
     const filePath = path.startsWith('mission-docs/') ? path.replace('mission-docs/', '') : path;
     
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
       
     if (error) {
       console.error("Error uploading file:", error);

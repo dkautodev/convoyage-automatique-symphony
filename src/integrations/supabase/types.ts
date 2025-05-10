@@ -602,6 +602,10 @@ export type Database = {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: string
       }
+      get_user_role_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_owner_of_profile: {
         Args: { profile_id: string }
         Returns: boolean

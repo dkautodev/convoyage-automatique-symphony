@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -80,7 +79,7 @@ const profileSchema = z.object({
   phone_2: z.string().optional(),
   siret: z.string().optional(),
   tva_number: z.string().optional(),
-  tva_applicable: z.boolean().optional(),
+  // Retiré tva_applicable car cette colonne n'existe pas dans la table profiles
   // Adresse de facturation
   street: z.string().optional(),
   city: z.string().optional(),
@@ -130,7 +129,7 @@ const Profile = () => {
         phone_2: profile.phone_2 || '',
         siret: profile.siret || '',
         tva_number: profile.tva_number || '',
-        tva_applicable: profile.tva_applicable || false,
+        // Retirer la référence à tva_applicable qui n'existe pas dans la table profiles
         street: billingAddress.street || '',
         city: billingAddress.city || '',
         postal_code: billingAddress.postal_code || '',
@@ -164,7 +163,7 @@ const Profile = () => {
         country: data.country || 'France',
       };
 
-      // Préparer les données à mettre à jour
+      // Préparer les données à mettre à jour, sans tva_applicable
       const updateData = {
         full_name: data.full_name,
         company_name: data.company_name,
@@ -172,7 +171,6 @@ const Profile = () => {
         phone_2: data.phone_2,
         siret: data.siret,
         tva_number: data.tva_number,
-        tva_applicable: data.tva_applicable,
         billing_address: billingAddress as any, // Type assertion to handle Json conversion
       };
 

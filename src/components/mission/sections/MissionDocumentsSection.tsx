@@ -45,7 +45,6 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
             adminProfile={adminProfile} 
           />
         )}
-        {/* Removed Mission Sheet button from here */}
       </CardContent>
     </Card>
   );

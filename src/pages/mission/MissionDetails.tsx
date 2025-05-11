@@ -285,6 +285,7 @@ const MissionDetailsPage = () => {
           <p className="text-gray-500">Créée le {formattedDate}</p>
         </div>
         <div className="flex gap-2">
+          {/* Admin buttons */}
           {isAdmin && (
             <>
               <Button onClick={handleEditMission} variant="outline">
@@ -314,6 +315,7 @@ const MissionDetailsPage = () => {
               </Button>
             </>
           )}
+          
           {/* Client buttons */}
           {isClient && (
             <>
@@ -350,23 +352,26 @@ const MissionDetailsPage = () => {
           
           {/* Driver buttons */}
           {isDriver && (
-            <Button 
-              variant="outline" 
-              className="relative"
-              onClick={() => setDocumentsDialogOpen(true)}
-            >
-              <Paperclip className="h-4 w-4" />
-              {documentsCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
-                  {documentsCount}
-                </span>
-              )}
-              {documentsCount === 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
-                  0
-                </span>
-              )}
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                className="relative"
+                onClick={() => setDocumentsDialogOpen(true)}
+              >
+                <Paperclip className="h-4 w-4" />
+                {documentsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                    {documentsCount}
+                  </span>
+                )}
+                {documentsCount === 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                    0
+                  </span>
+                )}
+              </Button>
+              <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+            </>
           )}
           
           <Button onClick={handleBack} variant="outline">

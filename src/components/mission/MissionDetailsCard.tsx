@@ -61,7 +61,7 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
           Informations générales
         </CardTitle>
         <div className="flex gap-2">
-          {/* Ajout du bouton de génération de fiche de mission ici */}
+          {/* Bouton de génération de fiche de mission */}
           <GenerateMissionSheetButton mission={mission} driverName={driverName} />
           
           {isAdmin && !editMode && <Button variant="outline" onClick={onEditClick} size="sm">
@@ -73,6 +73,7 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
           </Button>}
         </div>
       </CardHeader>
+      
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>

@@ -8,22 +8,11 @@ import { Mission, MissionStatus } from '@/types/supabase';
 import { typedSupabase } from '@/types/database';
 import { Clock, CheckCircle2, Ban } from 'lucide-react';
 import { missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 interface MissionStatusSectionProps {
   mission: Mission;
   refetchMission: () => void;
 }
-
 export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   mission,
   refetchMission
@@ -39,7 +28,6 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   useEffect(() => {
     fetchStatusHistory();
   }, [mission.id]);
-
   const fetchStatusHistory = async () => {
     if (!mission.id) return;
     try {
@@ -61,7 +49,6 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       setLoading(false);
     }
   };
-
   const handleUpdateStatus = async () => {
     if (updating) return;
     if (selectedStatus === mission.status) {
@@ -106,7 +93,6 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
       return;
     }
-
     try {
       setCancelling(true);
       const {
@@ -114,11 +100,9 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       } = await typedSupabase.from('missions').update({
         status: 'annule'
       }).eq('id', mission.id);
-      
       if (error) {
         throw error;
       }
-      
       toast.success('Le devis a été annulé avec succès');
       refetchMission();
       fetchStatusHistory();
@@ -133,8 +117,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
 
   // All possible mission statuses for the dropdown
   const statuses: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
-  return (
-    <Card className="mb-6">
+  return <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5" />
@@ -172,17 +155,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
                 {updating ? 'Mise à jour...' : 'Mettre à jour le statut'}
               </Button>
               
-              {mission.status === 'en_acceptation' && (
-                <Button 
-                  onClick={openCancelDialog} 
-                  disabled={cancelling || mission.status !== 'en_acceptation'} 
-                  variant="destructive" 
-                  className="w-full sm:w-auto"
-                >
-                  <Ban className="h-4 w-4 mr-2" />
-                  {cancelling ? 'Annulation en cours...' : 'Annuler le devis'}
-                </Button>
-              )}
+              {mission.status === 'en_acceptation'}
             </div>
           </div>
         </div>
@@ -199,17 +172,12 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleCancelQuote} 
-                className="bg-red-600 hover:bg-red-700 text-white"
-                disabled={cancelling}
-              >
+              <AlertDialogAction onClick={handleCancelQuote} className="bg-red-600 hover:bg-red-700 text-white" disabled={cancelling}>
                 {cancelling ? 'Annulation en cours...' : 'Confirmer l\'annulation'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };

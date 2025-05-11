@@ -29,7 +29,6 @@ import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHi
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
-import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -336,7 +335,6 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
-              <GenerateMissionSheetButton mission={mission} driverName={driverName} />
               <GenerateQuoteButton 
                 mission={mission} 
                 client={client}
@@ -350,7 +348,7 @@ const MissionDetailsPage = () => {
             </>
           )}
           
-          {/* Driver buttons */}
+          {/* Driver buttons - Removed the GenerateMissionSheetButton from here */}
           {isDriver && (
             <>
               <Button 
@@ -370,7 +368,6 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
-              <GenerateMissionSheetButton mission={mission} driverName={driverName} />
             </>
           )}
           

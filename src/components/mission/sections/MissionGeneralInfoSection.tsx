@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatFullAddress, formatAddressDisplay } from '@/utils/missionUtils';
 import { Mission } from '@/types/supabase';
 import { Separator } from '@/components/ui/separator';
+import { MapPin, Calendar, Clock, Truck, Info, FileText } from 'lucide-react';
 import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
 
 interface MissionGeneralInfoSectionProps {
@@ -58,7 +59,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
       return formattedDate;
     }
   };
-
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -69,143 +70,188 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
           </div>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Address Information */}
-          <div>
-            <h3 className="font-bold text-lg mb-2">Adresses</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold">Adresse d'enlèvement:</h4>
-                <p className="text-gray-700">{formatFullAddress(mission.pickup_address)}</p>
-                
-                {/* Contact pickup information */}
-                {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? (
-                  <div className="mt-2 pt-2 border-t">
-                    <p className="font-semibold">{mission.contact_pickup_name}</p>
-                    {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
-                    {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
-                  </div>
-                ) : null}
-              </div>
-              <div>
-                <h4 className="font-semibold">Adresse de livraison:</h4>
-                <p className="text-gray-700">{formatFullAddress(mission.delivery_address)}</p>
-                
-                {/* Contact delivery information */}
-                {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? (
-                  <div className="mt-2 pt-2 border-t">
-                    <p className="font-semibold">{mission.contact_delivery_name}</p>
-                    {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
-                    {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          {/* Time slots information */}
-          <div>
-            <h3 className="font-bold text-lg mb-2">Créneaux horaires</h3>
-            <div className="space-y-4">
-              {(mission.D1_PEC || mission.H1_PEC) && (
-                <div>
-                  <h4 className="font-semibold">Créneau de ramassage:</h4>
-                  <p className="text-gray-700">{formatTimeSlot(mission.D1_PEC, mission.H1_PEC, mission.H2_PEC)}</p>
-                </div>
-              )}
-              
-              {(mission.D2_LIV || mission.H1_LIV) && (
-                <div>
-                  <h4 className="font-semibold">Créneau de livraison:</h4>
-                  <p className="text-gray-700">{formatTimeSlot(mission.D2_LIV, mission.H1_LIV, mission.H2_LIV)}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Client Information - Only show if client exists and hideFinancials is false */}
-          {client && !hideFinancials && (
+      <CardContent className="space-y-6">
+        {/* Information blocks at the top in a grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Client - Only show if not hideFinancials (i.e., not a driver) */}
+          {!hideFinancials && client && (
             <div>
-              <h3 className="font-bold text-lg mb-2">Client</h3>
-              <p><span className="font-semibold">Nom:</span> {client.company_name || client.full_name || "Non spécifié"}</p>
-              {client.phone1 && <p><span className="font-semibold">Téléphone:</span> {client.phone1}</p>}
-              {client.email && <p><span className="font-semibold">Email:</span> {client.email}</p>}
-              {client.siret && <p><span className="font-semibold">SIRET:</span> {client.siret}</p>}
+              <h3 className="text-sm font-medium text-gray-500">Client</h3>
+              <p className="text-lg font-medium">{client.company_name || client.full_name || "Non spécifié"}</p>
             </div>
           )}
-
-          {/* Mission Details */}
-          <div className={!hideFinancials ? "md:col-span-2" : ""}>
-            <h3 className="font-bold text-lg mb-2">Détails de la mission</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Type de mission</h3>
+            <p className="text-lg font-medium">{mission.mission_type || "Non spécifié"}</p>
+          </div>
+          
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Catégorie de véhicule</h3>
+            <p className="text-lg font-medium">
+              {mission.vehicle_category ? mission.vehicle_category.replace(/_/g, ' ').toLocaleUpperCase() : 'Non spécifié'}
+            </p>
+          </div>
+          
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Distance</h3>
+            <p className="text-lg font-medium">{mission.distance_km.toFixed(2)} km</p>
+          </div>
+          
+          {/* Financial info - Only show if not hideFinancials */}
+          {!hideFinancials && (
+            <>
               <div>
-                <p className="font-semibold">Chauffeur assigné:</p>
-                <p className="text-gray-700">{driverName}</p>
+                <h3 className="text-sm font-medium text-gray-500">Prix HT</h3>
+                <p className="text-lg font-medium">{formatPrice(mission.price_ht)}</p>
               </div>
+              
               <div>
-                <p className="font-semibold">Distance:</p>
-                <p className="text-gray-700">{mission.distance_km.toFixed(2)} km</p>
+                <h3 className="text-sm font-medium text-gray-500">Prix TTC</h3>
+                <p className="text-lg font-medium">{formatPrice(mission.price_ttc)}</p>
               </div>
-              <div>
-                <p className="font-semibold">Véhicule:</p>
-                <p className="text-gray-700">
-                  {mission.vehicle_category ? mission.vehicle_category.replace(/_/g, ' ').toLocaleUpperCase() : 'Non spécifié'}
-                </p>
-              </div>
-              {mission.vehicle_make && (
-                <div>
-                  <p className="font-semibold">Marque/Modèle:</p>
-                  <p className="text-gray-700">
-                    {mission.vehicle_make} {mission.vehicle_model || ''}
-                  </p>
+            </>
+          )}
+        </div>
+        
+        <Separator />
+        
+        {/* Addresses section */}
+        <div>
+          <h3 className="font-bold text-lg mb-4 flex items-center">
+            <MapPin className="mr-2 h-5 w-5" />
+            Adresses
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold">Adresse de départ</h4>
+              <p className="text-gray-700">{formatFullAddress(mission.pickup_address)}</p>
+              
+              {/* Contact pickup information */}
+              {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? (
+                <div className="mt-2 pt-2 border-t">
+                  <p className="font-medium">Contact départ</p>
+                  <p>{mission.contact_pickup_name}</p>
+                  {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
+                  {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
                 </div>
-              )}
-              {mission.vehicle_registration && (
-                <div>
-                  <p className="font-semibold">Immatriculation:</p>
-                  <p className="text-gray-700">{mission.vehicle_registration}</p>
-                </div>
-              )}
-              {mission.mission_type && (
-                <div>
-                  <p className="font-semibold">Type de mission:</p>
-                  <p className="text-gray-700">{mission.mission_type}</p>
-                </div>
-              )}
-              {mission.notes && (
-                <div className="col-span-full">
-                  <p className="font-semibold">Notes:</p>
-                  <p className="text-gray-700 whitespace-pre-wrap">{mission.notes}</p>
-                </div>
-              )}
+              ) : null}
             </div>
-            
-            {/* Only display financial info if not hidden */}
-            {!hideFinancials && (
-              <>
-                <Separator className="my-4" />
-                <div className="mt-4">
-                  <h3 className="font-bold text-lg mb-2">Informations financières</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="font-semibold">Prix HT:</p>
-                      <p className="text-gray-700">{formatPrice(mission.price_ht)}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Taux TVA:</p>
-                      <p className="text-gray-700">{mission.vat_rate || 20}%</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Prix TTC:</p>
-                      <p className="text-gray-700 font-bold">{formatPrice(mission.price_ttc)}</p>
-                    </div>
-                  </div>
+            <div>
+              <h4 className="font-semibold">Adresse de livraison</h4>
+              <p className="text-gray-700">{formatFullAddress(mission.delivery_address)}</p>
+              
+              {/* Contact delivery information */}
+              {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? (
+                <div className="mt-2 pt-2 border-t">
+                  <p className="font-medium">Contact livraison</p>
+                  <p>{mission.contact_delivery_name}</p>
+                  {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
+                  {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
                 </div>
-              </>
-            )}
+              ) : null}
+            </div>
           </div>
         </div>
+        
+        <Separator />
+        
+        {/* Vehicle information section if available */}
+        {(mission.vehicle_make || mission.vehicle_model || mission.vehicle_registration) && (
+          <>
+            <div>
+              <h3 className="font-bold text-lg mb-4 flex items-center">
+                <Truck className="mr-2 h-5 w-5" />
+                Informations véhicule
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {mission.vehicle_make && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Marque</h4>
+                    <p className="text-lg font-medium">{mission.vehicle_make}</p>
+                  </div>
+                )}
+                
+                {mission.vehicle_model && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Modèle</h4>
+                    <p className="text-lg font-medium">{mission.vehicle_model}</p>
+                  </div>
+                )}
+                
+                {mission.vehicle_year && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Année</h4>
+                    <p className="text-lg font-medium">{mission.vehicle_year}</p>
+                  </div>
+                )}
+                
+                {mission.vehicle_fuel && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Carburant</h4>
+                    <p className="text-lg font-medium">{mission.vehicle_fuel}</p>
+                  </div>
+                )}
+                
+                {mission.vehicle_registration && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Immatriculation</h4>
+                    <p className="text-lg font-medium">{mission.vehicle_registration}</p>
+                  </div>
+                )}
+                
+                {mission.vehicle_vin && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">VIN</h4>
+                    <p className="text-lg font-medium">{mission.vehicle_vin}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <Separator />
+          </>
+        )}
+        
+        {/* Dates and time slots */}
+        {(mission.D1_PEC || mission.D2_LIV || mission.H1_PEC || mission.H1_LIV) && (
+          <>
+            <div>
+              <h3 className="font-bold text-lg mb-4 flex items-center">
+                <Calendar className="mr-2 h-5 w-5" />
+                Dates et créneaux
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(mission.D1_PEC || mission.H1_PEC) && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Date départ</h4>
+                    <p className="text-lg font-medium">{formatTimeSlot(mission.D1_PEC, mission.H1_PEC, mission.H2_PEC)}</p>
+                  </div>
+                )}
+                
+                {(mission.D2_LIV || mission.H1_LIV) && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Date livraison</h4>
+                    <p className="text-lg font-medium">{formatTimeSlot(mission.D2_LIV, mission.H1_LIV, mission.H2_LIV)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <Separator />
+          </>
+        )}
+        
+        {/* Notes section if available */}
+        {mission.notes && (
+          <div>
+            <h3 className="font-bold text-lg mb-4 flex items-center">
+              <FileText className="mr-2 h-5 w-5" />
+              Notes complémentaires
+            </h3>
+            <p className="whitespace-pre-wrap">{mission.notes}</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

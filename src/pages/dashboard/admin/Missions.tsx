@@ -198,6 +198,11 @@ const MissionsPage = () => {
   // Tous les statuts disponibles pour la boîte de dialogue de changement de statut
   const allStatuses: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
 
+  // Function to handle tab change with proper typing
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as MissionTab);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -231,7 +236,7 @@ const MissionsPage = () => {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="w-full mb-4 flex flex-wrap">
           <TabsTrigger value="all" className="flex gap-2">
             Toutes

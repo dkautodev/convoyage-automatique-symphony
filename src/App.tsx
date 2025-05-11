@@ -26,6 +26,11 @@ import ClientContactsPage from './pages/dashboard/client/Contacts';
 import ClientsPage from './pages/dashboard/admin/Clients';
 import AdminInvoicesPage from './pages/dashboard/admin/Invoices';
 import ClientInvoicesPage from './pages/dashboard/client/Invoices';
+import Register from './pages/Register'; 
+import BasicRegister from './pages/auth/BasicRegister';
+import RegisterAdmin from './pages/RegisterAdmin';
+import CompleteClientProfile from './pages/auth/CompleteClientProfile';
+import { CompleteDriverProfile, CompleteDriverConfig } from './pages/auth';
 
 function App() {
   return (
@@ -35,7 +40,15 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/home" element={<Home />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/register" element={<RegisterPage />} />
+        
+        {/* Registration routes */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/register-page" element={<RegisterPage />} />
+        <Route path="/register-admin" element={<RegisterAdmin />} />
+        <Route path="/auth/register" element={<BasicRegister />} />
+        <Route path="/auth/complete-client-profile" element={<CompleteClientProfile />} />
+        <Route path="/auth/complete-driver-profile" element={<CompleteDriverProfile />} />
+        <Route path="/auth/complete-driver-config" element={<CompleteDriverConfig />} />
         
         {/* Admin routes */}
         <Route path="/admin" element={

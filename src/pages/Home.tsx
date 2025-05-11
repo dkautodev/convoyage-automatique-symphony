@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -250,6 +249,21 @@ export default function Home() {
               </div>
             </CardFooter>
           </Card>
+        </div>
+      </div>
+      
+      <div className="mt-8 p-4 bg-white rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4">Inscrivez-vous</h2>
+        <div className="flex flex-col gap-2">
+          <Link to="/register" className="text-blue-600 hover:underline">
+            Inscription standard (client/chauffeur)
+          </Link>
+          <Link to="/auth/register" className="text-blue-600 hover:underline">
+            Inscription complète (client/chauffeur/admin)
+          </Link>
+          <Link to="/register-admin" className="text-blue-600 hover:underline">
+            Inscription administrateur
+          </Link>
         </div>
       </div>
     </div>

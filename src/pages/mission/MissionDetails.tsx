@@ -353,7 +353,7 @@ const MissionDetailsPage = () => {
         </div>
       </div>
 
-      {/* General Information Section - Now has the quote button */}
+      {/* General Information Section */}
       <MissionGeneralInfoSection 
         mission={mission} 
         client={client} 

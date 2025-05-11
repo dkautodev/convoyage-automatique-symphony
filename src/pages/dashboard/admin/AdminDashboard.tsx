@@ -106,7 +106,7 @@ const AdminDashboard = () => {
       const currentYear = new Date().getFullYear();
       const { data: yearMissions } = await typedSupabase
         .from('missions')
-        .select('price_ht, price_ttc, chauffeur_price_ht, created_at, status')
+        .select('price_ht, price_ttc, chauffeur_price_ht, chauffeur_id, created_at, status')
         .gte('created_at', `${currentYear}-01-01`)
         .lte('created_at', `${currentYear}-12-31`);
 
@@ -127,7 +127,7 @@ const AdminDashboard = () => {
           const price_ht = mission.price_ht || 0;
           const price_ttc = mission.price_ttc || 0;
           const vat = price_ttc - price_ht;
-          const driverPayment = mission.chauffeur_price_ht || 0;
+          const driverPayment = mission.status === 'termine' && mission.chauffeur_id ? (mission.chauffeur_price_ht || 0) : 0;
           
           if (mission.status === 'termine') {
             totalRevenue += price_ht;
@@ -142,7 +142,9 @@ const AdminDashboard = () => {
           if (monthlyData[monthName]) {
             monthlyData[monthName].revenue += price_ht;
             monthlyData[monthName].vat += vat;
-            monthlyData[monthName].driverPayments += driverPayment;
+            if (mission.status === 'termine' && mission.chauffeur_id) {
+              monthlyData[monthName].driverPayments += driverPayment;
+            }
           }
         });
       }

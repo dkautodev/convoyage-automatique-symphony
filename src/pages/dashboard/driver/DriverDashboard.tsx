@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
-import { Mission, MissionStatus, missionStatusLabels, missionStatusColors } from '@/types/supabase';
+import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -45,19 +45,24 @@ const DriverDashboard = () => {
       if (error) throw error;
       
       if (missionsData && missionsData.length > 0) {
+        // Convert all missions to the correct type
+        const convertedMissions: Mission[] = missionsData.map(mission => 
+          convertMissionFromDB(mission as unknown as MissionFromDB)
+        );
+        
         // Trouver la mission en cours (en prise en charge ou en livraison)
-        const inProgressMission = missionsData.find(m => 
+        const inProgressMission = convertedMissions.find(m => 
           m.status === 'prise_en_charge' || m.status === 'livraison'
         );
         
         // Trouver les missions à venir (acceptées mais pas encore en cours)
-        const upcoming = missionsData
+        const upcoming = convertedMissions
           .filter(m => m.status === 'accepte')
           .slice(0, 3); // Limiter à 3 missions à venir
         
         setCurrentMission(inProgressMission || null);
         setUpcomingMissions(upcoming);
-        setMissions(missionsData);
+        setMissions(convertedMissions);
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des missions:', error);

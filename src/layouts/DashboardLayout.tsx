@@ -1,4 +1,3 @@
-
 import React, { ReactNode } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
@@ -8,7 +7,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 // Import dashboard page components 
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
-import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
+import DriverDashboard from '@/components/dashboard/driver/DriverDashboard';
 
 interface DashboardLayoutProps {
   children: ReactNode;

@@ -17,31 +17,31 @@ const AdminInvoicesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch missions with status 'livre' or 'termine'
+  const fetchMissions = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('missions')
+        .select('*')
+        .in('status', ['livre', 'termine'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const convertedMissions = data.map(mission => 
+        convertMissionFromDB(mission as unknown as MissionFromDB)
+      );
+      
+      setMissions(convertedMissions);
+      setFilteredMissions(convertedMissions);
+    } catch (err) {
+      console.error("Error fetching invoices:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMissions = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('missions')
-          .select('*')
-          .in('status', ['livre', 'termine'])
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        const convertedMissions = data.map(mission => 
-          convertMissionFromDB(mission as unknown as MissionFromDB)
-        );
-        
-        setMissions(convertedMissions);
-        setFilteredMissions(convertedMissions);
-      } catch (err) {
-        console.error("Error fetching invoices:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMissions();
   }, []);
 
@@ -100,6 +100,11 @@ const AdminInvoicesPage = () => {
     setFilteredMissions(filtered);
   }, [searchQuery, missions, clientsData]);
 
+  // Handle mission status update
+  const handleMissionStatusUpdate = () => {
+    fetchMissions();
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-admin">Facturation</h1>
@@ -127,6 +132,7 @@ const AdminInvoicesPage = () => {
             clientsData={clientsData}
             isLoading={loading}
             userRole="admin"
+            onMissionStatusUpdate={handleMissionStatusUpdate}
           />
         </CardContent>
       </Card>

@@ -60,6 +60,7 @@ const DriverMissionsPage = () => {
       );
       
       setMissions(convertedMissions);
+      console.log('Fetched missions:', convertedMissions);
     } catch (error) {
       console.error('Error fetching driver missions:', error);
     } finally {
@@ -134,13 +135,20 @@ const DriverMissionsPage = () => {
         return;
       }
       
+      console.log('Updating mission status:', selectedMission.id, 'from', selectedMission.status, 'to', nextStatus);
+      
       // Update the status in the database
       const { error } = await typedSupabase
         .from('missions')
         .update({ status: nextStatus })
         .eq('id', selectedMission.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error from Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Status updated successfully');
       
       // Update the local state
       setMissions(missions.map(mission => {
@@ -161,11 +169,11 @@ const DriverMissionsPage = () => {
       // Refetch missions to ensure we have the latest data
       fetchDriverMissions();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating mission status:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de la mise à jour du statut.",
+        description: "Une erreur s'est produite lors de la mise à jour du statut: " + (error.message || "Erreur inconnue"),
         variant: "destructive",
       });
     } finally {
@@ -205,17 +213,26 @@ const DriverMissionsPage = () => {
 
   // Check if the status update button should be enabled for a mission
   const isStatusButtonEnabled = (mission: Mission) => {
+    console.log('Checking if status button should be enabled for mission:', mission.id);
+    console.log('Mission status:', mission.status);
+    console.log('D1_PEC:', mission.D1_PEC);
+    console.log('Is today:', isToday(mission.D1_PEC));
+    
     // Only enable for 'accepte' or 'prise_en_charge' status
     if (mission.status !== 'accepte' && mission.status !== 'prise_en_charge') {
+      console.log('Button disabled: status is not accepte or prise_en_charge');
       return false;
     }
     
     // For 'accepte' status, only enable if today is the scheduled pickup date
     if (mission.status === 'accepte') {
-      return mission.D1_PEC ? isToday(mission.D1_PEC) : false;
+      const enabled = mission.D1_PEC ? isToday(mission.D1_PEC) : false;
+      console.log('Button enabled for accepte status:', enabled);
+      return enabled;
     }
     
     // For 'prise_en_charge', always enable
+    console.log('Button enabled for prise_en_charge status');
     return true;
   };
 
@@ -297,6 +314,7 @@ const DriverMissionsPage = () => {
                             size="sm"
                             disabled={!isStatusButtonEnabled(mission)} 
                             onClick={() => {
+                              console.log('Status button clicked for mission:', mission.id);
                               setSelectedMission(mission);
                               setUpdateStatusDialogOpen(true);
                             }}

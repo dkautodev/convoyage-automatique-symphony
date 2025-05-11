@@ -263,7 +263,8 @@ const MissionDetailsPage = () => {
       }) 
     : 'Date inconnue';
 
-  const showCancelButton = mission.status === 'en_acceptation' && (isAdmin || (isClient && user?.id === mission.client_id));
+  // Only show cancel button for clients, not for admin
+  const showCancelButton = mission.status === 'en_acceptation' && isClient && user?.id === mission.client_id;
 
   return (
     <div className="space-y-6 overflow-y-auto pb-8">
@@ -334,13 +335,14 @@ const MissionDetailsPage = () => {
                 mission={mission} 
                 client={client}
               />
+              {/* Only show cancel button for clients */}
+              {showCancelButton && (
+                <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
+                  <Ban className="h-4 w-4 mr-2" />
+                  {cancelling ? 'Annulation...' : 'Annuler le devis'}
+                </Button>
+              )}
             </>
-          )}
-          {showCancelButton && (
-            <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
-              <Ban className="h-4 w-4 mr-2" />
-              {cancelling ? 'Annulation...' : 'Annuler le devis'}
-            </Button>
           )}
           <Button onClick={handleBack} variant="outline">
             Retour aux missions

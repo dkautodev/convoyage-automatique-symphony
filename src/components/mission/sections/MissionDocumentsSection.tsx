@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,13 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FileUpload from '@/components/mission/FileUpload';
 import { useAuth } from '@/hooks/auth';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
-
 interface MissionDocumentsSectionProps {
   mission: Mission;
   client?: any;
   adminProfile?: any;
 }
-
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission,
   client,
@@ -37,7 +34,6 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       fetchDocumentCount();
     }
   }, [mission.id]);
-  
   const fetchDocumentCount = async () => {
     try {
       const {
@@ -68,77 +64,5 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       description: "Les documents ont été attachés à la mission."
     });
   };
-  
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Documents
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowUploadDialog(true)}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Ajouter un document
-          </Button>
-          
-          {isAdmin && (
-            <>
-              <GenerateQuoteButton 
-                mission={mission} 
-                client={client} 
-                adminProfile={adminProfile || profile} 
-              />
-              
-              <Button variant="outline" size="sm">
-                <FileCheck className="h-4 w-4 mr-2" />
-                Fiche mission
-              </Button>
-              
-              <Button variant="outline" size="sm">
-                <Receipt className="h-4 w-4 mr-2" />
-                Facture
-              </Button>
-            </>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        <MissionAttachments 
-          missionId={mission.id} 
-          key={attachmentsKey} 
-          onCountChanged={setDocumentCount}
-        />
-      </CardContent>
-      
-      {/* Dialog for uploading files */}
-      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Ajouter des documents</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <FileUpload missionId={mission.id} onUploadComplete={handleDocumentUploaded} variant="default" label="Sélectionner des fichiers" multiple={true} className="w-full" />
-            
-            <div className="bg-muted/30 p-3 rounded-md">
-              <p className="text-sm text-muted-foreground">
-                Formats acceptés: PDF, images (JPG, PNG, GIF, etc.) • Taille max: 10 Mo
-              </p>
-            </div>
-            
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
-                Fermer
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
-  );
+  return;
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -190,14 +189,15 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
   const dueDate = addDays(emissionDate, 15);
   const formattedDueDate = format(dueDate, 'dd MMMM yyyy', { locale: fr });
 
-  // Format vehicle information
+  // Format vehicle information in the requested format
   const vehicleMakeModel = mission.vehicle_make && mission.vehicle_model 
     ? `${mission.vehicle_make} ${mission.vehicle_model}` 
     : "Non spécifié";
   
+  // VIN and registration separated by "/"
   const vehicleVinReg = [
-    mission.vehicle_vin ? `${mission.vehicle_vin}` : null,
-    mission.vehicle_registration ? `${mission.vehicle_registration}` : null
+    mission.vehicle_vin,
+    mission.vehicle_registration
   ].filter(Boolean).join(' / ');
 
   return (

@@ -6,7 +6,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit, Ban, Paperclip, FileText } from 'lucide-react';
+import { Package, History, Edit, Ban, Paperclip } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { 
   AlertDialog,
@@ -28,7 +28,6 @@ import { MissionDocumentsSection } from '@/components/mission/sections/MissionDo
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
-import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -95,7 +94,7 @@ const MissionDetailsPage = () => {
         .single();
       
       if (missionError) {
-        console.error('Erreur lors de la récupération de la mission:', missionError);
+        console.error('Erreur lors de la r��cupération de la mission:', missionError);
         toast.error('Impossible de charger les détails de la mission');
         return;
       }
@@ -315,7 +314,7 @@ const MissionDetailsPage = () => {
             </>
           )}
           
-          {/* Client buttons */}
+          {/* Client buttons - Removed GenerateQuoteButton */}
           {isClient && (
             <>
               <Button 
@@ -335,10 +334,6 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
-              <GenerateQuoteButton 
-                mission={mission} 
-                client={client}
-              />
               {showCancelButton && (
                 <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
                   <Ban className="h-4 w-4 mr-2" />
@@ -348,7 +343,7 @@ const MissionDetailsPage = () => {
             </>
           )}
           
-          {/* Driver buttons - Removed the GenerateMissionSheetButton from here */}
+          {/* Driver buttons */}
           {isDriver && (
             <>
               <Button 

@@ -1,9 +1,11 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User } from 'lucide-react';
+import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck } from 'lucide-react';
+
 interface SidebarProps {
   userRole: string;
 }
+
 const Sidebar: React.FC<SidebarProps> = ({
   userRole
 }) => {
@@ -89,6 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       path: '/driver/dashboard',
       label: 'Tableau de bord',
       icon: <Home size={20} />
+    }, {
+      path: '/driver/missions',
+      label: 'Mes missions',
+      icon: <ListCheck size={20} />
     }]
   };
 
@@ -119,4 +125,5 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
     </div>;
 };
+
 export default Sidebar;

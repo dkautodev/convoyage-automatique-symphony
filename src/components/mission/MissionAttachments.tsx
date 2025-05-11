@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { formatDistance } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getPublicUrl } from '@/integrations/supabase/storage';
+import { useAuth } from '@/hooks/auth'; // Import useAuth hook
 
 interface MissionDocument {
   id: string;
@@ -34,6 +35,10 @@ export default function MissionAttachments({
   const [documents, setDocuments] = useState<MissionDocument[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const { profile } = useAuth(); // Get user profile
+  
+  // Check if user is a driver
+  const isDriver = profile?.role === 'chauffeur';
   
   useEffect(() => {
     if (missionId) {
@@ -227,20 +232,24 @@ export default function MissionAttachments({
                 >
                   <Download className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 hover:text-destructive"
-                  onClick={() => handleDelete(doc)}
-                  disabled={deleting === doc.id}
-                  title="Supprimer"
-                >
-                  {deleting === doc.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                </Button>
+                
+                {/* Only show delete button if user is not a driver */}
+                {!isDriver && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 hover:text-destructive"
+                    onClick={() => handleDelete(doc)}
+                    disabled={deleting === doc.id}
+                    title="Supprimer"
+                  >
+                    {deleting === doc.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           ))}

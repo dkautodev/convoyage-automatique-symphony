@@ -19,6 +19,10 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   adminProfile,
   hideFinancials = false
 }) => {
+  // Determine if user is a driver based on hideFinancials prop
+  // since hideFinancials is only true when the user is a driver
+  const isDriverView = hideFinancials;
+
   return (
     <Card>
       <CardHeader>
@@ -26,12 +30,18 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
           <Paperclip className="h-5 w-5" />
           Documents
         </CardTitle>
-        <CardDescription>Générez et téléchargez les documents liés à cette mission</CardDescription>
+        <CardDescription>
+          {isDriverView 
+            ? "Consultez les documents liés à cette mission"
+            : "Générez et téléchargez les documents liés à cette mission"
+          }
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
+        {/* Mission Sheet - available to everyone */}
         <GenerateMissionSheetButton mission={mission} />
         
-        {/* Only show Quote button if financials are not hidden */}
+        {/* Quote button - hidden for drivers */}
         {!hideFinancials && (
           <GenerateQuoteButton 
             mission={mission} 

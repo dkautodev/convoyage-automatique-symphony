@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/auth';
 import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, ArrowRight, Filter, Package } from 'lucide-react';
+import { Search, Filter, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { formatFullAddress } from '@/utils/missionUtils';
@@ -66,11 +66,6 @@ const DriverMissionsPage = () => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-  };
-
-  const formatAddressDisplay = (address: any) => {
-    if (!address) return 'Adresse non spécifiée';
-    return address.city || (typeof address === 'string' ? address : 'Adresse non spécifiée');
   };
 
   // Filter missions based on search
@@ -171,7 +166,7 @@ const DriverMissionsPage = () => {
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">
-                            {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
+                            {formatFullAddress(mission.pickup_address)} <span className="mx-1">→</span> {formatFullAddress(mission.delivery_address)}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {mission.distance_km?.toFixed(2) || '0'} km · Départ: {mission.D1_PEC || formatDate(mission.scheduled_date)}

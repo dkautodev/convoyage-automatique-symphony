@@ -52,7 +52,7 @@ const MissionsPage = () => {
 
   useEffect(() => {
     fetchMissions();
-  }, [activeTab]);
+  }, []);
   
   useEffect(() => {
     fetchClients();
@@ -90,11 +90,6 @@ const MissionsPage = () => {
         .from('missions')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      // Filtrer par statut si un tab spécifique est sélectionné
-      if (activeTab !== 'all') {
-        query = query.eq('status', activeTab as MissionStatus);
-      }
       
       const { data: missionsData, error: missionsError } = await query;
       
@@ -154,8 +149,20 @@ const MissionsPage = () => {
     }
   };
 
-  // Filtered missions based on search query
+  // Prepare mission counts by status for tabs - Always calculate based on all missions
+  const missionCountsByStatus = missions.reduce((acc, mission) => {
+    acc[mission.status] = (acc[mission.status] || 0) + 1;
+    return acc;
+  }, {} as Record<MissionStatus, number>);
+
+  // Filtered missions based on active tab and search query
   const filteredMissions = missions.filter(mission => {
+    // Filter by tab (status)
+    if (activeTab !== 'all' && mission.status !== activeTab) {
+      return false;
+    }
+
+    // Filter by search query
     if (!searchQuery) return true;
     
     const searchLower = searchQuery.toLowerCase();
@@ -188,12 +195,6 @@ const MissionsPage = () => {
       </Button>
     </div>
   );
-
-  // Prepare mission counts by status for tabs
-  const missionCountsByStatus = missions.reduce((acc, mission) => {
-    acc[mission.status] = (acc[mission.status] || 0) + 1;
-    return acc;
-  }, {} as Record<MissionStatus, number>);
 
   // Tous les statuts disponibles pour la boîte de dialogue de changement de statut
   const allStatuses: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
@@ -35,35 +36,36 @@ const ClientMissionsPage = () => {
   const [activeTab, setActiveTab] = useState<string>(ALL_TABS_VALUE);
 
   useEffect(() => {
-    const fetchMissions = async () => {
-      if (!user?.id) return;
-      try {
-        setLoading(true);
-        console.log("Fetching missions for client ID:", user.id);
-        const {
-          data: missionsData,
-          error: missionsError
-        } = await typedSupabase.from('missions').select('*').eq('client_id', user.id).order('created_at', {
-          ascending: false
-        });
-        if (missionsError) {
-          console.error('Erreur lors de la récupération des missions:', missionsError);
-          throw missionsError;
-        }
-        console.log("Missions récupérées:", missionsData);
-        const convertedMissions = (missionsData || []).map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
-        setMissions(convertedMissions);
-      } catch (err) {
-        console.error('Error fetching missions:', err);
-        setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMissions();
   }, [user]);
 
-  // Prepare mission counts by status for tabs
+  const fetchMissions = async () => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      console.log("Fetching missions for client ID:", user.id);
+      const {
+        data: missionsData,
+        error: missionsError
+      } = await typedSupabase.from('missions').select('*').eq('client_id', user.id).order('created_at', {
+        ascending: false
+      });
+      if (missionsError) {
+        console.error('Erreur lors de la récupération des missions:', missionsError);
+        throw missionsError;
+      }
+      console.log("Missions récupérées:", missionsData);
+      const convertedMissions = (missionsData || []).map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
+      setMissions(convertedMissions);
+    } catch (err) {
+      console.error('Error fetching missions:', err);
+      setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prepare mission counts by status for tabs - Always calculate based on all missions
   const missionCountsByStatus = missions.reduce((acc, mission) => {
     acc[mission.status] = (acc[mission.status] || 0) + 1;
     return acc;
@@ -116,6 +118,11 @@ const ClientMissionsPage = () => {
     navigate('/mission/create');
   };
   
+  // Function to handle tab change with proper typing
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -139,7 +146,7 @@ const ClientMissionsPage = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="w-full mb-4 flex flex-wrap">
           <TabsTrigger value={ALL_TABS_VALUE} className="flex gap-2">
             Toutes

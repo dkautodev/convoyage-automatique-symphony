@@ -13,7 +13,7 @@ interface MissionDocumentsSectionProps {
 }
 
 // This component has been deprecated and will be removed in a future update.
-// Currently returning null so it doesn't display in the UI.
+// Documents functionality has been moved to MissionAttachments component.
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = () => {
   return null;
 };

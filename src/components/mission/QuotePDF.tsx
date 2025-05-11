@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
 import { formatMissionNumber, formatFullAddress } from '@/utils/missionUtils';
 import { format } from 'date-fns';
@@ -38,17 +38,28 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 5,
+  },
+  validityNote: {
+    fontSize: 9,
+    textAlign: 'center',
+    marginTop: 3,
+    color: '#666',
+  },
+  sectionsContainer: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    justifyContent: 'space-between',
   },
   section: {
-    marginBottom: 15,
-    borderBottom: '1pt solid #eee',
-    paddingBottom: 10,
+    width: '48%',
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 5,
+    borderBottom: '1pt solid #000',
+    paddingBottom: 3,
   },
   row: {
     flexDirection: 'row',
@@ -83,6 +94,9 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     fontSize: 8,
     color: '#666',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   priceTable: {
     marginTop: 30,
@@ -128,11 +142,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 10,
+    height: 50,
   },
   logo: {
-    width: 150,
-    height: 'auto',
+    height: 40,
+    objectFit: 'contain',
   },
 });
 
@@ -161,42 +175,50 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
         <View style={styles.header}>
           <Text style={styles.title}>DEVIS N° : {quoteNumber}</Text>
           <Text style={styles.subtitle}>Date de création : {creationDate}</Text>
+          <Text style={styles.validityNote}>Ce devis est valable 30 jours à compter de sa date d'émission</Text>
         </View>
 
-        {/* Company Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SOCIETE DE CONVOYAGE</Text>
-          <View style={styles.column}>
-            <Text style={styles.companyName}>DK-AUTOMOTIVE</Text>
-            <Text style={styles.address}>
-              {adminProfile?.billing_address?.address || "123 rue du Convoyage"}
-            </Text>
-            <Text style={styles.address}>
-              {adminProfile?.billing_address?.postal_code || "75000"} {adminProfile?.billing_address?.city || "Paris"}
-            </Text>
-            <Text style={styles.address}>SIRET : {adminProfile?.siret || "123 456 789 00000"}</Text>
-            <Text style={styles.address}>N° TVA : {adminProfile?.tva_number || "FR12 123456789"}</Text>
+        {/* Company and Client Information Side by Side */}
+        <View style={styles.sectionsContainer}>
+          {/* Company Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>SOCIETE DE CONVOYAGE</Text>
+            <View style={styles.column}>
+              <Text style={styles.companyName}>DK-AUTOMOTIVE</Text>
+              {adminProfile?.billing_address && (
+                <>
+                  <Text style={styles.address}>{adminProfile.billing_address.street || ""}</Text>
+                  <Text style={styles.address}>
+                    {adminProfile.billing_address.postal_code || ""} {adminProfile.billing_address.city || ""}
+                  </Text>
+                </>
+              )}
+              <Text style={styles.address}>SIRET : {adminProfile?.siret || "123 456 789 00000"}</Text>
+              <Text style={styles.address}>N° TVA : {adminProfile?.tva_number || "FR12 123456789"}</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Client Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>CLIENT</Text>
-          <View style={styles.column}>
-            <Text style={styles.companyName}>{client?.company_name || client?.full_name || "Client"}</Text>
-            <Text style={styles.address}>
-              {client?.billing_address?.address || "Adresse du client"}
-            </Text>
-            <Text style={styles.address}>
-              {client?.billing_address?.postal_code || ""} {client?.billing_address?.city || ""}
-            </Text>
-            <Text style={styles.address}>SIRET : {client?.siret || "Non spécifié"}</Text>
-            <Text style={styles.address}>N° TVA : {client?.tva_number || "Non spécifié"}</Text>
+          {/* Client Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>CLIENT</Text>
+            <View style={styles.column}>
+              <Text style={styles.companyName}>{client?.company_name || client?.full_name || "Client"}</Text>
+              {client?.billing_address && (
+                <>
+                  <Text style={styles.address}>{client.billing_address.street || ""}</Text>
+                  <Text style={styles.address}>
+                    {client.billing_address.postal_code || ""} {client.billing_address.city || ""}
+                  </Text>
+                </>
+              )}
+              <Text style={styles.address}>SIRET : {client?.siret || "Non spécifié"}</Text>
+              <Text style={styles.address}>N° TVA : {client?.tva_number || "Non spécifié"}</Text>
+            </View>
           </View>
         </View>
 
         {/* Service Description */}
-        <View style={styles.section}>
+        <View style={{marginTop: 20}}>
           <Text style={styles.sectionTitle}>PRESTATION</Text>
           <View style={styles.serviceDetails}>
             <Text>CONVOYAGE</Text>
@@ -231,9 +253,12 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
           </View>
         </View>
 
-        {/* Footer */}
+        {/* Footer with logo */}
         <View style={styles.footer}>
-          <Text>Ce devis est valable 30 jours à compter de sa date d'émission</Text>
+          <Image 
+            src="/public/lovable-uploads/964d45a2-0f00-4840-b665-6085581ee181.png" 
+            style={styles.logo} 
+          />
         </View>
       </Page>
     </Document>

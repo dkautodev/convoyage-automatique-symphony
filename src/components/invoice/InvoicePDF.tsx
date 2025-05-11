@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -196,8 +197,8 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
   
   // VIN and registration separated by "/"
   const vehicleVinReg = [
-    mission.vehicle_vin,
-    mission.vehicle_registration
+    mission.vehicle_vin && `VIN: ${mission.vehicle_vin}`,
+    mission.vehicle_registration && `Immatriculation: ${mission.vehicle_registration}`
   ].filter(Boolean).join(' / ');
 
   return (
@@ -269,7 +270,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
               <Text>À: {formatFullAddress(mission.delivery_address)}</Text>
               <Text>Catégorie de véhicule: {mission.vehicle_category || "Non spécifiée"}</Text>
               <Text>Véhicule: {vehicleMakeModel}</Text>
-              {vehicleVinReg && <Text>VIN / Immatriculation: {vehicleVinReg}</Text>}
+              {vehicleVinReg && <Text>{vehicleVinReg}</Text>}
               <Text>Distance: {mission.distance_km.toFixed(2)} km</Text>
             </View>
           </View>

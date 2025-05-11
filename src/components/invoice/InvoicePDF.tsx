@@ -3,7 +3,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
 import { formatMissionNumber, formatFullAddress } from '@/utils/missionUtils';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 // Register fonts
@@ -35,16 +35,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 5,
   },
-  subtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 5,
+  dateSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 4,
   },
-  validityNote: {
-    fontSize: 9,
-    textAlign: 'center',
-    marginTop: 3,
-    color: '#666',
+  dateColumn: {
+    flexDirection: 'column',
+    width: '48%',
+  },
+  dateLabel: {
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  dateValue: {
+    fontSize: 11,
   },
   sectionsContainer: {
     flexDirection: 'row',
@@ -95,6 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: '#666',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -141,12 +150,18 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-    height: 40,
+    marginBottom: 10,
   },
   logo: {
-    height: 30,
+    height: 25,
     objectFit: 'contain',
+  },
+  legalText: {
+    fontSize: 7,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 1.4,
   },
 });
 
@@ -163,10 +178,17 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
   // Calculate VAT amount
   const vatAmount = mission.price_ttc - mission.price_ht;
   
-  // Format date
-  const creationDate = mission.created_at 
-    ? format(new Date(mission.created_at), 'dd MMMM yyyy', { locale: fr })
-    : 'Date inconnue';
+  // Find the mission delivery date (D2_LIV) or use creation date as fallback
+  const emissionDate = mission.D2_LIV 
+    ? new Date(mission.D2_LIV) 
+    : new Date(mission.created_at);
+  
+  // Format emission date
+  const formattedEmissionDate = format(emissionDate, 'dd MMMM yyyy', { locale: fr });
+  
+  // Calculate due date (emission date + 15 days)
+  const dueDate = addDays(emissionDate, 15);
+  const formattedDueDate = format(dueDate, 'dd MMMM yyyy', { locale: fr });
 
   // Format vehicle information
   const vehicleMakeModel = mission.vehicle_make && mission.vehicle_model 
@@ -174,8 +196,8 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
     : "Non spécifié";
   
   const vehicleVinReg = [
-    mission.vehicle_vin ? `VIN: ${mission.vehicle_vin}` : null,
-    mission.vehicle_registration ? `Immatriculation: ${mission.vehicle_registration}` : null
+    mission.vehicle_vin ? `${mission.vehicle_vin}` : null,
+    mission.vehicle_registration ? `${mission.vehicle_registration}` : null
   ].filter(Boolean).join(' / ');
 
   return (
@@ -184,7 +206,18 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>FACTURE N° : {invoiceNumber}</Text>
-          <Text style={styles.subtitle}>Date de création : {creationDate}</Text>
+        </View>
+
+        {/* Date Section */}
+        <View style={styles.dateSection}>
+          <View style={styles.dateColumn}>
+            <Text style={styles.dateLabel}>Date d'émission:</Text>
+            <Text style={styles.dateValue}>{formattedEmissionDate}</Text>
+          </View>
+          <View style={styles.dateColumn}>
+            <Text style={styles.dateLabel}>Date d'échéance (15 jours):</Text>
+            <Text style={styles.dateValue}>{formattedDueDate}</Text>
+          </View>
         </View>
 
         {/* Company and Client Information Side by Side */}
@@ -236,7 +269,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
               <Text>À: {formatFullAddress(mission.delivery_address)}</Text>
               <Text>Catégorie de véhicule: {mission.vehicle_category || "Non spécifiée"}</Text>
               <Text>Véhicule: {vehicleMakeModel}</Text>
-              {vehicleVinReg && <Text>{vehicleVinReg}</Text>}
+              {vehicleVinReg && <Text>VIN / Immatriculation: {vehicleVinReg}</Text>}
               <Text>Distance: {mission.distance_km.toFixed(2)} km</Text>
             </View>
           </View>
@@ -264,14 +297,19 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
           </View>
         </View>
 
-        {/* Footer with logo */}
+        {/* Footer with legal text and logo */}
         <View style={styles.footer}>
           <View style={styles.logoContainer}>
             <Image 
-              src="/public/lovable-uploads/964d45a2-0f00-4840-b665-6085581ee181.png" 
+              src="/public/lovable-uploads/8e0598ee-4531-43f7-b33b-02d30c0f9eca.png" 
               style={styles.logo} 
             />
           </View>
+          <Text style={styles.legalText}>
+            Pas d'escompte accordé pour paiement anticipé.{"\n"}
+            En cas de non-paiement à la date d'échéance, des pénalités calculées à trois fois le taux d'intérêt légal seront appliquées.{"\n"}
+            Tout retard de paiement entraînera une indemnité forfaitaire pour frais de recouvrement de 40€.
+          </Text>
         </View>
       </Page>
     </Document>

@@ -25,6 +25,11 @@ const GenerateQuoteButton: React.FC<GenerateQuoteButtonProps> = ({
   const isDisabled = mission.status === 'annule' || mission.status === 'livre' || mission.status === 'termine';
   const [generating, setGenerating] = useState<boolean>(false);
   
+  // Hide button completely if user is a driver
+  if (profile?.role === 'chauffeur') {
+    return null;
+  }
+  
   const handleGenerateQuote = async () => {
     try {
       setGenerating(true);

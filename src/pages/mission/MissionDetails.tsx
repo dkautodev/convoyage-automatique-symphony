@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -50,6 +51,7 @@ const MissionDetailsPage = () => {
   
   const isAdmin = profile?.role === 'admin';
   const isClient = profile?.role === 'client';
+  const isDriver = profile?.role === 'chauffeur';
   const userRole = profile?.role || 'client';
   
   useEffect(() => {
@@ -177,7 +179,11 @@ const MissionDetailsPage = () => {
   };
   
   const handleBack = () => {
-    const basePath = userRole === 'admin' ? '/admin/missions' : '/client/missions';
+    const basePath = userRole === 'admin' 
+      ? '/admin/missions' 
+      : userRole === 'chauffeur' 
+        ? '/driver/missions' 
+        : '/client/missions';
     navigate(basePath);
   };
 
@@ -263,7 +269,7 @@ const MissionDetailsPage = () => {
       }) 
     : 'Date inconnue';
 
-  // Only show cancel button for clients, not for admin
+  // Only show cancel button for clients, not for admin or drivers
   const showCancelButton = mission.status === 'en_acceptation' && isClient && user?.id === mission.client_id;
 
   return (
@@ -334,7 +340,6 @@ const MissionDetailsPage = () => {
                 mission={mission} 
                 client={client}
               />
-              {/* Only show cancel button for clients */}
               {showCancelButton && (
                 <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
                   <Ban className="h-4 w-4 mr-2" />
@@ -343,18 +348,41 @@ const MissionDetailsPage = () => {
               )}
             </>
           )}
+          
+          {/* Driver buttons */}
+          {isDriver && (
+            <Button 
+              variant="outline" 
+              className="relative"
+              onClick={() => setDocumentsDialogOpen(true)}
+            >
+              <Paperclip className="h-4 w-4" />
+              {documentsCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                  {documentsCount}
+                </span>
+              )}
+              {documentsCount === 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                  0
+                </span>
+              )}
+            </Button>
+          )}
+          
           <Button onClick={handleBack} variant="outline">
             Retour aux missions
           </Button>
         </div>
       </div>
 
-      {/* General Information Section */}
+      {/* General Information Section - Hide pricing info for drivers */}
       <MissionGeneralInfoSection 
         mission={mission} 
-        client={client} 
+        client={isDriver ? undefined : client} 
         driverName={driverName} 
         adminProfile={adminProfile}
+        hideFinancials={isDriver}
       />
       
       {/* Driver Section - Admin and Client versions */}
@@ -371,8 +399,9 @@ const MissionDetailsPage = () => {
       <div id="documents-section">
         <MissionDocumentsSection 
           mission={mission} 
-          client={client}
+          client={isDriver ? undefined : client}
           adminProfile={adminProfile}
+          hideFinancials={isDriver}
         />
       </div>
       

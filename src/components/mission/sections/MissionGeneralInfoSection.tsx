@@ -1,229 +1,125 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatFullAddress, formatAddressDisplay } from '@/utils/missionUtils';
 import { Mission } from '@/types/supabase';
-import { formatFullAddress } from '@/utils/missionUtils';
-import { vehicleCategoryLabels } from '@/types/supabase';
-import { FileText, MapPin, Clock, Truck, Car, Info, Calendar } from 'lucide-react';
-import { GenerateMissionSheetButton } from '../GenerateMissionSheetButton';
-import GenerateQuoteButton from '../GenerateQuoteButton';
+import { Separator } from '@/components/ui/separator';
 
-interface MissionGeneralInfoProps {
+interface MissionGeneralInfoSectionProps {
   mission: Mission;
-  client: any;
-  driverName?: string;
+  client?: any;
+  driverName: string;
   adminProfile?: any;
+  hideFinancials?: boolean;
 }
 
-export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
+export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps> = ({
   mission,
   client,
   driverName,
-  adminProfile
+  adminProfile,
+  hideFinancials = false
 }) => {
-  const clientName = client?.company_name || client?.full_name || 'Client inconnu';
-  const vehicleCategory = mission.vehicle_category ? vehicleCategoryLabels[mission.vehicle_category] : 'Non spécifié';
+  // Format the price as a string with a Euro symbol
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR', { 
+      style: 'currency', 
+      currency: 'EUR'
+    }).format(price);
+  };
 
-  // Format date and time slots
-  const formatDateDisplay = (date: string | null) => {
-    if (!date) return 'Non spécifiée';
-    try {
-      return new Date(date).toLocaleDateString('fr-FR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-    } catch (error) {
-      return date;
-    }
-  };
-  
-  const formatTimeSlot = (time: string | null) => {
-    if (!time) return '';
-    return time;
-  };
-  
   return (
-    <Card className="mb-6">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Informations générales
-        </CardTitle>
-        <div className="flex gap-2">
-          <GenerateQuoteButton 
-            mission={mission} 
-            client={client} 
-            adminProfile={adminProfile}
-          />
-          <GenerateMissionSheetButton mission={mission} driverName={driverName} />
-        </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Informations générales</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Première ligne: Client, Type de mission, Catégorie de véhicule */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Address Information */}
           <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Client</h4>
-            <p className="font-medium">{clientName}</p>
+            <h3 className="font-bold text-lg mb-2">Adresses</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold">Adresse d'enlèvement:</h4>
+                <p className="text-gray-700">{formatFullAddress(mission.pickup_address)}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold">Adresse de livraison:</h4>
+                <p className="text-gray-700">{formatFullAddress(mission.delivery_address)}</p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Type de mission</h4>
-            <p className="font-medium">{mission.mission_type || 'Non spécifié'}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Catégorie de véhicule</h4>
-            <p className="font-medium flex items-center gap-1">
-              {vehicleCategory}
-            </p>
-          </div>
-        </div>
-        
-        {/* Deuxième ligne: Distance, Prix HT, Prix TTC */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 border-t pt-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Distance</h4>
-            <p className="font-medium">{mission.distance_km?.toFixed(2) || '0'} km</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Prix HT</h4>
-            <p className="font-medium">
-              {mission.price_ht?.toLocaleString('fr-FR', {
-              style: 'currency',
-              currency: 'EUR'
-            }) || '0 €'}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Prix TTC</h4>
-            <p className="font-medium">
-              {mission.price_ttc?.toLocaleString('fr-FR', {
-              style: 'currency',
-              currency: 'EUR'
-            }) || '0 €'}
-            </p>
-          </div>
-        </div>
 
-        {/* Addresses */}
-        <div className="mb-6 border-t pt-6">
-          <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Adresses
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Client Information - Only show if client exists and hideFinancials is false */}
+          {client && !hideFinancials && (
             <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de départ</h4>
-              <p className="font-medium">
-                {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'}
-              </p>
+              <h3 className="font-bold text-lg mb-2">Client</h3>
+              <p><span className="font-semibold">Nom:</span> {client.company_name || client.full_name || "Non spécifié"}</p>
+              {client.phone1 && <p><span className="font-semibold">Téléphone:</span> {client.phone1}</p>}
+              {client.email && <p><span className="font-semibold">Email:</span> {client.email}</p>}
+              {client.siret && <p><span className="font-semibold">SIRET:</span> {client.siret}</p>}
+            </div>
+          )}
+
+          {/* Mission Details */}
+          <div className="md:col-span-2">
+            <h3 className="font-bold text-lg mb-2">Détails de la mission</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <p className="font-semibold">Chauffeur assigné:</p>
+                <p className="text-gray-700">{driverName}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Distance:</p>
+                <p className="text-gray-700">{mission.distance_km.toFixed(2)} km</p>
+              </div>
+              <div>
+                <p className="font-semibold">Véhicule:</p>
+                <p className="text-gray-700">
+                  {mission.vehicle_category ? mission.vehicle_category.replace(/_/g, ' ').toLocaleUpperCase() : 'Non spécifié'}
+                </p>
+              </div>
+              {mission.vehicle_make && (
+                <div>
+                  <p className="font-semibold">Marque/Modèle:</p>
+                  <p className="text-gray-700">
+                    {mission.vehicle_make} {mission.vehicle_model || ''}
+                  </p>
+                </div>
+              )}
+              {mission.vehicle_registration && (
+                <div>
+                  <p className="font-semibold">Immatriculation:</p>
+                  <p className="text-gray-700">{mission.vehicle_registration}</p>
+                </div>
+              )}
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Adresse de livraison</h4>
-              <p className="font-medium">
-                {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'}
-              </p>
-            </div>
-          </div>
-          
-          {/* Contact section - aligned in a row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <div>
-              <h5 className="text-sm font-medium text-gray-500 mb-1">Contact départ</h5>
-              {mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email ? 
-                <div>
-                  {mission.contact_pickup_name && <p className="font-medium">{mission.contact_pickup_name}</p>}
-                  {mission.contact_pickup_phone && <p>{mission.contact_pickup_phone}</p>}
-                  {mission.contact_pickup_email && <p>{mission.contact_pickup_email}</p>}
-                </div> : 
-                <p className="text-sm text-gray-500">Aucun contact spécifié</p>
-              }
-            </div>
-            
-            <div>
-              <h5 className="text-sm font-medium text-gray-500 mb-1">Contact livraison</h5>
-              {mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email ? 
-                <div>
-                  {mission.contact_delivery_name && <p className="font-medium">{mission.contact_delivery_name}</p>}
-                  {mission.contact_delivery_phone && <p>{mission.contact_delivery_phone}</p>}
-                  {mission.contact_delivery_email && <p>{mission.contact_delivery_email}</p>}
-                </div> : 
-                <p className="text-sm text-gray-500">Aucun contact spécifié</p>
-              }
-            </div>
+            {/* Only display financial info if not hidden */}
+            {!hideFinancials && (
+              <>
+                <Separator className="my-4" />
+                <div className="mt-4">
+                  <h3 className="font-bold text-lg mb-2">Informations financières</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="font-semibold">Prix HT:</p>
+                      <p className="text-gray-700">{formatPrice(mission.price_ht)}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Taux TVA:</p>
+                      <p className="text-gray-700">{mission.vat_rate || 20}%</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Prix TTC:</p>
+                      <p className="text-gray-700 font-bold">{formatPrice(mission.price_ttc)}</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-
-        {/* Vehicle information */}
-        <div className="mb-6 border-t pt-6">
-          <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-            <Car className="h-5 w-5" />
-            Informations véhicule
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {mission.vehicle_make && <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Marque</h4>
-                <p className="font-medium">{mission.vehicle_make}</p>
-              </div>}
-            {mission.vehicle_model && <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Modèle</h4>
-                <p className="font-medium">{mission.vehicle_model}</p>
-              </div>}
-            {mission.vehicle_year && <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Année</h4>
-                <p className="font-medium">{mission.vehicle_year}</p>
-              </div>}
-            {mission.vehicle_fuel && <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Carburant</h4>
-                <p className="font-medium">{mission.vehicle_fuel}</p>
-              </div>}
-            {mission.vehicle_registration && <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">Immatriculation</h4>
-                <p className="font-medium">{mission.vehicle_registration}</p>
-              </div>}
-            {mission.vehicle_vin && <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-1">VIN</h4>
-                <p className="font-medium">{mission.vehicle_vin}</p>
-              </div>}
-            {!mission.vehicle_make && !mission.vehicle_model && !mission.vehicle_year && !mission.vehicle_fuel && !mission.vehicle_registration && !mission.vehicle_vin && <div className="col-span-3">
-                <p className="text-gray-500 text-center">Aucune information véhicule spécifiée</p>
-              </div>}
-          </div>
-        </div>
-
-        {/* Time slots */}
-        <div className="mb-6 border-t pt-6">
-          <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Dates et créneaux
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Date départ</h4>
-              <p className="font-medium">
-                {mission.D1_PEC ? formatDateDisplay(mission.D1_PEC) : 'Non spécifiée'}
-                {mission.H1_PEC && mission.H2_PEC ? ` entre ${formatTimeSlot(mission.H1_PEC)} et ${formatTimeSlot(mission.H2_PEC)}` : mission.H1_PEC ? ` à partir de ${formatTimeSlot(mission.H1_PEC)}` : ''}
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Date livraison</h4>
-              <p className="font-medium">
-                {mission.D2_LIV ? formatDateDisplay(mission.D2_LIV) : 'Non spécifiée'}
-                {mission.H1_LIV && mission.H2_LIV ? ` entre ${formatTimeSlot(mission.H1_LIV)} et ${formatTimeSlot(mission.H2_LIV)}` : mission.H1_LIV ? ` à partir de ${formatTimeSlot(mission.H1_LIV)}` : ''}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Notes */}
-        {mission.notes && <div className="border-t pt-6">
-            <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
-              <Info className="h-5 w-5" />
-              Notes complémentaires
-            </h3>
-            <div className="bg-gray-50 p-4 rounded-md">
-              <p className="whitespace-pre-wrap">{mission.notes}</p>
-            </div>
-          </div>}
       </CardContent>
     </Card>
   );

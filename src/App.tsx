@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -10,6 +11,7 @@ import DriverDashboard from './pages/dashboard/DriverDashboard';
 import PricingGridPage from './pages/dashboard/admin/PricingGrid';
 import MissionsPage from './pages/dashboard/admin/Missions';
 import ClientMissionsPage from './pages/dashboard/client/Missions';
+import DriverMissionsPage from './pages/dashboard/driver/Missions';
 import MissionDetailsPage from './pages/mission/MissionDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -156,6 +158,13 @@ function App() {
           <ProtectedRoute roles={['chauffeur']}>
             <DashboardLayout>
               <DriverDashboard />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/driver/missions" element={
+          <ProtectedRoute roles={['chauffeur']}>
+            <DashboardLayout>
+              <DriverMissionsPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

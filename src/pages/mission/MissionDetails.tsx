@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -6,7 +7,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit, Ban, Paperclip } from 'lucide-react';
+import { Package, History, Edit, Paperclip } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { 
   AlertDialog,
@@ -28,6 +29,7 @@ import { MissionDocumentsSection } from '@/components/mission/sections/MissionDo
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
+import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,11 +39,9 @@ const MissionDetailsPage = () => {
   const [client, setClient] = useState<any>(null);
   const [adminProfile, setAdminProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(false);
   const [statusHistory, setStatusHistory] = useState<any[]>([]);
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [documentsCount, setDocumentsCount] = useState(0);
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   const [driverName, setDriverName] = useState<string>('Non assigné');
@@ -94,7 +94,7 @@ const MissionDetailsPage = () => {
         .single();
       
       if (missionError) {
-        console.error('Erreur lors de la r��cupération de la mission:', missionError);
+        console.error('Erreur lors de la récupération de la mission:', missionError);
         toast.error('Impossible de charger les détails de la mission');
         return;
       }
@@ -192,46 +192,6 @@ const MissionDetailsPage = () => {
     setHistoryDrawerOpen(true);
   };
 
-  // Fonction pour ouvrir la boîte de dialogue de confirmation
-  const openCancelDialog = () => {
-    if (!mission || mission.status !== 'en_acceptation') {
-      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
-      return;
-    }
-    setCancelDialogOpen(true);
-  };
-
-  // Fonction pour annuler le devis après confirmation
-  const handleCancelQuote = async () => {
-    if (cancelling || !mission) return;
-    if (mission.status !== 'en_acceptation') {
-      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
-      return;
-    }
-
-    try {
-      setCancelling(true);
-      const { error } = await typedSupabase
-        .from('missions')
-        .update({ status: 'annule' })
-        .eq('id', mission.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success('Le devis a été annulé avec succès');
-      fetchMission();
-      if (id) fetchStatusHistory(id);
-      setCancelDialogOpen(false);
-    } catch (error: any) {
-      console.error('Erreur lors de l\'annulation du devis:', error);
-      toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);
-    } finally {
-      setCancelling(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -265,9 +225,6 @@ const MissionDetailsPage = () => {
         minute: '2-digit'
       }) 
     : 'Date inconnue';
-
-  // Only show cancel button for clients, not for admin or drivers
-  const showCancelButton = mission.status === 'en_acceptation' && isClient && user?.id === mission.client_id;
 
   return (
     <div className="space-y-6 overflow-y-auto pb-8">
@@ -314,7 +271,7 @@ const MissionDetailsPage = () => {
             </>
           )}
           
-          {/* Client buttons - Removed GenerateQuoteButton */}
+          {/* Client buttons */}
           {isClient && (
             <>
               <Button 
@@ -334,12 +291,6 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
-              {showCancelButton && (
-                <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
-                  <Ban className="h-4 w-4 mr-2" />
-                  {cancelling ? 'Annulation...' : 'Annuler le devis'}
-                </Button>
-              )}
             </>
           )}
           
@@ -379,6 +330,7 @@ const MissionDetailsPage = () => {
         driverName={driverName} 
         adminProfile={adminProfile}
         hideFinancials={isDriver}
+        refetchMission={fetchMission}
       />
       
       {/* Driver Section - Admin and Client versions */}
@@ -427,29 +379,6 @@ const MissionDetailsPage = () => {
           onDocumentsUpdated={() => fetchDocumentsCount(mission.id)}
         />
       )}
-
-      {/* Boîte de dialogue de confirmation pour l'annulation */}
-      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Annuler le devis</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Une fois le devis annulé, il ne pourra plus être modifié.
-              Voulez-vous vraiment annuler ce devis ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleCancelQuote} 
-              className="bg-red-600 hover:bg-red-700 text-white"
-              disabled={cancelling}
-            >
-              {cancelling ? 'Annulation en cours...' : 'Confirmer l\'annulation'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

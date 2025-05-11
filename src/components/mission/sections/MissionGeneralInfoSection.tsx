@@ -1,11 +1,26 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatFullAddress, formatAddressDisplay } from '@/utils/missionUtils';
 import { Mission } from '@/types/supabase';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, Clock, Truck, Info, FileText } from 'lucide-react';
+import { MapPin, Calendar, Clock, Truck, Info, FileText, Ban } from 'lucide-react';
 import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
+import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/auth';
+import { typedSupabase } from '@/types/database';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 interface MissionGeneralInfoSectionProps {
   mission: Mission;
@@ -13,6 +28,7 @@ interface MissionGeneralInfoSectionProps {
   driverName: string;
   adminProfile?: any;
   hideFinancials?: boolean;
+  refetchMission?: () => void;
 }
 
 export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps> = ({
@@ -20,8 +36,17 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
   client,
   driverName,
   adminProfile,
-  hideFinancials = false
+  hideFinancials = false,
+  refetchMission
 }) => {
+  const { user, profile } = useAuth();
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const isClient = profile?.role === 'client';
+  const isAdmin = profile?.role === 'admin';
+  const showCancelButton = mission.status === 'en_acceptation' && isClient && user?.id === mission.client_id;
+
   // Format the price as a string with a Euro symbol
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR', { 
@@ -60,15 +85,68 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
     }
   };
   
+  // Fonction pour ouvrir la boîte de dialogue de confirmation
+  const openCancelDialog = () => {
+    if (!mission || mission.status !== 'en_acceptation') {
+      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
+      return;
+    }
+    setCancelDialogOpen(true);
+  };
+
+  // Fonction pour annuler le devis après confirmation
+  const handleCancelQuote = async () => {
+    if (cancelling || !mission) return;
+    if (mission.status !== 'en_acceptation') {
+      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ status: 'annule' })
+        .eq('id', mission.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success('Le devis a été annulé avec succès');
+      if (refetchMission) {
+        refetchMission();
+      }
+      setCancelDialogOpen(false);
+    } catch (error: any) {
+      console.error('Erreur lors de l\'annulation du devis:', error);
+      toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);
+    } finally {
+      setCancelling(false);
+    }
+  };
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Informations générales</CardTitle>
-        {hideFinancials && (
-          <div>
-            <GenerateMissionSheetButton mission={mission} driverName={driverName} />
-          </div>
-        )}
+        <div className="flex gap-2">
+          {/* Bouton de génération de fiche mission - pour tous les utilisateurs */}
+          <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+          
+          {/* Bouton de génération de devis - pour admin et clients seulement */}
+          {!hideFinancials && (isAdmin || isClient) && (
+            <GenerateQuoteButton mission={mission} client={client} adminProfile={adminProfile} />
+          )}
+          
+          {/* Bouton d'annulation de devis - seulement pour les clients et pour les missions en acceptation */}
+          {showCancelButton && (
+            <Button onClick={openCancelDialog} disabled={cancelling} variant="destructive">
+              <Ban className="h-4 w-4 mr-2" />
+              {cancelling ? 'Annulation...' : 'Annuler le devis'}
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Information blocks at the top in a grid */}
@@ -253,6 +331,29 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
           </div>
         )}
       </CardContent>
+
+      {/* Boîte de dialogue de confirmation pour l'annulation */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler le devis</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Une fois le devis annulé, il ne pourra plus être modifié.
+              Voulez-vous vraiment annuler ce devis ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCancelQuote} 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={cancelling}
+            >
+              {cancelling ? 'Annulation en cours...' : 'Confirmer l\'annulation'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

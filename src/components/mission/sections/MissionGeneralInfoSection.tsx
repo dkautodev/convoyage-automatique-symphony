@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mission } from '@/types/supabase';
@@ -6,17 +5,20 @@ import { formatFullAddress } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
 import { FileText, MapPin, Clock, Truck, Car, Info, Calendar } from 'lucide-react';
 import { GenerateMissionSheetButton } from '../GenerateMissionSheetButton';
+import GenerateQuoteButton from '../GenerateQuoteButton';
 
 interface MissionGeneralInfoProps {
   mission: Mission;
   client: any;
   driverName?: string;
+  adminProfile?: any;
 }
 
 export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
   mission,
   client,
-  driverName
+  driverName,
+  adminProfile
 }) => {
   const clientName = client?.company_name || client?.full_name || 'Client inconnu';
   const vehicleCategory = mission.vehicle_category ? vehicleCategoryLabels[mission.vehicle_category] : 'Non spécifié';
@@ -47,7 +49,14 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoProps> = ({
           <FileText className="h-5 w-5" />
           Informations générales
         </CardTitle>
-        <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+        <div className="flex gap-2">
+          <GenerateQuoteButton 
+            mission={mission} 
+            client={client} 
+            adminProfile={adminProfile}
+          />
+          <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+        </div>
       </CardHeader>
       <CardContent>
         {/* Première ligne: Client, Type de mission, Catégorie de véhicule */}

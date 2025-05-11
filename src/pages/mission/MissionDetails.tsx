@@ -353,8 +353,13 @@ const MissionDetailsPage = () => {
         </div>
       </div>
 
-      {/* General Information Section - Pass driverName */}
-      <MissionGeneralInfoSection mission={mission} client={client} driverName={driverName} />
+      {/* General Information Section - Now has the quote button */}
+      <MissionGeneralInfoSection 
+        mission={mission} 
+        client={client} 
+        driverName={driverName} 
+        adminProfile={adminProfile}
+      />
       
       {/* Driver Section - Admin and Client versions */}
       {isAdmin ? (

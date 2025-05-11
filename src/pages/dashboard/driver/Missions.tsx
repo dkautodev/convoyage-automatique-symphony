@@ -53,7 +53,10 @@ const DriverMissionsPage = () => {
       
       const { data: missionsData, error: missionsError } = await query;
       
-      if (missionsError) throw missionsError;
+      if (missionsError) {
+        console.error('Error fetching missions:', missionsError);
+        throw missionsError;
+      }
       
       // Convert the data from DB to missions UI
       const convertedMissions = (missionsData || []).map(mission => 
@@ -64,6 +67,11 @@ const DriverMissionsPage = () => {
       console.log('Fetched missions:', convertedMissions);
     } catch (error) {
       console.error('Error fetching driver missions:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer vos missions",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -111,7 +119,7 @@ const DriverMissionsPage = () => {
     { id: 'annule', label: 'Annulées', color: 'bg-red-600 text-white' },
   ];
 
-  // Update mission status
+  // Update mission status with improved error handling
   const updateMissionStatus = async (newStatus: MissionStatus) => {
     if (!selectedMission || isUpdatingStatus) return;
     
@@ -121,16 +129,18 @@ const DriverMissionsPage = () => {
       console.log('Updating mission status:', selectedMission.id, 'from', selectedMission.status, 'to', newStatus);
       
       // Update the status in the database
-      const { error } = await typedSupabase
+      const { data, error } = await typedSupabase
         .from('missions')
         .update({ status: newStatus })
-        .eq('id', selectedMission.id);
+        .eq('id', selectedMission.id)
+        .select();
       
       if (error) {
         console.error('Error from Supabase:', error);
         throw error;
       }
       
+      console.log('Status update response:', data);
       console.log('Status updated successfully');
       
       // Update the local state

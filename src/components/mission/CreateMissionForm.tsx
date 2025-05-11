@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText, File } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -455,7 +456,9 @@ export default function CreateMissionForm({
     if (contact.phone) form.setValue('contact_delivery_phone', contact.phone);
     toast.success(`Contact de livraison sélectionné: ${contact.name_s || 'Sans nom'}`);
   };
-  return <Card className="w-full max-w-4xl mx-auto">
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Créer une nouvelle mission</CardTitle>
         <CardDescription>
@@ -713,4 +716,244 @@ export default function CreateMissionForm({
                         </FormItem>} />
 
                     {/* Créneau horaire de ramassage */}
-                    <
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium">Créneau de ramassage</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField control={form.control} name="D1_PEC" render={({
+                      field
+                    }) => <FormItem className="flex flex-col">
+                              <FormLabel>Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button variant={"outline"} className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}>
+                                      {field.value ? (
+                                        format(field.value, "dd/MM/yyyy")
+                                      ) : (
+                                        <span>Choisir une date</span>
+                                      )}
+                                      <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>} />
+                        <FormField control={form.control} name="H1_PEC" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Heure début</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="time" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                        <FormField control={form.control} name="H2_PEC" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Heure fin</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="time" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Contact au lieu de livraison et créneau horaire */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
+                      <ContactSelector 
+                        onSelectContact={handleDeliveryContactSelect} 
+                        clientId={selectedClientId || undefined} 
+                      />
+                    </div>
+                    
+                    <FormField control={form.control} name="contact_delivery_name" render={({
+                  field
+                }) => <FormItem>
+                          <FormLabel>Nom / Société *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nom complet ou société" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+                    <FormField control={form.control} name="contact_delivery_phone" render={({
+                  field
+                }) => <FormItem>
+                          <FormLabel>Téléphone *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Numéro de téléphone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+                    <FormField control={form.control} name="contact_delivery_email" render={({
+                  field
+                }) => <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="Adresse email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+
+                    {/* Créneau horaire de livraison */}
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium">Créneau de livraison</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField control={form.control} name="D2_LIV" render={({
+                      field
+                    }) => <FormItem className="flex flex-col">
+                              <FormLabel>Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button variant={"outline"} className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}>
+                                      {field.value ? (
+                                        format(field.value, "dd/MM/yyyy")
+                                      ) : (
+                                        <span>Choisir une date</span>
+                                      )}
+                                      <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>} />
+                        <FormField control={form.control} name="H1_LIV" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Heure début</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="time" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                        <FormField control={form.control} name="H2_LIV" render={({
+                      field
+                    }) => <FormItem>
+                              <FormLabel>Heure fin</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="time" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <FormField control={form.control} name="notes" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel>Notes / Instructions spéciales</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} placeholder="Informations supplémentaires, codes d'accès, instructions particulières..." className="h-32" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+              </div>}
+
+            {/* Étape 5: Attribution (Admin seulement) */}
+            {currentStep === 5 && profile?.role === 'admin' && <div className="space-y-6">
+                <FormField control={form.control} name="client_id" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel>Client</FormLabel>
+                      <Select onValueChange={handleClientChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un client" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="no_client_selected" disabled>Sélectionner un client</SelectItem>
+                          {loadingClients ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : clientProfiles.map((client: ProfileOption) => <SelectItem key={client.id} value={client.id}>{client.full_name || client.email || client.id}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="chauffeur_id" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel>Chauffeur</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un chauffeur (optionnel)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
+                          {loadingDrivers ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : driverProfiles.map((driver: ProfileOption) => <SelectItem key={driver.id} value={driver.id}>{driver.full_name || driver.email || driver.id}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Vous pouvez assigner un chauffeur maintenant ou plus tard
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="chauffeur_price_ht" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel>Prix chauffeur HT (€)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" step="0.01" placeholder="0.00" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                      </FormControl>
+                      <FormDescription>
+                        Prix payé au chauffeur pour cette mission (hors taxes)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>} />
+
+                <FormField control={form.control} name="status" render={({
+              field
+            }) => <FormItem>
+                      <FormLabel>Statut initial</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="en_acceptation">En acceptation</SelectItem>
+                          <SelectItem value="accepte">Accepté</SelectItem>
+                          <SelectItem value="prise_en_charge">Prise en charge</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>} />
+              </div>}
+
+            {/* Boutons de navigation */}
+            <div className="flex justify-between pt-6">
+              <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
+              </Button>
+
+              {currentStep < totalSteps ? <Button type="button" onClick={nextStep}>
+                  Suivant <ArrowRight className="ml-2 h-4 w-4" />
+                </Button> : <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                  Créer la mission
+                </Button>}
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}

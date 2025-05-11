@@ -232,7 +232,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
         <View style={{marginTop: 20}}>
           <Text style={styles.sectionTitle}>PRESTATION</Text>
           <View style={styles.serviceDetails}>
-            <Text>CONVOYAGE</Text>
+            <Text>CONVOYAGE (quantité : 1)</Text>
             <View style={styles.missionDetails}>
               <Text>De: {formatFullAddress(mission.pickup_address)}</Text>
               <Text>À: {formatFullAddress(mission.delivery_address)}</Text>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderBottom: '1pt solid #000',
     paddingBottom: 3,
-    textDecoration: 'underline',
+    // Removed textDecoration: 'underline'
   },
   row: {
     flexDirection: 'row',
@@ -142,10 +143,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    height: 50,
+    height: 40, // Reduced from 50 to 40
   },
   logo: {
-    height: 40,
+    height: 30, // Reduced from 40 to 30
     objectFit: 'contain',
   },
 });

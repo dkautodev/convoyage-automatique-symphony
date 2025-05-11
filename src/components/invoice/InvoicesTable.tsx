@@ -9,6 +9,7 @@ import { formatMissionNumber, formatClientName } from '@/utils/missionUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
+import { Check, X } from 'lucide-react';
 
 interface InvoicesTableProps {
   missions: Mission[];
@@ -118,6 +119,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
             {userRole === 'admin' && <TableHead>Client</TableHead>}
             <TableHead>Statut</TableHead>
             <TableHead className="text-right">Montant (TTC)</TableHead>
+            <TableHead className="text-center">Facture</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -135,14 +137,20 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               <TableCell className="text-right font-medium">
                 {formatPrice(mission.price_ttc)}
               </TableCell>
+              <TableCell className="text-center">
+                {userRole === 'admin' && (
+                  <GenerateInvoiceButton mission={mission} client={clientsData[mission.client_id]} />
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 {userRole === 'admin' ? (
                   <Button 
                     variant={mission.status === 'livre' ? 'default' : 'outline'} 
-                    size="sm"
+                    size="icon"
                     onClick={() => handleStatusButtonClick(mission)}
+                    title={mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}
                   >
-                    {mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}
+                    {mission.status === 'livre' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" asChild>

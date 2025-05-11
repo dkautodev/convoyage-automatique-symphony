@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Search } from 'lucide-react';
 import InvoicesTable from '@/components/invoice/InvoicesTable';
+import GenerateInvoiceButton from '@/components/invoice/GenerateInvoiceButton';
 
 const AdminInvoicesPage = () => {
   const { profile } = useAuth();

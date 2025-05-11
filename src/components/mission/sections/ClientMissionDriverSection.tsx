@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mission } from '@/types/supabase';
 import { User } from 'lucide-react';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useAuth } from '@/hooks/auth';
 
 interface ClientMissionDriverSectionProps {
   mission: Mission;
@@ -13,6 +14,10 @@ export const ClientMissionDriverSection: React.FC<ClientMissionDriverSectionProp
   mission
 }) => {
   const { profiles: driverProfiles, loading } = useProfiles('chauffeur');
+  const { profile } = useAuth();
+  
+  // Check if the current user is a driver
+  const isDriver = profile?.role === 'chauffeur';
   
   // Find the current driver
   const currentDriver = driverProfiles.find(driver => driver.id === mission.chauffeur_id);

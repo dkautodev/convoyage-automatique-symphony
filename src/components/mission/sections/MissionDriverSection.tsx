@@ -9,6 +9,7 @@ import { Mission } from '@/types/supabase';
 import { typedSupabase } from '@/types/database';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import { User, DollarSign } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
 
 interface MissionDriverSectionProps {
   mission: Mission;
@@ -23,6 +24,10 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
   const [selectedDriverId, setSelectedDriverId] = useState(mission.chauffeur_id || '');
   const [driverPrice, setDriverPrice] = useState(mission.chauffeur_price_ht?.toString() || '0');
   const [updating, setUpdating] = useState(false);
+  const { profile } = useAuth();
+  
+  // Check if the current user is a driver
+  const isDriver = profile?.role === 'chauffeur';
 
   // S'assurer que le prix du chauffeur est correctement initialisé
   useEffect(() => {
@@ -80,10 +85,12 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
               <h4 className="text-sm font-medium text-gray-500 mb-1">Chauffeur actuellement assigné</h4>
               <p className="font-medium">{currentDriverName}</p>
             </div>
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-1">Prix chauffeur actuel (HT)</h4>
-              <p className="font-medium">{mission.chauffeur_price_ht ? `${mission.chauffeur_price_ht.toFixed(2)} €` : '0.00 €'}</p>
-            </div>
+            {!isDriver && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500 mb-1">Prix chauffeur actuel (HT)</h4>
+                <p className="font-medium">{mission.chauffeur_price_ht ? `${mission.chauffeur_price_ht.toFixed(2)} €` : '0.00 €'}</p>
+              </div>
+            )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -112,24 +119,26 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
               </Select>
             </div>
             
-            <div>
-              <label className="text-sm font-medium block mb-2">
-                <div className="flex items-center gap-1">
-                  <DollarSign className="h-4 w-4" />
-                  Prix chauffeur (HT)
+            {!isDriver && (
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    Prix chauffeur (HT)
+                  </div>
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={driverPrice}
+                    onChange={(e) => setDriverPrice(e.target.value)}
+                    placeholder="0.00"
+                    disabled={updating}
+                  />
+                  <span className="flex items-center">€</span>
                 </div>
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  value={driverPrice}
-                  onChange={(e) => setDriverPrice(e.target.value)}
-                  placeholder="0.00"
-                  disabled={updating}
-                />
-                <span className="flex items-center">€</span>
               </div>
-            </div>
+            )}
           </div>
           
           <Button 

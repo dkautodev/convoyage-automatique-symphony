@@ -8,7 +8,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 // Import dashboard page components 
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
 import ClientDashboard from '@/pages/dashboard/client/ClientDashboard';
-import DriverDashboard from '@/components/dashboard/driver/DriverDashboard';
+import DriverDashboard from '@/pages/dashboard/driver/DriverDashboard';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -53,13 +53,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     console.log(`DashboardLayout: Path = ${path}, Role = ${role}`);
     
     // Check for both specific client path and generic dashboard path
-    if (path.includes('/client/dashboard') || (path.endsWith('/dashboard') && role === 'client')) {
+    if (path.includes('/client/dashboard') || (path === '/dashboard' && role === 'client')) {
       console.log("DashboardLayout: Rendering ClientDashboard");
       return <ClientDashboard />;
     }
     
     // Handle other role-specific dashboards
-    if (path.endsWith('/dashboard')) {
+    if (path === '/dashboard' || path === '/driver/dashboard') {
       switch (role) {
         case 'admin':
           console.log("DashboardLayout: Rendering AdminDashboard");
@@ -73,7 +73,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       }
     }
     
-    // For other paths, use the children prop instead of Outlet
+    // For other paths, use the children prop or Outlet
     console.log("DashboardLayout: Rendering children or Outlet");
     return children || <Outlet />;
   };

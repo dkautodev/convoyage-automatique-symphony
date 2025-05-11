@@ -139,7 +139,10 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               </TableCell>
               <TableCell className="text-center">
                 {userRole === 'admin' && (
-                  <GenerateInvoiceButton mission={mission} client={clientsData[mission.client_id]} />
+                  <GenerateInvoiceButton 
+                    mission={mission} 
+                    client={clientsData[mission.client_id]} 
+                  />
                 )}
               </TableCell>
               <TableCell className="text-right">

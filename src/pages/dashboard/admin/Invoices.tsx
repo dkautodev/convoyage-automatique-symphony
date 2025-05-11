@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Search } from 'lucide-react';
 import InvoicesTable from '@/components/invoice/InvoicesTable';
-import GenerateInvoiceButton from '@/components/invoice/GenerateInvoiceButton';
+import { fetchClientById } from '@/utils/clientUtils';
 
 const AdminInvoicesPage = () => {
   const { profile } = useAuth();
@@ -46,22 +46,31 @@ const AdminInvoicesPage = () => {
     fetchMissions();
   }, []);
 
-  // Fetch client data
+  // Fetch client data with more details including billing_address
   useEffect(() => {
     const fetchClients = async () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, company_name, full_name')
+          .select('*')
           .eq('role', 'client');
 
         if (error) throw error;
 
-        // Create a map of client ID to name for easy lookup
+        // Create a map of client ID to complete client data
         const clientMap: Record<string, any> = {};
         data?.forEach(client => {
           clientMap[client.id] = {
-            name: client.company_name || client.full_name || 'Client inconnu'
+            id: client.id,
+            name: client.company_name || client.full_name || 'Client inconnu',
+            company_name: client.company_name,
+            full_name: client.full_name,
+            email: client.email,
+            siret: client.siret,
+            tva_number: client.tva_number,
+            billing_address: client.billing_address,
+            phone_1: client.phone_1,
+            phone_2: client.phone_2
           };
         });
 

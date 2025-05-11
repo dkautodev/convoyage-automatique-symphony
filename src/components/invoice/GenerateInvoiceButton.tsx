@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { Mission } from '@/types/supabase';
@@ -8,6 +8,7 @@ import { formatMissionNumber } from '@/utils/missionUtils';
 import { toast } from 'sonner';
 import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from './InvoicePDF';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GenerateInvoiceButtonProps {
   mission: Mission;
@@ -20,6 +21,33 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
 }) => {
   const { profile } = useAuth();
   const [generating, setGenerating] = useState<boolean>(false);
+  const [clientData, setClientData] = useState<any>(client);
+  
+  // Fetch client data if not provided or incomplete
+  useEffect(() => {
+    const fetchClientData = async () => {
+      if (!client || !client.billing_address) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', mission.client_id)
+            .single();
+            
+          if (error) throw error;
+          if (data) {
+            setClientData(data);
+          }
+        } catch (err) {
+          console.error('Error fetching client data:', err);
+        }
+      }
+    };
+    
+    if (mission.client_id) {
+      fetchClientData();
+    }
+  }, [mission.client_id, client]);
   
   const handleGenerateInvoice = async () => {
     try {
@@ -32,7 +60,7 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
       const blob = await pdf(
         <InvoicePDF 
           mission={mission} 
-          client={client} 
+          client={clientData} 
           adminProfile={profile}
         />
       ).toBlob();

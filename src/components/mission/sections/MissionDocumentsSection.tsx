@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +11,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import FileUpload from '@/components/mission/FileUpload';
 import { useAuth } from '@/hooks/auth';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
+
 interface MissionDocumentsSectionProps {
   mission: Mission;
   client?: any;
   adminProfile?: any;
 }
+
 export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = ({
   mission,
   client,
@@ -34,6 +37,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       fetchDocumentCount();
     }
   }, [mission.id]);
+  
   const fetchDocumentCount = async () => {
     try {
       const {
@@ -64,5 +68,55 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       description: "Les documents ont été attachés à la mission."
     });
   };
-  return;
+
+  // Return the JSX for the component
+  return (
+    <Card id="documents-section">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <PaperclipIcon className="h-5 w-5" />
+          Documents
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={() => setShowUploadDialog(true)}
+              >
+                <Upload className="h-4 w-4" />
+                Ajouter des documents
+              </Button>
+            )}
+          </div>
+          
+          <MissionAttachments 
+            missionId={mission.id} 
+            showTitle={false} 
+            className="mt-4" 
+            key={attachmentsKey}
+            onCountChanged={(count) => setDocumentCount(count)} 
+          />
+        </div>
+      </CardContent>
+      
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajouter des documents</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <FileUpload 
+              missionId={mission.id} 
+              onUploaded={handleDocumentUploaded}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
 };

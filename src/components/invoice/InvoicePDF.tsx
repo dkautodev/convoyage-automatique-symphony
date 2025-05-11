@@ -190,15 +190,15 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
   const dueDate = addDays(emissionDate, 15);
   const formattedDueDate = format(dueDate, 'dd MMMM yyyy', { locale: fr });
 
-  // Format vehicle information in the requested format
+  // Format vehicle information in the requested format - EXACTLY like in QuotePDF
   const vehicleMakeModel = mission.vehicle_make && mission.vehicle_model 
     ? `${mission.vehicle_make} ${mission.vehicle_model}` 
     : "Non spécifié";
   
-  // VIN and registration separated by "/"
+  // VIN and registration separated by "/" - EXACTLY like in QuotePDF
   const vehicleVinReg = [
-    mission.vehicle_vin && `VIN: ${mission.vehicle_vin}`,
-    mission.vehicle_registration && `Immatriculation: ${mission.vehicle_registration}`
+    mission.vehicle_vin ? `VIN: ${mission.vehicle_vin}` : null,
+    mission.vehicle_registration ? `Immatriculation: ${mission.vehicle_registration}` : null
   ].filter(Boolean).join(' / ');
 
   return (

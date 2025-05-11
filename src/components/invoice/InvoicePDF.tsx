@@ -208,8 +208,8 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
           <Text style={styles.title}>FACTURE N° : {invoiceNumber}</Text>
         </View>
 
-        {/* Date Section - Redesigned to be on a single line */}
-        <View style={styles.dateSection}>
+        {/* Date Section - Redesigned to be on a single line and aligned with below sections */}
+        <View style={[styles.dateSection, { marginBottom: 15 }]}>
           <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Date d'émission:</Text>
             <Text style={styles.dateValue}>{formattedEmissionDate}</Text>
@@ -317,4 +317,3 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
 };
 
 export default InvoicePDF;
-

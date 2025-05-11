@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Truck, CheckCircle, CreditCard, CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DriverDashboard = () => {
   const { user, profile } = useAuth();
+  const isMobile = useIsMobile();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -122,18 +124,18 @@ const DriverDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-driver">Tableau de bord chauffeur</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-driver">Tableau de bord chauffeur</h2>
         <Button variant="outline" asChild>
           <Link to="/driver/schedule">
             <CalendarDays size={16} className="mr-2" />
-            Voir le planning
+            <span className="whitespace-nowrap">Voir le planning</span>
           </Link>
         </Button>
       </div>
       
       {/* Cartes statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Missions Assignées</CardTitle>
@@ -201,7 +203,7 @@ const DriverDashboard = () => {
       
       {/* Missions assignées */}
       <Card className="bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle>Vos Missions</CardTitle>
             <CardDescription>Les missions qui vous sont assignées</CardDescription>
@@ -216,26 +218,26 @@ const DriverDashboard = () => {
           <div className="space-y-4">
             {missions.length > 0 ? (
               missions.map((mission) => (
-                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
+                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
                       <Badge className={missionStatusColors[mission.status]}>
                         {missionStatusLabels[mission.status]}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 break-words">
                       {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500">
                       Prévue le {new Date(mission.scheduled_date || '').toLocaleDateString('fr-FR')}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {(mission.status === 'prise_en_charge' || mission.status === 'livraison') && (
                       <Button variant="default" size="sm" asChild>
                         <Link to={`/driver/missions/${mission.id}/update`}>
-                          Mettre à jour
+                          {isMobile ? "Mettre à jour" : "Mettre à jour"}
                         </Link>
                       </Button>
                     )}

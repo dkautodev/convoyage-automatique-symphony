@@ -8,10 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const isMobile = useIsMobile();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -149,16 +151,16 @@ const ClientDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-client">Tableau de bord client</h2>
         <Button onClick={handleCreateNewMission}>
           <Plus size={16} className="mr-2" />
-          Nouvelle mission
+          <span className="whitespace-nowrap">Nouvelle mission</span>
         </Button>
       </div>
       
       {/* Cartes statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Missions Actives</CardTitle>
@@ -226,7 +228,7 @@ const ClientDashboard = () => {
       
       {/* Missions récentes */}
       <Card className="bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle>Vos Missions</CardTitle>
             <CardDescription>Suivez l'état de vos missions récentes</CardDescription>
@@ -241,24 +243,24 @@ const ClientDashboard = () => {
           <div className="space-y-4">
             {missions.length > 0 ? (
               missions.map((mission) => (
-                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
+                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
                       <Badge className={missionStatusColors[mission.status]}>
                         {missionStatusLabels[mission.status]}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 break-words">
                       {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 mt-1">
                       {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" className="self-start" asChild>
                     <Link to={`/client/missions/${mission.id}`}>
-                      Détails
+                      {isMobile ? "Détails" : "Voir la mission"}
                     </Link>
                   </Button>
                 </div>

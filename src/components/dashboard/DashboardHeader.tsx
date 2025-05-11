@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardHeader = () => {
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Déterminer le rôle
   const role: string = profile?.role || 'client';
@@ -47,14 +49,14 @@ const DashboardHeader = () => {
   };
   
   return (
-    <header className="bg-white border-b px-6 py-3 flex items-center justify-between h-16">
-      {/* Titre de la page */}
-      <h1 className="text-xl font-bold text-neutral-800">
-        APP DKAUTOMOTIVE - {dashboardTitle}
+    <header className="px-4 sm:px-6 py-3 flex items-center justify-between h-16">
+      {/* Titre de la page - caché sur mobile car espace pour le toggle de sidebar */}
+      <h1 className={`${isMobile ? 'ml-8' : ''} text-lg sm:text-xl font-bold text-neutral-800 truncate`}>
+        {isMobile ? dashboardTitle : `APP DKAUTOMOTIVE - ${dashboardTitle}`}
       </h1>
       
       {/* Actions utilisateur */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell size={20} className="text-neutral-600" />

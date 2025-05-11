@@ -1,8 +1,12 @@
-import React, { ReactNode } from 'react';
+
+import React, { ReactNode, useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import Sidebar from '@/components/dashboard/Sidebar';
+import { Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Import dashboard page components 
 import AdminDashboard from '@/pages/dashboard/admin/AdminDashboard';
@@ -16,6 +20,8 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { profile, user, loading } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Adding debug logging to trace authentication state
   console.log("DashboardLayout auth state:", { user, profile, loading });
@@ -77,22 +83,49 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return children || <Outlet />;
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Fixed sidebar */}
-      <div className="fixed left-0 top-0 h-full z-10">
+      {/* Mobile sidebar trigger */}
+      {isMobile && (
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="fixed top-3 left-3 z-50 bg-white shadow-md"
+          onClick={toggleSidebar}
+        >
+          <Menu />
+        </Button>
+      )}
+      
+      {/* Sidebar - fixed on desktop, slideover on mobile */}
+      <div className={`${isMobile 
+        ? `fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+        : 'fixed left-0 top-0 h-full z-10'}`}
+      >
         <Sidebar userRole={profile?.role || 'client'} />
       </div>
       
-      {/* Main content with left margin to accommodate fixed sidebar */}
-      <div className="flex-1 ml-64">
+      {/* Overlay to close sidebar on mobile */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Main content area */}
+      <div className={`flex-1 ${!isMobile ? 'ml-64' : 'ml-0'}`}>
         {/* Fixed header */}
-        <div className="fixed top-0 right-0 left-64 z-10 bg-white shadow-sm">
+        <div className={`fixed top-0 right-0 z-10 bg-white shadow-sm ${!isMobile ? 'left-64' : 'left-0'}`}>
           <DashboardHeader />
         </div>
         
         {/* Content area with padding to accommodate fixed header */}
-        <div className="container mx-auto py-6 mt-16 px-6">
+        <div className="container mx-auto py-6 mt-16 px-4 sm:px-6">
           {renderDashboardContent()}
         </div>
       </div>

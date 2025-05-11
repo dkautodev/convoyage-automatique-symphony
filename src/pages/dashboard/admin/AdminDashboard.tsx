@@ -18,10 +18,12 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const isMobile = useIsMobile();
   
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -198,18 +200,18 @@ const AdminDashboard = () => {
   
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-admin">Tableau de bord administrateur</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-admin">Tableau de bord administrateur</h2>
         <div className="flex space-x-2">
           <Button onClick={handleCreateNewMission}>
             <Plus className="mr-2 h-4 w-4" />
-            Nouvelle mission
+            <span className="whitespace-nowrap">Nouvelle mission</span>
           </Button>
         </div>
       </div>
       
       {/* Statistiques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Missions Actives</CardTitle>
@@ -339,20 +341,25 @@ const AdminDashboard = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin"></div>
             </div>
           ) : (
-            <div className="h-80">
+            <div className={isMobile ? "h-60" : "h-80"}>
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart
                   data={monthlyRevenue}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                  margin={{ 
+                    top: 20, 
+                    right: isMobile ? 10 : 30, 
+                    left: isMobile ? 0 : 20, 
+                    bottom: 20 
+                  }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <XAxis dataKey="month" tick={{fontSize: isMobile ? 10 : 12}} />
+                  <YAxis tick={{fontSize: isMobile ? 10 : 12}} width={isMobile ? 40 : 60} />
                   <Tooltip 
                     formatter={(value) => [`${formatCurrency(Number(value))}`, '']}
                     contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{fontSize: isMobile ? 10 : 12}} />
                   <Bar dataKey="revenue" name="Chiffre d'affaires HT" fill="#3b82f6" />
                   <Bar dataKey="vat" name="TVA" fill="#8b5cf6" />
                   <Bar dataKey="driverPayments" name="Paiements chauffeurs" fill="#f59e0b" />
@@ -365,7 +372,7 @@ const AdminDashboard = () => {
       
       {/* Missions récentes */}
       <Card className="bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle>Missions Récentes</CardTitle>
             <CardDescription>Les 5 dernières missions créées</CardDescription>
@@ -402,8 +409,8 @@ const AdminDashboard = () => {
                     
                     return (
                       <TableRow key={mission.id}>
-                        <TableCell>{mission.mission_number || '-'}</TableCell>
-                        <TableCell>{clientName}</TableCell>
+                        <TableCell className="whitespace-nowrap">{mission.mission_number || '-'}</TableCell>
+                        <TableCell className="max-w-[150px] truncate">{clientName}</TableCell>
                         <TableCell>
                           <Badge className={missionStatusColors[mission.status as MissionStatus]}>
                             {missionStatusLabels[mission.status as MissionStatus]}
@@ -414,7 +421,7 @@ const AdminDashboard = () => {
                           <Button variant="outline" size="sm" asChild>
                             <Link to={`/admin/missions/${mission.id}`}>
                               <FileText className="h-4 w-4 mr-1" />
-                              Détails
+                              <span className="hidden sm:inline">Détails</span>
                             </Link>
                           </Button>
                         </TableCell>

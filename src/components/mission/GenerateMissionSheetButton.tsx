@@ -6,6 +6,7 @@ import { pdf } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
 import { MissionSheetPDF } from './MissionSheetPDF';
 import { toast } from 'sonner';
+import { formatMissionNumber } from '@/utils/missionUtils';
 
 interface GenerateMissionSheetButtonProps {
   mission: Mission;
@@ -24,19 +25,26 @@ export const GenerateMissionSheetButton: React.FC<GenerateMissionSheetButtonProp
   const handleGeneratePDF = async () => {
     try {
       setGenerating(true);
+      const missionNumber = formatMissionNumber(mission);
+      const fileName = `DKAUTOMOTIVE-MISSION-${missionNumber}.pdf`;
       
       // Générer le PDF
       const blob = await pdf(
         <MissionSheetPDF mission={mission} driverName={driverName} />
       ).toBlob();
       
-      // Créer un URL pour le blob
-      const url = URL.createObjectURL(blob);
+      // Create an anchor element and set it to download the PDF
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
       
-      // Ouvrir le PDF dans un nouvel onglet
-      window.open(url, '_blank');
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(link.href);
       
-      toast.success('Fiche de mission générée avec succès');
+      toast.success('Fiche de mission téléchargée avec succès');
     } catch (error) {
       console.error('Erreur lors de la génération du PDF:', error);
       toast.error('Erreur lors de la génération de la fiche de mission');

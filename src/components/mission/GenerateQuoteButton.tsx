@@ -28,7 +28,9 @@ const GenerateQuoteButton: React.FC<GenerateQuoteButtonProps> = ({
   const handleGenerateQuote = async () => {
     try {
       setGenerating(true);
-      const quoteNumber = `DEV-${formatMissionNumber(mission)}`;
+      const missionNumber = formatMissionNumber(mission);
+      const quoteNumber = `DEV-${missionNumber}`;
+      const fileName = `DKAUTOMOTIVE-${quoteNumber}.pdf`;
       
       // Generate the PDF
       const blob = await pdf(
@@ -42,10 +44,18 @@ const GenerateQuoteButton: React.FC<GenerateQuoteButtonProps> = ({
       // Create a URL for the blob
       const url = URL.createObjectURL(blob);
       
-      // Open the PDF in a new tab
-      window.open(url, '_blank');
+      // Create an anchor element and set it to download the PDF
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
       
-      toast.success(`Devis ${quoteNumber} généré avec succès`);
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Devis ${quoteNumber} téléchargé`);
     } catch (error) {
       console.error('Erreur lors de la génération du devis:', error);
       toast.error('Erreur lors de la génération du devis');

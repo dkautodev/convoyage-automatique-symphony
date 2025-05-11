@@ -116,47 +116,43 @@ const DriverMissionsPage = () => {
           <p className="text-muted-foreground">Aucune mission trouvée</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg p-6 shadow-lg border">
-          <div className="space-y-4">
-            {filteredMissions.map((mission) => (
-              <div key={mission.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors">
-                <div className="flex flex-grow gap-4 items-center">
-                  <div className="flex flex-col min-w-[140px]">
-                    <p className="font-medium">#{mission.mission_number || mission.id.slice(0, 8)}</p>
-                    <Badge className={`${missionStatusColors[mission.status]} mt-1`}>
+        <div className="bg-white rounded-lg shadow-lg border">
+          {filteredMissions.map((mission) => (
+            <div key={mission.id} className="border-b border-gray-100 last:border-b-0">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-bold">Mission #{mission.mission_number || mission.id.slice(0, 8)}</h3>
+                    <Badge className={`${missionStatusColors[mission.status]}`}>
                       {missionStatusLabels[mission.status]}
                     </Badge>
                   </div>
-                  
-                  <div className="flex items-center gap-2 flex-grow text-sm">
-                    <p className="flex-1 truncate text-gray-600">{formatFullAddress(mission.pickup_address)}</p>
-                    <ArrowRight className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                    <p className="flex-1 truncate text-gray-600">{formatFullAddress(mission.delivery_address)}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="text-xs text-muted-foreground hidden md:block">
-                    {mission.D1_PEC && (
-                      <span>Départ: {mission.D1_PEC}</span>
-                    )}
-                    {mission.D2_LIV && (
-                      <span className="ml-2">· Livraison: {mission.D2_LIV}</span>
-                    )}
-                  </div>
-                  <Button variant="outline" asChild size="sm">
+                  <Button variant="outline" asChild>
                     <Link to={`/driver/missions/${mission.id}`}>
                       Détails
                     </Link>
                   </Button>
                 </div>
+                
+                <div className="text-gray-600 mb-2 flex items-center gap-2">
+                  <span className="flex-1">{formatFullAddress(mission.pickup_address)}</span>
+                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                  <span className="flex-1">{formatFullAddress(mission.delivery_address)}</span>
+                </div>
+                
+                <div className="text-sm text-gray-500">
+                  Départ: {mission.D1_PEC || formatDate(mission.scheduled_date)}
+                  {(mission.D2_LIV || mission.completion_date) && (
+                    <span className="ml-2">· Livraison: {mission.D2_LIV || formatDate(mission.completion_date)}</span>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
           
           {filteredMissions.length > 10 && (
-            <div className="flex justify-center mt-6">
-              <Button variant="outline">Voir plus de missions</Button>
+            <div className="flex justify-center p-4">
+              <Button variant="outline">Voir toutes</Button>
             </div>
           )}
         </div>

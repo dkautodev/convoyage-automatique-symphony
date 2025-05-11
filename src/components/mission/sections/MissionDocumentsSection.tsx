@@ -23,7 +23,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const { profile } = useAuth();
   
   // Determine if user is a driver based on role
-  const isDriverView = profile?.role === 'chauffeur' || hideFinancials;
+  const isDriverView = profile?.role === 'chauffeur';
   
   return (
     <Card className="mb-6">
@@ -38,8 +38,8 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-3">
-          {/* Only show GenerateQuoteButton for admins and clients (not drivers) */}
-          {!isDriverView && (
+          {/* Ne pas masquer GenerateQuoteButton pour les chauffeurs sauf si hideFinancials est true */}
+          {!hideFinancials && (
             <GenerateQuoteButton 
               mission={mission} 
               client={client}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -878,7 +877,7 @@ export default function CreateMissionForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="no_client_selected" disabled>Sélectionner un client</SelectItem>
-                          {loadingClients ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : clientProfiles.map((client: ProfileOption) => <SelectItem key={client.id} value={client.id}>{client.full_name || client.email || client.id}</SelectItem>)}
+                          {loadingClients ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : clientProfiles.map((client: ProfileOption) => <SelectItem key={client.id} value={client.id}>{client.label || client.email || client.id}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -896,7 +895,7 @@ export default function CreateMissionForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
-                          {loadingDrivers ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : driverProfiles.map((driver: ProfileOption) => <SelectItem key={driver.id} value={driver.id}>{driver.full_name || driver.email || driver.id}</SelectItem>)}
+                          {loadingDrivers ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : driverProfiles.map((driver: ProfileOption) => <SelectItem key={driver.id} value={driver.id}>{driver.label || driver.email || driver.id}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormDescription>

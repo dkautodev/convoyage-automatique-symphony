@@ -43,13 +43,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 4,
   },
-  dateColumn: {
-    flexDirection: 'column',
-    width: '48%',
+  dateItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   dateLabel: {
     fontWeight: 'bold',
-    marginBottom: 3,
+    marginRight: 5,
   },
   dateValue: {
     fontSize: 11,
@@ -208,13 +208,13 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
           <Text style={styles.title}>FACTURE N° : {invoiceNumber}</Text>
         </View>
 
-        {/* Date Section */}
+        {/* Date Section - Redesigned to be on a single line */}
         <View style={styles.dateSection}>
-          <View style={styles.dateColumn}>
+          <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Date d'émission:</Text>
             <Text style={styles.dateValue}>{formattedEmissionDate}</Text>
           </View>
-          <View style={styles.dateColumn}>
+          <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Date d'échéance (15 jours):</Text>
             <Text style={styles.dateValue}>{formattedDueDate}</Text>
           </View>
@@ -317,3 +317,4 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
 };
 
 export default InvoicePDF;
+

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -60,6 +59,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     borderBottom: '1pt solid #000',
     paddingBottom: 3,
+    textDecoration: 'underline',
   },
   row: {
     flexDirection: 'row',
@@ -255,10 +255,12 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
 
         {/* Footer with logo */}
         <View style={styles.footer}>
-          <Image 
-            src="/public/lovable-uploads/964d45a2-0f00-4840-b665-6085581ee181.png" 
-            style={styles.logo} 
-          />
+          <View style={styles.logoContainer}>
+            <Image 
+              src="/public/lovable-uploads/964d45a2-0f00-4840-b665-6085581ee181.png" 
+              style={styles.logo} 
+            />
+          </View>
         </View>
       </Page>
     </Document>

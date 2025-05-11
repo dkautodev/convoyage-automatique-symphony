@@ -29,5 +29,31 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
   const isDriver = profile?.role === 'chauffeur';
   const isClient = profile?.role === 'client';
   
-  return;
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Documents
+        </CardTitle>
+        <CardDescription>
+          Documents associés à cette mission
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {/* Generate Quote Button - For clients and admins */}
+        {(isClient || isAdmin) && (
+          <div>
+            <GenerateQuoteButton 
+              mission={mission} 
+              client={client}
+              adminProfile={adminProfile}
+            />
+          </div>
+        )}
+
+        {/* Additional document functionalities can be added here */}
+      </CardContent>
+    </Card>
+  );
 };

@@ -22,7 +22,7 @@ const GenerateQuoteButton: React.FC<GenerateQuoteButtonProps> = ({
   adminProfile
 }) => {
   const { profile } = useAuth();
-  const isDisabled = mission.status === 'annule';
+  const isDisabled = mission.status === 'annule' || mission.status === 'livre' || mission.status === 'termine';
   const [generating, setGenerating] = useState<boolean>(false);
   
   const handleGenerateQuote = async () => {
@@ -54,13 +54,23 @@ const GenerateQuoteButton: React.FC<GenerateQuoteButtonProps> = ({
     }
   };
 
+  // Create a title message that explains the disabled state
+  const getTitleMessage = () => {
+    if (mission.status === 'annule') {
+      return "Devis non disponible pour une mission annulée";
+    } else if (mission.status === 'livre' || mission.status === 'termine') {
+      return "Devis non disponible pour une mission terminée ou livrée";
+    }
+    return "Générer un devis";
+  };
+
   return (
     <Button
       variant="outline"
       className="relative"
       onClick={handleGenerateQuote}
       disabled={isDisabled || generating}
-      title={isDisabled ? "Devis non disponible pour une mission annulée" : "Générer un devis"}
+      title={getTitleMessage()}
     >
       {generating ? (
         <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -30,6 +29,7 @@ import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHi
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
+import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
 
 const MissionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -302,6 +302,7 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
+              <GenerateMissionSheetButton mission={mission} driverName={driverName} />
               <GenerateQuoteButton 
                 mission={mission} 
                 client={client} 
@@ -333,9 +334,10 @@ const MissionDetailsPage = () => {
                   </span>
                 )}
               </Button>
+              <GenerateMissionSheetButton mission={mission} driverName={driverName} />
               <GenerateQuoteButton 
                 mission={mission} 
-                client={client} 
+                client={client}
               />
             </>
           )}

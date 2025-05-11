@@ -50,9 +50,8 @@ export const ClientMissionDriverSection: React.FC<ClientMissionDriverSectionProp
           <div>
             <h4 className="text-sm font-medium text-gray-500 mb-1 flex items-center gap-1">
               <DollarSign className="h-4 w-4" />
-              Prix chauffeur (HT)
+              Prix chauffeur (HT): <span className="font-medium">{mission.chauffeur_price_ht?.toFixed(2) || '0.00'} €</span>
             </h4>
-            <p className="font-medium">{mission.chauffeur_price_ht?.toFixed(2) || '0.00'} €</p>
           </div>
         </div>
       </CardContent>

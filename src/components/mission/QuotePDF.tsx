@@ -168,6 +168,16 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
     ? format(new Date(mission.created_at), 'dd MMMM yyyy', { locale: fr })
     : 'Date inconnue';
 
+  // Format vehicle information
+  const vehicleMakeModel = mission.vehicle_make && mission.vehicle_model 
+    ? `${mission.vehicle_make} ${mission.vehicle_model}` 
+    : "Non spécifié";
+  
+  const vehicleVinReg = [
+    mission.vehicle_vin ? `VIN: ${mission.vehicle_vin}` : null,
+    mission.vehicle_registration ? `Immatriculation: ${mission.vehicle_registration}` : null
+  ].filter(Boolean).join(' / ');
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -226,6 +236,8 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
               <Text>De: {formatFullAddress(mission.pickup_address)}</Text>
               <Text>À: {formatFullAddress(mission.delivery_address)}</Text>
               <Text>Catégorie de véhicule: {mission.vehicle_category || "Non spécifiée"}</Text>
+              <Text>Véhicule: {vehicleMakeModel}</Text>
+              {vehicleVinReg && <Text>{vehicleVinReg}</Text>}
               <Text>Distance: {mission.distance_km.toFixed(2)} km</Text>
             </View>
           </View>

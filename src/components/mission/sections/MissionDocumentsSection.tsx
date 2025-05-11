@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Mission } from '@/types/supabase';
 import { Paperclip } from 'lucide-react';
-import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 
 interface MissionDocumentsSectionProps {
@@ -38,9 +37,6 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
-        {/* Mission Sheet - available to everyone */}
-        <GenerateMissionSheetButton mission={mission} />
-        
         {/* Quote button - hidden for drivers */}
         {!hideFinancials && (
           <GenerateQuoteButton 
@@ -49,6 +45,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
             adminProfile={adminProfile} 
           />
         )}
+        {/* Removed Mission Sheet button from here */}
       </CardContent>
     </Card>
   );

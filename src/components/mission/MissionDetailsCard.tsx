@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Mission } from '@/types/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { FileText, MapPin, Truck, User, Calendar, Clock } from 'lucide-react';
 import { formatFullAddress, formatContactInfo } from '@/utils/missionUtils';
 import { vehicleCategoryLabels } from '@/types/supabase';
+import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
+
 interface MissionDetailsCardProps {
   mission: Mission;
   client: any;
@@ -13,14 +14,17 @@ interface MissionDetailsCardProps {
   onEditClick: () => void;
   editMode: boolean;
   onCancelEdit: () => void;
+  driverName?: string;
 }
+
 export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
   mission,
   client,
   isAdmin,
   onEditClick,
   editMode,
-  onCancelEdit
+  onCancelEdit,
+  driverName
 }) => {
   const clientName = client?.company_name || client?.full_name || 'Client inconnu';
   const vehicleCategory = mission.vehicle_category ? vehicleCategoryLabels[mission.vehicle_category] : 'Non spécifiée';
@@ -56,13 +60,18 @@ export const MissionDetailsCard: React.FC<MissionDetailsCardProps> = ({
           <FileText className="h-5 w-5" />
           Informations générales
         </CardTitle>
-        {isAdmin && !editMode && <Button variant="outline" onClick={onEditClick} size="sm">
+        <div className="flex gap-2">
+          {/* Ajout du bouton de génération de fiche de mission ici */}
+          <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+          
+          {isAdmin && !editMode && <Button variant="outline" onClick={onEditClick} size="sm">
             <FileText className="h-4 w-4 mr-2" />
             Modifier les détails
           </Button>}
-        {editMode && <Button variant="outline" onClick={onCancelEdit} size="sm">
+          {editMode && <Button variant="outline" onClick={onCancelEdit} size="sm">
             Annuler
           </Button>}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

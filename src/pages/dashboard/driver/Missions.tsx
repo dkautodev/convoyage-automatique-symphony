@@ -5,12 +5,15 @@ import { useAuth } from '@/hooks/auth';
 import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Package } from 'lucide-react';
+import { Search, Filter, Package, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { formatFullAddress } from '@/utils/missionUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 // Define valid tab values type that includes 'all' and all mission statuses
 type MissionTab = 'all' | MissionStatus;
@@ -21,6 +24,9 @@ const DriverMissionsPage = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [updateStatusDialogOpen, setUpdateStatusDialogOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     fetchDriverMissions();
@@ -68,6 +74,16 @@ const DriverMissionsPage = () => {
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
   };
 
+  // Check if a date is today
+  const isToday = (dateString: string | null | undefined) => {
+    if (!dateString) return false;
+    const today = new Date();
+    const date = new Date(dateString);
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
+
   // Filter missions based on search
   const filteredMissions = missions.filter(mission => {
     if (!searchText) return true;
@@ -93,6 +109,91 @@ const DriverMissionsPage = () => {
     { id: 'annule', label: 'Annulées', color: 'bg-red-600 text-white' },
   ];
 
+  // Handle status update confirmation
+  const handleUpdateStatus = async () => {
+    if (!selectedMission || isUpdatingStatus) return;
+    
+    try {
+      setIsUpdatingStatus(true);
+      
+      // Determine the next status based on current status
+      let nextStatus: MissionStatus;
+      
+      if (selectedMission.status === 'accepte') {
+        nextStatus = 'prise_en_charge';
+      } else if (selectedMission.status === 'prise_en_charge') {
+        nextStatus = 'livre';
+      } else {
+        toast({
+          title: "Mise à jour du statut impossible",
+          description: "Le statut actuel ne peut pas être mis à jour.",
+          variant: "destructive",
+        });
+        setUpdateStatusDialogOpen(false);
+        setIsUpdatingStatus(false);
+        return;
+      }
+      
+      // Update the status in the database
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ status: nextStatus })
+        .eq('id', selectedMission.id);
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setMissions(missions.map(mission => {
+        if (mission.id === selectedMission.id) {
+          return { ...mission, status: nextStatus };
+        }
+        return mission;
+      }));
+      
+      // Close dialog and show success message
+      setUpdateStatusDialogOpen(false);
+      
+      toast({
+        title: "Statut mis à jour",
+        description: `La mission est maintenant en statut "${missionStatusLabels[nextStatus]}"`,
+      });
+      
+      // Refetch missions to ensure we have the latest data
+      fetchDriverMissions();
+      
+    } catch (error) {
+      console.error('Error updating mission status:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la mise à jour du statut.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+  
+  // Get dialog content based on mission status
+  const getDialogContent = () => {
+    if (!selectedMission) return null;
+    
+    if (selectedMission.status === 'accepte') {
+      return {
+        title: "Prise en charge de la mission",
+        description: "Avez-vous pris en charge le véhicule ?",
+        confirmLabel: "Oui, j'ai pris en charge",
+      };
+    } else if (selectedMission.status === 'prise_en_charge') {
+      return {
+        title: "Livraison terminée",
+        description: "Avez-vous terminé la mission ?",
+        confirmLabel: "Oui, mission terminée",
+      };
+    }
+    
+    return null;
+  };
+
   // Empty state component
   const EmptyState = () => (
     <div className="text-center py-10 text-neutral-500">
@@ -101,6 +202,24 @@ const DriverMissionsPage = () => {
       <p className="text-sm mt-1">Les missions qui vous seront assignées apparaîtront ici</p>
     </div>
   );
+
+  // Check if the status update button should be enabled for a mission
+  const isStatusButtonEnabled = (mission: Mission) => {
+    // Only enable for 'accepte' or 'prise_en_charge' status
+    if (mission.status !== 'accepte' && mission.status !== 'prise_en_charge') {
+      return false;
+    }
+    
+    // For 'accepte' status, only enable if today is the scheduled pickup date
+    if (mission.status === 'accepte') {
+      return mission.D1_PEC ? isToday(mission.D1_PEC) : false;
+    }
+    
+    // For 'prise_en_charge', always enable
+    return true;
+  };
+
+  const dialogContent = getDialogContent();
 
   return (
     <div className="space-y-6">
@@ -172,11 +291,24 @@ const DriverMissionsPage = () => {
                             {mission.distance_km?.toFixed(2) || '0'} km · Départ: {mission.D1_PEC || formatDate(mission.scheduled_date)}
                           </p>
                         </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/driver/missions/${mission.id}`}>
-                            Détails
-                          </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            disabled={!isStatusButtonEnabled(mission)} 
+                            onClick={() => {
+                              setSelectedMission(mission);
+                              setUpdateStatusDialogOpen(true);
+                            }}
+                          >
+                            <Truck className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/driver/missions/${mission.id}`}>
+                              Détails
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -186,6 +318,29 @@ const DriverMissionsPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={updateStatusDialogOpen} onOpenChange={setUpdateStatusDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dialogContent?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{dialogContent?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpdatingStatus}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleUpdateStatus}
+              disabled={isUpdatingStatus}
+            >
+              {isUpdatingStatus ? (
+                <span className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Mise à jour...
+                </span>
+              ) : dialogContent?.confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -112,7 +112,7 @@ export const MissionDocumentsSection: React.FC<MissionDocumentsSectionProps> = (
           <div className="py-4">
             <FileUpload 
               missionId={mission.id} 
-              onUploaded={handleDocumentUploaded}
+              onUploadComplete={handleDocumentUploaded}
             />
           </div>
         </DialogContent>

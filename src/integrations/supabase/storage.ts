@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 /**
@@ -10,12 +11,13 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
   try {
     console.log(`Uploading file to ${path}`);
     
-    // All files should use the 'documents' bucket
-    const bucketName = 'documents';
+    // Determine the bucket name based on path
+    // Use driver.doc.config for driver invoice related files
+    const bucketName = path.startsWith('driver_invoices') ? 'driver.doc.config' : 'documents';
     
     // Sanitize the file path to avoid special characters
     const sanitizedPath = sanitizeStoragePath(path);
-    console.log(`Using sanitized path: ${sanitizedPath}`);
+    console.log(`Using sanitized path: ${sanitizedPath} in bucket: ${bucketName}`);
     
     // Upload file to the bucket
     const { data, error } = await supabase.storage
@@ -62,8 +64,10 @@ function sanitizeStoragePath(path: string): string {
  */
 export function getPublicUrl(path: string): string | null {
   try {
-    // All files use the 'documents' bucket now
-    const bucketName = 'documents';
+    // Determine bucket based on path or prefix
+    const bucketName = path.startsWith('driver_invoices') ? 'driver.doc.config' : 'documents';
+    
+    console.log(`Getting public URL from bucket: ${bucketName} for path: ${path}`);
     
     const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
     return data.publicUrl;

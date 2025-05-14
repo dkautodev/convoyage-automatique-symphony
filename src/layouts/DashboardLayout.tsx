@@ -104,7 +104,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Sidebar - fixed on desktop, slideover on mobile */}
       <div className={`${isMobile 
         ? `fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
-        : 'fixed left-0 top-0 h-full z-10'}`}
+        : 'w-64 shrink-0'}`}
       >
         <Sidebar userRole={profile?.role || 'client'} />
       </div>
@@ -118,14 +118,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       )}
       
       {/* Main content area */}
-      <div className={`flex-1 ${!isMobile ? 'ml-64' : 'ml-0'}`}>
+      <div className="flex-1">
         {/* Fixed header */}
-        <div className={`fixed top-0 right-0 z-10 bg-white shadow-sm ${!isMobile ? 'left-64' : 'left-0'}`}>
+        <div className="sticky top-0 z-10 bg-white shadow-sm">
           <DashboardHeader />
         </div>
         
         {/* Content area with padding to accommodate fixed header */}
-        <div className="container mx-auto py-6 mt-16 px-4 sm:px-6">
+        <div className="p-4 sm:p-6 mt-16">
           {renderDashboardContent()}
         </div>
       </div>

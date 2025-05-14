@@ -294,7 +294,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin = false }) => {
     if (!mission.chauffeur_invoice) {
       return <Badge variant="outline">Insérer une facture</Badge>;
     } else if (mission.chauffeur_paid) {
-      return <Badge className="bg-green-500">Payé</Badge>;
+      return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Payé</Badge>;
     } else {
       return <Badge variant="secondary">En attente de paiement</Badge>;
     }

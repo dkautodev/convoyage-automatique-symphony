@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,7 @@ import { Address } from '@/types/supabase';
 import { Loader2, Save } from 'lucide-react';
 import { Json } from '@/integrations/supabase/types';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
+import DocumentsSection from '@/components/dashboard/driver/DocumentsSection';
 
 // Helper function to convert JSON to Address
 function jsonToAddress(json: Json | null): Address {
@@ -418,6 +420,9 @@ const Profile = () => {
             </Form>
           </CardContent>
         </Card>
+        
+        {/* Ajout de la section Documents pour les chauffeurs */}
+        <DocumentsSection />
       </div>
     </div>
   );

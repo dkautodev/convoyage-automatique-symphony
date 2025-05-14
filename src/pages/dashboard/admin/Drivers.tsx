@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { typedSupabase } from '@/types/database';
 import { format } from 'date-fns';
+import { Address } from '@/hooks/auth/types';
+import { Json } from '@/integrations/supabase/types';
 
 // Updated Driver interface to match what's coming from the database
 interface Driver {
@@ -16,6 +18,7 @@ interface Driver {
   email: string;
   phone_1: string | null;
   created_at: string;
+  billing_address?: Json | null;
   // These fields might be in the drivers_config table, not in profiles
   license_number?: string | null;
   id_number?: string | null;
@@ -67,7 +70,8 @@ const DriversPage = () => {
         full_name: driver.full_name,
         email: driver.email,
         phone_1: driver.phone_1,
-        created_at: driver.created_at
+        created_at: driver.created_at,
+        billing_address: driver.billing_address
       }));
       
       setDrivers(formattedDrivers);
@@ -190,6 +194,26 @@ const DriversPage = () => {
     ];
   };
 
+  // Helper function to format the address for display
+  const formatAddress = (addressData: Json | null): string => {
+    if (!addressData) return 'Non définie';
+    
+    try {
+      const address = addressData as unknown as Address;
+      const parts = [
+        address.street,
+        address.postal_code,
+        address.city,
+        address.country
+      ].filter(Boolean);
+      
+      return parts.join(', ') || 'Adresse incomplète';
+    } catch (error) {
+      console.error('Error formatting address:', error);
+      return 'Format d\'adresse invalide';
+    }
+  };
+
   // Filter drivers based on search term
   const filteredDrivers = searchTerm
     ? drivers.filter(driver => 
@@ -307,7 +331,12 @@ const DriversPage = () => {
                 </div>
               </div>
               
-              <div>
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-sm mb-2">Adresse de facturation</h3>
+                <p>{formatAddress(selectedDriver.billing_address)}</p>
+              </div>
+              
+              <div className="border-t pt-4">
                 <h3 className="font-semibold mb-2">Documents</h3>
                 <Table>
                   <TableHeader>

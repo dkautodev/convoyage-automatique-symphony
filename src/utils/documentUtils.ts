@@ -19,9 +19,9 @@ export async function uploadDriverDocument(
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${documentType}_${Date.now()}.${fileExt}`;
     
-    // Upload file to storage bucket
+    // Upload file to storage bucket - Corrected bucket name
     const { data, error } = await supabase.storage
-      .from('driver_doc_config')
+      .from('driver.doc.config')
       .upload(fileName, file, { upsert: true });
     
     if (error) {
@@ -45,8 +45,9 @@ export function getDriverDocumentUrl(path: string | null): string | null {
   if (!path) return null;
   
   try {
+    // Corrected bucket name
     const { data } = supabase.storage
-      .from('driver_doc_config')
+      .from('driver.doc.config')
       .getPublicUrl(path);
     
     return data.publicUrl;

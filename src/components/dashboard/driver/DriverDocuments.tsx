@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -150,9 +149,9 @@ const DriverDocuments = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${docType.id}_${Date.now()}.${fileExt}`;
       
-      // Upload to storage bucket
+      // Upload to storage bucket - Corrected bucket name
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('driver_doc_config')
+        .from('driver.doc.config')
         .upload(fileName, file, { upsert: true });
       
       if (uploadError) throw uploadError;

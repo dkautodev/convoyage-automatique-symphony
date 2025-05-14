@@ -108,15 +108,26 @@ const DriverMissionsPage = () => {
            deliveryAddress.includes(search);
   });
 
-  // Group all statuses into logical categories for better organization
-  const tabGroups = [
-    { id: 'all', label: 'Toutes', color: 'bg-primary text-white' },
-    { id: 'en_acceptation', label: 'En attente', color: 'bg-amber-600 text-white' },
-    { id: 'accepte', label: 'Accepté', color: 'bg-green-600 text-white' },
-    { id: 'prise_en_charge', label: 'En cours', color: 'bg-amber-700 text-white' },
-    { id: 'livre', label: 'Livrées', color: 'bg-blue-600 text-white' },
-    { id: 'termine', label: 'Terminées', color: 'bg-green-700 text-white' },
-    { id: 'annule', label: 'Annulées', color: 'bg-red-600 text-white' },
+  // Prepare mission counts by status for tabs display
+  const missionCountsByStatus = missions.reduce((acc, mission) => {
+    acc[mission.status] = (acc[mission.status] || 0) + 1;
+    return acc;
+  }, {} as Record<MissionStatus, number>);
+  
+  // Calculate total missions count
+  const totalMissions = missions.length;
+
+  // Define the status tabs we want to display in order
+  const statusTabs = [
+    { id: 'all', label: 'Toutes' },
+    { id: 'en_acceptation', label: 'En cours d\'acceptation' },
+    { id: 'accepte', label: 'Accepté' },
+    { id: 'prise_en_charge', label: 'En cours de prise en charge' },
+    { id: 'livraison', label: 'En cours de livraison' },
+    { id: 'livre', label: 'Livré' },
+    { id: 'termine', label: 'Terminé' },
+    { id: 'annule', label: 'Annulé' },
+    { id: 'incident', label: 'Incident' }
   ];
 
   // Update mission status with improved error handling
@@ -247,14 +258,17 @@ const DriverMissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
-        <TabsList className="w-full mb-4 grid grid-cols-7 gap-1">
-          {tabGroups.map((tab) => (
+        <TabsList className="w-full mb-4 flex flex-wrap gap-2">
+          {statusTabs.map((tab) => (
             <TabsTrigger 
               key={tab.id}
               value={tab.id} 
-              className={`py-3 text-sm font-medium rounded-md hover:bg-gray-100 data-[state=active]:${tab.color}`}
+              className="flex gap-2"
             >
               {tab.label}
+              <Badge variant="secondary" className="ml-1">
+                {tab.id === 'all' ? totalMissions : (missionCountsByStatus[tab.id as MissionStatus] || 0)}
+              </Badge>
             </TabsTrigger>
           ))}
         </TabsList>

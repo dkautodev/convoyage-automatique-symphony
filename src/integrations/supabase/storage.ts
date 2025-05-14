@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 /**
@@ -155,5 +154,41 @@ export async function getMissionDocuments(missionId: string) {
   } catch (error) {
     console.error("Exception during fetching mission documents:", error);
     return [];
+  }
+}
+
+/**
+ * Upload a driver invoice file
+ * @param missionId The mission ID
+ * @param file The invoice file
+ * @param userId The user ID of the uploader
+ * @returns The file path if successful, null if failed
+ */
+export async function uploadDriverInvoice(missionId: string, file: File, userId: string): Promise<string | null> {
+  try {
+    // Generate a unique file identifier
+    const fileId = Date.now();
+    
+    // Sanitize the original filename
+    const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
+    
+    // Create a path pattern for driver invoices
+    const filePath = `driver_invoices/${missionId}/${fileId}_${sanitizedFileName}`;
+    
+    console.log(`Attempting to upload driver invoice to path: ${filePath}`);
+    
+    // Upload the file to storage
+    const storagePath = await uploadFile(filePath, file);
+    
+    if (!storagePath) {
+      console.error("Driver invoice upload failed, no storage path returned");
+      return null;
+    }
+    
+    console.log(`Driver invoice uploaded successfully to: ${storagePath}`);
+    return storagePath;
+  } catch (error) {
+    console.error("Exception during driver invoice upload:", error);
+    return null;
   }
 }

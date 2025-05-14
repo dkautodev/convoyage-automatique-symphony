@@ -1,0 +1,466 @@
+
+import React, { useState, useEffect } from 'react';
+import { typedSupabase } from '@/types/database';
+import { useAuth } from '@/hooks/useAuth';
+import { 
+  Card, 
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Eye, Upload, Trash2, Check } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { uploadFile, getPublicUrl } from '@/integrations/supabase/storage';
+
+// Type pour les missions avec factures
+interface DriverMission {
+  id: string;
+  mission_number: string;
+  chauffeur_price_ht: number;
+  chauffeur_invoice: string | null;
+  chauffeur_paid: boolean;
+}
+
+interface DriverInvoicesProps {
+  isAdmin?: boolean;
+}
+
+const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin = false }) => {
+  const { user, profile } = useAuth();
+  const [missions, setMissions] = useState<DriverMission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<DriverMission | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
+  const [totalUnpaid, setTotalUnpaid] = useState(0);
+
+  // Charger les missions
+  useEffect(() => {
+    fetchMissions();
+  }, [user, isAdmin]);
+
+  // Calculer le total à payer
+  useEffect(() => {
+    if (isAdmin) {
+      const total = missions.reduce((sum, mission) => {
+        if (!mission.chauffeur_paid && mission.chauffeur_invoice) {
+          return sum + (mission.chauffeur_price_ht || 0);
+        }
+        return sum;
+      }, 0);
+      setTotalUnpaid(total);
+    }
+  }, [missions, isAdmin]);
+
+  const fetchMissions = async () => {
+    try {
+      setLoading(true);
+      
+      let query = typedSupabase.from('missions').select('*');
+      
+      // Filtrer les missions par chauffeur si ce n'est pas un admin
+      if (!isAdmin && user) {
+        query = query.eq('chauffeur_id', user.id);
+      }
+      
+      // Si admin, seulement celles qui ont un chauffeur assigné
+      if (isAdmin) {
+        query = query.not('chauffeur_id', 'is', null);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const formattedMissions: DriverMission[] = data.map(mission => ({
+        id: mission.id,
+        mission_number: mission.mission_number || `#${mission.id.slice(0, 8)}`,
+        chauffeur_price_ht: mission.chauffeur_price_ht || 0,
+        chauffeur_invoice: mission.chauffeur_invoice,
+        chauffeur_paid: mission.chauffeur_paid || false
+      }));
+      
+      setMissions(formattedMissions);
+      
+    } catch (error) {
+      console.error('Error fetching missions:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les missions",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUploadClick = (mission: DriverMission) => {
+    setSelectedMission(mission);
+    setUploadDialogOpen(true);
+  };
+
+  const handleViewClick = async (mission: DriverMission) => {
+    if (!mission.chauffeur_invoice) {
+      toast({
+        title: "Information",
+        description: "Aucune facture n'a été uploadée pour cette mission",
+      });
+      return;
+    }
+
+    try {
+      const publicUrl = getPublicUrl(mission.chauffeur_invoice);
+      if (publicUrl) {
+        setViewUrl(publicUrl);
+        setViewDialogOpen(true);
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer l'URL de la facture",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error getting invoice URL:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'accéder à la facture",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Vérifier que c'est un PDF
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: "Format invalide",
+          description: "Seuls les fichiers PDF sont acceptés",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile || !selectedMission || !user) {
+      toast({
+        title: "Erreur",
+        description: "Fichier ou mission non sélectionnés",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setUploadLoading(true);
+      
+      // Générer un chemin unique pour la facture
+      const fileName = `${Date.now()}_${selectedFile.name}`;
+      const filePath = `driver_invoices/${selectedMission.id}/${fileName}`;
+      
+      // Uploader le fichier
+      const uploadedPath = await uploadFile(filePath, selectedFile);
+      
+      if (!uploadedPath) {
+        throw new Error("Échec de l'upload du fichier");
+      }
+      
+      // Mettre à jour la mission avec le chemin de la facture
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ chauffeur_invoice: uploadedPath })
+        .eq('id', selectedMission.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Succès",
+        description: "Facture uploadée avec succès",
+      });
+      
+      // Rafraîchir les données
+      fetchMissions();
+      setUploadDialogOpen(false);
+      setSelectedFile(null);
+      
+    } catch (error) {
+      console.error('Error uploading invoice:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'uploader la facture",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
+  const handleDeleteInvoice = async (mission: DriverMission) => {
+    if (!mission.chauffeur_invoice) return;
+    
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette facture ?")) {
+      return;
+    }
+
+    try {
+      // Mettre à jour la mission pour supprimer la référence à la facture
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ 
+          chauffeur_invoice: null,
+          chauffeur_paid: false // Réinitialiser le statut de paiement
+        })
+        .eq('id', mission.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Succès",
+        description: "Facture supprimée avec succès",
+      });
+      
+      // Rafraîchir les données
+      fetchMissions();
+      
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la facture",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleTogglePaidStatus = async (mission: DriverMission) => {
+    if (!mission.chauffeur_invoice) {
+      toast({
+        title: "Information",
+        description: "Une facture doit d'abord être uploadée",
+      });
+      return;
+    }
+
+    try {
+      // Inverser le statut de paiement
+      const newPaidStatus = !mission.chauffeur_paid;
+      
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ chauffeur_paid: newPaidStatus })
+        .eq('id', mission.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Succès",
+        description: newPaidStatus ? "Facture marquée comme payée" : "Facture marquée comme non payée",
+      });
+      
+      // Rafraîchir les données
+      fetchMissions();
+      
+    } catch (error) {
+      console.error('Error updating paid status:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de paiement",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getInvoiceStatusBadge = (mission: DriverMission) => {
+    if (!mission.chauffeur_invoice) {
+      return <Badge variant="outline">Insérer une facture</Badge>;
+    } else if (mission.chauffeur_paid) {
+      return <Badge variant="success" className="bg-green-500">Payé</Badge>;
+    } else {
+      return <Badge variant="secondary">En attente de paiement</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {isAdmin && (
+        <Card className="bg-white">
+          <CardHeader>
+            <CardTitle>Statistiques de facturation</CardTitle>
+            <CardDescription>Synthèse des paiements chauffeur</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Total restant à payer aux chauffeurs:</span>
+                <span className="text-xl font-bold">{totalUnpaid.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="bg-white">
+        <CardHeader>
+          <CardTitle>{isAdmin ? "Factures des chauffeurs" : "Mes factures"}</CardTitle>
+          <CardDescription>{isAdmin ? "Gestion des factures des chauffeurs" : "Gérer vos factures pour chaque mission"}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : missions.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Aucune mission trouvée
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {missions.map((mission) => (
+                <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex items-start justify-between flex-wrap gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium">Mission {mission.mission_number}</p>
+                        {getInvoiceStatusBadge(mission)}
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Montant: {mission.chauffeur_price_ht.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleUploadClick(mission)}
+                      >
+                        <Upload size={16} className="mr-1" />
+                        Upload
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewClick(mission)}
+                        disabled={!mission.chauffeur_invoice}
+                      >
+                        <Eye size={16} className="mr-1" />
+                        Voir
+                      </Button>
+                      {isAdmin && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleDeleteInvoice(mission)}
+                          disabled={!mission.chauffeur_invoice}
+                          className="text-red-500 hover:bg-red-50"
+                        >
+                          <Trash2 size={16} className="mr-1" />
+                          Supprimer
+                        </Button>
+                      )}
+                      <Button 
+                        variant={mission.chauffeur_paid ? "secondary" : "default"}
+                        size="sm" 
+                        onClick={() => handleTogglePaidStatus(mission)}
+                        disabled={!mission.chauffeur_invoice}
+                      >
+                        <Check size={16} className="mr-1" />
+                        {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog pour l'upload */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Uploader une facture</DialogTitle>
+            <DialogDescription>
+              Pour la mission {selectedMission?.mission_number}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <label htmlFor="invoice" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Sélectionner un fichier PDF
+              </label>
+              <input
+                id="invoice"
+                type="file"
+                accept="application/pdf"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium"
+                onChange={handleFileChange}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setUploadDialogOpen(false)}
+              disabled={uploadLoading}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={handleUploadSubmit}
+              disabled={!selectedFile || uploadLoading}
+            >
+              {uploadLoading ? 'Chargement...' : 'Uploader'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog pour visualiser la facture */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-4xl h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Facture - Mission {selectedMission?.mission_number}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 h-full overflow-auto">
+            {viewUrl && (
+              <iframe 
+                src={viewUrl} 
+                className="w-full h-full" 
+                title={`Facture mission ${selectedMission?.mission_number}`}
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default DriverInvoices;

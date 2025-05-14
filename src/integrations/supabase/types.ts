@@ -293,6 +293,8 @@ export type Database = {
       missions: {
         Row: {
           chauffeur_id: string | null
+          chauffeur_invoice: string | null
+          chauffeur_paid: boolean | null
           chauffeur_price_ht: number | null
           client_id: string
           completion_date: string | null
@@ -336,6 +338,8 @@ export type Database = {
         }
         Insert: {
           chauffeur_id?: string | null
+          chauffeur_invoice?: string | null
+          chauffeur_paid?: boolean | null
           chauffeur_price_ht?: number | null
           client_id: string
           completion_date?: string | null
@@ -379,6 +383,8 @@ export type Database = {
         }
         Update: {
           chauffeur_id?: string | null
+          chauffeur_invoice?: string | null
+          chauffeur_paid?: boolean | null
           chauffeur_price_ht?: number | null
           client_id?: string
           completion_date?: string | null

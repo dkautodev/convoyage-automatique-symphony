@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -32,6 +31,7 @@ import BasicRegister from './pages/auth/BasicRegister';
 import RegisterAdmin from './pages/RegisterAdmin';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import { CompleteDriverProfile, CompleteDriverConfig } from './pages/auth';
+import DriverInvoicesPage from './pages/dashboard/admin/DriverInvoices';
 
 function App() {
   return (
@@ -122,6 +122,7 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/driver-invoices" element={<ProtectedRoute requiredRole="admin"><DriverInvoicesPage /></ProtectedRoute>} />
         
         {/* Client routes */}
         <Route path="/client" element={
@@ -196,6 +197,7 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+        <Route path="/driver/invoices" element={<ProtectedRoute requiredRole="chauffeur"><DriverInvoicesPage /></ProtectedRoute>} />
         
         {/* Mission creation route */}
         <Route path="/mission/create" element={

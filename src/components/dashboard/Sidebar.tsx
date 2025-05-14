@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck } from 'lucide-react';
+import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck, CreditCard } from 'lucide-react';
 
 interface SidebarProps {
   userRole: string;
@@ -55,6 +54,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Factures',
       icon: <FileText size={20} />
     }, {
+      path: '/admin/driver-invoices',
+      label: 'Factures chauffeur',
+      icon: <CreditCard size={20} />
+    }, {
       path: '/admin/clients',
       label: 'Clients',
       icon: <Users size={20} />
@@ -100,6 +103,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       path: '/driver/missions',
       label: 'Mes missions',
       icon: <ListCheck size={20} />
+    }, {
+      path: '/driver/invoices',
+      label: 'Mes factures',
+      icon: <CreditCard size={20} />
     }]
   };
 

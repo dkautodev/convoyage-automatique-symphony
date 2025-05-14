@@ -64,15 +64,20 @@ const DriversPage = () => {
 
       if (error) throw error;
       
+      console.log('Raw driver data:', driversData); // Add logging to check the data
+      
       // Convert the data to Driver[] type by explicitly mapping the fields we need
-      const formattedDrivers: Driver[] = driversData.map(driver => ({
-        id: driver.id,
-        full_name: driver.full_name,
-        email: driver.email,
-        phone_1: driver.phone_1,
-        created_at: driver.created_at,
-        billing_address: driver.billing_address
-      }));
+      const formattedDrivers: Driver[] = driversData.map(driver => {
+        console.log(`Driver ${driver.id} billing address:`, driver.billing_address);
+        return {
+          id: driver.id,
+          full_name: driver.full_name,
+          email: driver.email,
+          phone_1: driver.phone_1,
+          created_at: driver.created_at,
+          billing_address: driver.billing_address
+        };
+      });
       
       setDrivers(formattedDrivers);
     } catch (error) {
@@ -199,7 +204,26 @@ const DriversPage = () => {
     if (!addressData) return 'Non définie';
     
     try {
+      console.log('Formatting address data:', addressData);
+      
+      // Try to parse the address data based on different possible formats
+      if (typeof addressData === 'string') {
+        try {
+          addressData = JSON.parse(addressData);
+        } catch (e) {
+          console.error('Failed to parse address string:', e);
+        }
+      }
+      
+      // Cast to Address type and handle potential format variations
       const address = addressData as unknown as Address;
+      
+      // Check if we have a formatted_address field (which might contain the full address)
+      if (address.formatted_address) {
+        return address.formatted_address;
+      }
+      
+      // Otherwise try to build from individual fields
       const parts = [
         address.street,
         address.postal_code,
@@ -207,9 +231,9 @@ const DriversPage = () => {
         address.country
       ].filter(Boolean);
       
-      return parts.join(', ') || 'Adresse incomplète';
+      return parts.length > 0 ? parts.join(', ') : 'Adresse incomplète';
     } catch (error) {
-      console.error('Error formatting address:', error);
+      console.error('Error formatting address:', error, addressData);
       return 'Format d\'adresse invalide';
     }
   };

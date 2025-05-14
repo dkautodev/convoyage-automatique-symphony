@@ -129,6 +129,13 @@ export function convertMissionFromDB(mission: MissionFromDB): Mission {
     chauffeur_id: mission.chauffeur_id || null,
     mission_type: mission.mission_type || null,
     vehicle_category: mission.vehicle_category,
+    vehicle_make: mission.vehicle_make || null,
+    vehicle_model: mission.vehicle_model || null,
+    vehicle_registration: mission.vehicle_registration || null,
+    vehicle_fuel: mission.vehicle_fuel || null,
+    vehicle_year: mission.vehicle_year || null,
+    vehicle_id: mission.vehicle_id || null,
+    vehicle_vin: mission.vehicle_vin || null,
     scheduled_date: mission.scheduled_date || new Date().toISOString(),
     mission_number: mission.mission_number || null,
     D1_PEC: mission.D1_PEC || null,
@@ -159,6 +166,13 @@ export interface Mission {
   chauffeur_id: string | null;
   mission_type?: string | null;
   vehicle_category?: VehicleCategory;
+  vehicle_make?: string | null;
+  vehicle_model?: string | null;
+  vehicle_registration?: string | null;
+  vehicle_fuel?: string | null;
+  vehicle_year?: number | null;
+  vehicle_id?: number | null;
+  vehicle_vin?: string | null;
   scheduled_date?: string;
   mission_number?: string | null;
   D1_PEC?: string | null;

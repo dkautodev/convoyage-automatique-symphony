@@ -2,13 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
-import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
+import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB, vehicleCategoryLabels } from '@/types/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Truck, CheckCircle, CreditCard, CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const DriverDashboard = () => {
   const { user, profile } = useAuth();
@@ -21,6 +23,11 @@ const DriverDashboard = () => {
     monthlyEarnings: 0,
     inProgressMissions: 0
   });
+  
+  // État pour la gestion du dialogue de confirmation de livraison
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
 
   useEffect(() => {
     const fetchDriverData = async () => {
@@ -43,6 +50,8 @@ const DriverDashboard = () => {
         const convertedMissions = (missionsData || []).map(mission => 
           convertMissionFromDB(mission as unknown as MissionFromDB)
         );
+        
+        console.log("Missions converties:", convertedMissions);
         setMissions(convertedMissions);
         
         // Récupérer les statistiques du chauffeur
@@ -100,6 +109,11 @@ const DriverDashboard = () => {
         });
       } catch (error) {
         console.error('Error fetching driver dashboard data:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les données du chauffeur",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
@@ -112,6 +126,84 @@ const DriverDashboard = () => {
   const getAddressString = (address: any) => {
     if (!address) return 'Adresse non spécifiée';
     return address.city || address.formatted_address || 'Adresse incomplète';
+  };
+  
+  // Fonction pour mettre à jour le statut d'une mission
+  const updateMissionStatus = async (missionId: string, newStatus: MissionStatus) => {
+    if (!user?.id) return;
+    
+    try {
+      setStatusUpdateLoading(true);
+      
+      const { error } = await typedSupabase
+        .from('missions')
+        .update({ 
+          status: newStatus,
+          ...(newStatus === 'livre' ? { completion_date: new Date().toISOString() } : {})
+        })
+        .eq('id', missionId);
+      
+      if (error) throw error;
+      
+      // Mise à jour locale de la mission
+      setMissions(missions.map(mission => 
+        mission.id === missionId 
+          ? { ...mission, status: newStatus } 
+          : mission
+      ));
+      
+      toast({
+        title: "Succès",
+        description: `La mission a été mise à jour avec succès: ${missionStatusLabels[newStatus]}`,
+      });
+      
+      // Fermer le dialogue de confirmation
+      setConfirmDialogOpen(false);
+      
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de la mission",
+        variant: "destructive"
+      });
+    } finally {
+      setStatusUpdateLoading(false);
+    }
+  };
+  
+  // Fonction pour gérer la demande de mise à jour du statut
+  const handleStatusUpdate = (mission: Mission) => {
+    if (!mission.id) return;
+    
+    // Déterminer le nouveau statut en fonction du statut actuel
+    let newStatus: MissionStatus;
+    
+    if (mission.status === 'accepte') {
+      newStatus = 'prise_en_charge';
+      updateMissionStatus(mission.id, newStatus);
+    } else if (mission.status === 'prise_en_charge') {
+      newStatus = 'livraison';
+      updateMissionStatus(mission.id, newStatus);
+    } else if (mission.status === 'livraison') {
+      // Pour le passage à livre, on ouvre une boîte de dialogue de confirmation
+      setSelectedMissionId(mission.id);
+      setConfirmDialogOpen(true);
+    }
+  };
+  
+  // Fonction pour obtenir le libellé du bouton en fonction du statut actuel
+  const getNextStatusButtonLabel = (status: MissionStatus) => {
+    switch (status) {
+      case 'accepte':
+        return "Démarrer la prise en charge";
+      case 'prise_en_charge':
+        return "Démarrer la livraison";
+      case 'livraison':
+        return "Marquer comme livré";
+      default:
+        return "Mettre à jour le statut";
+    }
   };
 
   if (loading) {
@@ -227,18 +319,48 @@ const DriverDashboard = () => {
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600 break-words">
-                      {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
+                      {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                      <div className="text-sm">
+                        <span className="text-gray-500">Véhicule: </span>
+                        {mission.vehicle_category ? 
+                          (vehicleCategoryLabels[mission.vehicle_category] || mission.vehicle_category) 
+                          : "Non spécifié"}
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-gray-500">Marque: </span>
+                        {mission.vehicle_make || "Non spécifié"}
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-gray-500">Modèle: </span>
+                        {mission.vehicle_model || "Non spécifié"}
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-gray-500">Immat.: </span>
+                        {mission.vehicle_registration || "Non spécifié"}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
                       Prévue le {new Date(mission.scheduled_date || '').toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {(mission.status === 'prise_en_charge' || mission.status === 'livraison') && (
-                      <Button variant="default" size="sm" asChild>
-                        <Link to={`/driver/missions/${mission.id}/update`}>
-                          {isMobile ? "Mettre à jour" : "Mettre à jour"}
-                        </Link>
+                    {(mission.status === 'accepte' || mission.status === 'prise_en_charge' || mission.status === 'livraison') && (
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => handleStatusUpdate(mission)}
+                        disabled={statusUpdateLoading}
+                      >
+                        {statusUpdateLoading && selectedMissionId === mission.id ? (
+                          <span className="flex items-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                            Mise à jour...
+                          </span>
+                        ) : (
+                          getNextStatusButtonLabel(mission.status as MissionStatus)
+                        )}
                       </Button>
                     )}
                     <Button variant="outline" size="sm" asChild>
@@ -272,6 +394,39 @@ const DriverDashboard = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Dialogue de confirmation pour marquer une mission comme livrée */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la livraison</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir marquer cette mission comme livrée ?
+              Cette action ne pourra pas être annulée.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-between sm:justify-end mt-4 gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setConfirmDialogOpen(false)}
+              disabled={statusUpdateLoading}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={() => selectedMissionId && updateMissionStatus(selectedMissionId, 'livre')}
+              disabled={statusUpdateLoading}
+            >
+              {statusUpdateLoading ? (
+                <span className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                  Mise à jour...
+                </span>
+              ) : "Confirmer la livraison"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

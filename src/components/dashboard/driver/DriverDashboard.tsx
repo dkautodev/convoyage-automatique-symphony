@@ -422,6 +422,7 @@ const DriverDashboard = () => {
         </Card>
       )}
 
+      {/* Upcoming Missions Section - This was missing and now restored */}
       <Card>
         <CardHeader>
           <CardTitle>Prochaines missions</CardTitle>

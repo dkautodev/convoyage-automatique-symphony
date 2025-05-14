@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle } from 'lucide-react';
+import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -151,6 +151,49 @@ const DriverDashboard = () => {
     }
   };
 
+  // Function to display vehicle information
+  const getVehicleDisplay = (mission: Mission) => {
+    if (!mission) return "Non spécifié";
+    
+    let vehicleInfo = '';
+    
+    // First add vehicle category if available
+    if (mission.vehicle_category) {
+      const categoryMap: Record<string, string> = {
+        'citadine': 'Citadine',
+        'berline': 'Berline',
+        '4x4_suv': '4x4/SUV',
+        'utilitaire_3_5m3': 'Utilitaire (3-5m³)',
+        'utilitaire_6_12m3': 'Utilitaire (6-12m³)',
+        'utilitaire_12_15m3': 'Utilitaire (12-15m³)',
+        'utilitaire_15_20m3': 'Utilitaire (15-20m³)',
+        'utilitaire_plus_20m3': 'Utilitaire (>20m³)'
+      };
+      vehicleInfo = categoryMap[mission.vehicle_category] || mission.vehicle_category;
+    }
+    
+    // Then add make and model if available
+    if (mission.vehicle_make || mission.vehicle_model) {
+      const makeModel = [mission.vehicle_make, mission.vehicle_model].filter(Boolean).join(' ');
+      if (vehicleInfo && makeModel) {
+        vehicleInfo += ' - ' + makeModel;
+      } else {
+        vehicleInfo = makeModel;
+      }
+    }
+    
+    // Add registration if available
+    if (mission.vehicle_registration) {
+      if (vehicleInfo) {
+        vehicleInfo += ' (' + mission.vehicle_registration + ')';
+      } else {
+        vehicleInfo = mission.vehicle_registration;
+      }
+    }
+    
+    return vehicleInfo || "Non spécifié";
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -274,8 +317,13 @@ const DriverDashboard = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Véhicule</h3>
-                  <p>{currentMission.vehicle_make} {currentMission.vehicle_model} - {currentMission.vehicle_registration || 'Non spécifié'}</p>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    <span className="flex items-center">
+                      <Truck className="h-4 w-4 mr-1" />
+                      Véhicule
+                    </span>
+                  </h3>
+                  <p>{getVehicleDisplay(currentMission)}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Distance</h3>
@@ -333,8 +381,14 @@ const DriverDashboard = () => {
                       {mission.D1_PEC || new Date(mission.scheduled_date || '').toLocaleDateString('fr-FR')}
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} • {mission.distance_km?.toFixed(0) || '0'} km
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="text-sm text-muted-foreground">
+                      {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} • {mission.distance_km?.toFixed(0) || '0'} km
+                    </div>
+                    <div className="text-sm flex items-center">
+                      <Truck className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{getVehicleDisplay(mission)}</span>
+                    </div>
                   </div>
                 </div>
               ))}

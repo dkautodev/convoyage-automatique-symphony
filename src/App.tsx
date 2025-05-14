@@ -31,7 +31,7 @@ import BasicRegister from './pages/auth/BasicRegister';
 import RegisterAdmin from './pages/RegisterAdmin';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import { CompleteDriverProfile, CompleteDriverConfig } from './pages/auth';
-import DriverInvoicesPage from './pages/dashboard/admin/DriverInvoices';
+import DriverInvoicesPage from './pages/dashboard/admin/DriverInvoicesPage';
 
 function App() {
   return (
@@ -122,7 +122,13 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-        <Route path="/admin/driver-invoices" element={<ProtectedRoute requiredRole="admin"><DriverInvoicesPage /></ProtectedRoute>} />
+        <Route path="/admin/driver-invoices" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <DriverInvoicesPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
         
         {/* Client routes */}
         <Route path="/client" element={
@@ -197,7 +203,13 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-        <Route path="/driver/invoices" element={<ProtectedRoute requiredRole="chauffeur"><DriverInvoicesPage /></ProtectedRoute>} />
+        <Route path="/driver/invoices" element={
+          <ProtectedRoute roles={['chauffeur']}>
+            <DashboardLayout>
+              <DriverInvoicesPage isAdmin={false} />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
         
         {/* Mission creation route */}
         <Route path="/mission/create" element={

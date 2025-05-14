@@ -1,9 +1,14 @@
 
 import React from 'react';
 import DriverInvoices from '@/components/dashboard/driver/DriverInvoices';
+import DashboardLayout from '@/layouts/DashboardLayout';
 
 const DriverInvoicesPage = () => {
-  return <DriverInvoices isAdmin={false} />;
+  return (
+    <DashboardLayout>
+      <DriverInvoices isAdmin={false} />
+    </DashboardLayout>
+  );
 };
 
 export default DriverInvoicesPage;

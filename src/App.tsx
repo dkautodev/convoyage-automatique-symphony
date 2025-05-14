@@ -31,7 +31,8 @@ import BasicRegister from './pages/auth/BasicRegister';
 import RegisterAdmin from './pages/RegisterAdmin';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
 import { CompleteDriverProfile, CompleteDriverConfig } from './pages/auth';
-import DriverInvoicesPage from './pages/dashboard/admin/DriverInvoicesPage';
+import AdminDriverInvoicesPage from './pages/dashboard/admin/DriverInvoicesPage';
+import DriverInvoicesPage from './pages/dashboard/driver/DriverInvoicesPage';
 
 function App() {
   return (
@@ -125,7 +126,7 @@ function App() {
         <Route path="/admin/driver-invoices" element={
           <ProtectedRoute roles={['admin']}>
             <DashboardLayout>
-              <DriverInvoicesPage />
+              <AdminDriverInvoicesPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />
@@ -206,7 +207,7 @@ function App() {
         <Route path="/driver/invoices" element={
           <ProtectedRoute roles={['chauffeur']}>
             <DashboardLayout>
-              <DriverInvoicesPage isAdmin={false} />
+              <DriverInvoicesPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

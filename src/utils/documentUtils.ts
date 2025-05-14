@@ -15,13 +15,13 @@ export async function uploadDriverDocument(
   documentType: 'kbis' | 'vigilance' | 'license' | 'id'
 ): Promise<string | null> {
   try {
-    console.log(`Trying to upload ${documentType} document for user ${userId} to driver.doc.config bucket`);
+    console.log(`Trying to upload ${documentType} document for user ${userId}`);
     
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${documentType}_${Date.now()}.${fileExt}`;
     
-    // Upload file to storage bucket - Corrected bucket name
+    // Upload file to storage bucket
     const { data, error } = await supabase.storage
       .from('driver.doc.config')
       .upload(fileName, file, { upsert: true });
@@ -48,12 +48,10 @@ export function getDriverDocumentUrl(path: string | null): string | null {
   if (!path) return null;
   
   try {
-    // Corrected bucket name
     const { data } = supabase.storage
       .from('driver.doc.config')
       .getPublicUrl(path);
     
-    console.log('Generated public URL for path:', path, data.publicUrl);
     return data.publicUrl;
   } catch (error) {
     console.error('Error getting document URL:', error);
@@ -97,19 +95,38 @@ export async function updateDriverDocumentPath(
         throw new Error('Invalid document type');
     }
     
-    const { error } = await supabase
+    // Make sure the user has a drivers_config record first
+    const { data: existingConfig } = await supabase
       .from('drivers_config')
-      .upsert({ 
-        id: userId, 
-        [fieldName]: filePath,
-        legal_status: legalStatus
-      }, { 
-        onConflict: 'id' 
-      });
-    
-    if (error) {
-      console.error('Error updating document path:', error);
-      return false;
+      .select('id')
+      .eq('id', userId)
+      .single();
+      
+    // If no config exists yet, create one
+    if (!existingConfig) {
+      const { error: insertError } = await supabase
+        .from('drivers_config')
+        .insert({
+          id: userId,
+          legal_status: legalStatus,
+          [fieldName]: filePath
+        });
+        
+      if (insertError) {
+        console.error('Error creating new driver config:', insertError);
+        return false;
+      }
+    } else {
+      // Update existing config
+      const { error: updateError } = await supabase
+        .from('drivers_config')
+        .update({ [fieldName]: filePath })
+        .eq('id', userId);
+        
+      if (updateError) {
+        console.error('Error updating document path:', updateError);
+        return false;
+      }
     }
     
     console.log(`Successfully updated ${documentType} document path in database`);

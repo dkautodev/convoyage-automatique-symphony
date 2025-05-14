@@ -139,7 +139,8 @@ const DriverDocuments = () => {
     }
   };
 
-  const handleFileUpload = async (docType: DocumentType, file: File) => {
+  const handleFileUpload = async (docType: DocumentType, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!user?.id || !file) return;
     
     try {
@@ -274,10 +275,7 @@ const DriverDocuments = () => {
                         type="file"
                         id={`upload-${docType.id}`}
                         className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleFileUpload(docType, file);
-                        }}
+                        onChange={(e) => handleFileUpload(docType, e)}
                         accept=".pdf,.jpg,.jpeg,.png"
                       />
                       <Button 
@@ -285,6 +283,10 @@ const DriverDocuments = () => {
                         variant={isDocumentUploaded(docType) ? "outline" : "default"}
                         size="sm"
                         disabled={uploadLoading[docType.id]}
+                        onClick={() => {
+                          // Trigger file input click programmatically
+                          document.getElementById(`upload-${docType.id}`)?.click();
+                        }}
                       >
                         {uploadLoading[docType.id] ? (
                           <><Loader2 className="mr-2 h-3 w-3 animate-spin" /> Envoi...</>

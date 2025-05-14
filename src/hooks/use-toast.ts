@@ -1,7 +1,6 @@
 
 // Re-export toast functionality from the UI components
-import { useToast as useToastUI, toast as toastUI } from "@/components/ui/use-toast"
+import { useToast, toast } from "@/components/ui/use-toast"
 
 // Export the toast functionality
-export const useToast = useToastUI
-export const toast = toastUI
+export { useToast, toast };

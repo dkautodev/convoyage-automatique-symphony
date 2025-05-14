@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,14 +9,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { typedSupabase } from '@/types/database';
 import { format } from 'date-fns';
 
+// Updated Driver interface to match what's coming from the database
 interface Driver {
   id: string;
-  full_name: string;
+  full_name: string | null;
   email: string;
   phone_1: string | null;
   created_at: string;
-  license_number: string | null;
-  id_number: string | null;
+  // These fields might be in the drivers_config table, not in profiles
+  license_number?: string | null;
+  id_number?: string | null;
 }
 
 interface DriverDocument {
@@ -59,7 +60,17 @@ const DriversPage = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDrivers(driversData as Driver[]);
+      
+      // Convert the data to Driver[] type by explicitly mapping the fields we need
+      const formattedDrivers: Driver[] = driversData.map(driver => ({
+        id: driver.id,
+        full_name: driver.full_name,
+        email: driver.email,
+        phone_1: driver.phone_1,
+        created_at: driver.created_at
+      }));
+      
+      setDrivers(formattedDrivers);
     } catch (error) {
       console.error('Error fetching drivers:', error);
       toast({
@@ -182,8 +193,8 @@ const DriversPage = () => {
   // Filter drivers based on search term
   const filteredDrivers = searchTerm
     ? drivers.filter(driver => 
-        (driver.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (driver.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+        ((driver.full_name || '').toLowerCase()).includes(searchTerm.toLowerCase()) ||
+        ((driver.email || '').toLowerCase()).includes(searchTerm.toLowerCase())
       )
     : drivers;
 

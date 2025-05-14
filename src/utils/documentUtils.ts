@@ -15,6 +15,8 @@ export async function uploadDriverDocument(
   documentType: 'kbis' | 'vigilance' | 'license' | 'id'
 ): Promise<string | null> {
   try {
+    console.log(`Trying to upload ${documentType} document for user ${userId} to driver.doc.config bucket`);
+    
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${documentType}_${Date.now()}.${fileExt}`;
@@ -29,6 +31,7 @@ export async function uploadDriverDocument(
       return null;
     }
     
+    console.log('Document uploaded successfully:', data.path);
     return data.path;
   } catch (error) {
     console.error('Error in uploadDriverDocument:', error);
@@ -50,6 +53,7 @@ export function getDriverDocumentUrl(path: string | null): string | null {
       .from('driver.doc.config')
       .getPublicUrl(path);
     
+    console.log('Generated public URL for path:', path, data.publicUrl);
     return data.publicUrl;
   } catch (error) {
     console.error('Error getting document URL:', error);
@@ -72,6 +76,8 @@ export async function updateDriverDocumentPath(
   legalStatus: LegalStatusType
 ): Promise<boolean> {
   try {
+    console.log(`Updating document path for ${documentType} document, user ${userId}`);
+    
     let fieldName: string;
     
     switch (documentType) {
@@ -106,6 +112,7 @@ export async function updateDriverDocumentPath(
       return false;
     }
     
+    console.log(`Successfully updated ${documentType} document path in database`);
     return true;
   } catch (error) {
     console.error('Error in updateDriverDocumentPath:', error);

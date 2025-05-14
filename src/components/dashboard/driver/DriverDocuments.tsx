@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Upload, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { LegalStatusType } from '@/hooks/auth/types';
-import { updateDriverDocumentPath } from '@/utils/documentUtils';
+import { uploadDriverDocument, updateDriverDocumentPath, getDriverDocumentUrl } from '@/utils/documentUtils';
 
 // Types for driver configuration
 interface DriverConfig {
@@ -145,19 +145,19 @@ const DriverDocuments = () => {
       // Set loading state for this document type
       setUploadLoading(prev => ({ ...prev, [docType.id]: true }));
       
-      // Generate a unique file path
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${docType.id}_${Date.now()}.${fileExt}`;
+      console.log(`Uploading ${docType.id} document for user ${user.id}`);
       
-      // Upload to storage bucket - Corrected bucket name
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('driver.doc.config')
-        .upload(fileName, file, { upsert: true });
+      // Upload the file using our utility function
+      const filePath = await uploadDriverDocument(user.id, file, docType.id as 'kbis' | 'vigilance' | 'license' | 'id');
       
-      if (uploadError) throw uploadError;
+      if (!filePath) {
+        throw new Error(`Failed to upload ${docType.label}`);
+      }
+      
+      console.log(`Successfully uploaded file to path: ${filePath}`);
       
       // Update the driver config with the new file path using our utility function
-      const success = await updateDriverDocumentPath(user.id, docType.id as 'kbis' | 'vigilance' | 'license' | 'id', fileName, legalStatus);
+      const success = await updateDriverDocumentPath(user.id, docType.id as 'kbis' | 'vigilance' | 'license' | 'id', filePath, legalStatus);
       
       if (!success) {
         throw new Error('Failed to update document path');

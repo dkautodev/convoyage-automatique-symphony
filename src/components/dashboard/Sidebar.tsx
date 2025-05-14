@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck } from 'lucide-react';
@@ -57,6 +58,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       path: '/admin/clients',
       label: 'Clients',
       icon: <Users size={20} />
+    }, {
+      path: '/admin/drivers',
+      label: 'Chauffeurs',
+      icon: <Truck size={20} />
     }, {
       path: '/admin/contacts',
       label: 'Contacts',

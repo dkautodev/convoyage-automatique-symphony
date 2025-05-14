@@ -24,6 +24,7 @@ import LoginPage from './pages/LoginPage';
 import AdminContactsPage from './pages/dashboard/admin/Contacts';
 import ClientContactsPage from './pages/dashboard/client/Contacts';
 import ClientsPage from './pages/dashboard/admin/Clients';
+import DriversPage from './pages/dashboard/admin/Drivers';
 import AdminInvoicesPage from './pages/dashboard/admin/Invoices';
 import ClientInvoicesPage from './pages/dashboard/client/Invoices';
 import Register from './pages/Register'; 
@@ -104,6 +105,13 @@ function App() {
           <ProtectedRoute roles={['admin']}>
             <DashboardLayout>
               <ClientsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/drivers" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <DriversPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

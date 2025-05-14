@@ -93,7 +93,11 @@ const DriverDocuments = () => {
       
     } catch (error) {
       console.error('Error fetching driver config:', error);
-      toast.error('Impossible de récupérer vos informations');
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer vos informations",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -118,11 +122,18 @@ const DriverDocuments = () => {
       
       if (error) throw error;
       
-      toast.success('Informations sauvegardées avec succès');
+      toast({
+        title: "Succès",
+        description: "Informations sauvegardées avec succès"
+      });
       
     } catch (error) {
       console.error('Error saving driver config:', error);
-      toast.error('Erreur lors de la sauvegarde des informations');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde des informations",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
     }
@@ -155,11 +166,18 @@ const DriverDocuments = () => {
       
       // Refresh the config
       fetchDriverConfig();
-      toast.success(`Document ${docType.label} téléchargé avec succès`);
+      toast({
+        title: "Document téléchargé",
+        description: `Document ${docType.label} téléchargé avec succès`
+      });
       
     } catch (error) {
       console.error(`Error uploading ${docType.label}:`, error);
-      toast.error(`Erreur lors du téléchargement du document ${docType.label}`);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors du téléchargement du document ${docType.label}`,
+        variant: "destructive"
+      });
     } finally {
       setUploadLoading(prev => ({ ...prev, [docType.id]: false }));
     }

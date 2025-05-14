@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,7 @@ interface DriverConfig {
   id_document_path: string | null;
 }
 
-// List of legal status options
+// Liste des options de statut juridique
 const legalStatusOptions: { value: LegalStatusType; label: string }[] = [
   { value: 'EI', label: 'Entreprise Individuelle' },
   { value: 'EURL', label: 'EURL' },

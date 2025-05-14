@@ -56,7 +56,8 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin = false }) => {
   useEffect(() => {
     if (isAdmin) {
       const total = missions.reduce((sum, mission) => {
-        if (!mission.chauffeur_paid && mission.chauffeur_invoice) {
+        // Comptabiliser tous les chauffeur_price_ht où chauffeur_paid est FALSE, qu'une facture soit uploadée ou non
+        if (!mission.chauffeur_paid) {
           return sum + (mission.chauffeur_price_ht || 0);
         }
         return sum;

@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { LegalStatusType } from '@/hooks/auth/types';
 
 /**
  * Upload a driver document to storage
@@ -60,12 +61,14 @@ export function getDriverDocumentUrl(path: string | null): string | null {
  * @param userId User ID
  * @param documentType Type of document
  * @param filePath Storage path of the document
+ * @param legalStatus Legal status of the driver's business
  * @returns Success boolean
  */
 export async function updateDriverDocumentPath(
   userId: string,
   documentType: 'kbis' | 'vigilance' | 'license' | 'id',
-  filePath: string
+  filePath: string,
+  legalStatus: LegalStatusType
 ): Promise<boolean> {
   try {
     let fieldName: string;
@@ -91,7 +94,8 @@ export async function updateDriverDocumentPath(
       .from('drivers_config')
       .upsert({ 
         id: userId, 
-        [fieldName]: filePath 
+        [fieldName]: filePath,
+        legal_status: legalStatus
       }, { 
         onConflict: 'id' 
       });

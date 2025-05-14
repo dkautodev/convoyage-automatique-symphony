@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LegalStatusType } from '@/hooks/auth/types';
+import { updateDriverDocumentPath } from '@/utils/documentUtils';
 
 // Types for driver configuration
 interface DriverConfig {
@@ -139,23 +139,18 @@ const DriverDocuments = () => {
       const fileName = `${user.id}/${docType.id}_${Date.now()}.${fileExt}`;
       
       // Upload to storage bucket
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('driver_doc_config')
         .upload(fileName, file, { upsert: true });
       
       if (uploadError) throw uploadError;
       
-      // Update the driver config with the new file path
-      const updates = {
-        id: user.id,
-        [docType.pathField]: fileName
-      };
+      // Update the driver config with the new file path using our utility function
+      const success = await updateDriverDocumentPath(user.id, docType.id as 'kbis' | 'vigilance' | 'license' | 'id', fileName, legalStatus);
       
-      const { error: updateError } = await supabase
-        .from('drivers_config')
-        .upsert(updates, { onConflict: 'id' });
-      
-      if (updateError) throw updateError;
+      if (!success) {
+        throw new Error('Failed to update document path');
+      }
       
       // Refresh the config
       fetchDriverConfig();

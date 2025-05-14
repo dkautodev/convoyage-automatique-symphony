@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle, Truck } from 'lucide-react';
@@ -214,6 +213,7 @@ const DriverDashboard = () => {
         </Button>
       </div>
 
+      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -315,19 +315,35 @@ const DriverDashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">
                     <span className="flex items-center">
                       <Truck className="h-4 w-4 mr-1" />
-                      Véhicule
+                      Type de véhicule
                     </span>
                   </h3>
-                  <p>{getVehicleDisplay(currentMission)}</p>
+                  <p>{currentMission.vehicle_category ? 
+                      (vehicleCategoryLabels[currentMission.vehicle_category] || 
+                      currentMission.vehicle_category) : "Non spécifié"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Distance</h3>
-                  <p>{currentMission.distance_km?.toFixed(0) || '0'} km</p>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Marque
+                  </h3>
+                  <p>{currentMission.vehicle_make || "Non spécifié"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Modèle
+                  </h3>
+                  <p>{currentMission.vehicle_model || "Non spécifié"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Immatriculation
+                  </h3>
+                  <p>{currentMission.vehicle_registration || "Non spécifié"}</p>
                 </div>
               </div>
             </div>
@@ -383,7 +399,7 @@ const DriverDashboard = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="text-sm text-muted-foreground">
-                      {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)} • {mission.distance_km?.toFixed(0) || '0'} km
+                      {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
                     </div>
                     <div className="text-sm flex items-center">
                       <Truck className="h-3 w-3 mr-1 flex-shrink-0" />

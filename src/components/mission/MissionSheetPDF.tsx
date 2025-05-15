@@ -122,6 +122,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 3,
   },
+  driverSection: {
+    marginBottom: 10, // Réduire la marge pour économiser de l'espace
+  },
 });
 
 // Formater la date
@@ -150,15 +153,18 @@ interface MissionSheetPDFProps {
   driverName?: string;
 }
 
-export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, driverName = 'Non assigné' }) => {
+const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, driverName = 'Non assigné' }) => {
   // Utiliser directement le mission_type et mission_number de la mission
   const missionType = mission.mission_type || 'MIS';
   const missionNumber = mission.mission_number || '';
   const fullMissionNumber = `${missionType}-${missionNumber}`;
   const distanceKm = mission.distance_km?.toFixed(2) || '0';
+  
+  // Nom du convoyeur: soit le nom du chauffeur assigné, soit "DKAUTOMOTIVE" par défaut
+  const convoyeurName = mission.chauffeur_id ? (driverName !== 'Non assigné' ? driverName : 'DKAUTOMOTIVE') : 'DKAUTOMOTIVE';
 
-  // Convertir le logo en noir et blanc est géré au niveau de l'image elle-même
-  const logoPath = '/lovable-uploads/6a1b152c-305a-4a80-ae16-b6aef3bd1683.png';
+  // Nouveau logo en noir et blanc
+  const logoPath = '/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png';
 
   return (
     <Document>
@@ -167,6 +173,12 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
         <View style={styles.header}>
           <Text style={styles.title}>FICHE DE MISSION</Text>
           <Text style={styles.subtitle}>{fullMissionNumber}</Text>
+        </View>
+
+        {/* Section Convoyeur */}
+        <View style={styles.driverSection}>
+          <Text style={styles.sectionTitle}>Convoyeur</Text>
+          <Text>{convoyeurName}</Text>
         </View>
 
         {/* Adresses avec distance sur une seule ligne */}
@@ -275,3 +287,5 @@ export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, drive
     </Document>
   );
 };
+
+export default MissionSheetPDF;

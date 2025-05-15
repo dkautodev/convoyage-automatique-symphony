@@ -177,6 +177,9 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
     mission.vehicle_registration ? `Immatriculation: ${mission.vehicle_registration}` : null
   ].filter(Boolean).join(' / ');
 
+  // Nouveau chemin du logo
+  const logoPath = '/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png';
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -268,7 +271,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
         <View style={styles.footer}>
           <View style={styles.logoContainer}>
             <Image 
-              src="/public/lovable-uploads/964d45a2-0f00-4840-b665-6085581ee181.png" 
+              src={logoPath} 
               style={styles.logo} 
             />
           </View>

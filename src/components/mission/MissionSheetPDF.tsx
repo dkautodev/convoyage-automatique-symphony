@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
-import { Mission } from '@/types/supabase';
-import { formatFullAddress } from '@/utils/missionUtils';
+import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { formatCurrency, formatDate } from '@/utils/validation';
 
-// Enregistrer les polices
+// Register fonts
 Font.register({
   family: 'Roboto',
   fonts: [
@@ -13,71 +12,66 @@ Font.register({
   ],
 });
 
-// Styles pour le PDF
+// Create styles
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
-    backgroundColor: '#fff',
     padding: 30,
     fontFamily: 'Roboto',
-    fontSize: 12,
+    fontSize: 10,
   },
   header: {
+    flexDirection: 'row',
     marginBottom: 20,
-    borderBottom: '1pt solid #ccc',
-    paddingBottom: 10,
+    justifyContent: 'space-between',
+  },
+  headerText: {
+    fontSize: 10,
+    flexShrink: 1,
+  },
+  logo: {
+    width: 80,
+    height: 60,
+    objectFit: 'contain',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 20,
     textAlign: 'center',
-    marginBottom: 5,
   },
   subtitle: {
     fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 10,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+    backgroundColor: '#f0f0f0',
+    padding: 5,
   },
   section: {
-    marginBottom: 15,
-    borderBottom: '1pt solid #eee',
-    paddingBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    backgroundColor: '#f5f5f5',
-    padding: '5 10',
+    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 3,
+    paddingTop: 3,
   },
-  column: {
-    flexDirection: 'column',
-    marginBottom: 5,
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 3,
+    paddingTop: 3,
   },
   label: {
-    fontWeight: 'bold',
     width: '30%',
+    fontWeight: 'bold',
   },
   value: {
     width: '70%',
-  },
-  halfColumn: {
-    width: '50%',
-  },
-  contactBlock: {
-    marginTop: 8,
-    paddingLeft: 0,
-  },
-  contactLabel: {
-    fontWeight: 'bold',
-    marginBottom: 3,
-  },
-  contactInfo: {
-    marginBottom: 2,
   },
   footer: {
     position: 'absolute',
@@ -85,193 +79,229 @@ const styles = StyleSheet.create({
     left: 30,
     right: 30,
     textAlign: 'center',
-    borderTop: '1pt solid #ccc',
+    fontSize: 8,
+    color: '#666',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
     paddingTop: 10,
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  logoContainer: {
-    display: 'flex',
-    justifyContent: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
   },
-  logo: {
-    width: 150,
-    height: 'auto',
+  footerLogo: {
+    width: 50,
+    height: 30,
+    objectFit: 'contain',
   },
-  addressRow: {
-    flexDirection: 'row',
-    marginBottom: 10,
+  footerText: {
+    flex: 1,
+    textAlign: 'center',
   },
-  addressColumn: {
-    width: '50%',
-  },
-  addressLabel: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  vehicleRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  vehicleColumn: {
-    width: '33%',
-  },
-  vehicleLabel: {
-    fontWeight: 'bold',
-    marginBottom: 3,
+  pageNumber: {
+    position: 'absolute',
+    bottom: 10,
+    right: 30,
+    fontSize: 8,
   },
 });
 
-// Formater la date
-const formatDate = (dateStr?: string | null): string => {
-  if (!dateStr) return 'Non spécifiée';
+// Create Document Component
+const MissionSheetPDF = ({ mission, clientProfile }: { mission: any, clientProfile: any }) => {
+  const pickupAddress = mission.pickup_address ? 
+    `${mission.pickup_address.street}, ${mission.pickup_address.postal_code} ${mission.pickup_address.city}, ${mission.pickup_address.country || 'France'}` : 
+    'Non spécifiée';
   
-  try {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  } catch (e) {
-    return 'Date invalide';
-  }
-};
+  const deliveryAddress = mission.delivery_address ? 
+    `${mission.delivery_address.street}, ${mission.delivery_address.postal_code} ${mission.delivery_address.city}, ${mission.delivery_address.country || 'France'}` : 
+    'Non spécifiée';
 
-// Formater l'heure
-const formatTime = (timeStr?: string | null): string => {
-  if (!timeStr) return '';
-  return timeStr;
-};
+  const formatFullPickupDate = () => {
+    if (!mission.D1_PEC) return 'Non spécifiée';
+    const date = formatDate(mission.D1_PEC);
+    
+    let time = '';
+    if (mission.H1_PEC && mission.H2_PEC) {
+      time = `entre ${mission.H1_PEC} et ${mission.H2_PEC}`;
+    } else if (mission.H1_PEC) {
+      time = `à partir de ${mission.H1_PEC}`;
+    } else if (mission.H2_PEC) {
+      time = `jusqu'à ${mission.H2_PEC}`;
+    }
+    
+    return time ? `${date} ${time}` : date;
+  };
 
-interface MissionSheetPDFProps {
-  mission: Mission;
-  driverName?: string;
-}
+  const formatFullDeliveryDate = () => {
+    if (!mission.D2_LIV) return 'Non spécifiée';
+    const date = formatDate(mission.D2_LIV);
+    
+    let time = '';
+    if (mission.H1_LIV && mission.H2_LIV) {
+      time = `entre ${mission.H1_LIV} et ${mission.H2_LIV}`;
+    } else if (mission.H1_LIV) {
+      time = `à partir de ${mission.H1_LIV}`;
+    } else if (mission.H2_LIV) {
+      time = `jusqu'à ${mission.H2_LIV}`;
+    }
+    
+    return time ? `${date} ${time}` : date;
+  };
 
-export const MissionSheetPDF: React.FC<MissionSheetPDFProps> = ({ mission, driverName = 'Non assigné' }) => {
-  // Utiliser directement le mission_type et mission_number de la mission
-  const missionType = mission.mission_type || 'MIS';
-  const missionNumber = mission.mission_number || '';
-  const fullMissionNumber = `${missionType}-${missionNumber}`;
-  const distanceKm = mission.distance_km?.toFixed(2) || '0';
-
-  // Convertir le logo en noir et blanc est géré au niveau de l'image elle-même
-  const logoPath = '/lovable-uploads/6a1b152c-305a-4a80-ae16-b6aef3bd1683.png';
+  // Extraire le nom du convoyeur, ou utiliser DKAUTOMOTIVE par défaut
+  const driverName = mission.chauffeur_profile?.full_name || 'DKAUTOMOTIVE';
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.title}>FICHE DE MISSION</Text>
-          <Text style={styles.subtitle}>{fullMissionNumber}</Text>
-        </View>
-
-        {/* Adresses avec distance sur une seule ligne */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Adresses ({distanceKm} km)</Text>
-          <View style={styles.addressRow}>
-            <View style={styles.addressColumn}>
-              <Text style={styles.addressLabel}>Adresse de départ:</Text>
-              <Text>{formatFullAddress(mission.pickup_address)}</Text>
-            </View>
-            
-            <View style={styles.addressColumn}>
-              <Text style={styles.addressLabel}>Adresse de livraison:</Text>
-              <Text>{formatFullAddress(mission.delivery_address)}</Text>
-            </View>
+          <View style={styles.headerText}>
+            <Text>DK AUTOMOTIVE SASU</Text>
+            <Text>35 Chemin Du Vieux Chene</Text>
+            <Text>38240 MEYLAN</Text>
+            <Text>France</Text>
+            <Text>SIRET: 92065077300013</Text>
           </View>
+          <Image
+            src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png"
+            style={styles.logo}
+          />
         </View>
 
-        {/* Rendez-vous */}
+        <Text style={styles.title}>FICHE DE MISSION {mission.mission_number || ''}</Text>
+
+        {/* Section Convoyeur/Chauffeur */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>RDV</Text>
+          <Text style={styles.subtitle}>CONVOYEUR</Text>
           <View style={styles.row}>
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Départ:</Text>
-              <Text>
-                {mission.D1_PEC ? formatDate(mission.D1_PEC) : 'Non spécifiée'}
-                {mission.H1_PEC && mission.H2_PEC 
-                  ? ` entre ${formatTime(mission.H1_PEC)} et ${formatTime(mission.H2_PEC)}` 
-                  : mission.H1_PEC 
-                    ? ` à partir de ${formatTime(mission.H1_PEC)}` 
-                    : ''}
-              </Text>
-              
-              {(mission.contact_pickup_name || mission.contact_pickup_phone || mission.contact_pickup_email) && (
-                <View style={styles.contactBlock}>
-                  <Text style={styles.contactLabel}>Contact:</Text>
-                  {mission.contact_pickup_name && <Text style={styles.contactInfo}>{mission.contact_pickup_name}</Text>}
-                  {mission.contact_pickup_phone && <Text style={styles.contactInfo}>{mission.contact_pickup_phone}</Text>}
-                  {mission.contact_pickup_email && <Text style={styles.contactInfo}>{mission.contact_pickup_email}</Text>}
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.halfColumn}>
-              <Text style={{fontWeight: 'bold'}}>Livraison:</Text>
-              <Text>
-                {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Non spécifiée'}
-                {mission.H1_LIV && mission.H2_LIV 
-                  ? ` entre ${formatTime(mission.H1_LIV)} et ${formatTime(mission.H2_LIV)}` 
-                  : mission.H1_LIV 
-                    ? ` à partir de ${formatTime(mission.H1_LIV)}` 
-                    : ''}
-              </Text>
-              
-              {(mission.contact_delivery_name || mission.contact_delivery_phone || mission.contact_delivery_email) && (
-                <View style={styles.contactBlock}>
-                  <Text style={styles.contactLabel}>Contact:</Text>
-                  {mission.contact_delivery_name && <Text style={styles.contactInfo}>{mission.contact_delivery_name}</Text>}
-                  {mission.contact_delivery_phone && <Text style={styles.contactInfo}>{mission.contact_delivery_phone}</Text>}
-                  {mission.contact_delivery_email && <Text style={styles.contactInfo}>{mission.contact_delivery_email}</Text>}
-                </View>
-              )}
-            </View>
+            <Text>{driverName}</Text>
           </View>
         </View>
 
-        {/* Informations véhicule (sur une seule ligne en 3 colonnes) */}
+        {/* Section Adresses */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informations véhicule</Text>
-          <View style={styles.vehicleRow}>
-            {/* Colonne 1: Véhicule */}
-            <View style={styles.vehicleColumn}>
-              <Text style={styles.vehicleLabel}>Véhicule:</Text>
-              <Text>{[mission.vehicle_make, mission.vehicle_model].filter(Boolean).join(' ')}</Text>
-            </View>
-            
-            {/* Colonne 2: Immatriculation */}
-            <View style={styles.vehicleColumn}>
-              <Text style={styles.vehicleLabel}>Immatriculation:</Text>
-              <Text>{mission.vehicle_registration || 'Non spécifiée'}</Text>
-            </View>
-            
-            {/* Colonne 3: VIN */}
-            <View style={styles.vehicleColumn}>
-              <Text style={styles.vehicleLabel}>VIN:</Text>
-              <Text>{mission.vehicle_vin || 'Non spécifié'}</Text>
-            </View>
+          <Text style={styles.subtitle}>ADRESSES</Text>
+          
+          <View style={styles.row}>
+            <Text style={styles.label}>Adresse d'enlèvement</Text>
+            <Text style={styles.value}>{pickupAddress}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Date d'enlèvement</Text>
+            <Text style={styles.value}>{formatFullPickupDate()}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Contact</Text>
+            <Text style={styles.value}>{mission.contact_pickup_name || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Téléphone</Text>
+            <Text style={styles.value}>{mission.contact_pickup_phone || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{mission.contact_pickup_email || 'Non spécifié'}</Text>
+          </View>
+          
+          <View style={styles.row}>
+            <Text style={styles.label}>Adresse de livraison</Text>
+            <Text style={styles.value}>{deliveryAddress}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Date de livraison</Text>
+            <Text style={styles.value}>{formatFullDeliveryDate()}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Contact</Text>
+            <Text style={styles.value}>{mission.contact_delivery_name || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Téléphone</Text>
+            <Text style={styles.value}>{mission.contact_delivery_phone || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{mission.contact_delivery_email || 'Non spécifié'}</Text>
           </View>
         </View>
 
-        {/* Notes */}
-        {mission.notes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes complémentaires</Text>
-            <Text>{mission.notes}</Text>
+        {/* Section véhicule */}
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>INFORMATIONS VÉHICULE</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Type de véhicule</Text>
+            <Text style={styles.value}>{mission.vehicle_category || 'Non spécifié'}</Text>
           </View>
-        )}
+          <View style={styles.row}>
+            <Text style={styles.label}>Marque</Text>
+            <Text style={styles.value}>{mission.vehicle_make || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Modèle</Text>
+            <Text style={styles.value}>{mission.vehicle_model || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Année</Text>
+            <Text style={styles.value}>{mission.vehicle_year || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Carburant</Text>
+            <Text style={styles.value}>{mission.vehicle_fuel || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Immatriculation</Text>
+            <Text style={styles.value}>{mission.vehicle_registration || 'Non spécifié'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Numéro de châssis</Text>
+            <Text style={styles.value}>{mission.vehicle_vin || 'Non spécifié'}</Text>
+          </View>
+        </View>
 
-        {/* Pied de page avec logo */}
+        {/* Section Client */}
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>CLIENT</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Nom</Text>
+            <Text style={styles.value}>{clientProfile?.company_name || ''}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Contact</Text>
+            <Text style={styles.value}>{clientProfile?.full_name || ''}</Text>
+          </View>
+        </View>
+
+        {/* Section Prix */}
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>INFORMATIONS MISSION</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Distance</Text>
+            <Text style={styles.value}>{mission.distance_km} km</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Notes</Text>
+            <Text style={styles.value}>{mission.notes || '-'}</Text>
+          </View>
+        </View>
+
+        {/* Pied de page */}
         <View style={styles.footer}>
-          <View style={styles.logoContainer}>
-            <Image src={logoPath} style={styles.logo} />
+          <Image
+            src="https://app-private.dkautomotive.fr/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png"
+            style={styles.footerLogo}
+          />
+          <View style={styles.footerText}>
+            <Text>DK AUTOMOTIVE SASU - 35 Chemin Du Vieux Chene, 38240 MEYLAN, France</Text>
+            <Text>SIRET: 92065077300013 - TVA: FR83920650773</Text>
           </View>
         </View>
+        
+        <Text 
+          style={styles.pageNumber} 
+          render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} 
+        />
       </Page>
     </Document>
   );
 };
+
+export default MissionSheetPDF;

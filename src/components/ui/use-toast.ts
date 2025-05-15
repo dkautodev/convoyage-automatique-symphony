@@ -1,8 +1,9 @@
+
 import * as React from "react"
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 2000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -70,9 +71,14 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      // Dismiss all existing toasts when a new one is added
+      state.toasts.forEach((toast) => {
+        addToRemoveQueue(toast.id)
+      })
+      
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [action.toast].slice(0, TOAST_LIMIT),
       }
 
     case "UPDATE_TOAST":

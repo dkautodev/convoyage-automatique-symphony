@@ -45,10 +45,7 @@ export default function ForgotPassword() {
   return <div className="min-h-screen bg-muted/30 flex flex-col">
       <div className="container mx-auto p-4">
         <div className="max-w-md mx-auto my-8">
-          <Link to="/home" className="inline-flex items-center text-sm mb-6 hover:underline">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Retour à l'accueil
-          </Link>
+          
           
           <Card>
             <CardHeader>

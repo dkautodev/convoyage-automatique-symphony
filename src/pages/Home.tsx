@@ -172,7 +172,7 @@ export default function Home() {
                           </FormLabel>
                         </FormItem>} />
                     
-                    {/* Forgot password */}
+                    {/* Forgot password - Updated link */}
                     <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
                       Mot de passe oublié ?
                     </Link>

@@ -26,6 +26,17 @@ const ProtectedRoute = ({ children, roles }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Si le profil n'est pas complet, rediriger vers la page de complétion appropriée
+  if (profile && !profile.profile_completed) {
+    console.log('Profil non complété, redirection vers la page de complétion');
+    
+    if (profile.role === 'client') {
+      return <Navigate to="/complete-client-profile" replace />;
+    } else if (profile.role === 'chauffeur') {
+      return <Navigate to="/complete-driver-profile" replace />;
+    }
+  }
+
   // Si des rôles spécifiques sont requis et que l'utilisateur n'a pas le bon rôle
   if (roles && profile?.role && !roles.includes(profile.role)) {
     console.log(`Rôle requis: ${roles.join(', ')}, rôle de l'utilisateur: ${profile.role}`);

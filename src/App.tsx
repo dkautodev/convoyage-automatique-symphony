@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -30,9 +31,10 @@ import Register from './pages/Register';
 import BasicRegister from './pages/auth/BasicRegister';
 import RegisterAdmin from './pages/RegisterAdmin';
 import CompleteClientProfile from './pages/auth/CompleteClientProfile';
-import { CompleteDriverProfile, CompleteDriverConfig } from './pages/auth';
+import { CompleteDriverProfile } from './pages/auth';
 import AdminDriverInvoicesPage from './pages/dashboard/admin/DriverInvoicesPage';
 import DriverInvoicesPage from './pages/dashboard/driver/DriverInvoicesPage';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   return (
@@ -42,15 +44,15 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/home" element={<Home />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* Registration routes */}
         <Route path="/register" element={<Register />} />
         <Route path="/register-page" element={<RegisterPage />} />
         <Route path="/register-admin" element={<RegisterAdmin />} />
         <Route path="/auth/register" element={<BasicRegister />} />
-        <Route path="/auth/complete-client-profile" element={<CompleteClientProfile />} />
-        <Route path="/auth/complete-driver-profile" element={<CompleteDriverProfile />} />
-        <Route path="/auth/complete-driver-config" element={<CompleteDriverConfig />} />
+        <Route path="/complete-client-profile" element={<CompleteClientProfile />} />
+        <Route path="/complete-driver-profile" element={<CompleteDriverProfile />} />
         
         {/* Admin routes */}
         <Route path="/admin" element={

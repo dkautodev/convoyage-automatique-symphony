@@ -200,6 +200,9 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
     mission.vehicle_vin ? `VIN: ${mission.vehicle_vin}` : null,
     mission.vehicle_registration ? `Immatriculation: ${mission.vehicle_registration}` : null
   ].filter(Boolean).join(' / ');
+  
+  // Path for the new logo
+  const logoPath = '/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png';
 
   return (
     <Document>
@@ -302,7 +305,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
         <View style={styles.footer}>
           <View style={styles.logoContainer}>
             <Image 
-              src="/public/lovable-uploads/8e0598ee-4531-43f7-b33b-02d30c0f9eca.png" 
+              src={logoPath} 
               style={styles.logo} 
             />
           </View>

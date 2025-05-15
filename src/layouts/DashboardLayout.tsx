@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -22,6 +22,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Close sidebar on location change (page navigation)
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
   
   // Adding debug logging to trace authentication state
   console.log("DashboardLayout auth state:", { user, profile, loading });
@@ -88,8 +95,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Mobile sidebar trigger */}
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Mobile sidebar trigger - positioned better to avoid overlapping with content */}
       {isMobile && (
         <Button 
           variant="ghost" 
@@ -101,32 +108,35 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </Button>
       )}
       
-      {/* Sidebar - fixed on desktop, slideover on mobile */}
-      <div className={`${isMobile 
-        ? `fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
-        : 'w-64 shrink-0'}`}
-      >
-        <Sidebar userRole={profile?.role || 'client'} />
-      </div>
-      
-      {/* Overlay to close sidebar on mobile */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30" 
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Main content area */}
-      <div className="flex-1">
-        {/* Fixed header */}
-        <div className="sticky top-0 z-10 bg-white shadow-sm">
-          <DashboardHeader />
+      {/* Main flex container */}
+      <div className="flex flex-1 h-full">
+        {/* Sidebar - fixed on desktop, slideover on mobile */}
+        <div className={`${isMobile 
+          ? `fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+          : 'w-64 shrink-0'}`}
+        >
+          <Sidebar userRole={profile?.role || 'client'} />
         </div>
         
-        {/* Content area with padding to accommodate fixed header */}
-        <div className="p-4 sm:p-6 mt-16">
-          {renderDashboardContent()}
+        {/* Overlay to close sidebar on mobile */}
+        {isMobile && sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-30" 
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Main content area - flex-1 to take up all available space */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Fixed header */}
+          <div className="sticky top-0 z-10 bg-white shadow-sm">
+            <DashboardHeader />
+          </div>
+          
+          {/* Content area with padding and overflow handling */}
+          <div className="p-4 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto">
+            {renderDashboardContent()}
+          </div>
         </div>
       </div>
     </div>

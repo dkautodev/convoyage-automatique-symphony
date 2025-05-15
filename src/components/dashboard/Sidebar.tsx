@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck, CreditCard } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SidebarProps {
   userRole: string;
@@ -10,6 +12,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   userRole
 }) => {
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   // Helper function to determine if a link is active
   const isActive = (path: string) => {
@@ -115,27 +118,41 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   // Merge role-specific items with common items
   const allItems = [...roleItems, ...commonItems];
-  return <div className="bg-white w-64 h-full shadow-lg">
-      {/* Logo Section */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-        <img src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png" alt="DK Automotive Logo" className="h-8" />
-        
-      </div>
+  
+  return (
+    <div className="bg-white w-64 h-full shadow-lg flex flex-col">
+      {/* Logo Section - Only show at top when not on mobile */}
+      {!isMobile && (
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center">
+          <img src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png" alt="DK Automotive Logo" className="h-8" />
+        </div>
+      )}
       
-      {/* Navigation Section */}
-      <nav className="px-4 py-6">
+      {/* Navigation Section - expanded to take available space */}
+      <nav className="px-4 py-6 flex-1 overflow-y-auto">
         <ul className="space-y-2">
-          {allItems.map(item => <li key={item.path}>
-              <NavLink to={item.path} className={({
-            isActive
-          }) => `flex items-center px-4 py-2 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}>
+          {allItems.map(item => (
+            <li key={item.path}>
+              <NavLink 
+                to={item.path} 
+                className={({isActive}) => `flex items-center px-4 py-2 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}
+              >
                 <span className="mr-3">{item.icon}</span>
                 <span>{item.label}</span>
               </NavLink>
-            </li>)}
+            </li>
+          ))}
         </ul>
       </nav>
-    </div>;
+      
+      {/* Logo at bottom for mobile */}
+      {isMobile && (
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-center items-center">
+          <img src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png" alt="DK Automotive Logo" className="h-8" />
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Sidebar;

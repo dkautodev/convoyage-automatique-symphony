@@ -105,8 +105,13 @@ const styles = StyleSheet.create({
   },
 });
 
-// Create Document Component
-const MissionSheetPDF = ({ mission, clientProfile }: { mission: any, clientProfile: any }) => {
+interface MissionSheetPDFProps {
+  mission: any;
+  driverName?: string;
+  clientProfile?: any;
+}
+
+const MissionSheetPDF = ({ mission, driverName, clientProfile }: MissionSheetPDFProps) => {
   const pickupAddress = mission.pickup_address ? 
     `${mission.pickup_address.street}, ${mission.pickup_address.postal_code} ${mission.pickup_address.city}, ${mission.pickup_address.country || 'France'}` : 
     'Non spécifiée';
@@ -148,7 +153,7 @@ const MissionSheetPDF = ({ mission, clientProfile }: { mission: any, clientProfi
   };
 
   // Extraire le nom du convoyeur, ou utiliser DKAUTOMOTIVE par défaut
-  const driverName = mission.chauffeur_profile?.full_name || 'DKAUTOMOTIVE';
+  const driver = driverName || mission.chauffeur_profile?.full_name || 'DKAUTOMOTIVE';
 
   return (
     <Document>
@@ -173,7 +178,7 @@ const MissionSheetPDF = ({ mission, clientProfile }: { mission: any, clientProfi
         <View style={styles.section}>
           <Text style={styles.subtitle}>CONVOYEUR</Text>
           <View style={styles.row}>
-            <Text>{driverName}</Text>
+            <Text>{driver}</Text>
           </View>
         </View>
 

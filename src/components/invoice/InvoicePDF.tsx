@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -182,11 +183,12 @@ interface InvoicePDFProps {
   mission: Mission;
   client?: any;
   adminProfile?: any;
+  invoiceNumber?: string;
 }
 
-const InvoicePDF = ({ mission, client, invoiceNumber = 'AUTO-DRAFT' }: { mission: any, client: any, invoiceNumber?: string }) => {
+const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile, invoiceNumber: propInvoiceNumber }) => {
   // Format the invoice number
-  const invoiceNumber = `FAC-${formatMissionNumber(mission)}`;
+  const invoiceNumber = propInvoiceNumber || `FAC-${formatMissionNumber(mission)}`;
   
   // Calculate VAT amount
   const vatAmount = mission.price_ttc - mission.price_ht;

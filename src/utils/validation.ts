@@ -50,3 +50,19 @@ export const formatSiret = (value: string): string => {
   if (digits.length <= 9) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
   return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
 };
+
+// Ajout des fonctions manquantes
+export const formatCurrency = (amount: number): string => {
+  return amount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+};
+
+export const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};

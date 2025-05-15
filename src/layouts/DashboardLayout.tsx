@@ -16,7 +16,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   
   // Fermer le menu quand on change de page
   useEffect(() => {
@@ -43,6 +43,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     );
   }
 
+  // Déterminer le rôle de l'utilisateur
+  const userRole = profile?.role || 'client';
+
   return (
     <div className="h-screen flex overflow-hidden bg-muted/30">
       {/* Sidebar pour mobile - s'ouvre en modal */}
@@ -63,7 +66,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <img src="/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png" alt="Logo" className="h-12" />
           </div>
           
-          <Sidebar />
+          <Sidebar userRole={userRole} />
         </div>
       </div>
 

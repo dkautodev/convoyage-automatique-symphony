@@ -12,7 +12,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
 const loginSchema = z.object({
   email: z.string().email({
     message: 'Veuillez saisir une adresse email valide'

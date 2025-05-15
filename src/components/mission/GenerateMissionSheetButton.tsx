@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { pdf } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
-import MissionSheetPDF from './MissionSheetPDF';
+import { MissionSheetPDF } from './MissionSheetPDF';
 import { toast } from 'sonner';
 import { formatMissionNumber } from '@/utils/missionUtils';
 

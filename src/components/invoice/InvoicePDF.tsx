@@ -163,32 +163,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 1.4,
   },
-  footerLogo: {
-    height: 25,
-    objectFit: 'contain',
-  },
-  footerText: {
-    marginTop: 5,
-  },
-  pageNumber: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    fontSize: 8,
-    color: '#666',
-  },
 });
 
 interface InvoicePDFProps {
   mission: Mission;
   client?: any;
   adminProfile?: any;
-  invoiceNumber?: string;
 }
 
-const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile, invoiceNumber: propInvoiceNumber }) => {
+const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }) => {
   // Format the invoice number
-  const invoiceNumber = propInvoiceNumber || `FAC-${formatMissionNumber(mission)}`;
+  const invoiceNumber = `FAC-${formatMissionNumber(mission)}`;
   
   // Calculate VAT amount
   const vatAmount = mission.price_ttc - mission.price_ht;
@@ -313,22 +298,20 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile, 
           </View>
         </View>
 
-        {/* Pied de page avec le nouveau logo */}
+        {/* Footer with legal text and logo */}
         <View style={styles.footer}>
-          <Image
-            src="https://app-private.dkautomotive.fr/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png"
-            style={styles.footerLogo}
-          />
-          <View style={styles.footerText}>
-            <Text>DK AUTOMOTIVE SASU - 35 Chemin Du Vieux Chene, 38240 MEYLAN, France</Text>
-            <Text>SIRET: 92065077300013 - TVA: FR83920650773</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              src="/public/lovable-uploads/8e0598ee-4531-43f7-b33b-02d30c0f9eca.png" 
+              style={styles.logo} 
+            />
           </View>
+          <Text style={styles.legalText}>
+            Pas d'escompte accordé pour paiement anticipé.{"\n"}
+            En cas de non-paiement à la date d'échéance, des pénalités calculées à trois fois le taux d'intérêt légal seront appliquées.{"\n"}
+            Tout retard de paiement entraînera une indemnité forfaitaire pour frais de recouvrement de 40€.
+          </Text>
         </View>
-        
-        <Text 
-          style={styles.pageNumber} 
-          render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} 
-        />
       </Page>
     </Document>
   );

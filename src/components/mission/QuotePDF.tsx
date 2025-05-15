@@ -147,20 +147,6 @@ const styles = StyleSheet.create({
     height: 30, // Reduced from 40 to 30
     objectFit: 'contain',
   },
-  footerLogo: {
-    height: 30,
-    objectFit: 'contain',
-  },
-  footerText: {
-    marginLeft: 10,
-  },
-  pageNumber: {
-    position: 'absolute',
-    bottom: 10,
-    right: 10,
-    fontSize: 8,
-    color: '#666',
-  },
 });
 
 interface QuotePDFProps {
@@ -278,22 +264,15 @@ const QuotePDF: React.FC<QuotePDFProps> = ({ mission, client, adminProfile }) =>
           </View>
         </View>
 
-        {/* Pied de page avec le nouveau logo */}
+        {/* Footer with logo */}
         <View style={styles.footer}>
-          <Image
-            src="https://app-private.dkautomotive.fr/lovable-uploads/4f0af89a-3624-4a59-9623-2e9852b51049.png"
-            style={styles.footerLogo}
-          />
-          <View style={styles.footerText}>
-            <Text>DK AUTOMOTIVE SASU - 35 Chemin Du Vieux Chene, 38240 MEYLAN, France</Text>
-            <Text>SIRET: 92065077300013 - TVA: FR83920650773</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              src="/public/lovable-uploads/964d45a2-0f00-4840-b665-6085581ee181.png" 
+              style={styles.logo} 
+            />
           </View>
         </View>
-        
-        <Text 
-          style={styles.pageNumber} 
-          render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} 
-        />
       </Page>
     </Document>
   );

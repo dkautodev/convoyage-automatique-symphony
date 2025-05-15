@@ -62,7 +62,6 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
           mission={mission} 
           client={clientData} 
           adminProfile={profile}
-          invoiceNumber={invoiceNumber}
         />
       ).toBlob();
       

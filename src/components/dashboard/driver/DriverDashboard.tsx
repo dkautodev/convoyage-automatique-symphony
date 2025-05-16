@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle, Truck } from 'lucide-react';
@@ -28,7 +29,8 @@ const DriverDashboard = () => {
     todayMissions: 0,
     upcomingMissions: 0, 
     completedMissions: 0,
-    earnings: 0
+    earnings: 0,
+    paidInvoices: 0
   });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
@@ -113,22 +115,31 @@ const DriverDashboard = () => {
         .eq('status', 'termine')
         .gte('completion_date', firstDayOfMonth.toISOString());
       
-      // Revenus du mois (basés sur chauffeur_price_ht)
-      const { data: completedMissions } = await supabase
+      // Factures payées du mois (basées sur chauffeur_paid)
+      const { data: paidMissions } = await supabase
         .from('missions')
         .select('chauffeur_price_ht')
         .eq('chauffeur_id', user.id)
-        .eq('status', 'termine')
-        .gte('completion_date', firstDayOfMonth.toISOString());
+        .eq('chauffeur_paid', true)
+        .gte('updated_at', firstDayOfMonth.toISOString());
       
-      const monthEarnings = completedMissions?.reduce((sum, mission) => 
+      const monthEarnings = paidMissions?.reduce((sum, mission) => 
         sum + (mission.chauffeur_price_ht || 0), 0) || 0;
+      
+      // Nombre de factures payées
+      const { count: paidInvoicesCount } = await supabase
+        .from('missions')
+        .select('*', { count: 'exact', head: true })
+        .eq('chauffeur_id', user.id)
+        .eq('chauffeur_paid', true)
+        .gte('updated_at', firstDayOfMonth.toISOString());
       
       setStats({
         todayMissions: todayCount || 0,
         upcomingMissions: upcomingCount || 0,
         completedMissions: completedCount || 0,
-        earnings: monthEarnings
+        earnings: monthEarnings,
+        paidInvoices: paidInvoicesCount || 0
       });
       
     } catch (error) {
@@ -233,16 +244,24 @@ const DriverDashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Tableau de bord chauffeur</h1>
-        <Button asChild>
-          <Link to="/driver/missions">
-            <MapPin className="mr-2 h-4 w-4" />
-            Voir mes missions
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/driver/revenue-management">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pilotage CA
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/driver/missions">
+              <MapPin className="mr-2 h-4 w-4" />
+              Voir mes missions
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Mission du jour</CardTitle>
@@ -282,6 +301,21 @@ const DriverDashboard = () => {
               <Clock className="h-7 w-7 text-purple-500 mr-4" />
               <div>
                 <div className="text-2xl font-bold">{stats.completedMissions}</div>
+                <p className="text-xs text-muted-foreground">Ce mois-ci</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Factures payées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <CheckCircle className="h-7 w-7 text-emerald-500 mr-4" />
+              <div>
+                <div className="text-2xl font-bold">{stats.paidInvoices}</div>
                 <p className="text-xs text-muted-foreground">Ce mois-ci</p>
               </div>
             </div>

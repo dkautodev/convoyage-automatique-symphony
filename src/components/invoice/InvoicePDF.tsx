@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     bottom: 75, // Positionnement au-dessus du footer
     left: 30,
     right: 30,
-    margin-botton :10px,
+    marginBottom: 10, // Fixed here: changed from margin-botton to marginBottom
   },
   paymentTermsText: {
     fontSize: 7,

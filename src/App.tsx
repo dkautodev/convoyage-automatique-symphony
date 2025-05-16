@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -35,6 +34,7 @@ import { CompleteDriverProfile } from './pages/auth';
 import AdminDriverInvoicesPage from './pages/dashboard/admin/DriverInvoicesPage';
 import DriverInvoicesPage from './pages/dashboard/driver/DriverInvoicesPage';
 import ForgotPassword from './pages/ForgotPassword';
+import RevenueManagementPage from './pages/dashboard/driver/RevenueManagementPage';
 
 function App() {
   return (
@@ -210,6 +210,13 @@ function App() {
           <ProtectedRoute roles={['chauffeur']}>
             <DashboardLayout>
               <DriverInvoicesPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/driver/revenue-management" element={
+          <ProtectedRoute roles={['chauffeur']}>
+            <DashboardLayout>
+              <RevenueManagementPage />
             </DashboardLayout>
           </ProtectedRoute>
         } />

@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
     bottom: 75, // Positionnement au-dessus du footer
     left: 30,
     right: 30,
+    margin-botton :10px,
   },
   paymentTermsText: {
     fontSize: 7,

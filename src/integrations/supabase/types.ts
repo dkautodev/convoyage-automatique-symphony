@@ -42,6 +42,30 @@ export type Database = {
         }
         Relationships: []
       }
+      api_store_admin_table: {
+        Row: {
+          app_name: string | null
+          created_at: string
+          id: number
+          key: string | null
+          note: string | null
+        }
+        Insert: {
+          app_name?: string | null
+          created_at?: string
+          id?: number
+          key?: string | null
+          note?: string | null
+        }
+        Update: {
+          app_name?: string | null
+          created_at?: string
+          id?: number
+          key?: string | null
+          note?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           billing_address: Json
@@ -190,27 +214,6 @@ export type Database = {
           license_number?: string | null
           updated_at?: string
           vigilance_document_path?: string | null
-        }
-        Relationships: []
-      }
-      google_maps_settings: {
-        Row: {
-          api_key: string
-          id: number
-          updated_at: string
-          updated_by: string
-        }
-        Insert: {
-          api_key: string
-          id?: number
-          updated_at?: string
-          updated_by: string
-        }
-        Update: {
-          api_key?: string
-          id?: number
-          updated_at?: string
-          updated_by?: string
         }
         Relationships: []
       }

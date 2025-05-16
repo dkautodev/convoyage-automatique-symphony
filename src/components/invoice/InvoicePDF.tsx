@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { Mission } from '@/types/supabase';
@@ -163,6 +162,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 1.4,
   },
+  paymentTermsContainer: {
+    position: 'absolute',
+    bottom: 75, // Positionnement au-dessus du footer
+    left: 30,
+    right: 30,
+  },
+  paymentTermsText: {
+    fontSize: 7,
+    textAlign: 'left',
+    color: '#666',
+    lineHeight: 1.3,
+  },
 });
 
 interface InvoicePDFProps {
@@ -301,7 +312,15 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
           </View>
         </View>
 
-        {/* Footer with legal text and logo */}
+        {/* Texte de conditions de paiement déplacé ici, avant le footer */}
+        <View style={styles.paymentTermsContainer}>
+          <Text style={styles.paymentTermsText}>
+            Pas d'escompte accordé pour paiement anticipé. En cas de non-paiement à la date d'échéance, des pénalités calculées à trois fois le taux d'intérêt légal seront appliquées.{"\n"}
+            Tout retard de paiement entraînera une indemnité forfaitaire pour frais de recouvrement de 40€.
+          </Text>
+        </View>
+
+        {/* Footer avec uniquement le logo */}
         <View style={styles.footer}>
           <View style={styles.logoContainer}>
             <Image 
@@ -309,11 +328,6 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
               style={styles.logo} 
             />
           </View>
-          <Text style={styles.legalText}>
-            Pas d'escompte accordé pour paiement anticipé.{"\n"}
-            En cas de non-paiement à la date d'échéance, des pénalités calculées à trois fois le taux d'intérêt légal seront appliquées.{"\n"}
-            Tout retard de paiement entraînera une indemnité forfaitaire pour frais de recouvrement de 40€.
-          </Text>
         </View>
       </Page>
     </Document>

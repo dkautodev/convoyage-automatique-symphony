@@ -67,60 +67,8 @@ const parseTime = (time: string): number => {
   return hours * 60 + minutes;
 };
 
-// Fonctions de validation personnalisées
-const validatePickupDates = (schema: z.ZodObject<any>) => {
-  return schema.refine(
-    (data) => {
-      // Si les deux champs d'heure sont renseignés, vérifier que l'heure de fin est après l'heure de début
-      if (data.H1_PEC && data.H2_PEC) {
-        return parseTime(data.H2_PEC) > parseTime(data.H1_PEC);
-      }
-      return true;
-    },
-    {
-      message: "L'heure de fin de ramassage doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
-      path: ["H2_PEC"],
-    }
-  );
-};
-
-const validateDeliveryDates = (schema: z.ZodObject<any>) => {
-  return schema.refine(
-    (data) => {
-      // Si les deux champs d'heure sont renseignés, vérifier que l'heure de fin est après l'heure de début
-      if (data.H1_LIV && data.H2_LIV) {
-        return parseTime(data.H2_LIV) > parseTime(data.H1_LIV);
-      }
-      return true;
-    },
-    {
-      message: "L'heure de fin de livraison doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
-      path: ["H2_LIV"],
-    }
-  );
-};
-
-const validatePickupVsDeliveryDates = (schema: z.ZodObject<any>) => {
-  return schema.refine(
-    (data) => {
-      // Vérifier que la date de livraison est égale ou postérieure à la date de ramassage
-      if (data.D1_PEC && data.D2_LIV) {
-        const pickupDate = new Date(data.D1_PEC);
-        const deliveryDate = new Date(data.D2_LIV);
-        
-        return deliveryDate >= pickupDate;
-      }
-      return true;
-    },
-    {
-      message: "La date de livraison doit être égale ou ultérieure à la date de ramassage",
-      path: ["D2_LIV"],
-    }
-  );
-};
-
-// Étape 4: Contacts et notes avec créneaux horaires
-const contactsAndNotesSchema = z.object({
+// Créer le schéma de base pour l'étape 4
+const baseContactsAndNotesSchema = z.object({
   contact_pickup_name: z.string().min(1, 'Le nom du contact de départ est requis'),
   contact_pickup_phone: z.string().min(1, 'Le téléphone du contact de départ est requis'),
   contact_pickup_email: z.string().min(1, 'L\'email du contact de départ est requis').email('Email invalide'),
@@ -140,10 +88,52 @@ const contactsAndNotesSchema = z.object({
   H1_LIV: z.string().min(1, 'L\'heure de début de livraison est requise'),
   H2_LIV: z.string().min(1, 'L\'heure de fin de livraison est requise'),
   notes: z.string().optional()
-})
-  .pipe(validatePickupDates)
-  .pipe(validateDeliveryDates)
-  .pipe(validatePickupVsDeliveryDates);
+});
+
+// Fonctions de validation personnalisées
+const contactsAndNotesSchema = baseContactsAndNotesSchema.superRefine((data, ctx) => {
+  // Valider que l'heure de fin de ramassage est après l'heure de début
+  if (data.H1_PEC && data.H2_PEC) {
+    const h1PecTime = parseTime(data.H1_PEC);
+    const h2PecTime = parseTime(data.H2_PEC);
+    
+    if (h2PecTime <= h1PecTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "L'heure de fin de ramassage doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
+        path: ["H2_PEC"],
+      });
+    }
+  }
+
+  // Valider que l'heure de fin de livraison est après l'heure de début
+  if (data.H1_LIV && data.H2_LIV) {
+    const h1LivTime = parseTime(data.H1_LIV);
+    const h2LivTime = parseTime(data.H2_LIV);
+    
+    if (h2LivTime <= h1LivTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "L'heure de fin de livraison doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
+        path: ["H2_LIV"],
+      });
+    }
+  }
+
+  // Vérifier que la date de livraison est égale ou postérieure à la date de ramassage
+  if (data.D1_PEC && data.D2_LIV) {
+    const pickupDate = new Date(data.D1_PEC);
+    const deliveryDate = new Date(data.D2_LIV);
+    
+    if (deliveryDate < pickupDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La date de livraison doit être égale ou ultérieure à la date de ramassage",
+        path: ["D2_LIV"],
+      });
+    }
+  }
+});
 
 // Étape 5: Attribution (Admin seulement)
 const attributionSchema = z.object({
@@ -243,8 +233,10 @@ export default function CreateMissionForm({
     setSelectedClientId(clientId);
     form.setValue('client_id', clientId);
   };
-  const currentSchema = (() => {
-    switch (currentStep) {
+
+  // Déterminer le schéma à utiliser en fonction de l'étape actuelle
+  const getCurrentSchema = (step: number) => {
+    switch (step) {
       case 1:
         return missionTypeSchema;
       case 2:
@@ -258,7 +250,8 @@ export default function CreateMissionForm({
       default:
         return missionTypeSchema;
     }
-  })();
+  };
+
   async function calculatePrice() {
     try {
       setCalculatingPrice(true);
@@ -333,27 +326,38 @@ export default function CreateMissionForm({
       setCalculatingPrice(false);
     }
   }
+
   const nextStep = async () => {
     setFormTouched(true);
-    const isValid = await form.trigger(Object.keys(currentSchema.shape) as any);
+    
+    // Obtenir les noms des champs à valider pour l'étape actuelle
+    const currentSchema = getCurrentSchema(currentStep);
+    const fieldNames = Object.keys(currentSchema._def.shape || {});
+    
+    const isValid = await form.trigger(fieldNames as any);
     if (!isValid) return;
+    
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     setFormTouched(false); // Réinitialiser formTouched pour la nouvelle étape
   };
+
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
     setFormTouched(false); // Réinitialiser formTouched pour la nouvelle étape
   };
+
   const onSelectPickupAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('pickup_address', address);
     setPickupAddressData(addressData);
     form.setValue('pickup_address_data', addressData);
   };
+
   const onSelectDeliveryAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('delivery_address', address);
     setDeliveryAddressData(addressData);
     form.setValue('delivery_address_data', addressData);
   };
+
   const onSubmit = async (values: CreateMissionFormValues) => {
     try {
       setIsSubmitting(true);
@@ -525,6 +529,17 @@ export default function CreateMissionForm({
     toast.success(`Contact de livraison sélectionné: ${contact.name_s || 'Sans nom'}`);
   };
 
+  // Type guard pour vérifier si error est un FieldError
+  const getErrorMessageAsString = (error: any): string | undefined => {
+    if (error && typeof error === 'object' && 'message' in error) {
+      return error.message as string;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    return undefined;
+  };
+  
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -606,9 +621,15 @@ export default function CreateMissionForm({
               }) => <FormItem>
                         <FormLabel>Adresse de départ</FormLabel>
                         <FormControl>
-                          <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
-                    onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                  }} placeholder="Saisissez l'adresse de départ" error={formTouched ? form.formState.errors.pickup_address?.message : undefined} />
+                          <AddressAutocomplete 
+                            value={field.value} 
+                            onChange={value => field.onChange(value)} 
+                            onSelect={(address, placeId) => {
+                              onSelectPickupAddress(address, placeId, window.selectedAddressData);
+                            }} 
+                            placeholder="Saisissez l'adresse de départ" 
+                            error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>} />
@@ -618,9 +639,15 @@ export default function CreateMissionForm({
               }) => <FormItem>
                         <FormLabel>Adresse de livraison</FormLabel>
                         <FormControl>
-                          <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
-                    onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                  }} placeholder="Saisissez l'adresse de livraison" error={formTouched ? form.formState.errors.delivery_address?.message : undefined} />
+                          <AddressAutocomplete 
+                            value={field.value} 
+                            onChange={value => field.onChange(value)} 
+                            onSelect={(address, placeId) => {
+                              onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
+                            }} 
+                            placeholder="Saisissez l'adresse de livraison" 
+                            error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>} />

@@ -60,12 +60,12 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
       
       // Créer un URL pour le téléchargement
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.file_name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Erreur lors du téléchargement du document:', error);

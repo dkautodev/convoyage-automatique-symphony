@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText, ExternalLink } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -618,7 +618,7 @@ export default function CreateMissionForm({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )} 
+                  ) 
                 />
               </div>
             )}
@@ -840,14 +840,14 @@ export default function CreateMissionForm({
                           <FormMessage />
                         </FormItem>} />
 
-                    {/* Créneau horaire de ramassage - modifié pour être sur la même ligne */}
+                    {/* Créneau horaire de ramassage - modifié pour être aligné correctement */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de ramassage</h4>
                       <div className="grid grid-cols-3 gap-4">
                         <FormField control={form.control} name="D1_PEC" render={({
                       field
                     }) => <FormItem className="flex flex-col">
-                              <FormLabel>Date</FormLabel>
+                              <FormLabel className="mb-2">Date</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <FormControl>
@@ -870,7 +870,7 @@ export default function CreateMissionForm({
                         <FormField control={form.control} name="H1_PEC" render={({
                       field
                     }) => <FormItem>
-                              <FormLabel>Heure début</FormLabel>
+                              <FormLabel className="mb-2">Heure début</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
@@ -879,7 +879,7 @@ export default function CreateMissionForm({
                         <FormField control={form.control} name="H2_PEC" render={({
                       field
                     }) => <FormItem>
-                              <FormLabel>Heure fin</FormLabel>
+                              <FormLabel className="mb-2">Heure fin</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
@@ -927,14 +927,14 @@ export default function CreateMissionForm({
                           <FormMessage />
                         </FormItem>} />
 
-                    {/* Créneau horaire de livraison - modifié pour être sur la même ligne */}
+                    {/* Créneau horaire de livraison - modifié pour être aligné correctement */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de livraison</h4>
                       <div className="grid grid-cols-3 gap-4">
                         <FormField control={form.control} name="D2_LIV" render={({
                       field
                     }) => <FormItem className="flex flex-col">
-                              <FormLabel>Date</FormLabel>
+                              <FormLabel className="mb-2">Date</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <FormControl>
@@ -957,7 +957,7 @@ export default function CreateMissionForm({
                         <FormField control={form.control} name="H1_LIV" render={({
                       field
                     }) => <FormItem>
-                              <FormLabel>Heure début</FormLabel>
+                              <FormLabel className="mb-2">Heure début</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
@@ -966,7 +966,7 @@ export default function CreateMissionForm({
                         <FormField control={form.control} name="H2_LIV" render={({
                       field
                     }) => <FormItem>
-                              <FormLabel>Heure fin</FormLabel>
+                              <FormLabel className="mb-2">Heure fin</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>

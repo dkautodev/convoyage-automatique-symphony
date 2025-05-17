@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -143,14 +142,35 @@ const attributionSchema = z.object({
   chauffeur_price_ht: z.number().optional()
 });
 
-// Schéma complet
+// Schéma complet - On utilise spread pour ajouter correctement les propriétés
 const createMissionSchema = z.object({
-  ...missionTypeSchema.shape,
-  ...vehicleAndAddressSchema.shape,
-  ...vehicleInfoSchema.shape,
-  ...contactsAndNotesSchema.shape,
-  ...attributionSchema.shape
+  mission_type: missionTypeSchema.shape.mission_type,
+  // Étape 2
+  vehicle_category: vehicleAndAddressSchema.shape.vehicle_category,
+  pickup_address: vehicleAndAddressSchema.shape.pickup_address,
+  pickup_address_data: vehicleAndAddressSchema.shape.pickup_address_data,
+  delivery_address: vehicleAndAddressSchema.shape.delivery_address,
+  delivery_address_data: vehicleAndAddressSchema.shape.delivery_address_data,
+  distance_km: vehicleAndAddressSchema.shape.distance_km,
+  price_ht: vehicleAndAddressSchema.shape.price_ht,
+  price_ttc: vehicleAndAddressSchema.shape.price_ttc,
+  vehicle_id: vehicleAndAddressSchema.shape.vehicle_id,
+  // Étape 3
+  vehicle_make: vehicleInfoSchema.shape.vehicle_make,
+  vehicle_model: vehicleInfoSchema.shape.vehicle_model,
+  vehicle_fuel: vehicleInfoSchema.shape.vehicle_fuel,
+  vehicle_year: vehicleInfoSchema.shape.vehicle_year,
+  vehicle_registration: vehicleInfoSchema.shape.vehicle_registration,
+  vehicle_vin: vehicleInfoSchema.shape.vehicle_vin,
+  // Étape 4 - Nous utilisons directement le schéma de base, puis appliquons la validation raffinée
+  ...baseContactsAndNotesSchema.shape,
+  // Étape 5
+  client_id: attributionSchema.shape.client_id,
+  status: attributionSchema.shape.status,
+  chauffeur_id: attributionSchema.shape.chauffeur_id,
+  chauffeur_price_ht: attributionSchema.shape.chauffeur_price_ht
 });
+
 type CreateMissionFormValues = z.infer<typeof createMissionSchema>;
 export default function CreateMissionForm({
   onSuccess
@@ -552,13 +572,20 @@ export default function CreateMissionForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Étape 1: Type de mission */}
-            {currentStep === 1 && <div className="space-y-4">
-                <FormField control={form.control} name="mission_type" render={({
-              field
-            }) => <FormItem className="space-y-3">
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <FormField 
+                  control={form.control} 
+                  name="mission_type" 
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
                       <FormLabel>Type de mission</FormLabel>
                       <FormControl>
-                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-4">
+                        <RadioGroup 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value} 
+                          className="grid grid-cols-2 gap-4"
+                        >
                           <FormItem>
                             <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
                               <FormControl>
@@ -590,8 +617,11 @@ export default function CreateMissionForm({
                         </RadioGroup>
                       </FormControl>
                       <FormMessage />
-                    </FormItem>} />
-              </div>}
+                    </FormItem>
+                  )} 
+                />
+              </div>
+            )}
 
             {/* Étape 2: Sélection du véhicule, adresses et prix */}
             {currentStep === 2 && <div className="space-y-6">
@@ -1041,9 +1071,11 @@ export default function CreateMissionForm({
                   <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
                 </Button>
 
-                {currentStep < totalSteps ? <Button type="button" onClick={nextStep}>
+                {currentStep < totalSteps ? (
+                  <Button type="button" onClick={nextStep}>
                     Suivant <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button> : 
+                  </Button>
+                ) : (
                   <div className="flex gap-2 items-center">
                     <p className="text-sm text-right">
                       Le client accepte sans réserves les <a href="https://dkautomotive.fr/cgv" target="_blank" className="font-medium text-primary hover:underline flex items-center">
@@ -1054,7 +1086,8 @@ export default function CreateMissionForm({
                       {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                       Créer la mission
                     </Button>
-                  </div>}
+                  </div>
+                )}
               </div>
             </div>
           </form>

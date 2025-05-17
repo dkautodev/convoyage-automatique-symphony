@@ -109,14 +109,33 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
     }
   };
 
-  const handleDownloadDocument = (document: MissionDocument) => {
-    if (!document.publicUrl) {
-      toast.error('URL de téléchargement non disponible');
-      return;
+  const handleDownloadDocument = async (document: MissionDocument) => {
+    try {
+      // Utiliser le bucket 'documents' explicitement
+      const { data, error } = await typedSupabase
+        .storage
+        .from('documents')
+        .download(document.file_path);
+        
+      if (error) {
+        console.error('Erreur de téléchargement:', error);
+        toast.error('Impossible de télécharger le document');
+        return;
+      }
+      
+      // Créer un URL pour le téléchargement
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du document:", error);
+      toast.error("Erreur lors du téléchargement du document");
     }
-
-    // Ouvrir l'URL dans un nouvel onglet
-    window.open(document.publicUrl, '_blank');
   };
 
   const formatDate = (dateString: string) => {
@@ -178,17 +197,17 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {documents.map(document => (
-                <TableRow key={document.id}>
-                  <TableCell className="font-medium">{document.file_name}</TableCell>
-                  <TableCell>{document.file_type || 'Inconnu'}</TableCell>
-                  <TableCell>{formatDate(document.uploaded_at)}</TableCell>
+              {documents.map((doc) => (
+                <TableRow key={doc.id}>
+                  <TableCell className="font-medium">{doc.file_name}</TableCell>
+                  <TableCell>{doc.file_type || 'Inconnu'}</TableCell>
+                  <TableCell>{formatDate(doc.uploaded_at)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => handleDownloadDocument(document)}
+                        onClick={() => handleDownloadDocument(doc)}
                       >
                         <Download className="h-4 w-4" />
                       </Button>
@@ -198,10 +217,10 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
                         <Button 
                           size="sm" 
                           variant="destructive" 
-                          onClick={() => handleDeleteDocument(document.id)} 
-                          disabled={deleting === document.id}
+                          onClick={() => handleDeleteDocument(doc.id)} 
+                          disabled={deleting === doc.id}
                         >
-                          {deleting === document.id ? (
+                          {deleting === doc.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <Trash2 className="h-4 w-4" />

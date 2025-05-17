@@ -11,9 +11,8 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
   try {
     console.log(`Uploading file to ${path}`);
     
-    // Determine the bucket name based on path
-    // Use driver.doc.config for driver invoice related files
-    const bucketName = path.startsWith('driver_invoices') ? 'driver.doc.config' : 'documents';
+    // Always use 'documents' bucket for mission documents
+    const bucketName = 'documents';
     
     // Sanitize the file path to avoid special characters
     const sanitizedPath = sanitizeStoragePath(path);
@@ -64,8 +63,8 @@ function sanitizeStoragePath(path: string): string {
  */
 export function getPublicUrl(path: string): string | null {
   try {
-    // Determine bucket based on path or prefix
-    const bucketName = path.startsWith('driver_invoices') ? 'driver.doc.config' : 'documents';
+    // Always use 'documents' bucket for all files
+    const bucketName = 'documents';
     
     console.log(`Getting public URL from bucket: ${bucketName} for path: ${path}`);
     
@@ -150,7 +149,7 @@ export async function getMissionDocuments(missionId: string) {
       return [];
     }
     
-    // Add public URL to each document
+    // Add public URL to each document - always use 'documents' bucket
     return data.map(doc => ({
       ...doc,
       publicUrl: getPublicUrl(doc.file_path)
@@ -176,7 +175,7 @@ export async function uploadDriverInvoice(missionId: string, file: File, userId:
     // Sanitize the original filename
     const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
     
-    // Create a path pattern for driver invoices
+    // Create a path pattern for driver invoices - always use documents bucket
     const filePath = `driver_invoices/${missionId}/${fileId}_${sanitizedFileName}`;
     
     console.log(`Attempting to upload driver invoice to path: ${filePath}`);

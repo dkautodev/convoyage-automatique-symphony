@@ -63,7 +63,7 @@ export default function MissionAttachments({
         
       if (error) throw error;
       
-      // Add public URLs to documents
+      // Add public URLs to documents using 'documents' bucket explicitly
       const docsWithUrls = data ? data.map(doc => ({
         ...doc,
         publicUrl: getPublicUrl(doc.file_path)
@@ -85,7 +85,7 @@ export default function MissionAttachments({
   
   const handleDownload = async (doc: MissionDocument) => {
     try {
-      // Use documents bucket for all files
+      // Toujours utiliser le bucket 'documents'
       const bucketName = 'documents';
       
       const { data, error } = await typedSupabase
@@ -93,7 +93,10 @@ export default function MissionAttachments({
         .from(bucketName)
         .download(doc.file_path);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur de téléchargement:", error);
+        throw error;
+      }
       
       // Create a download link and trigger download
       const url = URL.createObjectURL(data);
@@ -118,7 +121,7 @@ export default function MissionAttachments({
     try {
       setDeleting(document.id);
       
-      // Use documents bucket for all files
+      // Toujours utiliser le bucket 'documents'
       const bucketName = 'documents';
       
       // Delete the file from storage

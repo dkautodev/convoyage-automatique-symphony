@@ -45,9 +45,31 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
     }
   };
 
-  const handleDownload = (document: MissionDocument) => {
-    if (document.publicUrl) {
-      window.open(document.publicUrl, '_blank');
+  const handleDownload = async (document: MissionDocument) => {
+    try {
+      // Utiliser le bucket 'documents' explicitement pour la cohérence
+      const { data, error } = await supabase
+        .storage
+        .from('documents')
+        .download(document.file_path);
+        
+      if (error) {
+        console.error('Erreur lors du téléchargement:', error);
+        throw error;
+      }
+      
+      // Créer un URL pour le téléchargement
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du document:', error);
+      toast.error("Impossible de télécharger le document");
     }
   };
   

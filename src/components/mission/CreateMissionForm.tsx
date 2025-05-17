@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -841,10 +840,10 @@ export default function CreateMissionForm({
                           <FormMessage />
                         </FormItem>} />
 
-                    {/* Créneau horaire de ramassage */}
+                    {/* Créneau horaire de ramassage - modifié pour être sur la même ligne */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de ramassage</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4">
+                      <div className="grid grid-cols-3 gap-4">
                         <FormField control={form.control} name="D1_PEC" render={({
                       field
                     }) => <FormItem className="flex flex-col">
@@ -856,7 +855,7 @@ export default function CreateMissionForm({
                                       {field.value ? (
                                         format(field.value, "dd/MM/yyyy")
                                       ) : (
-                                        <span>Choisir une date</span>
+                                        <span>Date</span>
                                       )}
                                       <Calendar className="ml-auto h-4 w-4 opacity-50" />
                                     </Button>
@@ -928,10 +927,10 @@ export default function CreateMissionForm({
                           <FormMessage />
                         </FormItem>} />
 
-                    {/* Créneau horaire de livraison */}
+                    {/* Créneau horaire de livraison - modifié pour être sur la même ligne */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de livraison</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4">
+                      <div className="grid grid-cols-3 gap-4">
                         <FormField control={form.control} name="D2_LIV" render={({
                       field
                     }) => <FormItem className="flex flex-col">
@@ -943,7 +942,7 @@ export default function CreateMissionForm({
                                       {field.value ? (
                                         format(field.value, "dd/MM/yyyy")
                                       ) : (
-                                        <span>Choisir une date</span>
+                                        <span>Date</span>
                                       )}
                                       <Calendar className="ml-auto h-4 w-4 opacity-50" />
                                     </Button>
@@ -1079,8 +1078,8 @@ export default function CreateMissionForm({
                 ) : (
                   <div className="flex gap-2 items-center">
                     <p className="text-sm text-right">
-                      Le client accepte sans réserves les <a href="https://dkautomotive.fr/cgv" target="_blank" className="font-medium text-primary hover:underline flex items-center">
-                        CGV <ExternalLink className="h-3 w-3 ml-1" />
+                      Le client accepte sans réserves les <a href="https://dkautomotive.fr/cgv" target="_blank" className="font-medium text-[#193366] hover:underline">
+                        CGV
                       </a> en créant la mission
                     </p>
                     <Button type="submit" disabled={isSubmitting}>

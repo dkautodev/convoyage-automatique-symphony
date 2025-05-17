@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -254,21 +255,22 @@ export default function CreateMissionForm({
     form.setValue('client_id', clientId);
   };
 
-  // Déterminer le schéma à utiliser en fonction de l'étape actuelle
-  const getCurrentSchema = (step: number) => {
+  // Déterminer le schéma à utiliser en fonction de l'étape actuelle et obtenir les noms des champs
+  const getCurrentSchemaFields = (step: number): string[] => {
     switch (step) {
       case 1:
-        return missionTypeSchema;
+        return Object.keys(missionTypeSchema.shape);
       case 2:
-        return vehicleAndAddressSchema;
+        return Object.keys(vehicleAndAddressSchema.shape);
       case 3:
-        return vehicleInfoSchema;
+        return Object.keys(vehicleInfoSchema.shape);
       case 4:
-        return contactsAndNotesSchema;
+        // Pour le schéma avec superRefine, on utilise le schéma de base pour obtenir les noms des champs
+        return Object.keys(baseContactsAndNotesSchema.shape);
       case 5:
-        return attributionSchema;
+        return Object.keys(attributionSchema.shape);
       default:
-        return missionTypeSchema;
+        return Object.keys(missionTypeSchema.shape);
     }
   };
 
@@ -351,8 +353,7 @@ export default function CreateMissionForm({
     setFormTouched(true);
     
     // Obtenir les noms des champs à valider pour l'étape actuelle
-    const currentSchema = getCurrentSchema(currentStep);
-    const fieldNames = Object.keys(currentSchema._def.shape || {});
+    const fieldNames = getCurrentSchemaFields(currentStep);
     
     const isValid = await form.trigger(fieldNames as any);
     if (!isValid) return;

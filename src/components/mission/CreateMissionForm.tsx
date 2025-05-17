@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -21,6 +22,7 @@ import { vehicleCategoryLabels, VehicleCategory, MissionStatus } from '@/types/s
 import { Address } from '@/types/supabase';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { TimeSelect } from '@/components/ui/time-select';
 import { format } from 'date-fns';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import ContactSelector from './ContactSelector';
@@ -58,6 +60,65 @@ const vehicleInfoSchema = z.object({
   vehicle_vin: z.string().optional() // VIN est maintenant optionnel
 });
 
+// Fonction pour comparer deux horaires (pour validation)
+const parseTime = (time: string): number => {
+  if (!time) return 0;
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+// Fonctions de validation personnalisées
+const validatePickupDates = (schema: z.ZodObject<any>) => {
+  return schema.refine(
+    (data) => {
+      // Si les deux champs d'heure sont renseignés, vérifier que l'heure de fin est après l'heure de début
+      if (data.H1_PEC && data.H2_PEC) {
+        return parseTime(data.H2_PEC) > parseTime(data.H1_PEC);
+      }
+      return true;
+    },
+    {
+      message: "L'heure de fin de ramassage doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
+      path: ["H2_PEC"],
+    }
+  );
+};
+
+const validateDeliveryDates = (schema: z.ZodObject<any>) => {
+  return schema.refine(
+    (data) => {
+      // Si les deux champs d'heure sont renseignés, vérifier que l'heure de fin est après l'heure de début
+      if (data.H1_LIV && data.H2_LIV) {
+        return parseTime(data.H2_LIV) > parseTime(data.H1_LIV);
+      }
+      return true;
+    },
+    {
+      message: "L'heure de fin de livraison doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
+      path: ["H2_LIV"],
+    }
+  );
+};
+
+const validatePickupVsDeliveryDates = (schema: z.ZodObject<any>) => {
+  return schema.refine(
+    (data) => {
+      // Vérifier que la date de livraison est égale ou postérieure à la date de ramassage
+      if (data.D1_PEC && data.D2_LIV) {
+        const pickupDate = new Date(data.D1_PEC);
+        const deliveryDate = new Date(data.D2_LIV);
+        
+        return deliveryDate >= pickupDate;
+      }
+      return true;
+    },
+    {
+      message: "La date de livraison doit être égale ou ultérieure à la date de ramassage",
+      path: ["D2_LIV"],
+    }
+  );
+};
+
 // Étape 4: Contacts et notes avec créneaux horaires
 const contactsAndNotesSchema = z.object({
   contact_pickup_name: z.string().min(1, 'Le nom du contact de départ est requis'),
@@ -79,7 +140,10 @@ const contactsAndNotesSchema = z.object({
   H1_LIV: z.string().min(1, 'L\'heure de début de livraison est requise'),
   H2_LIV: z.string().min(1, 'L\'heure de fin de livraison est requise'),
   notes: z.string().optional()
-});
+})
+  .pipe(validatePickupDates)
+  .pipe(validateDeliveryDates)
+  .pipe(validatePickupVsDeliveryDates);
 
 // Étape 5: Attribution (Admin seulement)
 const attributionSchema = z.object({
@@ -121,6 +185,7 @@ export default function CreateMissionForm({
   const [pickupAddressData, setPickupAddressData] = useState<any>(null);
   const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [formTouched, setFormTouched] = useState(false);
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
 
   const {
@@ -133,6 +198,7 @@ export default function CreateMissionForm({
   } = useProfiles('chauffeur');
   const form = useForm<CreateMissionFormValues>({
     resolver: zodResolver(createMissionSchema),
+    mode: 'onSubmit', // Changement important: n'affiche les erreurs qu'après soumission
     defaultValues: {
       mission_type: undefined,
       vehicle_category: undefined,
@@ -268,12 +334,15 @@ export default function CreateMissionForm({
     }
   }
   const nextStep = async () => {
+    setFormTouched(true);
     const isValid = await form.trigger(Object.keys(currentSchema.shape) as any);
     if (!isValid) return;
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    setFormTouched(false); // Réinitialiser formTouched pour la nouvelle étape
   };
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
+    setFormTouched(false); // Réinitialiser formTouched pour la nouvelle étape
   };
   const onSelectPickupAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('pickup_address', address);
@@ -539,7 +608,7 @@ export default function CreateMissionForm({
                         <FormControl>
                           <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
                     onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                  }} placeholder="Saisissez l'adresse de départ" error={form.formState.errors.pickup_address?.message} />
+                  }} placeholder="Saisissez l'adresse de départ" error={formTouched ? form.formState.errors.pickup_address?.message : undefined} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>} />
@@ -551,7 +620,7 @@ export default function CreateMissionForm({
                         <FormControl>
                           <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
                     onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                  }} placeholder="Saisissez l'adresse de livraison" error={form.formState.errors.delivery_address?.message} />
+                  }} placeholder="Saisissez l'adresse de livraison" error={formTouched ? form.formState.errors.delivery_address?.message : undefined} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>} />
@@ -717,7 +786,7 @@ export default function CreateMissionForm({
                     {/* Créneau horaire de ramassage */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de ramassage</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4">
                         <FormField control={form.control} name="D1_PEC" render={({
                       field
                     }) => <FormItem className="flex flex-col">
@@ -746,7 +815,7 @@ export default function CreateMissionForm({
                     }) => <FormItem>
                               <FormLabel>Heure début</FormLabel>
                               <FormControl>
-                                <Input {...field} type="time" />
+                                <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
@@ -755,7 +824,7 @@ export default function CreateMissionForm({
                     }) => <FormItem>
                               <FormLabel>Heure fin</FormLabel>
                               <FormControl>
-                                <Input {...field} type="time" />
+                                <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
@@ -804,7 +873,7 @@ export default function CreateMissionForm({
                     {/* Créneau horaire de livraison */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de livraison</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4">
                         <FormField control={form.control} name="D2_LIV" render={({
                       field
                     }) => <FormItem className="flex flex-col">
@@ -833,7 +902,7 @@ export default function CreateMissionForm({
                     }) => <FormItem>
                               <FormLabel>Heure début</FormLabel>
                               <FormControl>
-                                <Input {...field} type="time" />
+                                <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
@@ -842,7 +911,7 @@ export default function CreateMissionForm({
                     }) => <FormItem>
                               <FormLabel>Heure fin</FormLabel>
                               <FormControl>
-                                <Input {...field} type="time" />
+                                <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
@@ -860,6 +929,7 @@ export default function CreateMissionForm({
                         <Textarea {...field} placeholder="Informations supplémentaires, codes d'accès, instructions particulières..." className="h-32" />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-sm font-bold mt-2">Les fichiers pourront être téléchargées dans la page de la mission crée</p>
                     </FormItem>} />
               </div>}
 
@@ -938,17 +1008,27 @@ export default function CreateMissionForm({
               </div>}
 
             {/* Boutons de navigation */}
-            <div className="flex justify-between pt-6">
-              <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
-              </Button>
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between pt-6">
+                <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1}>
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
+                </Button>
 
-              {currentStep < totalSteps ? <Button type="button" onClick={nextStep}>
-                  Suivant <ArrowRight className="ml-2 h-4 w-4" />
-                </Button> : <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                  Créer la mission
-                </Button>}
+                {currentStep < totalSteps ? <Button type="button" onClick={nextStep}>
+                    Suivant <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button> : 
+                  <div className="flex gap-2 items-center">
+                    <p className="text-sm text-right">
+                      Le client accepte sans réserves les <a href="https://dkautomotive.fr/cgv" target="_blank" className="font-medium text-primary hover:underline flex items-center">
+                        CGV <ExternalLink className="h-3 w-3 ml-1" />
+                      </a> en créant la mission
+                    </p>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                      Créer la mission
+                    </Button>
+                  </div>}
+              </div>
             </div>
           </form>
         </Form>

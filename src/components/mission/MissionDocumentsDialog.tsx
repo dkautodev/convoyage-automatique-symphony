@@ -8,7 +8,7 @@ import { typedSupabase } from '@/types/database';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/auth';
 import FileUpload from '@/components/mission/FileUpload';
-import { Paperclip, FileText, Trash2, Download, Loader2 } from 'lucide-react';
+import { FileText, Trash2, Download, Loader2, Paperclip } from 'lucide-react';
 import { getMissionDocuments } from '@/integrations/supabase/storage';
 
 interface MissionDocumentsDialogProps {
@@ -147,7 +147,7 @@ export const MissionDocumentsDialog: React.FC<MissionDocumentsDialogProps> = ({
               <FileUpload 
                 missionId={mission.id} 
                 onUploadComplete={handleDocumentUploaded} 
-                label="Ajouter un document" 
+                label="+ Ajouter des documents" 
                 variant="default" 
                 size="sm" 
               />

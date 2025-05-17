@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -7,7 +6,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit, Paperclip } from 'lucide-react';
+import { Package, History, Edit } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { 
   AlertDialog,
@@ -252,7 +251,7 @@ const MissionDetailsPage = () => {
                 className="relative"
                 onClick={() => setDocumentsDialogOpen(true)}
               >
-                <Paperclip className="h-4 w-4" />
+                + Ajouter des documents
                 {documentsCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
                     {documentsCount}
@@ -279,7 +278,7 @@ const MissionDetailsPage = () => {
                 className="relative"
                 onClick={() => setDocumentsDialogOpen(true)}
               >
-                <Paperclip className="h-4 w-4" />
+                + Ajouter des documents
                 {documentsCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
                     {documentsCount}
@@ -302,7 +301,7 @@ const MissionDetailsPage = () => {
                 className="relative"
                 onClick={() => setDocumentsDialogOpen(true)}
               >
-                <Paperclip className="h-4 w-4" />
+                + Ajouter des documents
                 {documentsCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
                     {documentsCount}

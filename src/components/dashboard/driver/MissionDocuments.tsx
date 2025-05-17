@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Download, Loader2 } from 'lucide-react'; // Removed Upload and other unused icons
+import { FileText, Download, Loader2 } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { getMissionDocuments, getPublicUrl } from '@/integrations/supabase/storage';

@@ -1,9 +1,10 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { uploadFile } from '@/integrations/supabase/storage';
-import { Upload, Loader2, File as FileIcon, X, AlertCircle, PaperclipIcon, Trash2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Upload, Loader2, File as FileIcon, X, AlertCircle, Trash2 } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
 import { cn } from '@/lib/utils';
 
@@ -36,7 +37,7 @@ export default function FileUpload({
   className = '',
   variant = "outline",
   size = "sm",
-  label = "Sélectionner un document",
+  label = "+ Ajouter des documents",
   multiple = false
 }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -230,7 +231,6 @@ export default function FileUpload({
         <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} multiple={multiple} accept=".pdf,.jpg,.jpeg,.png" />
         
         {selectedFiles.length === 0 ? <Button type="button" variant={variant} size={size} onClick={() => fileInputRef.current?.click()}>
-            <PaperclipIcon className="h-4 w-4 mr-2" />
             {label}
           </Button> : <div className="border rounded-md p-3 bg-muted/30 mb-2">
             <div className="flex justify-between items-center mb-2">

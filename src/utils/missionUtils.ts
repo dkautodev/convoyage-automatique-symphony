@@ -83,6 +83,12 @@ export const formatContactInfo = (name?: string | null, phone?: string | null, e
   return info.join(' • ');
 };
 
+// Add the getAddressString function that was missing
+export const getAddressString = (address: any) => {
+  if (!address) return 'Adresse non spécifiée';
+  return address.city || address.formatted_address || 'Adresse incomplète';
+};
+
 export const missionStatusLabels = {
   'en_acceptation': 'En cours d\'acceptation',
   'accepte': 'Accepté',

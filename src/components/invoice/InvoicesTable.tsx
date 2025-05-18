@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ColumnDef,
@@ -16,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { formatDate } from '@/utils/documentUtils';
+import { Badge } from '@/components/ui/badge';
 import { Mission, missionStatusLabels, missionStatusColors } from '@/types/supabase';
 import { ArrowUpDown, Eye, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -89,7 +90,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
         cell: ({ row }: any) => {
           const mission = row.original;
           const completionDate = mission.D2_LIV || mission.completion_date || mission.created_at;
-          return formatDate(completionDate);
+          // Format the date - using a simple date formatter since formatDate is missing
+          return new Date(completionDate).toLocaleDateString('fr-FR');
         },
       },
       {
@@ -154,7 +156,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
           const mission = row.original;
           return (
             <div className="flex items-center">
-              <Badge className={missionStatusColors[mission.status]}>
+              <Badge className={`${missionStatusColors[mission.status]} px-2 py-1 rounded-full text-xs`}>
                 {missionStatusLabels[mission.status]}
               </Badge>
             </div>

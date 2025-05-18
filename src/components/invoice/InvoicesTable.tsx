@@ -1,23 +1,47 @@
 import React from 'react';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  getSortedRowModel,
+} from '@tanstack/react-table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { formatDate } from '@/utils/documentUtils';
 import { Mission, missionStatusLabels, missionStatusColors } from '@/types/supabase';
-import { formatMissionNumber, formatClientName } from '@/utils/missionUtils';
-import { supabase } from '@/integrations/supabase/client';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { toast } from 'sonner';
-import { Check, X } from 'lucide-react';
+import { ArrowUpDown, Eye, Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { formatMissionNumber } from '@/utils/missionUtils';
 import GenerateInvoiceButton from './GenerateInvoiceButton';
 
 interface InvoicesTableProps {
   missions: Mission[];
   clientsData?: Record<string, any>;
   isLoading?: boolean;
-  userRole: 'admin' | 'client' | 'chauffeur';
+  userRole: 'admin' | 'client';
   onMissionStatusUpdate?: () => void;
 }
+
+interface PaymentStatusProps {
+  status: string;
+}
+
+const PaymentStatus: React.FC<PaymentStatusProps> = ({ status }) => {
+  return (
+    <div className="flex items-center">
+      <span className="mr-2">{status}</span>
+    </div>
+  );
+};
 
 const InvoicesTable: React.FC<InvoicesTableProps> = ({
   missions,
@@ -26,165 +50,224 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   userRole,
   onMissionStatusUpdate
 }) => {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [selectedMission, setSelectedMission] = React.useState<Mission | null>(null);
+  const [sorting, setSorting] = React.useState([]);
 
-  if (isLoading) {
-    return <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-700"></div>
-      </div>;
-  }
-  
-  if (missions.length === 0) {
-    return <div className="text-center py-8 text-neutral-500">
-        <p className="font-medium">Aucune mission à facturer</p>
-      </div>;
-  }
+  const table = useReactTable({
+    data: missions,
+    columns: [
+      {
+        accessorKey: 'mission_number',
+        header: ({ column }: any) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Numéro
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          return (
+            <div>
+              {formatMissionNumber(mission)}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'completion_date',
+        header: ({ column }: any) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Date
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          const completionDate = mission.D2_LIV || mission.completion_date || mission.created_at;
+          return formatDate(completionDate);
+        },
+      },
+      {
+        accessorKey: 'pickup_address',
+        header: () => <div className="text-left">Départ</div>,
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          return (
+            <div className="text-left">
+              {mission.pickup_address?.city || mission.pickup_address?.formatted_address || 'N/A'}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'delivery_address',
+        header: () => <div className="text-left">Arrivée</div>,
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          return (
+            <div className="text-left">
+              {mission.delivery_address?.city || mission.delivery_address?.formatted_address || 'N/A'}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'price_ttc',
+        header: ({ column }: any) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Montant TTC
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          return (
+            <div>
+              {mission.price_ttc?.toLocaleString('fr-FR', {
+                style: 'currency',
+                currency: 'EUR',
+              }) || 'N/A'}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }: any) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Statut
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          return (
+            <div className="flex items-center">
+              <Badge className={missionStatusColors[mission.status]}>
+                {missionStatusLabels[mission.status]}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      // Colonne Actions
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }: any) => {
+          const mission = row.original;
+          const client = clientsData[mission.client_id];
 
-  // Format price for display
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    });
-  };
-
-  // Format date for display
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Non spécifiée';
-    return new Date(dateStr).toLocaleDateString('fr-FR');
-  };
-
-  // Toggle mission status between 'livre' and 'termine'
-  const toggleMissionStatus = async (mission: Mission) => {
-    if (!mission) return;
-    
-    const newStatus = mission.status === 'livre' ? 'termine' : 'livre';
-    
-    try {
-      const { error } = await supabase
-        .from('missions')
-        .update({ status: newStatus })
-        .eq('id', mission.id);
-      
-      if (error) throw error;
-      
-      // Show success message
-      toast.success(
-        `Mission ${formatMissionNumber(mission)} ${newStatus === 'termine' ? 'marquée comme payée' : 'marquée à payer'}`
-      );
-      
-      // Call the callback to refresh missions list
-      if (onMissionStatusUpdate) {
-        onMissionStatusUpdate();
-      }
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
-      toast.error("Erreur lors de la mise à jour du statut");
-    }
-    
-    setIsDialogOpen(false);
-    setSelectedMission(null);
-  };
-
-  // Handle button click based on mission status
-  const handleStatusButtonClick = (mission: Mission) => {
-    if (mission.status === 'termine') {
-      // Show confirmation dialog before changing to 'livre'
-      setSelectedMission(mission);
-      setIsDialogOpen(true);
-    } else {
-      // Directly change from 'livre' to 'termine'
-      toggleMissionStatus(mission);
-    }
-  };
-
-  // Custom status display for invoices page
-  const getInvoiceStatusLabel = (status: string) => {
-    return status === 'livre' ? 'À payer' : 'Payé';
-  };
-
-  // Custom status color for invoices page
-  const getInvoiceStatusColor = (status: string) => {
-    return status === 'livre' ? 'bg-red-600 text-white' : 'bg-green-700 text-white';
-  };
+          return (
+            <div className="flex items-center gap-2">
+              <GenerateInvoiceButton mission={mission} client={client} />
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+              >
+                <Link to={`/${userRole}/missions/${mission.id}`}>
+                  <Eye className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting,
+    },
+  });
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Numéro</TableHead>
-            <TableHead>Date liv.</TableHead>
-            {userRole === 'admin' && <TableHead>Client</TableHead>}
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Montant (TTC)</TableHead>
-            <TableHead className="text-center">Facture</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {missions.map(mission => (
-            <TableRow key={mission.id}>
-              <TableCell className="font-medium">#{formatMissionNumber(mission)}</TableCell>
-              <TableCell>{mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Non spécifiée'}</TableCell>
-              {userRole === 'admin' && <TableCell>{formatClientName(mission, clientsData)}</TableCell>}
-              <TableCell>
-                <Badge className={getInvoiceStatusColor(mission.status)}>
-                  {getInvoiceStatusLabel(mission.status)}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                {formatPrice(mission.price_ttc)}
-              </TableCell>
-              <TableCell className="text-center">
-                {userRole === 'admin' && (
-                  <GenerateInvoiceButton 
-                    mission={mission} 
-                    client={clientsData[mission.client_id]} 
-                  />
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                {userRole === 'admin' ? (
-                  <Button 
-                    variant={mission.status === 'livre' ? 'default' : 'outline'} 
-                    size="icon"
-                    onClick={() => handleStatusButtonClick(mission)}
-                    title={mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}
-                  >
-                    {mission.status === 'livre' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/${userRole}/missions/${mission.id}`}>
-                      Détails
-                    </Link>
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer le changement</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir marquer cette mission à payer ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => selectedMission && toggleMissionStatus(selectedMission)}>
-              Confirmer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    <div className="w-full">
+      {isLoading ? (
+        <div className="flex justify-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : missions.length === 0 ? (
+        <div className="text-center py-4">Aucune mission trouvée.</div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => {
+                return (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
+              {missions.length === 0 && 
+                <tr>
+                  <td colSpan={6} className="text-center py-4">Aucune mission trouvée.</td>
+                </tr>
+              }
+            </TableBody>
+          </Table>
+          
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-end space-x-2 py-2 px-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Précédent
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Suivant
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

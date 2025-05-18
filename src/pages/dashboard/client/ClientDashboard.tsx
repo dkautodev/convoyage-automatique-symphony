@@ -5,9 +5,11 @@ import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, Missi
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Package, FileText, Clock, MapPin, Plus } from 'lucide-react';
+import { Package, FileText, Clock, MapPin, Plus, Download } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { formatMissionNumber, formatAddressDisplay, formatFullAddress } from '@/utils/missionUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import GenerateInvoiceButton from '@/components/invoice/GenerateInvoiceButton';
+import { formatMissionNumber, formatAddressDisplay, formatFullAddress, getAddressString } from '@/utils/missionUtils';
 
 const ClientDashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +26,7 @@ const ClientDashboard = () => {
     totalSpent: 0,
     pendingMissions: 0
   });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchClientData = async () => {
@@ -146,17 +149,18 @@ const ClientDashboard = () => {
       <p className="text-gray-500">Vos documents apparaîtront ici</p>
     </div>;
 
-  return <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-client">Tableau de bord client</h2>
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-client">Tableau de bord client</h2>
         <Button onClick={handleCreateNewMission}>
           <Plus size={16} className="mr-2" />
-          Nouvelle mission
+          <span className="whitespace-nowrap">Nouvelle mission</span>
         </Button>
       </div>
       
       {/* Cartes statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="bg-white">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Missions Actives</CardTitle>
@@ -227,7 +231,7 @@ const ClientDashboard = () => {
       
       {/* Missions récentes */}
       <Card className="bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle>Vos Missions</CardTitle>
             <CardDescription>Suivez l'état de vos missions récentes</CardDescription>
@@ -240,33 +244,49 @@ const ClientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {missions.length > 0 ? missions.map(mission => <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex items-start justify-between">
+            {missions.length > 0 ? (
+              missions.map((mission) => (
+                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
                       <Badge className={missionStatusColors[mission.status]}>
                         {missionStatusLabels[mission.status]}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      {mission.pickup_address ? formatFullAddress(mission.pickup_address) : 'Adresse non spécifiée'} → {mission.delivery_address ? formatFullAddress(mission.delivery_address) : 'Adresse non spécifiée'}
+                    <p className="text-sm text-gray-600 break-words">
+                      {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Départ: {mission.D1_PEC ? new Date(mission.D1_PEC).toLocaleDateString('fr-FR') : 'Non spécifié'} · Livraison: {mission.D2_LIV ? new Date(mission.D2_LIV).toLocaleDateString('fr-FR') : 'Non spécifié'}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/client/missions/${mission.id}`}>
-                      Détails
-                    </Link>
-                  </Button>
-                </div>) : <EmptyMissionsState />}
+                  <div className="flex items-center gap-2">
+                    {(mission.status === 'livre' || mission.status === 'termine') && (
+                      <GenerateInvoiceButton 
+                        mission={mission} 
+                        client={profile}
+                      />
+                    )}
+                    <Button variant="outline" size="sm" className="self-start" asChild>
+                      <Link to={`/client/missions/${mission.id}`}>
+                        {isMobile ? "Détails" : "Voir la mission"}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <EmptyMissionsState />
+            )}
           </div>
         </CardContent>
       </Card>
       
       {/* Documents récents */}
       
-    </div>;
+    </div>
+  );
 };
+
 export default ClientDashboard;

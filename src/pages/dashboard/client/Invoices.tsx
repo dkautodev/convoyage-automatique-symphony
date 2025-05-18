@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 import InvoicesTable from '@/components/invoice/InvoicesTable';
 
 const ClientInvoicesPage = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +96,7 @@ const ClientInvoicesPage = () => {
             missions={filteredMissions} 
             isLoading={loading}
             userRole="client"
+            clientData={profile}
           />
         </CardContent>
       </Card>

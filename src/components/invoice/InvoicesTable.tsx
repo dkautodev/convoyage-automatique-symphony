@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,7 @@ import GenerateInvoiceButton from './GenerateInvoiceButton';
 interface InvoicesTableProps {
   missions: Mission[];
   clientsData?: Record<string, any>;
+  clientData?: any;
   isLoading?: boolean;
   userRole: 'admin' | 'client' | 'chauffeur';
   onMissionStatusUpdate?: () => void;
@@ -22,6 +24,7 @@ interface InvoicesTableProps {
 const InvoicesTable: React.FC<InvoicesTableProps> = ({
   missions,
   clientsData = {},
+  clientData,
   isLoading = false,
   userRole,
   onMissionStatusUpdate
@@ -142,6 +145,12 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                   <GenerateInvoiceButton 
                     mission={mission} 
                     client={clientsData[mission.client_id]} 
+                  />
+                )}
+                {userRole === 'client' && (
+                  <GenerateInvoiceButton 
+                    mission={mission} 
+                    client={clientData} 
                   />
                 )}
               </TableCell>

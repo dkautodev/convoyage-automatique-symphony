@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -483,10 +482,12 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
                           Supprimer
                         </Button>
                       )}
-                      <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice}>
-                        <Check size={16} className="mr-1" />
-                        {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
-                      </Button>
+                      {isAdmin && (
+                        <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice}>
+                          <Check size={16} className="mr-1" />
+                          {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

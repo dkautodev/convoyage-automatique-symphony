@@ -618,7 +618,7 @@ export default function CreateMissionForm({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  ) 
+                  )}
                 />
               </div>
             )}

@@ -33,6 +33,13 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
     }
   }, [mission]);
 
+  // Réinitialiser le prix du chauffeur à 0 si aucun chauffeur n'est sélectionné
+  useEffect(() => {
+    if (selectedDriverId === 'no_driver') {
+      setDriverPrice('0');
+    }
+  }, [selectedDriverId]);
+
   // Find the current driver
   const currentDriver = driverProfiles.find(driver => driver.id === mission.chauffeur_id);
   const currentDriverName = currentDriver ? currentDriver.label : mission.chauffeur_id ? 'Chauffeur inconnu' : 'Non assigné';
@@ -43,9 +50,15 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
     try {
       setUpdating(true);
       
+      // Déterminer si nous envoyons null pour le chauffeur_id
+      const chauffeurIdValue = selectedDriverId === 'no_driver' ? null : selectedDriverId || null;
+      
+      // Si aucun chauffeur n'est assigné, le prix est automatiquement mis à 0
+      const chauffeurPriceValue = chauffeurIdValue ? (driverPrice ? parseFloat(driverPrice) : 0) : 0;
+      
       const updates = {
-        chauffeur_id: selectedDriverId || null,
-        chauffeur_price_ht: driverPrice ? parseFloat(driverPrice) : 0
+        chauffeur_id: chauffeurIdValue,
+        chauffeur_price_ht: chauffeurPriceValue
       };
       
       const { error } = await typedSupabase
@@ -127,10 +140,13 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
                   value={driverPrice}
                   onChange={(e) => setDriverPrice(e.target.value)}
                   placeholder="0.00"
-                  disabled={updating}
+                  disabled={updating || selectedDriverId === 'no_driver'} // Désactiver si aucun chauffeur n'est sélectionné
                 />
                 <span className="flex items-center">€</span>
               </div>
+              {selectedDriverId === 'no_driver' && (
+                <p className="text-xs text-muted-foreground mt-1">Prix à 0 si aucun chauffeur n'est assigné</p>
+              )}
             </div>
           </div>
           

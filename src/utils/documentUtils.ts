@@ -1,7 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { LegalStatusType } from '@/hooks/auth/types';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 /**
  * Upload a driver document to storage
@@ -135,21 +134,5 @@ export async function updateDriverDocumentPath(
   } catch (error) {
     console.error('Error in updateDriverDocumentPath:', error);
     return false;
-  }
-}
-
-/**
- * Format a date string
- * @param date The date string to format
- * @returns The formatted date string
- */
-export function formatDate(date: string | Date | null | undefined): string {
-  if (!date) return 'N/A';
-  try {
-    const parsedDate = typeof date === 'string' ? new Date(date) : date;
-    return format(parsedDate, 'dd/MM/yyyy', { locale: fr });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'N/A';
   }
 }

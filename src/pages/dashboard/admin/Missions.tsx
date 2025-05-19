@@ -143,7 +143,7 @@ const MissionsPage = () => {
       
       // Apply driver filter if selected
       if (selectedDriverId) {
-        query = query.eq('driver_id', selectedDriverId);
+        query = query.eq('chauffeur_id', selectedDriverId);
       }
       
       const { data: missionsData, error: missionsError } = await query;
@@ -160,7 +160,7 @@ const MissionsPage = () => {
         return {
           ...basicMission,
           client_name: clientsData[mission.client_id]?.name || 'Client inconnu',
-          driver_name: driversData[mission.driver_id]?.name || 'Chauffeur non assigné'
+          driver_name: driversData[mission.chauffeur_id]?.name || 'Chauffeur non assigné'
         };
       });
       

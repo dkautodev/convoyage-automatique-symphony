@@ -1,439 +1,236 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Profile } from './types';
-import type { 
-  RegisterFormData, 
-  BasicRegisterFormData, 
-  ClientProfileFormData, 
+import type { AuthResponse, User } from '@supabase/supabase-js';
+import {
+  RegisterFormData,
+  BasicRegisterFormData,
+  ClientProfileFormData,
   DriverProfileFormData,
   DriverConfigFormData
 } from '@/types/auth';
-import { uploadFile } from '@/integrations/supabase/storage';
-import { Json } from '@/integrations/supabase/types';
-import { UserRole } from '@/types/supabase';
+import { Profile, LegalStatusType, Address } from './types';
+import { verifyAndUseAdminToken, uploadDriverDocument } from './utils';
 
-// Helper function to convert Address to Json compatible object
-function addressToJson(address: any): Json {
-  if (!address) return null;
-  return address as Json;
-}
+// Fonction pour vérifier le token d'invitation admin
+export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
+  const result = await verifyAndUseAdminToken(token, email);
+  return result.valid;
+};
 
-// Fonction pour récupérer le profil utilisateur
-export async function fetchUserProfile(userId: string): Promise<Profile | null> {
+// Fonction pour se connecter
+export const loginUser = async (email: string, password: string): Promise<{
+  user: User;
+  session: any;
+} | null> => {
   try {
-    console.log("Service: Récupération du profil pour", userId);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error("Service: Erreur lors de la récupération du profil", error);
-      throw error;
-    }
-
-    if (data) {
-      console.log("Service: Profil récupéré avec succès", data);
-      // Use type assertion to convert the raw data to Profile
-      return data as unknown as Profile;
-    } else {
-      console.warn("Service: Aucun profil trouvé pour l'utilisateur", userId);
-      return null;
-    }
-  } catch (error) {
-    console.error("Service: Erreur lors de la récupération du profil", error);
-    throw error;
-  }
-}
-
-// Fonction pour connecter l'utilisateur
-export async function loginUser(email: string, password: string) {
-  try {
-    console.log("Service: Tentative de connexion pour", email);
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+      email,
+      password
     });
 
     if (error) {
-      console.error("Service: Erreur lors de la connexion", error);
+      console.error('Erreur de connexion:', error);
       throw error;
     }
 
-    console.log("Service: Connexion réussie pour", email);
-    return data;
-  } catch (error) {
-    console.error("Service: Erreur lors de la connexion", error);
-    throw error;
+    if (!data.user || !data.session) {
+      throw new Error('Connexion échouée: Aucune donnée utilisateur retournée');
+    }
+
+    return { user: data.user, session: data.session };
+  } catch (err) {
+    console.error('Exception dans loginUser:', err);
+    throw err;
   }
-}
+};
 
-// Fonction pour enregistrer un nouvel utilisateur (basic)
-export async function registerBasicUser(data: BasicRegisterFormData) {
+// Fonction pour réinitialiser le mot de passe
+export const resetUserPassword = async (email: string): Promise<void> => {
   try {
-    console.log("Service: Inscription de l'utilisateur (basic)", data.email);
+    // URL pour la redirection après avoir cliqué sur le lien dans l'email
+    const resetPasswordURL = `${window.location.origin}/reset-password`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: resetPasswordURL
+    });
 
-    // Enregistrer l'utilisateur via Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    if (error) {
+      console.error("Erreur lors de la demande de réinitialisation du mot de passe:", error);
+      throw error;
+    }
+  } catch (err) {
+    console.error("Exception dans resetUserPassword:", err);
+    throw err;
+  }
+};
+
+// Fonction pour l'inscription simplifiée
+export const registerBasicUser = async (data: BasicRegisterFormData): Promise<{ user: User } | null> => {
+  try {
+    const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           role: data.role,
-        },
-      },
+        }
+      }
     });
 
-    if (authError) {
-      console.error("Service: Erreur lors de l'inscription de l'utilisateur", authError);
-      throw authError;
+    if (error) {
+      console.error('Erreur lors de l\'inscription:', error.message);
+      throw error;
     }
 
-    console.log("Service: Utilisateur inscrit avec succès, ID:", authData.user?.id);
-
-    // Créer un profil utilisateur dans la base de données
-    if (authData.user?.id) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: data.email,
-          role: data.role as UserRole,
-          created_at: new Date().toISOString(),
-          last_login: new Date().toISOString(),
-          active: true,
-          profile_completed: false,
-        });
-
-      if (profileError) {
-        console.error("Service: Erreur lors de la création du profil", profileError);
-        throw profileError;
-      }
+    if (!authData.user) {
+      throw new Error('Inscription échouée: Aucune donnée utilisateur retournée');
     }
 
-    console.log("Service: Profil utilisateur créé avec succès pour", authData.user?.id);
-    return authData;
-
-  } catch (error) {
-    console.error("Service: Erreur lors de l'inscription de l'utilisateur", error);
-    throw error;
+    return { user: authData.user };
+  } catch (err) {
+    console.error('Erreur dans registerBasicUser:', err);
+    throw err;
   }
-}
+};
 
 // Fonction pour compléter le profil client
-export async function completeClientProfileService(
-  userId: string,
-  data: ClientProfileFormData
-): Promise<void> {
+export const completeClientProfileService = async (userId: string, data: ClientProfileFormData): Promise<void> => {
   try {
-    console.log("Service: Complétion du profil client pour", userId);
-
-    // Mise à jour du profil avec les nouvelles données
     const { error } = await supabase
       .from('profiles')
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: addressToJson(data.billingAddress),
+        billing_address: data.billingAddress,
         siret: data.siret,
         tva_number: data.tvaNumb,
         phone_1: data.phone1,
         phone_2: data.phone2,
-        profile_completed: true
+        profile_completed: true,
       })
       .eq('id', userId);
 
-    if (error) throw error;
-
-    console.log("Service: Profil client complété avec succès");
-  } catch (error) {
-    console.error("Service: Erreur lors de la complétion du profil client", error);
-    throw error;
+    if (error) {
+      console.error('Erreur lors de la mise à jour du profil client:', error);
+      throw error;
+    }
+  } catch (err) {
+    console.error('Erreur dans completeClientProfileService:', err);
+    throw err;
   }
-}
+};
 
 // Fonction pour compléter le profil chauffeur
-export async function completeDriverProfileService(
-  userId: string,
-  data: DriverProfileFormData
-): Promise<void> {
+export const completeDriverProfileService = async (userId: string, data: DriverProfileFormData): Promise<void> => {
   try {
-    console.log("Service: Complétion du profil chauffeur pour", userId);
-
-    // Mise à jour du profil avec les nouvelles données
     const { error } = await supabase
       .from('profiles')
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: addressToJson(data.billingAddress),
+        billing_address: data.billingAddress,
         siret: data.siret,
-        // Retiré tva_applicable car la colonne n'existe pas
         tva_number: data.tvaNumb,
+        tva_applicable: data.tvaApplicable,
         phone_1: data.phone1,
         phone_2: data.phone2,
-        profile_completed: true
+        profile_completed: true,
       })
       .eq('id', userId);
 
-    if (error) throw error;
-
-    // Si des documents sont présents, les télécharger
-    if (data.documents) {
-      for (const [type, file] of Object.entries(data.documents)) {
-        await uploadDriverDocument(file, type, userId);
-      }
+    if (error) {
+      console.error('Erreur lors de la mise à jour du profil chauffeur:', error);
+      throw error;
     }
-
-    console.log("Service: Profil chauffeur complété avec succès");
-  } catch (error) {
-    console.error("Service: Erreur lors de la complétion du profil chauffeur", error);
-    throw error;
+  } catch (err) {
+    console.error('Erreur dans completeDriverProfileService:', err);
+    throw err;
   }
-}
+};
 
 // Fonction pour compléter la configuration du chauffeur
-export async function completeDriverConfigService(
-  userId: string,
-  data: DriverConfigFormData
-): Promise<void> {
+export const completeDriverConfigService = async (userId: string, data: DriverConfigFormData): Promise<void> => {
   try {
-    console.log("Service: Complétion de la configuration du chauffeur pour", userId);
+    // Préparer les mises à jour de profil
+    const updates: { [key: string]: any } = {
+      legal_status: data.legalStatus,
+      license_number: data.licenseNumber,
+      id_number: data.idNumber,
+      profile_completed: true
+    };
 
-    // Mise à jour du profil avec les données de configuration
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        legal_status: data.legalStatus,
-        profile_completed: true
-      })
-      .eq('id', userId);
-
-    if (profileError) throw profileError;
-
-    // Création ou mise à jour de l'entrée dans drivers_config
-    const { error: configError } = await supabase
-      .from('drivers_config')
-      .upsert({
-        id: userId,
-        legal_status: data.legalStatus,
-        license_number: data.licenseNumber,
-        id_number: data.idNumber,
-        updated_at: new Date().toISOString()
-      });
-
-    if (configError) throw configError;
-
-    // Si des documents sont présents, les télécharger
+    // Gérer le téléchargement et l'association des documents
     if (data.documents) {
-      for (const [type, file] of Object.entries(data.documents)) {
-        let path: string | null = null;
-        
-        switch(type) {
-          case 'kbis':
-            path = await uploadDriverDocument(file, 'kbis', userId);
-            if (path) {
-              await supabase
-                .from('drivers_config')
-                .update({ kbis_document_path: path })
-                .eq('id', userId);
-            }
-            break;
-          case 'driverLicenseFront':
-            path = await uploadDriverDocument(file, 'license', userId);
-            if (path) {
-              await supabase
-                .from('drivers_config')
-                .update({ license_document_path: path })
-                .eq('id', userId);
-            }
-            break;
-          case 'idDocument':
-            path = await uploadDriverDocument(file, 'id', userId);
-            if (path) {
-              await supabase
-                .from('drivers_config')
-                .update({ id_document_path: path })
-                .eq('id', userId);
-            }
-            break;
-          case 'vigilanceAttestation':
-            path = await uploadDriverDocument(file, 'vigilance', userId);
-            if (path) {
-              await supabase
-                .from('drivers_config')
-                .update({ vigilance_document_path: path })
-                .eq('id', userId);
-            }
-            break;
+      for (const [key, file] of Object.entries(data.documents)) {
+        const filePath = await uploadDriverDocument(file, key, userId);
+        if (filePath) {
+          updates[`document_${key}`] = filePath; // Stocker le chemin du fichier
+        } else {
+          console.warn(`Impossible de télécharger le document ${key}`);
         }
       }
     }
 
-    console.log("Service: Configuration chauffeur complétée avec succès");
-  } catch (error) {
-    console.error("Service: Erreur lors de la complétion de la configuration du chauffeur", error);
-    throw error;
-  }
-}
-
-// Fonction pour mettre à jour le profil utilisateur
-export async function updateUserProfile(userId: string, data: Partial<Profile>): Promise<void> {
-  try {
-    console.log("Service: Mise à jour du profil pour", userId, "avec", data);
-
-    // Convert any Address fields to Json before updating
-    const updateData = { ...data };
-    if (updateData.billing_address) {
-      updateData.billing_address = addressToJson(updateData.billing_address);
-    }
-
     const { error } = await supabase
       .from('profiles')
-      .update(updateData as any)
+      .update(updates)
       .eq('id', userId);
 
     if (error) {
-      console.error("Service: Erreur lors de la mise à jour du profil", error);
+      console.error('Erreur lors de la mise à jour de la configuration du chauffeur:', error);
       throw error;
     }
-
-    console.log("Service: Profil mis à jour avec succès pour", userId);
-  } catch (error) {
-    console.error("Service: Erreur lors de la mise à jour du profil", error);
-    throw error;
+  } catch (err) {
+    console.error('Erreur dans completeDriverConfigService:', err);
+    throw err;
   }
-}
+};
 
-// Fonction pour réinitialiser le mot de passe de l'utilisateur
-export async function resetUserPassword(email: string): Promise<void> {
+// Fonction d'inscription (gardée pour rétrocompatibilité)
+export const registerLegacyUser = async (data: RegisterFormData): Promise<{ user: User } | null> => {
   try {
-    console.log("Service: Demande de réinitialisation du mot de passe pour", email);
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`,
-    });
-
-    if (error) {
-      console.error("Service: Erreur lors de la demande de réinitialisation du mot de passe", error);
-      throw error;
-    }
-
-    console.log("Service: Demande de réinitialisation du mot de passe réussie pour", email);
-  } catch (error) {
-    console.error("Service: Erreur lors de la demande de réinitialisation du mot de passe", error);
-    throw error;
-  }
-}
-
-// Fonction pour vérifier le token d'admin
-export async function verifyAdminToken(token: string, email: string): Promise<boolean> {
-  try {
-    console.log("Service: Vérification du token d'admin pour", email);
-
-    const { data, error } = await supabase
-      .from('admin_invitation_tokens')
-      .select('*')
-      .eq('token', token)
-      .eq('email', email)
-      .single();
-
-    if (error) {
-      console.error("Service: Erreur lors de la vérification du token d'admin", error);
-      return false;
-    }
-
-    if (!data) {
-      console.warn("Service: Token d'admin invalide pour", email);
-      return false;
-    }
-
-    // Vérifier si le token est expiré
-    const expiryDate = new Date(data.expires_at);
-    if (expiryDate < new Date()) {
-      console.warn("Service: Token d'admin expiré pour", email);
-      return false;
-    }
-
-    console.log("Service: Token d'admin valide pour", email);
-    return true;
-  } catch (error) {
-    console.error("Service: Erreur lors de la vérification du token d'admin", error);
-    return false;
-  }
-}
-
-// Fonction pour uploader un document chauffeur
-export async function uploadDriverDocument(file: File, type: string, userId: string): Promise<string | null> {
-  try {
-    console.log(`Service: Upload du document ${type} pour l'utilisateur ${userId}`);
-
-    const path = `driver_documents/${userId}/${type}.${file.name.split('.').pop()}`;
-    const result = await uploadFile(path, file);
-
-    if (result) {
-      console.log(`Service: Document ${type} uploadé avec succès à ${path}`);
-      return path;
-    } else {
-      console.error(`Service: Erreur lors de l'upload du document ${type}`);
-      return null;
-    }
-  } catch (error) {
-    console.error(`Service: Erreur lors de l'upload du document ${type}`, error);
-    return null;
-  }
-}
-
-// Fonction pour enregistrer un nouvel utilisateur (legacy - gardée pour compatibilité)
-export async function registerLegacyUser(data: RegisterFormData) {
-  try {
-    console.log("Service: Inscription de l'utilisateur (legacy)", data.email);
-
-    // Enregistrer l'utilisateur via Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
-          role: data.role,
-        },
-      },
-    });
-
-    if (authError) {
-      console.error("Service: Erreur lors de l'inscription de l'utilisateur", authError);
-      throw authError;
-    }
-
-    console.log("Service: Utilisateur inscrit avec succès, ID:", authData.user?.id);
-
-    // Créer un profil utilisateur dans la base de données
-    if (authData.user?.id) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: data.email,
-          role: data.role as UserRole,
           full_name: data.fullName,
           company_name: data.companyName,
           siret: data.siret,
-          created_at: new Date().toISOString(),
-          last_login: new Date().toISOString(),
-          active: true,
-          profile_completed: false,
-        });
-
-      if (profileError) {
-        console.error("Service: Erreur lors de la création du profil", profileError);
-        throw profileError;
+          role: data.role,
+        }
       }
+    });
+
+    if (error) {
+      console.error('Erreur lors de l\'inscription:', error.message);
+      throw error;
     }
 
-    console.log("Service: Profil utilisateur créé avec succès pour", authData.user?.id);
-    return authData;
-  } catch (error) {
-    console.error("Service: Erreur lors de l'inscription de l'utilisateur", error);
-    throw error;
+    if (!authData.user) {
+      throw new Error('Inscription échouée: Aucune donnée utilisateur retournée');
+    }
+
+    return { user: authData.user };
+  } catch (err) {
+    console.error('Erreur dans registerLegacyUser:', err);
+    throw err;
   }
-}
+};
+
+// Fonction pour mettre à jour le profil
+export const updateUserProfile = async (userId: string, data: Partial<Profile>): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      throw error;
+    }
+  } catch (err) {
+    console.error('Erreur dans updateUserProfile:', err);
+    throw err;
+  }
+};

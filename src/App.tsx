@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -34,6 +35,7 @@ import { CompleteDriverProfile } from './pages/auth';
 import AdminDriverInvoicesPage from './pages/dashboard/admin/DriverInvoicesPage';
 import DriverInvoicesPage from './pages/dashboard/driver/DriverInvoicesPage';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import RevenueManagementPage from './pages/dashboard/driver/RevenueManagementPage';
 
 function App() {
@@ -45,6 +47,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         {/* Registration routes */}
         <Route path="/register" element={<Register />} />

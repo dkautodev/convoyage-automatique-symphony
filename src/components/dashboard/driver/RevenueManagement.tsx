@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -348,7 +347,7 @@ const RevenueManagement = () => {
                   <CardTitle>Répartition des revenus - {monthlyStats.monthName}</CardTitle>
                   <CardDescription>État des factures pour le mois en cours</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col lg:flex-row items-center justify-center gap-6">
+                <CardContent className="flex flex-col items-center justify-center gap-6">
                   {/* Horizontal Bar Chart */}
                   <div className="w-full h-64">
                     {prepareHorizontalBarData(monthlyStats).map((item, index) => (
@@ -379,46 +378,6 @@ const RevenueManagement = () => {
                         </div>
                       </div>
                     ))}
-                  </div>
-                  
-                  {/* Status Summary */}
-                  <div className="w-full lg:w-1/2 flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Factures payées</p>
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs text-muted-foreground">{monthlyStats.paidCount} factures</p>
-                          <p className="font-semibold text-right">
-                            {monthlyStats.paidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Factures en attente de paiement</p>
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs text-muted-foreground">{monthlyStats.unpaidCount} factures</p>
-                          <p className="font-semibold text-right">
-                            {monthlyStats.unpaidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full bg-gray-400"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Missions sans facture</p>
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs text-muted-foreground">{monthlyStats.noInvoiceCount} missions</p>
-                          <p className="font-semibold text-right">
-                            {monthlyStats.noInvoiceAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -649,4 +608,3 @@ const RevenueManagement = () => {
 };
 
 export default RevenueManagement;
-

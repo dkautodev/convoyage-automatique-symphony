@@ -6,10 +6,10 @@ import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, startOfYear, endOfYear, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, startOfYear, endOfYear, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowLeft, Calendar, CreditCard, FileCheck, FileQuestion } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ArrowLeft, Calendar, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface MonthlyStats {
@@ -226,6 +226,34 @@ const RevenueManagement = () => {
     }
   };
 
+  // Préparation des données pour le graphique en barres horizontales
+  const prepareHorizontalBarData = (stats: MonthlyStats) => {
+    const total = stats.totalAmount;
+    return [
+      {
+        name: 'Payé',
+        value: stats.paidAmount,
+        percentage: total > 0 ? Math.round((stats.paidAmount / total) * 100) : 0,
+        color: '#4ade80',
+        count: stats.paidCount
+      },
+      {
+        name: 'En attente',
+        value: stats.unpaidAmount,
+        percentage: total > 0 ? Math.round((stats.unpaidAmount / total) * 100) : 0,
+        color: '#f97316',
+        count: stats.unpaidCount
+      },
+      {
+        name: 'Sans facture',
+        value: stats.noInvoiceAmount,
+        percentage: total > 0 ? Math.round((stats.noInvoiceAmount / total) * 100) : 0,
+        color: '#a1a1aa',
+        count: stats.noInvoiceCount
+      }
+    ];
+  };
+
   // Colors for charts
   const COLORS = ['#4ade80', '#f97316', '#a1a1aa'];
 
@@ -314,58 +342,54 @@ const RevenueManagement = () => {
                 </Card>
               </div>
 
-              {/* Monthly Chart */}
+              {/* Horizontal Bar Chart for Monthly Data */}
               <Card>
                 <CardHeader>
                   <CardTitle>Répartition des revenus - {monthlyStats.monthName}</CardTitle>
                   <CardDescription>État des factures pour le mois en cours</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col lg:flex-row items-center justify-center gap-6">
-                  {/* Pie Chart */}
-                  <div className="w-full lg:w-1/2 h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { name: 'Payé', value: monthlyStats.paidAmount },
-                            { name: 'En attente', value: monthlyStats.unpaidAmount },
-                            { name: 'Sans facture', value: monthlyStats.noInvoiceAmount }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        >
-                          {[
-                            { name: 'Payé', value: monthlyStats.paidAmount },
-                            { name: 'En attente', value: monthlyStats.unpaidAmount },
-                            { name: 'Sans facture', value: monthlyStats.noInvoiceAmount }
-                          ].map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value) => 
-                            Number(value).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })
-                          }
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  {/* Horizontal Bar Chart */}
+                  <div className="w-full h-64">
+                    {prepareHorizontalBarData(monthlyStats).map((item, index) => (
+                      <div key={`bar-${index}`} className="flex items-center mb-4">
+                        <div className="flex-1">
+                          <p className="font-medium mb-1 flex items-center">
+                            <span className="w-4 h-4 mr-2 inline-block" style={{ backgroundColor: item.color }}></span>
+                            {item.name}
+                          </p>
+                          <div className="relative h-8">
+                            <div 
+                              className="absolute left-0 top-0 h-full" 
+                              style={{ 
+                                width: `${item.percentage}%`, 
+                                backgroundColor: item.color,
+                                minWidth: item.value > 0 ? '2%' : '0%'
+                              }}
+                            ></div>
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 pr-2 flex items-center">
+                              <span className="font-mono font-bold text-right">
+                                {item.value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              </span>
+                              <span className="ml-2 text-xs text-gray-500">
+                                {item.percentage > 0 ? `(${item.percentage}%)` : ''}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                   
                   {/* Status Summary */}
                   <div className="w-full lg:w-1/2 flex flex-col gap-3">
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-medium">Factures payées</p>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <p className="text-xs text-muted-foreground">{monthlyStats.paidCount} factures</p>
-                          <p className="font-semibold">
+                          <p className="font-semibold text-right">
                             {monthlyStats.paidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
                           </p>
                         </div>
@@ -373,11 +397,11 @@ const RevenueManagement = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-medium">Factures en attente de paiement</p>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <p className="text-xs text-muted-foreground">{monthlyStats.unpaidCount} factures</p>
-                          <p className="font-semibold">
+                          <p className="font-semibold text-right">
                             {monthlyStats.unpaidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
                           </p>
                         </div>
@@ -385,24 +409,15 @@ const RevenueManagement = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 rounded-full bg-gray-400"></div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-medium">Missions sans facture</p>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <p className="text-xs text-muted-foreground">{monthlyStats.noInvoiceCount} missions</p>
-                          <p className="font-semibold">
+                          <p className="font-semibold text-right">
                             {monthlyStats.noInvoiceAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
                           </p>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="mt-4">
-                      <Button variant="outline" asChild className="w-full">
-                        <Link to="/driver/invoices">
-                          <FileCheck className="mr-2 h-4 w-4" />
-                          Gérer mes factures
-                        </Link>
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -634,3 +649,4 @@ const RevenueManagement = () => {
 };
 
 export default RevenueManagement;
+

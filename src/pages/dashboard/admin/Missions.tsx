@@ -18,7 +18,16 @@ import {
   DialogHeader,
   DialogTitle 
 } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { useClients } from '@/hooks/useClients';
+import { useProfiles } from '@/hooks/useProfiles';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 
 // Define valid tab values type that includes 'all' and all mission statuses
 type MissionTab = 'all' | MissionStatus;
@@ -43,6 +52,7 @@ const MissionsPage = () => {
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [clientsData, setClientsData] = useState<Record<string, any>>({});
+  const [driversData, setDriversData] = useState<Record<string, any>>({});
   
   // État pour la boîte de dialogue de changement de statut
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -50,12 +60,24 @@ const MissionsPage = () => {
   const [newStatus, setNewStatus] = useState<MissionStatus | ''>('');
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
+  // État pour la boîte de dialogue de filtres
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [driverSearchTerm, setDriverSearchTerm] = useState('');
+
+  // Utiliser les hooks pour récupérer les clients et chauffeurs
+  const { clients: clientsList, loading: clientsLoading } = useClients();
+  const { profiles: driversList, loading: driversLoading } = useProfiles('chauffeur');
+
   useEffect(() => {
     fetchMissions();
   }, []);
   
   useEffect(() => {
     fetchClients();
+    fetchDrivers();
   }, []);
 
   const fetchClients = async () => {
@@ -81,6 +103,29 @@ const MissionsPage = () => {
     }
   };
 
+  const fetchDrivers = async () => {
+    try {
+      const { data, error } = await typedSupabase
+        .from('profiles')
+        .select('id, full_name')
+        .eq('role', 'chauffeur');
+        
+      if (error) throw error;
+      
+      // Create a map of driver ID to name for easy lookup
+      const driverMap: Record<string, any> = {};
+      data?.forEach(driver => {
+        driverMap[driver.id] = {
+          name: driver.full_name || 'Chauffeur inconnu'
+        };
+      });
+      
+      setDriversData(driverMap);
+    } catch (err) {
+      console.error('Error fetching drivers:', err);
+    }
+  };
+
   const fetchMissions = async () => {
     try {
       setLoading(true);
@@ -90,6 +135,16 @@ const MissionsPage = () => {
         .from('missions')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      // Apply client filter if selected
+      if (selectedClientId) {
+        query = query.eq('client_id', selectedClientId);
+      }
+      
+      // Apply driver filter if selected
+      if (selectedDriverId) {
+        query = query.eq('driver_id', selectedDriverId);
+      }
       
       const { data: missionsData, error: missionsError } = await query;
       
@@ -104,7 +159,8 @@ const MissionsPage = () => {
         const basicMission = convertMissionFromDB(mission as unknown as MissionFromDB);
         return {
           ...basicMission,
-          client_name: clientsData[mission.client_id]?.name || 'Client inconnu'
+          client_name: clientsData[mission.client_id]?.name || 'Client inconnu',
+          driver_name: driversData[mission.driver_id]?.name || 'Chauffeur non assigné'
         };
       });
       
@@ -116,6 +172,25 @@ const MissionsPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Appliquer les filtres et fermer la boîte de dialogue
+  const applyFilters = () => {
+    fetchMissions();
+    setFilterDialogOpen(false);
+  };
+
+  // Réinitialiser les filtres
+  const resetFilters = () => {
+    setSelectedClientId(null);
+    setSelectedDriverId(null);
+    setClientSearchTerm('');
+    setDriverSearchTerm('');
+    setFilterDialogOpen(false);
+    // Utiliser setTimeout pour s'assurer que l'état est bien mis à jour avant de récupérer les missions
+    setTimeout(() => {
+      fetchMissions();
+    }, 0);
   };
 
   // Nouvelle fonction pour ouvrir la boîte de dialogue de changement de statut
@@ -171,7 +246,8 @@ const MissionsPage = () => {
       (mission.pickup_address?.city || '').toLowerCase().includes(searchLower) ||
       (mission.delivery_address?.city || '').toLowerCase().includes(searchLower) ||
       missionStatusLabels[mission.status].toLowerCase().includes(searchLower) ||
-      (mission as any).client_name?.toLowerCase().includes(searchLower)
+      (mission as any).client_name?.toLowerCase().includes(searchLower) ||
+      (mission as any).driver_name?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -204,6 +280,16 @@ const MissionsPage = () => {
     setActiveTab(value as MissionTab);
   };
 
+  // Filtrer les clients en fonction du terme de recherche
+  const filteredClients = Object.entries(clientsList).filter(([_, client]) => 
+    client.name.toLowerCase().includes(clientSearchTerm.toLowerCase())
+  );
+
+  // Filtrer les chauffeurs en fonction du terme de recherche
+  const filteredDrivers = driversList.filter(driver => 
+    driver.label.toLowerCase().includes(driverSearchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -231,9 +317,18 @@ const MissionsPage = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="flex gap-2">
+        <Button 
+          variant="outline" 
+          className="flex gap-2"
+          onClick={() => setFilterDialogOpen(true)}
+        >
           <Filter className="h-4 w-4" />
           Filtres
+          {(selectedClientId || selectedDriverId) && (
+            <Badge variant="secondary" className="ml-1">
+              {[selectedClientId, selectedDriverId].filter(Boolean).length}
+            </Badge>
+          )}
         </Button>
       </div>
 
@@ -361,6 +456,126 @@ const MissionsPage = () => {
               disabled={!newStatus || newStatus === selectedMission?.status || updatingStatus}
             >
               {updatingStatus ? 'Mise à jour...' : 'Mettre à jour'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Boîte de dialogue pour les filtres */}
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filtrer les missions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Filtre par client */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Client</h3>
+              <div className="border rounded-md">
+                <Command>
+                  <CommandInput 
+                    placeholder="Rechercher un client..." 
+                    value={clientSearchTerm}
+                    onValueChange={setClientSearchTerm}
+                  />
+                  <CommandList>
+                    <CommandEmpty>Aucun client trouvé</CommandEmpty>
+                    <CommandGroup>
+                      {clientsLoading ? (
+                        <div className="py-2 text-center text-sm">Chargement...</div>
+                      ) : filteredClients.length > 0 ? (
+                        <>
+                          <CommandItem 
+                            className="cursor-pointer"
+                            onSelect={() => setSelectedClientId(null)}
+                          >
+                            <span className={!selectedClientId ? 'font-medium text-primary' : ''}>
+                              Tous les clients
+                            </span>
+                          </CommandItem>
+                          {filteredClients.map(([id, client]) => (
+                            <CommandItem 
+                              key={id}
+                              className="cursor-pointer"
+                              onSelect={() => setSelectedClientId(id)}
+                            >
+                              <span className={selectedClientId === id ? 'font-medium text-primary' : ''}>
+                                {client.name}
+                              </span>
+                            </CommandItem>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="py-2 text-center text-sm">Aucun client disponible</div>
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </div>
+              {selectedClientId && (
+                <p className="text-xs text-muted-foreground">
+                  Client sélectionné: {clientsList[selectedClientId]?.name}
+                </p>
+              )}
+            </div>
+
+            {/* Filtre par chauffeur */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Chauffeur</h3>
+              <div className="border rounded-md">
+                <Command>
+                  <CommandInput 
+                    placeholder="Rechercher un chauffeur..." 
+                    value={driverSearchTerm}
+                    onValueChange={setDriverSearchTerm}
+                  />
+                  <CommandList>
+                    <CommandEmpty>Aucun chauffeur trouvé</CommandEmpty>
+                    <CommandGroup>
+                      {driversLoading ? (
+                        <div className="py-2 text-center text-sm">Chargement...</div>
+                      ) : filteredDrivers.length > 0 ? (
+                        <>
+                          <CommandItem 
+                            className="cursor-pointer"
+                            onSelect={() => setSelectedDriverId(null)}
+                          >
+                            <span className={!selectedDriverId ? 'font-medium text-primary' : ''}>
+                              Tous les chauffeurs
+                            </span>
+                          </CommandItem>
+                          {filteredDrivers.map(driver => (
+                            <CommandItem 
+                              key={driver.id}
+                              className="cursor-pointer"
+                              onSelect={() => setSelectedDriverId(driver.id)}
+                            >
+                              <span className={selectedDriverId === driver.id ? 'font-medium text-primary' : ''}>
+                                {driver.label}
+                              </span>
+                            </CommandItem>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="py-2 text-center text-sm">Aucun chauffeur disponible</div>
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </div>
+              {selectedDriverId && (
+                <p className="text-xs text-muted-foreground">
+                  Chauffeur sélectionné: {driversList.find(d => d.id === selectedDriverId)?.label}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={resetFilters} className="w-full sm:w-auto">
+              Réinitialiser
+            </Button>
+            <Button onClick={applyFilters} className="w-full sm:w-auto">
+              Appliquer les filtres
             </Button>
           </DialogFooter>
         </DialogContent>

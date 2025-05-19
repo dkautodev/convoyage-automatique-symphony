@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Search, Filter, FileText, Edit } from 'lucide-react';
+import { Package, Plus, Search, Filter, FileText, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -306,7 +306,7 @@ const MissionsPage = () => {
                             onClick={() => openStatusDialog(mission)}
                             title="Modifier le statut"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Truck className="h-4 w-4" />
                           </Button>
                           <Button variant="outline" size="sm" asChild>
                             <Link to={`/admin/missions/${mission.id}`}>

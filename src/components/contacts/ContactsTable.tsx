@@ -47,7 +47,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
   }
   
   return (
-    <div className="rounded-md border">
+    <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>

@@ -17,17 +17,21 @@ const ClientContactsPage: React.FC = () => {
   };
   
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Mes contacts</h1>
-        <AddContactDialog onAddContact={handleAddContact} />
+    <div className="p-6">
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h1 className="text-2xl font-bold">Mes contacts</h1>
+          <AddContactDialog onAddContact={handleAddContact} />
+        </div>
+        
+        <div className="p-6">
+          <ContactsTable
+            contacts={contacts}
+            loading={loading}
+            onDeleteContact={handleDeleteContact}
+          />
+        </div>
       </div>
-      
-      <ContactsTable
-        contacts={contacts}
-        loading={loading}
-        onDeleteContact={handleDeleteContact}
-      />
     </div>
   );
 };

@@ -173,9 +173,11 @@ const createMissionSchema = z.object({
 
 type CreateMissionFormValues = z.infer<typeof createMissionSchema>;
 export default function CreateMissionForm({
-  onSuccess
+  onSuccess,
+  onDirtyChange
 }: {
   onSuccess?: (missionId: string) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -239,6 +241,13 @@ export default function CreateMissionForm({
       H2_LIV: ''
     }
   });
+
+  // Observer l'état "dirty" du formulaire et le communiquer au parent
+  useEffect(() => {
+    if (onDirtyChange) {
+      onDirtyChange(form.formState.isDirty);
+    }
+  }, [form.formState.isDirty, onDirtyChange]);
 
   // Si le rôle est admin, initialiser le client_id avec undefined
   useEffect(() => {

@@ -93,10 +93,7 @@ const ClientsPage = () => {
 
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              <h3 className="font-medium">Liste des clients</h3>
-            </div>
+            
             <div className="relative w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
               <Input type="search" placeholder="Rechercher un client..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />

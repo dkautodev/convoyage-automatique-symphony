@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Plus, Search, Pencil, Trash2, Building2, Mail, User, Phone } from 'lucide-react';
+import { Building, Plus, Search, Pencil, Trash2, Building2, Mail, User, Phone, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,7 +9,9 @@ import { fetchClients, deleteClient } from '@/utils/clientUtils';
 import { Client } from '@/types/supabase';
 import ClientDetails from '@/components/ClientDetails';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -17,6 +20,9 @@ const ClientsPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
+  const [clientToView, setClientToView] = useState<Client | null>(null);
+
   const loadClients = async () => {
     setLoading(true);
     try {
@@ -28,13 +34,20 @@ const ClientsPage = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadClients();
   }, []);
+
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
-    return client.company_name && client.company_name.toLowerCase().includes(searchLower) || client.siret && client.siret.toLowerCase().includes(searchLower) || client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || client.full_name && client.full_name.toLowerCase().includes(searchLower) || client.email && client.email.toLowerCase().includes(searchLower);
+    return client.company_name && client.company_name.toLowerCase().includes(searchLower) || 
+           client.siret && client.siret.toLowerCase().includes(searchLower) || 
+           client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || 
+           client.full_name && client.full_name.toLowerCase().includes(searchLower) || 
+           client.email && client.email.toLowerCase().includes(searchLower);
   });
+
   const handleNewClient = () => {
     // Create a new empty client object
     const newClient: Client = {
@@ -53,14 +66,22 @@ const ClientsPage = () => {
     setSelectedClient(newClient);
     setIsDialogOpen(true);
   };
+
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setIsDialogOpen(true);
   };
+
+  const handleViewClient = (client: Client) => {
+    setClientToView(client);
+    setIsViewDialogOpen(true);
+  };
+
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
   };
+
   const handleConfirmDelete = async () => {
     if (clientToDelete) {
       try {
@@ -80,15 +101,27 @@ const ClientsPage = () => {
       }
     }
   };
+
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedClient(null);
   };
-  return <div className="space-y-6 p-6">
+
+  const formatAddress = (address: any) => {
+    if (!address) return 'Non spécifié';
+    const { street, postal_code, city, country } = address;
+    return `${street || ''}, ${postal_code || ''} ${city || ''}, ${country || ''}`;
+  };
+
+  return (
+    <div className="p-6">
       <div className="bg-white rounded-lg shadow-sm">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold">Gestion des clients</h2>
-          
+          <Button onClick={handleNewClient} className="flex gap-2 items-center">
+            <Plus className="h-4 w-4" />
+            Nouveau client
+          </Button>
         </div>
 
         <div className="p-6">
@@ -99,34 +132,48 @@ const ClientsPage = () => {
             </div>
             <div className="relative w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input type="search" placeholder="Rechercher un client..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+              <Input 
+                type="search" 
+                placeholder="Rechercher un client..." 
+                className="pl-8" 
+                value={searchTerm} 
+                onChange={e => setSearchTerm(e.target.value)} 
+              />
             </div>
           </div>
           
-          {loading ? <div className="text-center py-10 text-neutral-500">
+          {loading ? (
+            <div className="text-center py-10 text-neutral-500">
               <p>Chargement des clients...</p>
-            </div> : filteredClients.length > 0 ? <div className="border rounded-md">
+            </div>
+          ) : filteredClients.length > 0 ? (
+            <div className="border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nom / Entreprise</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Téléphone</TableHead>
-                    <TableHead className="w-[120px]">Actions</TableHead>
+                    <TableHead className="w-[180px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients.map(client => <TableRow key={client.id}>
+                  {filteredClients.map(client => (
+                    <TableRow key={client.id}>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          {client.company_name && <div className="flex items-center gap-2">
+                          {client.company_name && (
+                            <div className="flex items-center gap-2">
                               <Building2 className="h-4 w-4 text-neutral-500" />
                               {client.company_name}
-                            </div>}
-                          {client.full_name && <div className="flex items-center gap-2 text-sm text-neutral-600">
+                            </div>
+                          )}
+                          {client.full_name && (
+                            <div className="flex items-center gap-2 text-sm text-neutral-600">
                               <User className="h-3 w-3 text-neutral-500" />
                               {client.full_name}
-                            </div>}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -136,13 +183,24 @@ const ClientsPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {client.phone1 && <div className="flex items-center gap-1">
+                        {client.phone1 && (
+                          <div className="flex items-center gap-1">
                             <Phone className="h-3 w-3 text-neutral-500" />
                             {client.phone1}
-                          </div>}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleViewClient(client)} 
+                            className="flex items-center gap-1"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            Voir le profil
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleEditClient(client)} title="Modifier">
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -151,13 +209,19 @@ const ClientsPage = () => {
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>)}
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
-            </div> : <div className="text-center py-10 text-neutral-500">
+            </div>
+          ) : (
+            <div className="text-center py-10 text-neutral-500">
               <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
-              {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
-            </div>}
+              {!searchTerm && (
+                <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -179,6 +243,86 @@ const ClientsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>;
+
+      {/* Client View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {clientToView?.company_name || clientToView?.full_name || 'Détails du client'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {clientToView && (
+            <div className="space-y-6 mt-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-muted-foreground mb-1">Informations générales</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Entreprise:</span>{' '}
+                      {clientToView.company_name || 'Non spécifié'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Nom complet:</span>{' '}
+                      {clientToView.full_name || 'Non spécifié'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Email:</span>{' '}
+                      {clientToView.email}
+                    </div>
+                    <div>
+                      <span className="font-medium">Téléphone principal:</span>{' '}
+                      {clientToView.phone1 || 'Non spécifié'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Téléphone secondaire:</span>{' '}
+                      {clientToView.phone2 || 'Non spécifié'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-muted-foreground mb-1">Informations fiscales</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">SIRET:</span>{' '}
+                      {clientToView.siret || 'Non spécifié'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Numéro de TVA:</span>{' '}
+                      {clientToView.vat_number || 'Non spécifié'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-muted-foreground mb-1">Adresse de facturation</h3>
+                <div className="p-3 border rounded-md bg-muted/20">
+                  {formatAddress(clientToView.billing_address)}
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-muted-foreground mb-1">Informations supplémentaires</h3>
+                <div className="space-y-2">
+                  <div>
+                    <span className="font-medium">Date de création:</span>{' '}
+                    {clientToView.created_at ? new Date(clientToView.created_at).toLocaleDateString('fr-FR') : 'Non spécifié'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Profil complété:</span>{' '}
+                    {clientToView.profile_completed ? 'Oui' : 'Non'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
+
 export default ClientsPage;

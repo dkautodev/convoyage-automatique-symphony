@@ -1,23 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Plus, Search, Pencil, Trash2, Building2, Mail, User, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { fetchClients, deleteClient } from '@/utils/clientUtils';
 import { Client } from '@/types/supabase';
 import ClientDetails from '@/components/ClientDetails';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,7 +17,6 @@ const ClientsPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-
   const loadClients = async () => {
     setLoading(true);
     try {
@@ -38,22 +28,13 @@ const ClientsPage = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     loadClients();
   }, []);
-
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
-    return (
-      (client.company_name && client.company_name.toLowerCase().includes(searchLower)) ||
-      (client.siret && client.siret.toLowerCase().includes(searchLower)) ||
-      (client.vat_number && client.vat_number.toLowerCase().includes(searchLower)) ||
-      (client.full_name && client.full_name.toLowerCase().includes(searchLower)) ||
-      (client.email && client.email.toLowerCase().includes(searchLower))
-    );
+    return client.company_name && client.company_name.toLowerCase().includes(searchLower) || client.siret && client.siret.toLowerCase().includes(searchLower) || client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || client.full_name && client.full_name.toLowerCase().includes(searchLower) || client.email && client.email.toLowerCase().includes(searchLower);
   });
-
   const handleNewClient = () => {
     // Create a new empty client object
     const newClient: Client = {
@@ -69,21 +50,17 @@ const ClientsPage = () => {
       created_at: new Date().toISOString(),
       profile_completed: false
     };
-    
     setSelectedClient(newClient);
     setIsDialogOpen(true);
   };
-
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setIsDialogOpen(true);
   };
-
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
   };
-
   const handleConfirmDelete = async () => {
     if (clientToDelete) {
       try {
@@ -103,21 +80,15 @@ const ClientsPage = () => {
       }
     }
   };
-
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedClient(null);
   };
-
-  return (
-    <div className="space-y-6 p-6">
+  return <div className="space-y-6 p-6">
       <div className="bg-white rounded-lg shadow-sm">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold">Gestion des clients</h2>
-          <Button onClick={handleNewClient}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau client
-          </Button>
+          
         </div>
 
         <div className="p-6">
@@ -128,22 +99,13 @@ const ClientsPage = () => {
             </div>
             <div className="relative w-64">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input
-                type="search"
-                placeholder="Rechercher un client..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <Input type="search" placeholder="Rechercher un client..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
           </div>
           
-          {loading ? (
-            <div className="text-center py-10 text-neutral-500">
+          {loading ? <div className="text-center py-10 text-neutral-500">
               <p>Chargement des clients...</p>
-            </div>
-          ) : filteredClients.length > 0 ? (
-            <div className="border rounded-md">
+            </div> : filteredClients.length > 0 ? <div className="border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -154,22 +116,17 @@ const ClientsPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients.map((client) => (
-                    <TableRow key={client.id}>
+                  {filteredClients.map(client => <TableRow key={client.id}>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          {client.company_name && (
-                            <div className="flex items-center gap-2">
+                          {client.company_name && <div className="flex items-center gap-2">
                               <Building2 className="h-4 w-4 text-neutral-500" />
                               {client.company_name}
-                            </div>
-                          )}
-                          {client.full_name && (
-                            <div className="flex items-center gap-2 text-sm text-neutral-600">
+                            </div>}
+                          {client.full_name && <div className="flex items-center gap-2 text-sm text-neutral-600">
                               <User className="h-3 w-3 text-neutral-500" />
                               {client.full_name}
-                            </div>
-                          )}
+                            </div>}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -179,55 +136,32 @@ const ClientsPage = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {client.phone1 && (
-                          <div className="flex items-center gap-1">
+                        {client.phone1 && <div className="flex items-center gap-1">
                             <Phone className="h-3 w-3 text-neutral-500" />
                             {client.phone1}
-                          </div>
-                        )}
+                          </div>}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditClient(client)}
-                            title="Modifier"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => handleEditClient(client)} title="Modifier">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(client)}
-                            title="Supprimer"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(client)} title="Supprimer">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
-            </div>
-          ) : (
-            <div className="text-center py-10 text-neutral-500">
+            </div> : <div className="text-center py-10 text-neutral-500">
               <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
-              {!searchTerm && (
-                <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>
-              )}
-            </div>
-          )}
+              {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
+            </div>}
         </div>
       </div>
 
-      <ClientDetails
-        client={selectedClient}
-        open={isDialogOpen}
-        onClose={handleDialogClose}
-        onSave={loadClients}
-      />
+      <ClientDetails client={selectedClient} open={isDialogOpen} onClose={handleDialogClose} onSave={loadClients} />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -245,8 +179,6 @@ const ClientsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 };
-
 export default ClientsPage;

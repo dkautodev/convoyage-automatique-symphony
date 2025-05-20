@@ -128,7 +128,7 @@ const ClientsPage = () => {
             </div> : filteredClients.length > 0 ? <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead>Nom / Entreprise</TableHead>
+                  <TableHead className="bg-white">Nom / Entreprise</TableHead>
                   <TableHead className="bg-white">Email</TableHead>
                   <TableHead className="bg-white">Téléphone</TableHead>
                   <TableHead className="text-left bg-white">Actions</TableHead>

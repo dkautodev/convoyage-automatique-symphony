@@ -131,7 +131,7 @@ const ClientsPage = () => {
                   <TableHead>Nom / Entreprise</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Téléphone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-left">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

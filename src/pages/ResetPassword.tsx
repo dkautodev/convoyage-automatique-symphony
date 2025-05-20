@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -33,14 +33,11 @@ const resetPasswordSchema = z.object({
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // Récupérer le token de l'URL
-  const token = searchParams.get('token');
+  const [tokenAvailable, setTokenAvailable] = useState(false);
 
   // Formulaire avec validation
   const form = useForm<ResetPasswordFormValues>({
@@ -51,20 +48,34 @@ export default function ResetPassword() {
     },
   });
 
-  // Vérifier que nous avons un token valide
+  // Vérifier que nous avons une session valide (le token est automatiquement utilisé par Supabase)
   useEffect(() => {
-    if (!token) {
-      setError("Le lien de réinitialisation de mot de passe est invalide ou a expiré.");
-    }
-  }, [token]);
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      
+      console.log("Session check result:", data);
+      
+      if (error) {
+        console.error("Erreur lors de la vérification de la session:", error);
+        setError("Le lien de réinitialisation de mot de passe est invalide ou a expiré.");
+        return;
+      }
+      
+      if (data.session) {
+        console.log("Session trouvée, prêt pour la réinitialisation");
+        setTokenAvailable(true);
+      } else {
+        console.error("Aucune session trouvée");
+        setError("Le lien de réinitialisation de mot de passe est invalide ou a expiré.");
+      }
+    };
+
+    checkSession();
+  }, []);
 
   // Gérer la soumission du formulaire
   const onSubmit = async (data: ResetPasswordFormValues) => {
     try {
-      if (!token) {
-        throw new Error("Le lien de réinitialisation de mot de passe est invalide ou a expiré.");
-      }
-
       setIsLoading(true);
       setError(null);
 
@@ -159,7 +170,7 @@ export default function ResetPassword() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isLoading || !token}
+                      disabled={isLoading || !tokenAvailable}
                     >
                       {isLoading ? (
                         <div className="flex items-center gap-2">

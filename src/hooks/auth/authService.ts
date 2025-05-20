@@ -93,8 +93,11 @@ export const loginUser = async (email: string, password: string): Promise<{
 // Fonction pour réinitialiser le mot de passe
 export const resetUserPassword = async (email: string): Promise<void> => {
   try {
-    // URL pour la redirection après avoir cliqué sur le lien dans l'email
-    const resetPasswordURL = `${window.location.origin}/reset-password`;
+    // Définir l'URL complète pour la redirection
+    const baseUrl = window.location.origin;
+    const resetPasswordURL = `${baseUrl}/reset-password`;
+    
+    console.log(`Sending password reset email with redirect URL: ${resetPasswordURL}`);
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: resetPasswordURL

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { AuthResponse, User } from '@supabase/supabase-js';
 import {
@@ -8,7 +9,53 @@ import {
   DriverConfigFormData
 } from '@/types/auth';
 import { Profile, LegalStatusType, Address } from './types';
-import { verifyAndUseAdminToken, uploadDriverDocument } from './utils';
+import { verifyAndUseAdminToken } from './utils';
+
+// Fetch user profile from the database
+export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Erreur lors de la récupération du profil utilisateur:', error);
+      throw error;
+    }
+
+    return data as Profile;
+  } catch (err) {
+    console.error('Exception dans fetchUserProfile:', err);
+    throw err;
+  }
+};
+
+// Upload driver document to storage
+export const uploadDriverDocument = async (file: File, documentType: string, userId: string): Promise<string | null> => {
+  try {
+    if (!file) return null;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${documentType}.${fileExt}`;
+    const filePath = `driver-documents/${userId}/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, { upsert: true });
+
+    if (error) {
+      console.error(`Erreur lors du téléchargement du document ${documentType}:`, error);
+      return null;
+    }
+
+    return data.path;
+  } catch (err) {
+    console.error(`Exception dans uploadDriverDocument (${documentType}):`, err);
+    return null;
+  }
+};
 
 // Fonction pour vérifier le token d'invitation admin
 export const verifyAdminToken = async (token: string, email: string): Promise<boolean> => {
@@ -92,6 +139,22 @@ export const registerBasicUser = async (data: BasicRegisterFormData): Promise<{ 
   }
 };
 
+// Helper function to convert Address to JsonObject
+const addressToJsonObject = (address: Address | null): Record<string, any> | null => {
+  if (!address) return null;
+  
+  return {
+    formatted_address: address.formatted_address || '',
+    street: address.street || '',
+    city: address.city || '',
+    postal_code: address.postal_code || '',
+    country: address.country || 'France',
+    place_id: address.place_id || '',
+    lat: address.lat || null,
+    lng: address.lng || null
+  };
+};
+
 // Fonction pour compléter le profil client
 export const completeClientProfileService = async (userId: string, data: ClientProfileFormData): Promise<void> => {
   try {
@@ -100,7 +163,7 @@ export const completeClientProfileService = async (userId: string, data: ClientP
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: addressToJsonObject(data.billingAddress),
         siret: data.siret,
         tva_number: data.tvaNumb,
         phone_1: data.phone1,
@@ -127,7 +190,7 @@ export const completeDriverProfileService = async (userId: string, data: DriverP
       .update({
         full_name: data.fullName,
         company_name: data.companyName,
-        billing_address: data.billingAddress,
+        billing_address: addressToJsonObject(data.billingAddress),
         siret: data.siret,
         tva_number: data.tvaNumb,
         tva_applicable: data.tvaApplicable,
@@ -218,7 +281,7 @@ export const registerLegacyUser = async (data: RegisterFormData): Promise<{ user
 };
 
 // Fonction pour mettre à jour le profil
-export const updateUserProfile = async (userId: string, data: Partial<Profile>): Promise<void> => {
+export const updateUserProfile = async (userId: string, data: Partial<Record<string, any>>): Promise<void> => {
   try {
     const { error } = await supabase
       .from('profiles')

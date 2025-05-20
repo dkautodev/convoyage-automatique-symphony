@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building, Plus, Search, Pencil, Trash2, Building2, Mail, User, Phone, Eye } from 'lucide-react';
+import { Building, Plus, Search, User, Phone, Mail, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +10,7 @@ import ClientDetails from '@/components/ClientDetails';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -20,6 +21,7 @@ const ClientsPage = () => {
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
   const [clientToView, setClientToView] = useState<Client | null>(null);
+
   const loadClients = async () => {
     setLoading(true);
     try {
@@ -31,13 +33,20 @@ const ClientsPage = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadClients();
   }, []);
+
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
-    return client.company_name && client.company_name.toLowerCase().includes(searchLower) || client.siret && client.siret.toLowerCase().includes(searchLower) || client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || client.full_name && client.full_name.toLowerCase().includes(searchLower) || client.email && client.email.toLowerCase().includes(searchLower);
+    return client.company_name && client.company_name.toLowerCase().includes(searchLower) || 
+           client.siret && client.siret.toLowerCase().includes(searchLower) || 
+           client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || 
+           client.full_name && client.full_name.toLowerCase().includes(searchLower) || 
+           client.email && client.email.toLowerCase().includes(searchLower);
   });
+
   const handleNewClient = () => {
     // Create a new empty client object
     const newClient: Client = {
@@ -56,18 +65,22 @@ const ClientsPage = () => {
     setSelectedClient(newClient);
     setIsDialogOpen(true);
   };
+
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setIsDialogOpen(true);
   };
+
   const handleViewClient = (client: Client) => {
     setClientToView(client);
     setIsViewDialogOpen(true);
   };
+
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
   };
+
   const handleConfirmDelete = async () => {
     if (clientToDelete) {
       try {
@@ -87,10 +100,12 @@ const ClientsPage = () => {
       }
     }
   };
+
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedClient(null);
   };
+
   const formatAddress = (address: any) => {
     if (!address) return 'Non spécifié';
     const {
@@ -101,83 +116,109 @@ const ClientsPage = () => {
     } = address;
     return `${street || ''}, ${postal_code || ''} ${city || ''}, ${country || ''}`;
   };
-  return <div className="p-6">
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Liste des clients</h1>
+          <p className="text-muted-foreground mt-1">Gérer les profils des clients et leurs documents</p>
+        </div>
+        <Button onClick={handleNewClient} className="flex gap-2 items-center">
+          <Plus className="h-4 w-4" />
+          Nouveau client
+        </Button>
+      </div>
+
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold">Gestion des clients</h2>
-          <Button onClick={handleNewClient} className="flex gap-2 items-center">
-            <Plus className="h-4 w-4" />
-            Nouveau client
-          </Button>
+        <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center gap-2">
+            <Building className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-medium">Liste des clients</h2>
+          </div>
+          <div className="relative w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
+            <Input 
+              type="search" 
+              placeholder="Rechercher un client..." 
+              className="pl-8" 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)} 
+            />
+          </div>
         </div>
 
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              <h3 className="font-medium">Liste des clients</h3>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input type="search" placeholder="Rechercher un client..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-            </div>
-          </div>
-          
-          {loading ? <div className="text-center py-10 text-neutral-500">
+        <div className="p-0">
+          {loading ? (
+            <div className="text-center py-10 text-neutral-500">
               <p>Chargement des clients...</p>
-            </div> : filteredClients.length > 0 ? <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom / Entreprise</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Téléphone</TableHead>
-                    <TableHead className="w-[180px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClients.map(client => <TableRow key={client.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          {client.company_name && <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-neutral-500" />
-                              {client.company_name}
-                            </div>}
-                          {client.full_name && <div className="flex items-center gap-2 text-sm text-neutral-600">
-                              <User className="h-3 w-3 text-neutral-500" />
-                              {client.full_name}
-                            </div>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
+            </div>
+          ) : filteredClients.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead>Nom / Entreprise</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Téléphone</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClients.map(client => (
+                  <TableRow key={client.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        {client.company_name && (
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-neutral-500" />
+                            {client.company_name}
+                          </div>
+                        )}
+                        {client.full_name && (
+                          <div className="flex items-center gap-2 text-sm text-neutral-600">
+                            <User className="h-3 w-3 text-neutral-500" />
+                            {client.full_name}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3 text-neutral-500" />
+                        {client.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {client.phone1 && (
                         <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3 text-neutral-500" />
-                          {client.email}
+                          <Phone className="h-3 w-3 text-neutral-500" />
+                          {client.phone1}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {client.phone1 && <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3 text-neutral-500" />
-                            {client.phone1}
-                          </div>}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleViewClient(client)} className="flex items-center gap-1">
-                            <Eye className="h-3.5 w-3.5" />
-                            Voir le profil
-                          </Button>
-                          
-                          
-                        </div>
-                      </TableCell>
-                    </TableRow>)}
-                </TableBody>
-              </Table>
-            </div> : <div className="text-center py-10 text-neutral-500">
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewClient(client)} 
+                        className="flex items-center gap-1"
+                      >
+                        <User className="h-3.5 w-3.5" />
+                        Voir le profil
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-10 text-neutral-500">
               <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
-              {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
-            </div>}
+              {!searchTerm && (
+                <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -209,7 +250,8 @@ const ClientsPage = () => {
             </DialogTitle>
           </DialogHeader>
           
-          {clientToView && <div className="space-y-6 mt-4 text-sm">
+          {clientToView && (
+            <div className="space-y-6 mt-4 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground mb-1">Informations générales</h3>
@@ -272,9 +314,12 @@ const ClientsPage = () => {
                   </div>
                 </div>
               </div>
-            </div>}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default ClientsPage;

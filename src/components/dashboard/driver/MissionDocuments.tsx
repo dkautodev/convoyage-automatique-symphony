@@ -49,11 +49,17 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
     try {
       console.log(`Downloading document from path: ${document.file_path} using documents bucket`);
       
+      // Clean up the path if needed
+      let filePath = document.file_path;
+      if (filePath.startsWith('/')) {
+        filePath = filePath.substring(1);
+      }
+      
       // Use the documents bucket explicitly for consistency
       const { data, error } = await supabase
         .storage
         .from('documents')
-        .download(document.file_path);
+        .download(filePath);
         
       if (error) {
         console.error('Erreur lors du téléchargement:', error);

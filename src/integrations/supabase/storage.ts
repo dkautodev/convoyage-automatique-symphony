@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 /**
@@ -74,8 +75,14 @@ export function getPublicUrl(path: string | null): string | null {
       return null;
     }
     
+    // Ensure path doesn't start with slash for URL construction
+    let cleanPath = path;
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.substring(1);
+    }
+    
     // Create a direct URL to avoid any potential issues with getPublicUrl
-    const directUrl = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/${bucketName}/${path}`;
+    const directUrl = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/${bucketName}/${cleanPath}`;
     console.log("Direct public URL generated:", directUrl);
     return directUrl;
   } catch (error) {

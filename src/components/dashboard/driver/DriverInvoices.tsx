@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Upload, Trash2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { uploadFile, getPublicUrl } from '@/integrations/supabase/storage';
+import { uploadFile } from '@/integrations/supabase/storage';
 
 // Type pour les missions avec factures
 interface DriverMission {
@@ -160,16 +159,27 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
     try {
       console.log('Trying to get public URL for:', mission.chauffeur_invoice);
       
+      // Make sure we have a clean file path without leading slashes
+      let filePath = mission.chauffeur_invoice;
+      if (filePath.startsWith('/')) {
+        filePath = filePath.substring(1);
+      }
+      
       // Create a direct URL to the document in the documents bucket
-      const fullPath = mission.chauffeur_invoice;
-      const publicUrlRaw = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/documents/${fullPath}`;
+      const publicUrlRaw = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/documents/${filePath}`;
       console.log('Using direct public URL:', publicUrlRaw);
+      
+      // Test if the URL is valid
+      const testRequest = await fetch(publicUrlRaw, { method: 'HEAD' });
+      if (!testRequest.ok) {
+        throw new Error(`URL is not accessible: ${testRequest.status}`);
+      }
       
       setViewUrl(publicUrlRaw);
       setViewDialogOpen(true);
     } catch (error) {
-      console.error('Error getting invoice URL:', error);
-      toast.error("Impossible d'accéder à la facture");
+      console.error('Error accessing invoice URL:', error);
+      toast.error("Impossible d'accéder à la facture. Erreur: " + (error instanceof Error ? error.message : "Inconnue"));
     }
   };
 
@@ -195,14 +205,19 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       setUploadLoading(true);
 
       // Générer un chemin unique pour la facture
-      const fileName = `${Date.now()}_${selectedFile.name}`;
+      const fileName = `${Date.now()}_${selectedFile.name.replace(/[^\w\d.-]/g, '_')}`;
       const filePath = `driver_invoices/${selectedMission.id}/${fileName}`;
+
+      console.log('Uploading file to path:', filePath);
+      console.log('Using bucket:', 'documents');
 
       // Uploader le fichier - assurer que c'est bien dans le bucket 'documents'
       const uploadedPath = await uploadFile(filePath, selectedFile);
       if (!uploadedPath) {
         throw new Error("Échec de l'upload du fichier");
       }
+
+      console.log('File uploaded successfully to path:', uploadedPath);
 
       // Mettre à jour la mission avec le chemin de la facture
       const { error } = await typedSupabase.from('missions').update({
@@ -491,20 +506,36 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
               Visualisation de la facture pour la mission {selectedMission?.mission_number}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 h-full overflow-auto">
-            {viewUrl && (
-              <iframe 
-                src={viewUrl} 
+          <div className="flex-1 h-full overflow-auto bg-white">
+            {viewUrl ? (
+              <object 
+                data={viewUrl} 
+                type="application/pdf" 
                 className="w-full h-full" 
-                title={`Facture mission ${selectedMission?.mission_number}`}
                 aria-label={`Facture pour la mission ${selectedMission?.mission_number}`}
-              />
+              >
+                <p className="text-center p-4">
+                  Votre navigateur ne peut pas afficher le PDF. 
+                  <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline ml-2">
+                    Cliquer ici pour télécharger
+                  </a>
+                </p>
+              </object>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Fermer
             </Button>
+            {viewUrl && (
+              <Button as="a" href={viewUrl} target="_blank" rel="noopener noreferrer">
+                Ouvrir dans un nouvel onglet
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

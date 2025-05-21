@@ -11,7 +11,7 @@ export async function uploadFile(path: string, file: File): Promise<string | nul
   try {
     console.log(`Uploading file to ${path}`);
     
-    // Toujours utiliser 'documents' bucket pour tous les documents
+    // Always use 'documents' bucket for mission documents
     const bucketName = 'documents';
     
     // Sanitize the file path to avoid special characters
@@ -61,30 +61,15 @@ function sanitizeStoragePath(path: string): string {
  * @param path The storage path of the file
  * @returns The public URL of the file
  */
-export function getPublicUrl(path: string | null): string | null {
-  if (!path) return null;
-  
+export function getPublicUrl(path: string): string | null {
   try {
     // Always use 'documents' bucket for all files
     const bucketName = 'documents';
     
     console.log(`Getting public URL from bucket: ${bucketName} for path: ${path}`);
     
-    if (!path.trim()) {
-      console.error("Invalid path: Path is empty");
-      return null;
-    }
-    
-    // Ensure path doesn't start with slash for URL construction
-    let cleanPath = path;
-    if (cleanPath.startsWith('/')) {
-      cleanPath = cleanPath.substring(1);
-    }
-    
-    // Create a direct URL to avoid any potential issues with getPublicUrl
-    const directUrl = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/${bucketName}/${cleanPath}`;
-    console.log("Direct public URL generated:", directUrl);
-    return directUrl;
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
+    return data.publicUrl;
   } catch (error) {
     console.error("Error getting public URL:", error);
     return null;
@@ -164,7 +149,7 @@ export async function getMissionDocuments(missionId: string) {
       return [];
     }
     
-    // Add public URL to each document - toujours utiliser 'documents' bucket
+    // Add public URL to each document - always use 'documents' bucket
     return data.map(doc => ({
       ...doc,
       publicUrl: getPublicUrl(doc.file_path)
@@ -190,7 +175,7 @@ export async function uploadDriverInvoice(missionId: string, file: File, userId:
     // Sanitize the original filename
     const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
     
-    // Create a path pattern for driver invoices - toujours utiliser documents bucket
+    // Create a path pattern for driver invoices - always use documents bucket
     const filePath = `driver_invoices/${missionId}/${fileId}_${sanitizedFileName}`;
     
     console.log(`Attempting to upload driver invoice to path: ${filePath}`);

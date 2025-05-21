@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -158,17 +159,14 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
     }
     try {
       console.log('Trying to get public URL for:', mission.chauffeur_invoice);
-      // Use getPublicUrl from our storage utility to ensure consistent bucket usage
-      const publicUrl = getPublicUrl(mission.chauffeur_invoice);
       
-      if (publicUrl) {
-        console.log('Got public URL:', publicUrl);
-        setViewUrl(publicUrl);
-        setViewDialogOpen(true);
-      } else {
-        console.error('Failed to get public URL, it returned null');
-        toast.error("Impossible de récupérer l'URL de la facture");
-      }
+      // Create a direct URL to the document in the documents bucket
+      const fullPath = mission.chauffeur_invoice;
+      const publicUrlRaw = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/documents/${fullPath}`;
+      console.log('Using direct public URL:', publicUrlRaw);
+      
+      setViewUrl(publicUrlRaw);
+      setViewDialogOpen(true);
     } catch (error) {
       console.error('Error getting invoice URL:', error);
       toast.error("Impossible d'accéder à la facture");
@@ -486,12 +484,22 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
       {/* Dialog pour visualiser la facture */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-4xl h-[80vh]">
+        <DialogContent className="sm:max-w-4xl h-[80vh]" aria-describedby="invoice-viewer-desc">
           <DialogHeader>
             <DialogTitle>Facture - Mission {selectedMission?.mission_number}</DialogTitle>
+            <DialogDescription id="invoice-viewer-desc">
+              Visualisation de la facture pour la mission {selectedMission?.mission_number}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 h-full overflow-auto">
-            {viewUrl && <iframe src={viewUrl} className="w-full h-full" title={`Facture mission ${selectedMission?.mission_number}`} />}
+            {viewUrl && (
+              <iframe 
+                src={viewUrl} 
+                className="w-full h-full" 
+                title={`Facture mission ${selectedMission?.mission_number}`}
+                aria-label={`Facture pour la mission ${selectedMission?.mission_number}`}
+              />
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>

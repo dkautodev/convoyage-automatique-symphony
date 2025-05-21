@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 /**
@@ -75,11 +74,10 @@ export function getPublicUrl(path: string | null): string | null {
       return null;
     }
     
-    const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
-    
-    console.log("Public URL generated:", data.publicUrl);
-    
-    return data.publicUrl;
+    // Create a direct URL to avoid any potential issues with getPublicUrl
+    const directUrl = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/${bucketName}/${path}`;
+    console.log("Direct public URL generated:", directUrl);
+    return directUrl;
   } catch (error) {
     console.error("Error getting public URL:", error);
     return null;

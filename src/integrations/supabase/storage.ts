@@ -65,12 +65,20 @@ export function getPublicUrl(path: string | null): string | null {
   if (!path) return null;
   
   try {
-    // Toujours utiliser 'documents' bucket pour tous les fichiers
+    // Always use 'documents' bucket for all files
     const bucketName = 'documents';
     
     console.log(`Getting public URL from bucket: ${bucketName} for path: ${path}`);
     
+    if (!path.trim()) {
+      console.error("Invalid path: Path is empty");
+      return null;
+    }
+    
     const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
+    
+    console.log("Public URL generated:", data.publicUrl);
+    
     return data.publicUrl;
   } catch (error) {
     console.error("Error getting public URL:", error);

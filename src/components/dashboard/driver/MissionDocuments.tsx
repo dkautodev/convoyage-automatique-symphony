@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Download, Loader2 } from 'lucide-react'; 
@@ -47,7 +46,9 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
 
   const handleDownload = async (document: MissionDocument) => {
     try {
-      // Utiliser le bucket 'documents' explicitement pour la cohérence
+      console.log(`Downloading document from path: ${document.file_path} using documents bucket`);
+      
+      // Use the documents bucket explicitly for consistency
       const { data, error } = await supabase
         .storage
         .from('documents')
@@ -58,7 +59,7 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
         throw error;
       }
       
-      // Créer un URL pour le téléchargement
+      // Create a URL for the download
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = url;

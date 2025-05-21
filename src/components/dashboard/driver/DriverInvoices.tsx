@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -158,13 +157,16 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       return;
     }
     try {
-      // Utiliser getPublicUrl avec le bucket 'documents'
+      console.log('Trying to get public URL for:', mission.chauffeur_invoice);
+      // Use getPublicUrl from our storage utility to ensure consistent bucket usage
       const publicUrl = getPublicUrl(mission.chauffeur_invoice);
       
       if (publicUrl) {
+        console.log('Got public URL:', publicUrl);
         setViewUrl(publicUrl);
         setViewDialogOpen(true);
       } else {
+        console.error('Failed to get public URL, it returned null');
         toast.error("Impossible de récupérer l'URL de la facture");
       }
     } catch (error) {

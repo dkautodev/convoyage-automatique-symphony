@@ -63,18 +63,16 @@ function sanitizeStoragePath(path: string): string {
  */
 export function getPublicUrl(path: string): string | null {
   try {
-    // Always use 'documents' bucket for all files
     const bucketName = 'documents';
+    // Nettoyer le chemin si il contient déjà le nom du bucket
+    const cleanPath = path.startsWith(`${bucketName}/`) 
+      ? path.split(`${bucketName}/`)[1] 
+      : path;
+
+    console.log(`Getting public URL from bucket: ${bucketName} for path: ${cleanPath}`);
     
-    console.log(`Getting public URL from bucket: ${bucketName} for path: ${path}`);
-    
-    const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(cleanPath);
     return data.publicUrl;
-  } catch (error) {
-    console.error("Error getting public URL:", error);
-    return null;
-  }
-}
 
 /**
  * Upload a document for a specific mission

@@ -93,11 +93,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       setMissions(formattedMissions);
     } catch (error) {
       console.error('Error fetching missions:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les missions",
-        variant: "destructive"
-      });
+      toast.error("Impossible de charger les missions");
     } finally {
       setLoading(false);
     }
@@ -158,10 +154,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
   const handleViewClick = async (mission: DriverMission) => {
     if (!mission.chauffeur_invoice) {
-      toast({
-        title: "Information",
-        description: "Aucune facture n'a été uploadée pour cette mission"
-      });
+      toast.error("Aucune facture n'a été uploadée pour cette mission");
       return;
     }
     try {
@@ -172,19 +165,11 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
         setViewUrl(publicUrl);
         setViewDialogOpen(true);
       } else {
-        toast({
-          title: "Erreur",
-          description: "Impossible de récupérer l'URL de la facture",
-          variant: "destructive"
-        });
+        toast.error("Impossible de récupérer l'URL de la facture");
       }
     } catch (error) {
       console.error('Error getting invoice URL:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'accéder à la facture",
-        variant: "destructive"
-      });
+      toast.error("Impossible d'accéder à la facture");
     }
   };
 
@@ -194,11 +179,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
       // Vérifier que c'est un PDF
       if (file.type !== 'application/pdf') {
-        toast({
-          title: "Format invalide",
-          description: "Seuls les fichiers PDF sont acceptés",
-          variant: "destructive"
-        });
+        toast.error("Seuls les fichiers PDF sont acceptés");
         return;
       }
       setSelectedFile(file);
@@ -207,11 +188,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
   const handleUploadSubmit = async () => {
     if (!selectedFile || !selectedMission || !user) {
-      toast({
-        title: "Erreur",
-        description: "Fichier ou mission non sélectionnés",
-        variant: "destructive"
-      });
+      toast.error("Fichier ou mission non sélectionnés");
       return;
     }
     try {
@@ -234,10 +211,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       
       if (error) throw error;
       
-      toast({
-        title: "Succès",
-        description: "Facture uploadée avec succès"
-      });
+      toast.success("Facture uploadée avec succès");
 
       // Rafraîchir les données
       fetchMissions();
@@ -245,11 +219,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       setSelectedFile(null);
     } catch (error) {
       console.error('Error uploading invoice:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'uploader la facture",
-        variant: "destructive"
-      });
+      toast.error("Impossible d'uploader la facture");
     } finally {
       setUploadLoading(false);
     }
@@ -268,29 +238,19 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       }).eq('id', mission.id);
       if (error) throw error;
       
-      toast({
-        title: "Succès",
-        description: "Facture supprimée avec succès"
-      });
+      toast.success("Facture supprimée avec succès");
 
       // Rafraîchir les données
       fetchMissions();
     } catch (error) {
       console.error('Error deleting invoice:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la facture",
-        variant: "destructive"
-      });
+      toast.error("Impossible de supprimer la facture");
     }
   };
 
   const handleTogglePaidStatus = async (mission: DriverMission) => {
     if (!mission.chauffeur_invoice) {
-      toast({
-        title: "Information",
-        description: "Une facture doit d'abord être uploadée"
-      });
+      toast.error("Une facture doit d'abord être uploadée");
       return;
     }
     try {
@@ -301,20 +261,13 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       }).eq('id', mission.id);
       if (error) throw error;
       
-      toast({
-        title: "Succès",
-        description: newPaidStatus ? "Facture marquée comme payée" : "Facture marquée comme non payée"
-      });
+      toast.success(newPaidStatus ? "Facture marquée comme payée" : "Facture marquée comme non payée");
 
       // Rafraîchir les données
       fetchMissions();
     } catch (error) {
       console.error('Error updating paid status:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut de paiement",
-        variant: "destructive"
-      });
+      toast.error("Impossible de mettre à jour le statut de paiement");
     }
   };
 

@@ -1,6 +1,4 @@
 
-// Remplacer ce fichier entièrement car il utilise un bucket incorrect
-
 import { supabase } from '@/integrations/supabase/client';
 import { LegalStatusType } from '@/hooks/auth/types';
 

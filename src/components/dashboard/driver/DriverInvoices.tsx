@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Upload, Trash2, Check, AlertCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Eye, Upload, Trash2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { uploadFile, getPublicUrl } from '@/integrations/supabase/storage';
 
@@ -164,7 +165,9 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       return;
     }
     try {
+      // Utiliser getPublicUrl avec le bucket 'documents'
       const publicUrl = getPublicUrl(mission.chauffeur_invoice);
+      
       if (publicUrl) {
         setViewUrl(publicUrl);
         setViewDialogOpen(true);
@@ -218,7 +221,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       const fileName = `${Date.now()}_${selectedFile.name}`;
       const filePath = `driver_invoices/${selectedMission.id}/${fileName}`;
 
-      // Uploader le fichier
+      // Uploader le fichier - assurer que c'est bien dans le bucket 'documents'
       const uploadedPath = await uploadFile(filePath, selectedFile);
       if (!uploadedPath) {
         throw new Error("Échec de l'upload du fichier");
@@ -228,6 +231,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       const { error } = await typedSupabase.from('missions').update({
         chauffeur_invoice: uploadedPath
       }).eq('id', selectedMission.id);
+      
       if (error) throw error;
       
       toast({

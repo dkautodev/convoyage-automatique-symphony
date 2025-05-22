@@ -4,13 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Upload, Trash2, Check, AlertCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Eye, Upload, Trash2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { uploadFile, getPublicUrl } from '@/integrations/supabase/storage';
-
-// Import the supabase client properly
-import { supabase } from '@/integrations/supabase/client';
+import { uploadFile } from '@/integrations/supabase/storage';
 
 // Type pour les missions avec factures
 interface DriverMission {
@@ -95,11 +92,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       setMissions(formattedMissions);
     } catch (error) {
       console.error('Error fetching missions:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les missions",
-        variant: "destructive"
-      });
+      toast.error("Impossible de charger les missions");
     } finally {
       setLoading(false);
     }
@@ -160,31 +153,33 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
   const handleViewClick = async (mission: DriverMission) => {
     if (!mission.chauffeur_invoice) {
-      toast({
-        title: "Information",
-        description: "Aucune facture n'a été uploadée pour cette mission"
-      });
+      toast.error("Aucune facture n'a été uploadée pour cette mission");
       return;
     }
     try {
-      const publicUrl = getPublicUrl(mission.chauffeur_invoice);
-      if (publicUrl) {
-        setViewUrl(publicUrl);
-        setViewDialogOpen(true);
-      } else {
-        toast({
-          title: "Erreur",
-          description: "Impossible de récupérer l'URL de la facture",
-          variant: "destructive"
-        });
+      console.log('Trying to get public URL for:', mission.chauffeur_invoice);
+      
+      // Make sure we have a clean file path without leading slashes
+      let filePath = mission.chauffeur_invoice;
+      if (filePath.startsWith('/')) {
+        filePath = filePath.substring(1);
       }
+      
+      // Create a direct URL to the document in the documents bucket
+      const publicUrlRaw = `https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/documents/${filePath}`;
+      console.log('Using direct public URL:', publicUrlRaw);
+      
+      // Test if the URL is valid
+      const testRequest = await fetch(publicUrlRaw, { method: 'HEAD' });
+      if (!testRequest.ok) {
+        throw new Error(`URL is not accessible: ${testRequest.status}`);
+      }
+      
+      setViewUrl(publicUrlRaw);
+      setViewDialogOpen(true);
     } catch (error) {
-      console.error('Error getting invoice URL:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'accéder à la facture",
-        variant: "destructive"
-      });
+      console.error('Error accessing invoice URL:', error);
+      toast.error("Impossible d'accéder à la facture. Erreur: " + (error instanceof Error ? error.message : "Inconnue"));
     }
   };
 
@@ -194,11 +189,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
       // Vérifier que c'est un PDF
       if (file.type !== 'application/pdf') {
-        toast({
-          title: "Format invalide",
-          description: "Seuls les fichiers PDF sont acceptés",
-          variant: "destructive"
-        });
+        toast.error("Seuls les fichiers PDF sont acceptés");
         return;
       }
       setSelectedFile(file);
@@ -207,36 +198,35 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
   const handleUploadSubmit = async () => {
     if (!selectedFile || !selectedMission || !user) {
-      toast({
-        title: "Erreur",
-        description: "Fichier ou mission non sélectionnés",
-        variant: "destructive"
-      });
+      toast.error("Fichier ou mission non sélectionnés");
       return;
     }
     try {
       setUploadLoading(true);
 
       // Générer un chemin unique pour la facture
-      const fileName = `${Date.now()}_${selectedFile.name}`;
+      const fileName = `${Date.now()}_${selectedFile.name.replace(/[^\w\d.-]/g, '_')}`;
       const filePath = `driver_invoices/${selectedMission.id}/${fileName}`;
 
-      // Uploader le fichier
+      console.log('Uploading file to path:', filePath);
+      console.log('Using bucket:', 'documents');
+
+      // Uploader le fichier - assurer que c'est bien dans le bucket 'documents'
       const uploadedPath = await uploadFile(filePath, selectedFile);
       if (!uploadedPath) {
         throw new Error("Échec de l'upload du fichier");
       }
 
+      console.log('File uploaded successfully to path:', uploadedPath);
+
       // Mettre à jour la mission avec le chemin de la facture
       const { error } = await typedSupabase.from('missions').update({
         chauffeur_invoice: uploadedPath
       }).eq('id', selectedMission.id);
+      
       if (error) throw error;
       
-      toast({
-        title: "Succès",
-        description: "Facture uploadée avec succès"
-      });
+      toast.success("Facture uploadée avec succès");
 
       // Rafraîchir les données
       fetchMissions();
@@ -244,11 +234,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       setSelectedFile(null);
     } catch (error) {
       console.error('Error uploading invoice:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'uploader la facture",
-        variant: "destructive"
-      });
+      toast.error("Impossible d'uploader la facture");
     } finally {
       setUploadLoading(false);
     }
@@ -267,29 +253,19 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       }).eq('id', mission.id);
       if (error) throw error;
       
-      toast({
-        title: "Succès",
-        description: "Facture supprimée avec succès"
-      });
+      toast.success("Facture supprimée avec succès");
 
       // Rafraîchir les données
       fetchMissions();
     } catch (error) {
       console.error('Error deleting invoice:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la facture",
-        variant: "destructive"
-      });
+      toast.error("Impossible de supprimer la facture");
     }
   };
 
   const handleTogglePaidStatus = async (mission: DriverMission) => {
     if (!mission.chauffeur_invoice) {
-      toast({
-        title: "Information",
-        description: "Une facture doit d'abord être uploadée"
-      });
+      toast.error("Une facture doit d'abord être uploadée");
       return;
     }
     try {
@@ -300,20 +276,13 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       }).eq('id', mission.id);
       if (error) throw error;
       
-      toast({
-        title: "Succès",
-        description: newPaidStatus ? "Facture marquée comme payée" : "Facture marquée comme non payée"
-      });
+      toast.success(newPaidStatus ? "Facture marquée comme payée" : "Facture marquée comme non payée");
 
       // Rafraîchir les données
       fetchMissions();
     } catch (error) {
       console.error('Error updating paid status:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut de paiement",
-        variant: "destructive"
-      });
+      toast.error("Impossible de mettre à jour le statut de paiement");
     }
   };
 
@@ -530,17 +499,43 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
       {/* Dialog pour visualiser la facture */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-4xl h-[80vh]">
+        <DialogContent className="sm:max-w-4xl h-[80vh]" aria-describedby="invoice-viewer-desc">
           <DialogHeader>
             <DialogTitle>Facture - Mission {selectedMission?.mission_number}</DialogTitle>
+            <DialogDescription id="invoice-viewer-desc">
+              Visualisation de la facture pour la mission {selectedMission?.mission_number}
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 h-full overflow-auto">
-            {viewUrl && <iframe src={viewUrl} className="w-full h-full" title={`Facture mission ${selectedMission?.mission_number}`} />}
+          <div className="flex-1 h-full overflow-auto bg-white">
+            {viewUrl ? (
+              <object 
+                data={viewUrl} 
+                type="application/pdf" 
+                className="w-full h-full" 
+                aria-label={`Facture pour la mission ${selectedMission?.mission_number}`}
+              >
+                <p className="text-center p-4">
+                  Votre navigateur ne peut pas afficher le PDF. 
+                  <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline ml-2">
+                    Cliquer ici pour télécharger
+                  </a>
+                </p>
+              </object>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Fermer
             </Button>
+            {viewUrl && (
+              <Button as="a" href={viewUrl} target="_blank" rel="noopener noreferrer">
+                Ouvrir dans un nouvel onglet
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

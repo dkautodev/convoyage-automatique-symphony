@@ -47,18 +47,26 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
 
   const handleDownload = async (document: MissionDocument) => {
     try {
-      // Utiliser le bucket 'documents' explicitement pour la cohérence
+      console.log(`Downloading document from path: ${document.file_path} using documents bucket`);
+      
+      // Clean up the path if needed
+      let filePath = document.file_path;
+      if (filePath.startsWith('/')) {
+        filePath = filePath.substring(1);
+      }
+      
+      // Use the documents bucket explicitly for consistency
       const { data, error } = await supabase
         .storage
         .from('documents')
-        .download(document.file_path);
+        .download(filePath);
         
       if (error) {
         console.error('Erreur lors du téléchargement:', error);
         throw error;
       }
       
-      // Créer un URL pour le téléchargement
+      // Create a URL for the download
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = url;

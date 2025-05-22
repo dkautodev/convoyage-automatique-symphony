@@ -66,42 +66,6 @@ export type Database = {
         }
         Relationships: []
       }
-      clients: {
-        Row: {
-          billing_address: Json
-          company_name: string
-          created_at: string
-          full_name: string | null
-          id: string
-          phone1: string
-          phone2: string | null
-          siret: string
-          vat_number: string | null
-        }
-        Insert: {
-          billing_address: Json
-          company_name: string
-          created_at?: string
-          full_name?: string | null
-          id: string
-          phone1: string
-          phone2?: string | null
-          siret: string
-          vat_number?: string | null
-        }
-        Update: {
-          billing_address?: Json
-          company_name?: string
-          created_at?: string
-          full_name?: string | null
-          id?: string
-          phone1?: string
-          phone2?: string | null
-          siret?: string
-          vat_number?: string | null
-        }
-        Relationships: []
-      }
       contacts: {
         Row: {
           client_id: string
@@ -214,6 +178,30 @@ export type Database = {
           license_number?: string | null
           updated_at?: string
           vigilance_document_path?: string | null
+        }
+        Relationships: []
+      }
+      fac_admin_config: {
+        Row: {
+          admin_bank: string | null
+          admin_bic: string | null
+          admin_doc_logo: string | null
+          admin_iban: string | null
+          bank_doc: string | null
+        }
+        Insert: {
+          admin_bank?: string | null
+          admin_bic?: string | null
+          admin_doc_logo?: string | null
+          admin_iban?: string | null
+          bank_doc?: string | null
+        }
+        Update: {
+          admin_bank?: string | null
+          admin_bic?: string | null
+          admin_doc_logo?: string | null
+          admin_iban?: string | null
+          bank_doc?: string | null
         }
         Relationships: []
       }

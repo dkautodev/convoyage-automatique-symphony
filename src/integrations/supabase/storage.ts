@@ -63,12 +63,21 @@ function sanitizeStoragePath(path: string): string {
  */
 export function getPublicUrl(path: string): string | null {
   try {
+    if (!path) {
+      console.warn("Empty path provided to getPublicUrl");
+      return null;
+    }
+    
     // Always use 'documents' bucket for all files
     const bucketName = 'documents';
     
-    console.log(`Getting public URL from bucket: ${bucketName} for path: ${path}`);
+    // Sanitize path if needed
+    const sanitizedPath = path.startsWith('/') ? path.substring(1) : path;
     
-    const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
+    console.log(`Getting public URL from bucket: ${bucketName} for path: ${sanitizedPath}`);
+    
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(sanitizedPath);
+    console.log("Generated public URL:", data.publicUrl);
     return data.publicUrl;
   } catch (error) {
     console.error("Error getting public URL:", error);
@@ -150,10 +159,14 @@ export async function getMissionDocuments(missionId: string) {
     }
     
     // Add public URL to each document - always use 'documents' bucket
-    return data.map(doc => ({
-      ...doc,
-      publicUrl: getPublicUrl(doc.file_path)
-    }));
+    return data.map(doc => {
+      const publicUrl = getPublicUrl(doc.file_path);
+      console.log(`Document ${doc.id}: Path=${doc.file_path}, URL=${publicUrl}`);
+      return {
+        ...doc,
+        publicUrl
+      };
+    });
   } catch (error) {
     console.error("Exception during fetching mission documents:", error);
     return [];

@@ -532,7 +532,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
               Fermer
             </Button>
             {viewUrl && (
-              <Button as="a" href={viewUrl} target="_blank" rel="noopener noreferrer">
+              <Button onClick={() => window.open(viewUrl, '_blank', 'noopener,noreferrer')}>
                 Ouvrir dans un nouvel onglet
               </Button>
             )}

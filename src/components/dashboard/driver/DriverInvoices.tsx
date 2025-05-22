@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Upload, Trash2, Check, AlertCircle, Download, ExternalLink } from 'lucide-react';
+import { Eye, Upload, Trash2, Check, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { uploadFile, getPublicUrl } from '@/integrations/supabase/storage';
-import { cn } from '@/lib/utils';
 
 // Type pour les missions avec factures
 interface DriverMission {
@@ -168,9 +166,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
     try {
       const publicUrl = getPublicUrl(mission.chauffeur_invoice);
       if (publicUrl) {
-        console.log("Opening document with URL:", publicUrl);
         setViewUrl(publicUrl);
-        setSelectedMission(mission);
         setViewDialogOpen(true);
       } else {
         toast({
@@ -187,12 +183,6 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
         variant: "destructive"
       });
     }
-  };
-
-  const handleOpenInNewTab = (url: string) => {
-    // Add timestamp to URL to prevent caching
-    const urlWithTimestamp = `${url}?t=${new Date().getTime()}`;
-    window.open(urlWithTimestamp, '_blank');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -353,71 +343,6 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       .reduce((sum, mission) => sum + mission.chauffeur_price_ht, 0);
   };
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('fr-FR', {
-      style: 'currency',
-      currency: 'EUR'
-    });
-  };
-
-  // Group cards 2 by 2 for the dashboard stats
-  const statsData = [
-    {
-      title: "Revenus du mois",
-      description: "Factures payées",
-      value: formatPrice(getCurrentMonthRevenue()),
-      additionalText: `${stats.paidMissions} facture(s) payée(s) ce mois-ci`,
-      className: ""
-    },
-    {
-      title: "En attente",
-      description: "Factures non payées",
-      value: formatPrice(stats.unpaidAmount),
-      additionalText: `${stats.invoicedMissions - stats.paidMissions} facture(s) en attente`,
-      className: "text-amber-500"
-    },
-    {
-      title: "Sans facture",
-      description: "Missions sans facture",
-      value: formatPrice(stats.noInvoiceAmount),
-      additionalText: `${stats.uninvoicedMissions} mission(s) sans facture`,
-      className: "text-gray-500"
-    },
-    {
-      title: "Total missions",
-      description: "Missions terminées",
-      value: stats.totalMissions.toString(),
-      additionalText: `${stats.totalMissions} mission(s) terminée(s)`,
-      className: ""
-    }
-  ];
-
-  // Function to chunk array into pairs
-  const chunkArray = <T,>(array: T[], size: number): T[][] => {
-    const chunked: T[][] = [];
-    for (let i = 0; i < array.length; i += size) {
-      chunked.push(array.slice(i, i + size));
-    }
-    return chunked;
-  };
-
-  // Group stats cards
-  const statGroups = chunkArray(statsData, 2);
-
-  // Get a URL with a timestamp to prevent caching
-  const getPublicUrlWithTimestamp = (filePath: string) => {
-    if (!filePath) return '';
-    
-    try {
-      const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
-      // Add timestamp to prevent caching issues
-      return `${data.publicUrl}?t=${new Date().getTime()}`;
-    } catch (error) {
-      console.error('Error generating public URL:', error);
-      return '';
-    }
-  };
-
   return (
     <div className="space-y-6">
       {isAdmin ? (
@@ -430,31 +355,84 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Total restant à payer aux chauffeurs:</span>
-                <span className="text-xl font-bold">{formatPrice(totalUnpaid)}</span>
+                <span className="text-xl font-bold">{totalUnpaid.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                })}</span>
               </div>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {statGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {group.map((stat, index) => (
-                <Card key={index} className="bg-white">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                    <CardDescription>{stat.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <span className={cn("text-xl font-bold", stat.className)}>{stat.value}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.additionalText}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Revenus du mois</CardTitle>
+              <CardDescription>Factures payées</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-xl font-bold">{getCurrentMonthRevenue().toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                })}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.paidMissions} facture(s) payée(s) ce mois-ci
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">En attente</CardTitle>
+              <CardDescription>Factures non payées</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-xl font-bold text-amber-500">{stats.unpaidAmount.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                })}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.invoicedMissions - stats.paidMissions} facture(s) en attente
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Sans facture</CardTitle>
+              <CardDescription>Missions sans facture</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-xl font-bold text-gray-500">{stats.noInvoiceAmount.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                })}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.uninvoicedMissions} mission(s) sans facture
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total missions</CardTitle>
+              <CardDescription>Missions terminées</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <span className="text-xl font-bold">{stats.totalMissions}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.totalMissions} mission(s) terminée(s)
+              </p>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -475,72 +453,44 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
           ) : (
             <div className="space-y-4">
               {missions.map((mission) => (
-                <Card key={mission.id} className="p-4">
-                  {/* Line 1: Mission number */}
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">Mission {mission.mission_number}</h3>
-                  </div>
-                  
-                  {/* Line 2: Status and price */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getInvoiceStatusBadge(mission)}
+                <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex items-start justify-between flex-wrap gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium">Mission {mission.mission_number}</p>
+                        {getInvoiceStatusBadge(mission)}
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Montant: {mission.chauffeur_price_ht.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
+                      </p>
                     </div>
-                    <p className="text-sm">
-                      Montant: {formatPrice(mission.chauffeur_price_ht)}
-                    </p>
-                  </div>
-                  
-                  {/* Line 3: Action buttons - 2x2 grid on mobile */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-xs"
-                      onClick={() => handleUploadClick(mission)}
-                    >
-                      <Upload size={14} className="mr-1" />
-                      Upload
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-xs"
-                      onClick={() => handleViewClick(mission)} 
-                      disabled={!mission.chauffeur_invoice}
-                    >
-                      <Eye size={14} className="mr-1" />
-                      Voir
-                    </Button>
-                    
-                    {isAdmin && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-xs text-red-500 hover:bg-red-50"
-                        onClick={() => handleDeleteInvoice(mission)} 
-                        disabled={!mission.chauffeur_invoice}
-                      >
-                        <Trash2 size={14} className="mr-1" />
-                        Supprimer
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleUploadClick(mission)}>
+                        <Upload size={16} className="mr-1" />
+                        Upload
                       </Button>
-                    )}
-                    
-                    {isAdmin && (
-                      <Button 
-                        variant={mission.chauffeur_paid ? "secondary" : "default"} 
-                        size="sm" 
-                        className="text-xs"
-                        onClick={() => handleTogglePaidStatus(mission)} 
-                        disabled={!mission.chauffeur_invoice}
-                      >
-                        <Check size={14} className="mr-1" />
-                        {mission.chauffeur_paid ? "Annuler" : "Payé"}
+                      <Button variant="outline" size="sm" onClick={() => handleViewClick(mission)} disabled={!mission.chauffeur_invoice}>
+                        <Eye size={16} className="mr-1" />
+                        Voir
                       </Button>
-                    )}
+                      {isAdmin && (
+                        <Button variant="outline" size="sm" onClick={() => handleDeleteInvoice(mission)} disabled={!mission.chauffeur_invoice} className="text-red-500 hover:bg-red-50">
+                          <Trash2 size={16} className="mr-1" />
+                          Supprimer
+                        </Button>
+                      )}
+                      {isAdmin && (
+                        <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice}>
+                          <Check size={16} className="mr-1" />
+                          {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}
@@ -577,45 +527,17 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
       {/* Dialog pour visualiser la facture */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-4xl h-[80vh] flex flex-col">
+        <DialogContent className="sm:max-w-4xl h-[80vh]">
           <DialogHeader>
             <DialogTitle>Facture - Mission {selectedMission?.mission_number}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 h-full min-h-0 overflow-hidden">
-            {selectedMission?.chauffeur_invoice && (
-              <object
-                data={getPublicUrlWithTimestamp(selectedMission.chauffeur_invoice)}
-                type="application/pdf"
-                className="w-full h-full"
-                aria-label={`Facture de la mission ${selectedMission.mission_number}`}
-              >
-                <div className="flex flex-col items-center justify-center h-full">
-                  <p className="mb-4 text-center">Le navigateur ne peut pas afficher ce PDF</p>
-                  <Button 
-                    onClick={() => selectedMission.chauffeur_invoice && 
-                      handleOpenInNewTab(getPublicUrlWithTimestamp(selectedMission.chauffeur_invoice))}
-                    variant="default"
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Ouvrir dans un nouvel onglet
-                  </Button>
-                </div>
-              </object>
-            )}
+          <div className="flex-1 h-full overflow-auto">
+            {viewUrl && <iframe src={viewUrl} className="w-full h-full" title={`Facture mission ${selectedMission?.mission_number}`} />}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Fermer
             </Button>
-            {selectedMission?.chauffeur_invoice && (
-              <Button 
-                variant="default"
-                onClick={() => handleOpenInNewTab(getPublicUrlWithTimestamp(selectedMission.chauffeur_invoice!))}
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Ouvrir dans un nouvel onglet
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,383 +1,170 @@
 
-import React, { useContext, useEffect, createContext, useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks/useAuth';
+import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck, CreditCard, TrendingUp } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { User, Clipboard, Truck, MapPin, Calendar, Settings, LogOut, UserPlus, Shield, Plus, Mail, Menu, X, FileText } from 'lucide-react';
-import { toast } from 'sonner';
-
-// Create context for controlling sidebar open state
-interface SidebarContextType {
-  isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  toggle: () => void;
-}
-
-const SidebarContext = createContext<SidebarContextType>({
-  isOpen: false,
-  setIsOpen: () => {},
-  toggle: () => {}
-});
-
-export const useSidebar = () => {
-  return useContext(SidebarContext);
-};
-
-export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const isMobile = useIsMobile();
-  
-  // Close sidebar on mobile by default
-  useEffect(() => {
-    setIsOpen(!isMobile);
-  }, [isMobile]);
-
-  const toggle = () => {
-    setIsOpen(prev => !prev);
-  };
-  
-  return (
-    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggle }}>
-      {children}
-    </SidebarContext.Provider>
-  );
-};
-
-// For accessibility - close sidebar when clicking outside on mobile
-export const SidebarOverlay: React.FC = () => {
-  const { isOpen, setIsOpen } = useSidebar();
-  const isMobile = useIsMobile();
-  
-  if (!isOpen || !isMobile) return null;
-  
-  return (
-    <div 
-      className="fixed inset-0 bg-black/20 z-40"
-      onClick={() => setIsOpen(false)}
-      aria-hidden="true"
-    />
-  );
-};
-
-export const SidebarTrigger: React.FC = () => {
-  const { isOpen, toggle } = useSidebar();
-  
-  // Don't show trigger when sidebar is open - user can click elsewhere to close
-  if (isOpen) {
-    return null;
-  }
-  
-  return (
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      onClick={toggle}
-      className="mb-2"
-      aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
-    >
-      <Menu className="h-5 w-5" />
-    </Button>
-  );
-};
 
 interface SidebarProps {
-  className?: string;
+  userRole: string;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ className }) => {
-  const { isOpen, setIsOpen } = useSidebar();
-  const { user, profile, logout } = useAuth();
+const Sidebar: React.FC<SidebarProps> = ({
+  userRole
+}) => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  
-  // Get user role from profile
-  const userRole = profile?.role || 'client';
-  
-  const handleLogout = () => {
-    logout()
-      .then(() => {
-        toast.success('Déconnexion réussie');
-        navigate('/login');
-      })
-      .catch(error => {
-        console.error('Erreur lors de la déconnexion:', error);
-        toast.error('Erreur lors de la déconnexion');
-      });
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+
+  // Helper function to determine if a link is active
+  const isActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
-  
-  const handleCreateMission = () => {
-    navigate('/mission/create');
-  };
-  
-  const handleContactClick = () => {
-    if (userRole === 'admin') {
-      navigate('/admin/contact');
-    } else if (userRole === 'client') {
-      navigate('/client/contact');
-    } else {
-      navigate('/contact');
-    }
-    
+
+  // Function to close the sidebar after navigation (on mobile)
+  const handleNavClick = () => {
     if (isMobile) {
-      setIsOpen(false);
+      setIsSidebarOpen(false);
     }
   };
 
-  const roleLinkPrefix = userRole === 'chauffeur' ? 'driver' : userRole;
-  
-  // Close sidebar on link click on mobile
-  const handleLinkClick = () => {
-    if (isMobile) {
-      setIsOpen(false);
+  // Function to get the proper color class based on user role
+  const getRoleColorClass = (type: 'text' | 'bg' | 'hover-bg') => {
+    if (userRole === 'admin') {
+      return type === 'text' ? 'text-neutral-900' : type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
+    } else if (userRole === 'client') {
+      return type === 'text' ? 'text-neutral-800' : type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
+    } else if (userRole === 'chauffeur') {
+      return type === 'text' ? 'text-neutral-700' : type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
     }
+    return type === 'text' ? 'text-neutral-600' : type === 'bg' ? 'bg-neutral-100' : 'hover:bg-neutral-100';
   };
-  
-  // Color styles based on role
-  const roleColors = {
-    admin: 'bg-admin-light/10 text-admin',
-    client: 'bg-client-light/10 text-client',
-    chauffeur: 'bg-driver-light/10 text-driver'
+
+  // Common navigation items
+  const commonItems = [{
+    path: '/profile',
+    label: 'Mon profil',
+    icon: <User size={20} />
+  }, {
+    path: '/settings',
+    label: 'Paramètres',
+    icon: <Settings size={20} />
+  }];
+
+  // Role-specific navigation items
+  const navigationItems = {
+    admin: [{
+      path: '/admin/dashboard',
+      label: 'Tableau de bord',
+      icon: <Home size={20} />
+    }, {
+      path: '/admin/missions',
+      label: 'Missions',
+      icon: <Package size={20} />
+    }, {
+      path: '/admin/invoices',
+      label: 'Factures',
+      icon: <FileText size={20} />
+    }, {
+      path: '/admin/driver-invoices',
+      label: 'Factures chauffeur',
+      icon: <CreditCard size={20} />
+    }, {
+      path: '/admin/clients',
+      label: 'Clients',
+      icon: <Users size={20} />
+    }, {
+      path: '/admin/drivers',
+      label: 'Chauffeurs',
+      icon: <Truck size={20} />
+    }, {
+      path: '/admin/contacts',
+      label: 'Contacts',
+      icon: <Contact size={20} />
+    }, {
+      path: '/admin/pricing-grid',
+      label: 'Grille tarifaire',
+      icon: <Tag size={20} />
+    }, {
+      path: '/admin/invite',
+      label: 'Invitations',
+      icon: <UserPlus size={20} />
+    }],
+    client: [{
+      path: '/client/dashboard',
+      label: 'Tableau de bord',
+      icon: <Home size={20} />
+    }, {
+      path: '/client/missions',
+      label: 'Mes missions',
+      icon: <Package size={20} />
+    }, {
+      path: '/client/invoices',
+      label: 'Mes factures',
+      icon: <FileText size={20} />
+    }, {
+      path: '/client/contacts',
+      label: 'Mes contacts',
+      icon: <Contact size={20} />
+    }],
+    chauffeur: [{
+      path: '/driver/dashboard',
+      label: 'Tableau de bord',
+      icon: <Home size={20} />
+    }, {
+      path: '/driver/missions',
+      label: 'Mes missions',
+      icon: <ListCheck size={20} />
+    }, {
+      path: '/driver/revenue-management',
+      label: 'Pilotage CA',
+      icon: <TrendingUp size={20} />
+    }, {
+      path: '/driver/invoices',
+      label: 'Mes factures',
+      icon: <CreditCard size={20} />
+    }]
   };
+
+  // Get navigation items for the current user role
+  const roleItems = navigationItems[userRole as keyof typeof navigationItems] || [];
+
+  // Merge role-specific items with common items
+  const allItems = [...roleItems, ...commonItems];
   
   return (
-    <>
-      <aside
-        className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 transition-all duration-300 flex flex-col border-r bg-white",
-          isOpen ? "translate-x-0 w-64" : "w-0 -translate-x-full",
-          className
-        )}
-      >
-        <div className="flex items-center justify-between p-4 h-16 border-b">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <MapPin className={cn("h-5 w-5", roleColors[userRole])} />
-            <h1 className="text-xl font-bold">ConvoySync</h1>
-          </div>
-          {isMobile && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setIsOpen(false)}
-              aria-label="Close sidebar"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+    <div className="bg-white w-64 h-full shadow-lg flex flex-col">
+      {/* Logo Section - Only show at top when not on mobile */}
+      {!isMobile && (
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center">
+          <img src="/lovable-uploads/4922f807-dfd8-4cf6-b440-ee35efade638.png" alt="DK Automotive Logo" className="h-8" />
         </div>
-        
-        <nav className="space-y-1 flex-1 p-4 overflow-y-auto">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start"
-            asChild
-            onClick={handleLinkClick}
-          >
-            <Link to={`/${roleLinkPrefix}/dashboard`}>
-              <Clipboard className="mr-2 h-4 w-4" />
-              Tableau de bord
-            </Link>
-          </Button>
-          
-          {userRole === 'admin' && (
-            <>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
+      )}
+      
+      {/* Navigation Section - expanded to take available space */}
+      <nav className="px-4 py-6 flex-1 overflow-y-auto">
+        <ul className="space-y-2">
+          {allItems.map(item => (
+            <li key={item.path}>
+              <NavLink 
+                to={item.path} 
+                onClick={handleNavClick}
+                className={({isActive}) => `flex items-center px-4 py-2 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}
               >
-                <Link to="/admin/clients">
-                  <User className="mr-2 h-4 w-4" />
-                  Utilisateurs
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/admin/drivers">
-                  <Truck className="mr-2 h-4 w-4" />
-                  Chauffeurs
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/admin/missions">
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Missions
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/admin/invoices">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Facturation
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/admin/driver-invoices">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Factures chauffeurs
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/admin/invite">
-                  <Shield className="mr-2 h-4 w-4" />
-                  Invitations Admin
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start" 
-                onClick={handleCreateMission}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Créer une mission
-              </Button>
-            </>
-          )}
-          
-          {userRole === 'client' && (
-            <>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/client/missions">
-                  <Truck className="mr-2 h-4 w-4" />
-                  Missions
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/client/invoices">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Factures
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/client/contacts">
-                  <User className="mr-2 h-4 w-4" />
-                  Contacts
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start" 
-                onClick={handleCreateMission}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Créer une mission
-              </Button>
-            </>
-          )}
-          
-          {userRole === 'chauffeur' && (
-            <>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/driver/missions">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Missions
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/driver/driver-invoices">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Mes factures
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start"
-                asChild
-                onClick={handleLinkClick}
-              >
-                <Link to="/driver/revenue-management">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Revenus
-                </Link>
-              </Button>
-            </>
-          )}
-          
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start" 
-            onClick={handleContactClick}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            Contact
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start"
-            asChild
-            onClick={handleLinkClick}
-          >
-            <Link to="/settings">
-              <Settings className="mr-2 h-4 w-4" />
-              Paramètres
-            </Link>
-          </Button>
-        </nav>
-        
-        <div className="border-t p-4">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-muted-foreground" 
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Déconnexion
-          </Button>
+                <span className="mr-3">{item.icon}</span>
+                <span>{item.label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      
+      {/* Logo at bottom for mobile */}
+      {isMobile && (
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-center items-center">
+          <img src="/lovable-uploads/4922f807-dfd8-4cf6-b440-ee35efade638.png" alt="DK Automotive Logo" className="h-8" />
         </div>
-      </aside>
-    </>
+      )}
+    </div>
   );
 };
 

@@ -36,34 +36,37 @@ export default function AddressAutocomplete({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddressSelected, setIsAddressSelected] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Debounce search input
   useEffect(() => {
     if (isAddressSelected) return; // Ne pas rechercher si une adresse a été sélectionnée
     
     const timer = setTimeout(() => {
-      if (value) {
+      // Afficher les suggestions uniquement si l'input est en focus
+      if (value && focused) {
         searchPlaces(value);
         setShowSuggestions(true);
       } else {
         clearPredictions();
-        setShowSuggestions(false);
+        if (!focused) {
+          setShowSuggestions(false);
+        }
       }
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [value, searchPlaces, clearPredictions, isAddressSelected]);
+  }, [value, searchPlaces, clearPredictions, isAddressSelected, focused]);
 
   // Add click outside listener to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        suggestionsRef.current && 
-        !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current && 
-        !inputRef.current.contains(event.target as Node)
+        containerRef.current && 
+        !containerRef.current.contains(event.target as Node)
       ) {
         setShowSuggestions(false);
+        setFocused(false);
       }
     };
 
@@ -122,10 +125,16 @@ export default function AddressAutocomplete({
     }
   };
   
-  const handleBlur = () => {
+  const handleBlur = (e: React.FocusEvent) => {
     // On conserve cet état pour les styles CSS mais on ne ferme pas les suggestions ici
-    setFocused(false);
-    // Les suggestions se fermeront avec le click outside handler
+    // car cela pourrait empêcher de cliquer sur une suggestion
+    // La fermeture se fait via le click outside handler
+    if (
+      suggestionsRef.current && 
+      !suggestionsRef.current.contains(e.relatedTarget as Node)
+    ) {
+      // Ne pas modifier si on clique sur une suggestion
+    }
   };
   
   // Permettre à l'utilisateur de recommencer la saisie
@@ -141,7 +150,7 @@ export default function AddressAutocomplete({
   };
   
   return (
-    <div className="relative w-full">
+    <div ref={containerRef} className="relative w-full">
       <div className="relative">
         <Input
           ref={inputRef}
@@ -169,7 +178,9 @@ export default function AddressAutocomplete({
       
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       
-      {showSuggestions && predictions.length > 0 && !isAddressSelected && (
+      {/* Conditionnellement afficher les suggestions seulement quand focused est true,
+          une adresse n'est pas déjà sélectionnée, et nous avons des prédictions */}
+      {showSuggestions && predictions.length > 0 && !isAddressSelected && focused && (
         <Card ref={suggestionsRef} className="absolute z-50 w-full mt-1 shadow-lg overflow-hidden">
           <ul className="py-1 max-h-60 overflow-auto">
             {predictions.map((prediction) => (

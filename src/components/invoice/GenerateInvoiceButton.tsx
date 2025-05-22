@@ -13,11 +13,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface GenerateInvoiceButtonProps {
   mission: Mission;
   client: any;
+  className?: string;
 }
 
 const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
   mission,
-  client
+  client,
+  className
 }) => {
   const { profile } = useAuth();
   const [generating, setGenerating] = useState<boolean>(false);
@@ -95,6 +97,7 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
       onClick={handleGenerateInvoice}
       disabled={generating}
       title="Télécharger la facture"
+      className={className}
     >
       {generating ? (
         <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

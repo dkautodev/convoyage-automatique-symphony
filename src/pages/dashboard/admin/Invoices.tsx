@@ -2,33 +2,63 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Search, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
-import { Search } from 'lucide-react';
 import InvoicesTable from '@/components/invoice/InvoicesTable';
-import { fetchClientById } from '@/utils/clientUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const AdminInvoicesPage = () => {
-  const { profile } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
-  const [clientsData, setClientsData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Fetch missions with status 'livre' or 'termine'
+  const [clientsData, setClientsData] = useState<Record<string, any>>({});
+  const isMobile = useIsMobile();
+  
+  // Fetch clients data
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, company_name, email')
+          .eq('role', 'client');
+          
+        if (error) throw error;
+        
+        // Create a map for easy lookup
+        const clientsMap: Record<string, any> = {};
+        data?.forEach(client => {
+          clientsMap[client.id] = {
+            name: client.company_name || client.full_name || client.email || 'Client inconnu'
+          };
+        });
+        
+        setClientsData(clientsMap);
+      } catch (err) {
+        console.error('Error fetching clients:', err);
+      }
+    };
+    
+    fetchClients();
+  }, []);
+  
+  // Fetch all invoiced missions (status: 'livre' or 'termine')
   const fetchMissions = async () => {
     try {
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('missions')
         .select('*')
         .in('status', ['livre', 'termine'])
         .order('created_at', { ascending: false });
-
+        
       if (error) throw error;
-
+      
+      // Convert the mission data
       const convertedMissions = data.map(mission => 
         convertMissionFromDB(mission as unknown as MissionFromDB)
       );
@@ -36,90 +66,49 @@ const AdminInvoicesPage = () => {
       setMissions(convertedMissions);
       setFilteredMissions(convertedMissions);
     } catch (err) {
-      console.error("Error fetching invoices:", err);
+      console.error('Error fetching invoices:', err);
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // Initial data fetch
   useEffect(() => {
     fetchMissions();
   }, []);
-
-  // Fetch client data with more details including billing_address
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'client');
-
-        if (error) throw error;
-
-        // Create a map of client ID to complete client data
-        const clientMap: Record<string, any> = {};
-        data?.forEach(client => {
-          clientMap[client.id] = {
-            id: client.id,
-            name: client.company_name || client.full_name || 'Client inconnu',
-            company_name: client.company_name,
-            full_name: client.full_name,
-            email: client.email,
-            siret: client.siret,
-            tva_number: client.tva_number,
-            billing_address: client.billing_address,
-            phone_1: client.phone_1,
-            phone_2: client.phone_2
-          };
-        });
-
-        setClientsData(clientMap);
-      } catch (err) {
-        console.error('Error fetching clients:', err);
-      }
-    };
-
-    fetchClients();
-  }, []);
-
-  // Filter missions based on search query
+  
+  // Search and filter
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredMissions(missions);
       return;
     }
-
+    
     const lowerSearchQuery = searchQuery.toLowerCase();
     const filtered = missions.filter(mission => {
       // Search by mission number
       const missionNumber = mission.mission_number || mission.id.substring(0, 8);
       if (missionNumber.toLowerCase().includes(lowerSearchQuery)) return true;
-
-      // Search by client name if available
-      const clientName = clientsData[mission.client_id]?.name || '';
-      if (clientName.toLowerCase().includes(lowerSearchQuery)) return true;
-
+      
       // Search by mission date
       const missionDate = new Date(mission.created_at).toLocaleDateString('fr-FR');
       if (missionDate.includes(lowerSearchQuery)) return true;
-
+      
+      // Search by client name
+      const clientInfo = clientsData[mission.client_id];
+      if (clientInfo?.name.toLowerCase().includes(lowerSearchQuery)) return true;
+      
       return false;
     });
-
+    
     setFilteredMissions(filtered);
   }, [searchQuery, missions, clientsData]);
-
-  // Handle mission status update
-  const handleMissionStatusUpdate = () => {
-    fetchMissions();
-  };
-
+  
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-admin">Facturation</h1>
+      <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 text-center">Factures</h1>
       
-      <div className="flex gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
           <Input 
@@ -130,20 +119,29 @@ const AdminInvoicesPage = () => {
             onChange={e => setSearchQuery(e.target.value)} 
           />
         </div>
+        <div className="flex gap-2 items-center">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Filter size={16} />
+            Filtrer
+          </Button>
+        </div>
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Missions à facturer</CardTitle>
+        <CardHeader className="pb-3 md:pb-4">
+          <CardTitle className="text-center md:text-left">Missions facturées</CardTitle>
         </CardHeader>
-        <CardContent>
-          <InvoicesTable 
-            missions={filteredMissions} 
-            clientsData={clientsData}
-            isLoading={loading}
-            userRole="admin"
-            onMissionStatusUpdate={handleMissionStatusUpdate}
-          />
+        <CardContent className="px-3 md:px-4">
+          <div className="overflow-x-auto -mx-3 md:mx-0">
+            <InvoicesTable 
+              missions={filteredMissions} 
+              clientsData={clientsData}
+              isLoading={loading}
+              userRole="admin"
+              onMissionStatusUpdate={fetchMissions}
+              layout={isMobile ? "stacked" : "table"}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

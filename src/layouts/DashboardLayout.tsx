@@ -4,8 +4,6 @@ import { useAuth } from '@/hooks/auth';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 // Import dashboard page components 
@@ -57,6 +55,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  // Close sidebar function
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   // Determine which dashboard to render based on user role and path
   const renderDashboardContent = () => {
     const path = location.pathname;
@@ -90,24 +98,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return children || <Outlet />;
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Mobile sidebar trigger - positioned better to avoid overlapping with content */}
-      {isMobile && (
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="fixed top-3 left-3 z-50 bg-white shadow-md"
-          onClick={toggleSidebar}
-        >
-          <Menu />
-        </Button>
-      )}
-      
       {/* Main flex container */}
       <div className="flex flex-1 h-full">
         {/* Sidebar - fixed on desktop, slideover on mobile */}
@@ -115,14 +107,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           ? `fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
           : 'w-64 shrink-0'}`}
         >
-          <Sidebar userRole={profile?.role || 'client'} />
+          <Sidebar 
+            userRole={profile?.role || 'client'}
+            onClose={closeSidebar} 
+          />
         </div>
         
         {/* Overlay to close sidebar on mobile */}
         {isMobile && sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 z-30" 
-            onClick={() => setSidebarOpen(false)}
+            onClick={closeSidebar}
           />
         )}
         
@@ -130,11 +125,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Fixed header */}
           <div className="sticky top-0 z-10 bg-white shadow-sm">
-            <DashboardHeader />
+            <DashboardHeader 
+              toggleSidebar={toggleSidebar} 
+              sidebarOpen={sidebarOpen}
+            />
           </div>
           
           {/* Content area with padding and overflow handling */}
-          <div className="p-4 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="p-3 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto">
             {renderDashboardContent()}
           </div>
         </div>

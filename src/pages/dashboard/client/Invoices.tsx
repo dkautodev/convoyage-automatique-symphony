@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Search } from 'lucide-react';
 import InvoicesTable from '@/components/invoice/InvoicesTable';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ClientInvoicesPage = () => {
   const { user, profile } = useAuth();
@@ -14,6 +15,7 @@ const ClientInvoicesPage = () => {
   const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const isMobile = useIsMobile();
 
   // Fetch missions with status 'livre' or 'termine' for the current client
   useEffect(() => {
@@ -72,7 +74,7 @@ const ClientInvoicesPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-neutral-900">Mes factures</h1>
+      <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 text-center">Mes factures</h1>
       
       <div className="flex gap-4 mb-4">
         <div className="relative flex-1">
@@ -88,16 +90,19 @@ const ClientInvoicesPage = () => {
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Missions facturées</CardTitle>
+        <CardHeader className="pb-3 md:pb-4">
+          <CardTitle className="text-center md:text-left">Missions facturées</CardTitle>
         </CardHeader>
-        <CardContent>
-          <InvoicesTable 
-            missions={filteredMissions} 
-            isLoading={loading}
-            userRole="client"
-            clientData={profile}
-          />
+        <CardContent className="px-3 md:px-4">
+          <div className="overflow-x-auto -mx-3 md:mx-0">
+            <InvoicesTable 
+              missions={filteredMissions} 
+              isLoading={loading}
+              userRole="client"
+              clientData={profile}
+              layout={isMobile ? "stacked" : "table"}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

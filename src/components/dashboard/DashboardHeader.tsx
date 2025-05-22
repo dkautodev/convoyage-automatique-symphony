@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, User, LogOut, Settings } from 'lucide-react';
+import { Bell, User, LogOut, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,7 +14,12 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  toggleSidebar?: () => void;
+  sidebarOpen?: boolean;
+}
+
+const DashboardHeader = ({ toggleSidebar, sidebarOpen }: DashboardHeaderProps) => {
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -49,26 +54,38 @@ const DashboardHeader = () => {
   };
   
   return (
-    <header className="px-4 sm:px-6 py-3 flex items-center justify-between h-16">
-      {/* Titre de la page - caché sur mobile car espace pour le toggle de sidebar */}
-      <h1 className={`${isMobile ? 'ml-8' : ''} text-lg sm:text-xl font-bold text-neutral-800 truncate`}>
-        {isMobile ? dashboardTitle : `APP DKAUTOMOTIVE - ${dashboardTitle}`}
+    <header className="px-3 sm:px-6 py-3 flex items-center justify-between h-16">
+      {/* Mobile menu toggle button - only show when sidebar is closed */}
+      {isMobile && toggleSidebar && !sidebarOpen && (
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="mr-2 h-10 w-10"
+          onClick={toggleSidebar}
+        >
+          <Menu size={24} />
+        </Button>
+      )}
+      
+      {/* Titre de la page - centré sur mobile */}
+      <h1 className="text-lg sm:text-xl font-bold text-neutral-800 truncate text-center flex-1">
+        {dashboardTitle}
       </h1>
       
       {/* Actions utilisateur */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell size={20} className="text-neutral-600" />
-          <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+        <Button variant="ghost" size="icon" className="relative h-10 w-10">
+          <Bell size={24} className="text-neutral-600" />
+          <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"></span>
         </Button>
         
         {/* Menu utilisateur */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center">
-                <User size={16} className="text-neutral-600" />
+            <Button variant="ghost" className="flex items-center gap-2 h-10 w-10 sm:w-auto">
+              <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
+                <User size={20} className="text-neutral-600" />
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
@@ -79,10 +96,10 @@ const DashboardHeader = () => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={navigateToProfile}>Profil</DropdownMenuItem>
-            <DropdownMenuItem onClick={navigateToSettings}>Paramètres</DropdownMenuItem>
+            <DropdownMenuItem onClick={navigateToProfile} className="cursor-pointer">Profil</DropdownMenuItem>
+            <DropdownMenuItem onClick={navigateToSettings} className="cursor-pointer">Paramètres</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </DropdownMenuItem>

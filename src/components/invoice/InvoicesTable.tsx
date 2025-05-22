@@ -4,13 +4,14 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Mission, missionStatusLabels, missionStatusColors } from '@/types/supabase';
+import { Mission } from '@/types/supabase';
 import { formatMissionNumber, formatClientName } from '@/utils/missionUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 import { Check, X } from 'lucide-react';
 import GenerateInvoiceButton from './GenerateInvoiceButton';
+import { Card } from '@/components/ui/card';
 
 interface InvoicesTableProps {
   missions: Mission[];
@@ -19,6 +20,7 @@ interface InvoicesTableProps {
   isLoading?: boolean;
   userRole: 'admin' | 'client' | 'chauffeur';
   onMissionStatusUpdate?: () => void;
+  layout?: 'table' | 'stacked';
 }
 
 const InvoicesTable: React.FC<InvoicesTableProps> = ({
@@ -27,7 +29,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   clientData,
   isLoading = false,
   userRole,
-  onMissionStatusUpdate
+  onMissionStatusUpdate,
+  layout = 'table'
 }) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedMission, setSelectedMission] = React.useState<Mission | null>(null);
@@ -112,6 +115,105 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     return status === 'livre' ? 'bg-red-600 text-white' : 'bg-green-700 text-white';
   };
 
+  // Stacked layout for mobile devices
+  if (layout === 'stacked') {
+    return (
+      <>
+        <div className="space-y-4">
+          {missions.map(mission => (
+            <Card key={mission.id} className="p-4 mb-4">
+              <div className="grid grid-cols-12 gap-2">
+                {/* Row 1: Number + Generate button */}
+                <div className="col-span-8 font-medium">
+                  #{formatMissionNumber(mission)}
+                </div>
+                <div className="col-span-4 flex justify-end">
+                  {userRole === 'admin' && (
+                    <GenerateInvoiceButton 
+                      mission={mission} 
+                      client={clientsData[mission.client_id]}
+                      className="h-8 w-8 p-0" 
+                    />
+                  )}
+                  {userRole === 'client' && (
+                    <GenerateInvoiceButton 
+                      mission={mission} 
+                      client={clientData}
+                      className="h-8 w-8 p-0"
+                    />
+                  )}
+                </div>
+                
+                {/* Row 2: Date + Client + Status */}
+                <div className="col-span-5 text-xs text-gray-600">
+                  {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Date inconnue'}
+                </div>
+                {userRole === 'admin' && (
+                  <div className="col-span-3 text-xs truncate">
+                    {formatClientName(mission, clientsData)}
+                  </div>
+                )}
+                <div className={`col-span-${userRole === 'admin' ? '4' : '7'} flex justify-end`}>
+                  <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs`}>
+                    {getInvoiceStatusLabel(mission.status)}
+                  </Badge>
+                </div>
+                
+                {/* Row 3: Amount + Actions */}
+                <div className="col-span-7 font-medium">
+                  {formatPrice(mission.price_ttc)}
+                </div>
+                <div className="col-span-5 flex justify-end">
+                  {userRole === 'admin' ? (
+                    <Button 
+                      variant={mission.status === 'livre' ? 'default' : 'outline'} 
+                      size="sm"
+                      onClick={() => handleStatusButtonClick(mission)}
+                      className="h-8 px-2 text-xs"
+                    >
+                      {mission.status === 'livre' ? (
+                        <><Check className="h-3 w-3 mr-1" /> Payer</>
+                      ) : (
+                        <><X className="h-3 w-3 mr-1" /> Impayé</>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" asChild className="h-8 px-2 text-xs">
+                      <Link to={`/${userRole}/missions/${mission.id}`}>
+                        Détails
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <AlertDialogContent className="max-w-[90%] sm:max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmer le changement</AlertDialogTitle>
+              <AlertDialogDescription>
+                Êtes-vous sûr de vouloir marquer cette mission à payer ?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="w-full sm:w-auto">Annuler</AlertDialogCancel>
+              <AlertDialogAction 
+                className="w-full sm:w-auto"
+                onClick={() => selectedMission && toggleMissionStatus(selectedMission)}
+              >
+                Confirmer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
+
+  // Table layout for larger screens
   return (
     <>
       <Table>

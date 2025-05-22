@@ -1,19 +1,21 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck, CreditCard, TrendingUp } from 'lucide-react';
+import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck, CreditCard, TrendingUp, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
   userRole: string;
+  onClose?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
-  userRole
+  userRole,
+  onClose
 }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   // Helper function to determine if a link is active
   const isActive = (path: string) => {
@@ -22,8 +24,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   // Function to close the sidebar after navigation (on mobile)
   const handleNavClick = () => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
+    if (isMobile && onClose) {
+      onClose();
     }
   };
 
@@ -133,12 +135,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   return (
     <div className="bg-white w-64 h-full shadow-lg flex flex-col">
-      {/* Logo Section - Only show at top when not on mobile */}
-      {!isMobile && (
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center">
-          <img src="/lovable-uploads/4922f807-dfd8-4cf6-b440-ee35efade638.png" alt="DK Automotive Logo" className="h-8" />
-        </div>
-      )}
+      {/* Logo Section with close button on mobile */}
+      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+        <img src="/lovable-uploads/4922f807-dfd8-4cf6-b440-ee35efade638.png" alt="DK Automotive Logo" className="h-8" />
+        {isMobile && onClose && (
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10" aria-label="Fermer">
+            <X size={20} />
+          </Button>
+        )}
+      </div>
       
       {/* Navigation Section - expanded to take available space */}
       <nav className="px-4 py-6 flex-1 overflow-y-auto">
@@ -148,7 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <NavLink 
                 to={item.path} 
                 onClick={handleNavClick}
-                className={({isActive}) => `flex items-center px-4 py-2 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}
+                className={({isActive}) => `flex items-center px-4 py-3 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}
               >
                 <span className="mr-3">{item.icon}</span>
                 <span>{item.label}</span>
@@ -157,13 +162,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </ul>
       </nav>
-      
-      {/* Logo at bottom for mobile */}
-      {isMobile && (
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-center items-center">
-          <img src="/lovable-uploads/4922f807-dfd8-4cf6-b440-ee35efade638.png" alt="DK Automotive Logo" className="h-8" />
-        </div>
-      )}
     </div>
   );
 };

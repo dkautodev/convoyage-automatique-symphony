@@ -89,6 +89,14 @@ export const getAddressString = (address: any) => {
   return address.city || address.formatted_address || 'Adresse incomplète';
 };
 
+// Add formatPrice function that was missing
+export const formatPrice = (price: number) => {
+  return price.toLocaleString('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
+  });
+};
+
 export const missionStatusLabels = {
   'en_acceptation': 'En cours d\'acceptation',
   'accepte': 'Accepté',

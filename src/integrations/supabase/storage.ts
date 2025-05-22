@@ -73,6 +73,11 @@ export function getPublicUrl(path: string): string | null {
     
     const { data } = supabase.storage.from(bucketName).getPublicUrl(cleanPath);
     return data.publicUrl;
+  } catch (error) {
+    console.error("Error getting public URL:", error);
+    return null;
+  }
+}
 
 /**
  * Upload a document for a specific mission

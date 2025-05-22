@@ -9,6 +9,9 @@ import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { uploadFile, getPublicUrl } from '@/integrations/supabase/storage';
 
+// Import the supabase client properly
+import { supabase } from '@/integrations/supabase/client';
+
 // Type pour les missions avec factures
 interface DriverMission {
   id: string;

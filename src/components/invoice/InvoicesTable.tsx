@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -12,13 +13,29 @@ import { Mission } from '@/types/supabase';
 import { formatClientName, formatMissionNumber, formatPrice } from '@/utils/missionUtils';
 import GenerateInvoiceButton from './GenerateInvoiceButton';
 
-interface InvoicesTableProps {
+export interface InvoicesTableProps {
   missions: Mission[];
   clientsData: Record<string, any>;
+  isLoading?: boolean;
+  userRole?: string;
+  clientData?: any;
+  onMissionStatusUpdate?: () => void;
 }
 
-// Update GenerateInvoiceButtonProps to include className if needed
-const InvoicesTable: React.FC<InvoicesTableProps> = ({ missions, clientsData }) => {
+const InvoicesTable: React.FC<InvoicesTableProps> = ({ 
+  missions, 
+  clientsData = {},
+  isLoading = false,
+  userRole = 'admin'
+}) => {
+  if (isLoading) {
+    return <div className="py-4 text-center">Chargement des factures...</div>;
+  }
+  
+  if (missions.length === 0) {
+    return <div className="py-4 text-center">Aucune facture disponible</div>;
+  }
+
   return (
     <div className="w-full">
       <Table>

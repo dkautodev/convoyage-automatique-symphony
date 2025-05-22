@@ -14,6 +14,7 @@ const ClientInvoicesPage = () => {
   const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [clientsData, setClientsData] = useState<Record<string, any>>({});
 
   // Fetch missions with status 'livre' or 'termine' for the current client
   useEffect(() => {
@@ -37,6 +38,22 @@ const ClientInvoicesPage = () => {
         
         setMissions(convertedMissions);
         setFilteredMissions(convertedMissions);
+
+        // Create a client data record for the current user/client
+        if (profile) {
+          const clientMap: Record<string, any> = {};
+          clientMap[user.id] = {
+            id: user.id,
+            name: profile.company_name || profile.full_name || 'Client',
+            company_name: profile.company_name,
+            full_name: profile.full_name,
+            email: profile.email,
+            billing_address: profile.billing_address,
+            phone_1: profile.phone_1,
+            phone_2: profile.phone_2
+          };
+          setClientsData(clientMap);
+        }
       } catch (err) {
         console.error("Error fetching invoices:", err);
       } finally {
@@ -45,7 +62,7 @@ const ClientInvoicesPage = () => {
     };
 
     fetchMissions();
-  }, [user?.id]);
+  }, [user?.id, profile]);
 
   // Filter missions based on search query
   useEffect(() => {
@@ -94,9 +111,9 @@ const ClientInvoicesPage = () => {
         <CardContent>
           <InvoicesTable 
             missions={filteredMissions} 
+            clientsData={clientsData}
             isLoading={loading}
             userRole="client"
-            clientData={profile}
           />
         </CardContent>
       </Card>

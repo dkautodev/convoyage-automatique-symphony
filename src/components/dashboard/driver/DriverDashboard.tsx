@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle, Truck } from 'lucide-react';
@@ -10,67 +9,53 @@ import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, Missi
 import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 const DriverDashboard = () => {
-  const { profile, user } = useAuth();
+  const {
+    profile,
+    user
+  } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [currentMission, setCurrentMission] = useState<Mission | null>(null);
   const [upcomingMissions, setUpcomingMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     todayMissions: 0,
-    upcomingMissions: 0, 
+    upcomingMissions: 0,
     completedMissions: 0,
     earnings: 0,
     paidInvoices: 0
   });
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
-
   useEffect(() => {
     if (user?.id) {
       fetchDriverMissions();
       fetchDriverStats();
     }
   }, [user?.id]);
-
   const fetchDriverMissions = async () => {
     try {
       setLoading(true);
-      
+
       // Récupérer toutes les missions du chauffeur
-      const { data: missionsData, error } = await supabase
-        .from('missions')
-        .select('*')
-        .eq('chauffeur_id', user?.id)
-        .order('scheduled_date', { ascending: true });
-      
+      const {
+        data: missionsData,
+        error
+      } = await supabase.from('missions').select('*').eq('chauffeur_id', user?.id).order('scheduled_date', {
+        ascending: true
+      });
       if (error) throw error;
-      
       if (missionsData && missionsData.length > 0) {
         // Convert all missions to the correct type
-        const convertedMissions: Mission[] = missionsData.map(mission => 
-          convertMissionFromDB(mission as unknown as MissionFromDB)
-        );
-        
+        const convertedMissions: Mission[] = missionsData.map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
+
         // Trouver la mission en cours (en prise en charge ou en livraison)
-        const inProgressMission = convertedMissions.find(m => 
-          m.status === 'prise_en_charge' || m.status === 'livraison'
-        );
-        
+        const inProgressMission = convertedMissions.find(m => m.status === 'prise_en_charge' || m.status === 'livraison');
+
         // Trouver les missions à venir (acceptées mais pas encore en cours)
-        const upcoming = convertedMissions
-          .filter(m => m.status === 'accepte')
-          .slice(0, 3); // Limiter à 3 missions à venir
-        
+        const upcoming = convertedMissions.filter(m => m.status === 'accepte').slice(0, 3); // Limiter à 3 missions à venir
+
         setCurrentMission(inProgressMission || null);
         setUpcomingMissions(upcoming);
         setMissions(convertedMissions);
@@ -82,58 +67,51 @@ const DriverDashboard = () => {
       setLoading(false);
     }
   };
-
   const fetchDriverStats = async () => {
     if (!user?.id) return;
-    
     try {
       // Date du jour à minuit
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Missions du jour
-      const { count: todayCount } = await supabase
-        .from('missions')
-        .select('*', { count: 'exact', head: true })
-        .eq('chauffeur_id', user.id)
-        .gte('scheduled_date', today.toISOString())
-        .lt('scheduled_date', new Date(today.getTime() + 86400000).toISOString()); // +24h
-      
+      const {
+        count: todayCount
+      } = await supabase.from('missions').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('chauffeur_id', user.id).gte('scheduled_date', today.toISOString()).lt('scheduled_date', new Date(today.getTime() + 86400000).toISOString()); // +24h
+
       // Missions à venir
-      const { count: upcomingCount } = await supabase
-        .from('missions')
-        .select('*', { count: 'exact', head: true })
-        .eq('chauffeur_id', user.id)
-        .eq('status', 'accepte');
-      
+      const {
+        count: upcomingCount
+      } = await supabase.from('missions').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('chauffeur_id', user.id).eq('status', 'accepte');
+
       // Missions terminées ce mois-ci
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const { count: completedCount } = await supabase
-        .from('missions')
-        .select('*', { count: 'exact', head: true })
-        .eq('chauffeur_id', user.id)
-        .eq('status', 'termine')
-        .gte('completion_date', firstDayOfMonth.toISOString());
-      
+      const {
+        count: completedCount
+      } = await supabase.from('missions').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('chauffeur_id', user.id).eq('status', 'termine').gte('completion_date', firstDayOfMonth.toISOString());
+
       // Factures payées du mois (basées sur chauffeur_paid)
-      const { data: paidMissions } = await supabase
-        .from('missions')
-        .select('chauffeur_price_ht')
-        .eq('chauffeur_id', user.id)
-        .eq('chauffeur_paid', true)
-        .gte('updated_at', firstDayOfMonth.toISOString());
-      
-      const monthEarnings = paidMissions?.reduce((sum, mission) => 
-        sum + (mission.chauffeur_price_ht || 0), 0) || 0;
-      
+      const {
+        data: paidMissions
+      } = await supabase.from('missions').select('chauffeur_price_ht').eq('chauffeur_id', user.id).eq('chauffeur_paid', true).gte('updated_at', firstDayOfMonth.toISOString());
+      const monthEarnings = paidMissions?.reduce((sum, mission) => sum + (mission.chauffeur_price_ht || 0), 0) || 0;
+
       // Nombre de factures payées
-      const { count: paidInvoicesCount } = await supabase
-        .from('missions')
-        .select('*', { count: 'exact', head: true })
-        .eq('chauffeur_id', user.id)
-        .eq('chauffeur_paid', true)
-        .gte('updated_at', firstDayOfMonth.toISOString());
-      
+      const {
+        count: paidInvoicesCount
+      } = await supabase.from('missions').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('chauffeur_id', user.id).eq('chauffeur_paid', true).gte('updated_at', firstDayOfMonth.toISOString());
       setStats({
         todayMissions: todayCount || 0,
         upcomingMissions: upcomingCount || 0,
@@ -141,20 +119,16 @@ const DriverDashboard = () => {
         earnings: monthEarnings,
         paidInvoices: paidInvoicesCount || 0
       });
-      
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
     }
   };
-
   const handleStatusUpdate = async () => {
     if (!currentMission) return;
-    
     try {
       setStatusUpdateLoading(true);
-      
       let newStatus: MissionStatus;
-      
+
       // Determine next status based on current status
       if (currentMission.status === 'accepte') {
         newStatus = 'prise_en_charge';
@@ -167,47 +141,41 @@ const DriverDashboard = () => {
         setStatusUpdateLoading(false);
         return;
       }
-      
+
       // For 'livre' status, confirmation is handled by the dialog
       if (newStatus === 'livre') {
         setConfirmDialogOpen(true);
         setStatusUpdateLoading(false);
         return;
       }
-      
+
       // Update status directly for other status transitions
       await updateMissionStatus(newStatus);
-      
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error("Erreur lors de la mise à jour du statut");
       setStatusUpdateLoading(false);
     }
   };
-  
   const updateMissionStatus = async (newStatus: MissionStatus) => {
     if (!currentMission) return;
-    
     try {
       setStatusUpdateLoading(true);
-      
-      const { error } = await supabase
-        .from('missions')
-        .update({ 
-          status: newStatus,
-          ...(newStatus === 'livre' ? { completion_date: new Date().toISOString() } : {})
-        })
-        .eq('id', currentMission.id);
-      
+      const {
+        error
+      } = await supabase.from('missions').update({
+        status: newStatus,
+        ...(newStatus === 'livre' ? {
+          completion_date: new Date().toISOString()
+        } : {})
+      }).eq('id', currentMission.id);
       if (error) throw error;
-      
       toast.success(`Mission mise à jour avec succès: ${missionStatusLabels[newStatus]}`);
       fetchDriverMissions();
       fetchDriverStats();
-      
+
       // Close dialog if open
       setConfirmDialogOpen(false);
-      
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la mission:', error);
       toast.error("Erreur lors de la mise à jour du statut");
@@ -219,7 +187,6 @@ const DriverDashboard = () => {
   // Function to get the next status button label
   const getNextStatusLabel = (mission: Mission | null) => {
     if (!mission) return "Mettre à jour le statut";
-    
     switch (mission.status) {
       case 'accepte':
         return "Démarrer la prise en charge";
@@ -231,25 +198,17 @@ const DriverDashboard = () => {
         return "Mettre à jour le statut";
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
+    return <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Tableau de bord chauffeur</h1>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link to="/driver/revenue-management">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Pilotage CA
-            </Link>
+            
           </Button>
           <Button asChild>
             <Link to="/driver/missions">
@@ -330,7 +289,10 @@ const DriverDashboard = () => {
             <div className="flex items-center">
               <CreditCard className="h-7 w-7 text-amber-500 mr-4" />
               <div>
-                <div className="text-2xl font-bold">{stats.earnings.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})}</div>
+                <div className="text-2xl font-bold">{stats.earnings.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                })}</div>
                 <p className="text-xs text-muted-foreground">Ce mois-ci</p>
               </div>
             </div>
@@ -338,8 +300,7 @@ const DriverDashboard = () => {
         </Card>
       </div>
 
-      {currentMission ? (
-        <Card>
+      {currentMission ? <Card>
           <CardHeader>
             <CardTitle>Ma mission en cours</CardTitle>
           </CardHeader>
@@ -385,9 +346,7 @@ const DriverDashboard = () => {
                       Type de véhicule
                     </span>
                   </h3>
-                  <p>{currentMission.vehicle_category ? 
-                      (vehicleCategoryLabels[currentMission.vehicle_category] || 
-                      currentMission.vehicle_category) : "Non spécifié"}</p>
+                  <p>{currentMission.vehicle_category ? vehicleCategoryLabels[currentMission.vehicle_category] || currentMission.vehicle_category : "Non spécifié"}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">
@@ -418,27 +377,18 @@ const DriverDashboard = () => {
                 </Link>
               </Button>
 
-              <Button 
-                onClick={handleStatusUpdate}
-                disabled={statusUpdateLoading || ['termine', 'livre', 'annule', 'incident'].includes(currentMission.status)}
-              >
-                {statusUpdateLoading ? (
-                  <span className="flex items-center">
+              <Button onClick={handleStatusUpdate} disabled={statusUpdateLoading || ['termine', 'livre', 'annule', 'incident'].includes(currentMission.status)}>
+                {statusUpdateLoading ? <span className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
                     Mise à jour...
-                  </span>
-                ) : (
-                  <>
+                  </span> : <>
                     <CheckCircle className="mr-2 h-4 w-4" />
                     {getNextStatusLabel(currentMission)}
-                  </>
-                )}
+                  </>}
               </Button>
             </div>
           </CardContent>
-        </Card>
-      ) : (
-        <Card>
+        </Card> : <Card>
           <CardHeader>
             <CardTitle>Aucune mission en cours</CardTitle>
           </CardHeader>
@@ -453,8 +403,7 @@ const DriverDashboard = () => {
               </Button>
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
 
       {/* Upcoming Missions Section - This was missing and now restored */}
       <Card>
@@ -462,10 +411,8 @@ const DriverDashboard = () => {
           <CardTitle>Prochaines missions</CardTitle>
         </CardHeader>
         <CardContent>
-          {upcomingMissions.length > 0 ? (
-            <div className="space-y-4">
-              {upcomingMissions.map((mission) => (
-                <div key={mission.id} className="border-b pb-3 last:border-b-0">
+          {upcomingMissions.length > 0 ? <div className="space-y-4">
+              {upcomingMissions.map(mission => <div key={mission.id} className="border-b pb-3 last:border-b-0">
                   <div className="flex justify-between mb-1">
                     <div className="font-medium">Mission #{formatMissionNumber(mission)}</div>
                     <div className="text-sm text-amber-500 font-medium">
@@ -475,9 +422,7 @@ const DriverDashboard = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                     <div className="text-sm">
                       <span className="text-muted-foreground">Type: </span>
-                      {mission.vehicle_category ? 
-                        (vehicleCategoryLabels[mission.vehicle_category] || 
-                        mission.vehicle_category) : "Non spécifié"}
+                      {mission.vehicle_category ? vehicleCategoryLabels[mission.vehicle_category] || mission.vehicle_category : "Non spécifié"}
                     </div>
                     <div className="text-sm">
                       <span className="text-muted-foreground">Marque: </span>
@@ -495,8 +440,7 @@ const DriverDashboard = () => {
                   <div className="text-sm text-muted-foreground mt-2">
                     {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
                   </div>
-                </div>
-              ))}
+                </div>)}
               <div className="flex justify-center mt-4">
                 <Button variant="outline" asChild>
                   <Link to="/driver/missions">
@@ -504,13 +448,10 @@ const DriverDashboard = () => {
                   </Link>
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-10 text-neutral-500">
+            </div> : <div className="text-center py-10 text-neutral-500">
               <Calendar className="h-12 w-12 mx-auto text-neutral-300 mb-3" />
               <p>Vous n'avez pas de missions à venir.</p>
-            </div>
-          )}
+            </div>}
         </CardContent>
       </Card>
       
@@ -525,29 +466,18 @@ const DriverDashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-between sm:justify-end gap-2 mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setConfirmDialogOpen(false)}
-              disabled={statusUpdateLoading}
-            >
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)} disabled={statusUpdateLoading}>
               Annuler
             </Button>
-            <Button 
-              onClick={() => updateMissionStatus('livre')}
-              disabled={statusUpdateLoading}
-            >
-              {statusUpdateLoading ? (
-                <span className="flex items-center">
+            <Button onClick={() => updateMissionStatus('livre')} disabled={statusUpdateLoading}>
+              {statusUpdateLoading ? <span className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
                   Mise à jour...
-                </span>
-              ) : 'Confirmer la livraison'}
+                </span> : 'Confirmer la livraison'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default DriverDashboard;

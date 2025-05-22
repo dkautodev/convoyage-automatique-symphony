@@ -10,6 +10,7 @@ import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils'
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+
 const DriverDashboard = () => {
   const {
     profile,
@@ -204,12 +205,9 @@ const DriverDashboard = () => {
       </div>;
   }
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Tableau de bord chauffeur</h1>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
-            
-          </Button>
           <Button asChild>
             <Link to="/driver/missions">
               <MapPin className="mr-2 h-4 w-4" />
@@ -219,81 +217,81 @@ const DriverDashboard = () => {
         </div>
       </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card>
+      {/* Stats cards - Updated for better responsiveness */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+        <Card className="min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Mission du jour</CardTitle>
+            <CardTitle className="text-sm font-medium whitespace-nowrap">Mission du jour</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Package className="h-7 w-7 text-blue-500 mr-4" />
+              <Package className="h-6 w-6 sm:h-7 sm:w-7 text-blue-500 mr-3 sm:mr-4" />
               <div>
-                <div className="text-2xl font-bold">{stats.todayMissions}</div>
-                <p className="text-xs text-muted-foreground">Aujourd'hui</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.todayMissions}</div>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Aujourd'hui</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Missions à venir</CardTitle>
+            <CardTitle className="text-sm font-medium whitespace-nowrap">Missions à venir</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Calendar className="h-7 w-7 text-green-500 mr-4" />
+              <Calendar className="h-6 w-6 sm:h-7 sm:w-7 text-green-500 mr-3 sm:mr-4" />
               <div>
-                <div className="text-2xl font-bold">{stats.upcomingMissions}</div>
-                <p className="text-xs text-muted-foreground">En attente</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.upcomingMissions}</div>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">En attente</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Missions terminées</CardTitle>
+            <CardTitle className="text-sm font-medium whitespace-nowrap">Missions terminées</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Clock className="h-7 w-7 text-purple-500 mr-4" />
+              <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-purple-500 mr-3 sm:mr-4" />
               <div>
-                <div className="text-2xl font-bold">{stats.completedMissions}</div>
-                <p className="text-xs text-muted-foreground">Ce mois-ci</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.completedMissions}</div>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Ce mois-ci</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Factures payées</CardTitle>
+            <CardTitle className="text-sm font-medium whitespace-nowrap">Factures payées</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <CheckCircle className="h-7 w-7 text-emerald-500 mr-4" />
+              <CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-500 mr-3 sm:mr-4" />
               <div>
-                <div className="text-2xl font-bold">{stats.paidInvoices}</div>
-                <p className="text-xs text-muted-foreground">Ce mois-ci</p>
+                <div className="text-xl sm:text-2xl font-bold">{stats.paidInvoices}</div>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Ce mois-ci</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Revenus</CardTitle>
+            <CardTitle className="text-sm font-medium whitespace-nowrap">Revenus</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <CreditCard className="h-7 w-7 text-amber-500 mr-4" />
+              <CreditCard className="h-6 w-6 sm:h-7 sm:w-7 text-amber-500 mr-3 sm:mr-4" />
               <div>
-                <div className="text-2xl font-bold">{stats.earnings.toLocaleString('fr-FR', {
+                <div className="text-xl sm:text-2xl font-bold truncate">{stats.earnings.toLocaleString('fr-FR', {
                   style: 'currency',
                   currency: 'EUR'
                 })}</div>
-                <p className="text-xs text-muted-foreground">Ce mois-ci</p>
+                <p className="text-xs text-muted-foreground whitespace-nowrap">Ce mois-ci</p>
               </div>
             </div>
           </CardContent>
@@ -480,4 +478,5 @@ const DriverDashboard = () => {
       </Dialog>
     </div>;
 };
+
 export default DriverDashboard;

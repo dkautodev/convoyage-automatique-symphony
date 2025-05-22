@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Lazy load the chart component for better performance
+const RevenueChart = lazy(() => import('./components/RevenueChart'));
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -210,73 +213,73 @@ const AdminDashboard = () => {
         </div>
       </div>
       
-      {/* Statistiques principales */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card className="bg-white">
+      {/* Statistiques principales - Updated for better responsiveness */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Missions Actives</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Missions Actives</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{loading ? "..." : stats.activeMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{loading ? "..." : stats.activeMissions}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Truck size={20} className="text-green-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-100 flex items-center justify-center">
+                <Truck size={16} className="sm:text-[20px] text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Revenus (HT)</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Revenus (HT)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold truncate">
                   {loading ? "..." : formatCurrency(stats.revenue)}
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Euro size={20} className="text-blue-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Euro size={16} className="sm:text-[20px] text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">TVA Collectée</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">TVA Collectée</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold truncate">
                   {loading ? "..." : formatCurrency(stats.vatCollected)}
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <BarChart size={20} className="text-purple-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <BarChart size={16} className="sm:text-[20px] text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Paiements Chauffeurs</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Paiements Chauffeurs</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl sm:text-2xl font-bold truncate">
                   {loading ? "..." : formatCurrency(stats.driverPayments)}
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <CreditCard size={20} className="text-amber-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <CreditCard size={16} className="sm:text-[20px] text-amber-600" />
               </div>
             </div>
           </CardContent>
@@ -307,7 +310,7 @@ const AdminDashboard = () => {
                 <TableBody>
                   {Object.entries(statusCounts).map(([status, count]) => (
                     <TableRow key={status}>
-                      <TableCell>
+                      <TableCell className="min-w-[120px]">
                         <Badge className={missionStatusColors[status as MissionStatus]}>
                           {missionStatusLabels[status as MissionStatus]}
                         </Badge>
@@ -329,7 +332,7 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
       
-      {/* Graphique de revenus */}
+      {/* Graphique de revenus - lazy loaded for performance */}
       <Card className="bg-white">
         <CardHeader>
           <CardTitle>Revenus Mensuels</CardTitle>
@@ -342,29 +345,35 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className={isMobile ? "h-60" : "h-80"}>
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart
-                  data={monthlyRevenue}
-                  margin={{ 
-                    top: 20, 
-                    right: isMobile ? 10 : 30, 
-                    left: isMobile ? 0 : 20, 
-                    bottom: 20 
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" tick={{fontSize: isMobile ? 10 : 12}} />
-                  <YAxis tick={{fontSize: isMobile ? 10 : 12}} width={isMobile ? 40 : 60} />
-                  <Tooltip 
-                    formatter={(value) => [`${formatCurrency(Number(value))}`, '']}
-                    contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                  />
-                  <Legend wrapperStyle={{fontSize: isMobile ? 10 : 12}} />
-                  <Bar dataKey="revenue" name="Chiffre d'affaires HT" fill="#3b82f6" />
-                  <Bar dataKey="vat" name="TVA" fill="#8b5cf6" />
-                  <Bar dataKey="driverPayments" name="Paiements chauffeurs" fill="#f59e0b" />
-                </RechartsBarChart>
-              </ResponsiveContainer>
+              <Suspense fallback={
+                <div className="flex justify-center items-center h-full">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin"></div>
+                </div>
+              }>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart
+                    data={monthlyRevenue}
+                    margin={{ 
+                      top: 20, 
+                      right: isMobile ? 10 : 30, 
+                      left: isMobile ? 0 : 20, 
+                      bottom: 20 
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" tick={{fontSize: isMobile ? 10 : 12}} />
+                    <YAxis tick={{fontSize: isMobile ? 10 : 12}} width={isMobile ? 40 : 60} />
+                    <Tooltip 
+                      formatter={(value) => [`${formatCurrency(Number(value))}`, '']}
+                      contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                    />
+                    <Legend wrapperStyle={{fontSize: isMobile ? 10 : 12}} />
+                    <Bar dataKey="revenue" name="Chiffre d'affaires HT" fill="#3b82f6" />
+                    <Bar dataKey="vat" name="TVA" fill="#8b5cf6" />
+                    <Bar dataKey="driverPayments" name="Paiements chauffeurs" fill="#f59e0b" />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              </Suspense>
             </div>
           )}
         </CardContent>
@@ -397,7 +406,7 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Référence</TableHead>
                     <TableHead>Client</TableHead>
-                    <TableHead>Statut</TableHead>
+                    <TableHead className="min-w-[120px]">Statut</TableHead>
                     <TableHead>Prix HT</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -411,7 +420,7 @@ const AdminDashboard = () => {
                       <TableRow key={mission.id}>
                         <TableCell className="whitespace-nowrap">{mission.mission_number || '-'}</TableCell>
                         <TableCell className="max-w-[150px] truncate">{clientName}</TableCell>
-                        <TableCell>
+                        <TableCell className="min-w-[120px]">
                           <Badge className={missionStatusColors[mission.status as MissionStatus]}>
                             {missionStatusLabels[mission.status as MissionStatus]}
                           </Badge>

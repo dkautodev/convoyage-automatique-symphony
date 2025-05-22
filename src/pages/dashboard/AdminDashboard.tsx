@@ -108,51 +108,51 @@ const AdminDashboard = () => {
         </div>
       </div>
       
-      {/* Cartes statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="bg-white">
+      {/* Cartes statistiques - Updated for better responsiveness */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Total Missions</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Total Missions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.totalMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.totalMissions}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-admin/10 flex items-center justify-center">
-                <Package size={20} className="text-admin" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-admin/10 flex items-center justify-center">
+                <Package size={16} className="sm:text-[20px] text-admin" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Missions Actives</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Missions Actives</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.activeMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.activeMissions}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Truck size={20} className="text-green-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-100 flex items-center justify-center">
+                <Truck size={16} className="sm:text-[20px] text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Clients</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Clients</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.clients}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.clients}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Building size={20} className="text-blue-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Building size={16} className="sm:text-[20px] text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -183,7 +183,7 @@ const AdminDashboard = () => {
             <div className="space-y-4">
               {recentMissions.map((mission) => (
                 <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
                         Client: {formatClientName(mission, clientsData)} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" className="self-start" asChild>
                       <Link to={`/admin/missions/${mission.id}`}>
                         Détails
                       </Link>

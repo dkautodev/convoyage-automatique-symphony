@@ -226,67 +226,67 @@ const DriverDashboard = () => {
         </Button>
       </div>
       
-      {/* Cartes statistiques */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <Card className="bg-white">
+      {/* Cartes statistiques - Updated for better responsiveness */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Missions Assignées</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Missions Assignées</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.assignedMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.assignedMissions}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-driver/10 flex items-center justify-center">
-                <Truck size={20} className="text-driver" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-driver/10 flex items-center justify-center">
+                <Truck size={16} className="sm:text-[20px] text-driver" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">En cours</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">En cours</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.inProgressMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.inProgressMissions}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <MapPin size={20} className="text-amber-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <MapPin size={16} className="sm:text-[20px] text-amber-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Missions Terminées</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Missions Terminées</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.completedMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.completedMissions}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle size={20} className="text-green-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle size={16} className="sm:text-[20px] text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white">
+        <Card className="bg-white min-w-[120px]">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">Gains du Mois</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 whitespace-nowrap">Gains du Mois</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.monthlyEarnings.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
+                <p className="text-xl sm:text-2xl font-bold truncate">{stats.monthlyEarnings.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <CreditCard size={20} className="text-blue-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <CreditCard size={16} className="sm:text-[20px] text-blue-600" />
               </div>
             </div>
           </CardContent>

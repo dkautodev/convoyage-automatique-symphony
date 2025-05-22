@@ -9,7 +9,7 @@ interface MissionStatusHistoryProps {
   statusHistory: any[];
 }
 
-export const MissionStatusHistory: React.FC<MissionStatusHistoryProps> = ({ statusHistory }) => {
+export const MissionStatusHistory: React.FC<MissionStatusHistoryProps> = React.memo(({ statusHistory }) => {
   return (
     <Card>
       <CardHeader>
@@ -28,8 +28,8 @@ export const MissionStatusHistory: React.FC<MissionStatusHistoryProps> = ({ stat
           <div className="space-y-4">
             {statusHistory.map((entry, index) => (
               <div key={index} className="border-b pb-4 last:border-b-0 last:pb-0">
-                <div className="flex items-center gap-2">
-                  <Badge className={`${missionStatusColors[entry.new_status]} w-24 justify-center`}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className={`${missionStatusColors[entry.new_status]} min-w-[120px] justify-center text-white`}>
                     {missionStatusLabels[entry.new_status]}
                   </Badge>
                   <span className="text-sm text-gray-500">
@@ -64,4 +64,5 @@ export const MissionStatusHistory: React.FC<MissionStatusHistoryProps> = ({ stat
       </CardContent>
     </Card>
   );
-};
+});
+

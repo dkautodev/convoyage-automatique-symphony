@@ -31,7 +31,7 @@ interface ContactsTableProps {
   onDeleteContact: (id: number) => Promise<void>;
 }
 
-export const ContactsTable: React.FC<ContactsTableProps> = ({
+export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
   contacts,
   loading,
   showClientInfo = false,
@@ -47,14 +47,14 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
   }
   
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Nom complet / société</TableHead>
             <TableHead>Téléphone</TableHead>
             <TableHead>Email</TableHead>
-            {showClientInfo && <TableHead>Client</TableHead>}
+            {showClientInfo && <TableHead className="min-w-[120px]">Client</TableHead>}
             <TableHead className="w-24">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -67,7 +67,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
               <TableCell>{contact.phone || '-'}</TableCell>
               <TableCell>{contact.email || '-'}</TableCell>
               {showClientInfo && (
-                <TableCell>
+                <TableCell className="min-w-[120px] whitespace-nowrap">
                   {clientData && clientData[contact.client_id] 
                     ? clientData[contact.client_id].name 
                     : 'Client inconnu'}
@@ -105,4 +105,5 @@ export const ContactsTable: React.FC<ContactsTableProps> = ({
       </Table>
     </div>
   );
-};
+});
+

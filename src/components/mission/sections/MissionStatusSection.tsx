@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -129,7 +130,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
           <div className="space-y-4">
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-1">Statut actuel</h4>
-              <Badge className={`${missionStatusColors[mission.status]} px-3 py-1`}>
+              <Badge className={`${missionStatusColors[mission.status]} px-3 py-1 min-w-[120px] justify-center text-white whitespace-nowrap`}>
                 {missionStatusLabels[mission.status]}
               </Badge>
             </div>

@@ -21,7 +21,7 @@ interface MissionStatusHistoryDrawerProps {
   onClose: () => void;
 }
 
-export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProps> = ({ 
+export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProps> = React.memo(({ 
   statusHistory, 
   isOpen,
   onClose 
@@ -49,8 +49,8 @@ export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProp
               <div className="space-y-4">
                 {statusHistory.map((entry, index) => (
                   <div key={index} className="border-b pb-4 last:border-b-0 last:pb-0">
-                    <div className="flex items-center gap-2">
-                      <Badge className={`${missionStatusColors[entry.new_status]} w-24 justify-center`}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className={`${missionStatusColors[entry.new_status]} min-w-[120px] justify-center text-white`}>
                         {missionStatusLabels[entry.new_status]}
                       </Badge>
                       <span className="text-sm text-gray-500">
@@ -90,4 +90,5 @@ export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProp
       </DrawerContent>
     </Drawer>
   );
-};
+});
+

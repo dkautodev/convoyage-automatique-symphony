@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MissionNumberLink } from '@/components/mission/MissionNumberLink';
 
 const DriverDashboard = () => {
   const { user, profile } = useAuth();
@@ -313,7 +313,7 @@ const DriverDashboard = () => {
                 <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
+                      <MissionNumberLink mission={mission} className="font-medium" />
                       <Badge className={missionStatusColors[mission.status]}>
                         {missionStatusLabels[mission.status]}
                       </Badge>

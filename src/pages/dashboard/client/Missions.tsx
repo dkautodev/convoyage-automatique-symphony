@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Package, Plus, Search, Filter } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatAddressDisplay } from '@/utils/missionUtils';
+import { MissionNumberLink } from '@/components/mission/MissionNumberLink';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const ALL_TABS_VALUE = 'all';
@@ -94,11 +94,6 @@ const ClientMissionsPage = () => {
       missionStatusLabels[mission.status].toLowerCase().includes(searchLower)
     );
   });
-
-  // Format the mission number for display
-  const formatMissionNumber = (mission: Mission) => {
-    return mission.mission_number || mission.id.slice(0, 8);
-  };
 
   // Format the dates for display
   const formatDate = (dateString?: string | null) => {
@@ -195,7 +190,7 @@ const ClientMissionsPage = () => {
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
+                          <MissionNumberLink mission={mission} className="font-medium" />
                           <Badge className={missionStatusColors[mission.status]}>
                             {missionStatusLabels[mission.status]}
                           </Badge>

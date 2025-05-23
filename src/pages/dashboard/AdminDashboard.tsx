@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +6,8 @@ import { BarChart, CreditCard, Package, User, Users, Truck, Building } from 'luc
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors } from '@/types/supabase';
-import { formatAddressDisplay, formatMissionNumber, formatClientName } from '@/utils/missionUtils';
+import { formatAddressDisplay, formatClientName } from '@/utils/missionUtils';
+import { MissionNumberLink } from '@/components/mission/MissionNumberLink';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
+                        <MissionNumberLink mission={mission} className="font-medium" />
                         <Badge className={missionStatusColors[mission.status]}>
                           {missionStatusLabels[mission.status]}
                         </Badge>

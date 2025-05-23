@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/auth';
 import { Mission, MissionStatus, missionStatusLabels, missionStatusColors, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Package, Truck } from 'lucide-react';
+import { Search, Filter, Package, Truck, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { formatFullAddress } from '@/utils/missionUtils';
@@ -13,12 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Define valid tab values type that includes 'all' and all mission statuses
 type MissionTab = 'all' | MissionStatus;
 
 const DriverMissionsPage = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<MissionTab>('all');
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -233,6 +236,12 @@ const DriverMissionsPage = () => {
     return true;
   };
 
+  // Get current filter label for mobile dropdown
+  const getCurrentFilterLabel = () => {
+    const currentTab = statusTabs.find(tab => tab.id === activeTab);
+    return currentTab ? currentTab.label : 'Toutes';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -256,87 +265,121 @@ const DriverMissionsPage = () => {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
-        <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
-          {statusTabs.map((tab) => (
-            <TabsTrigger 
-              key={tab.id}
-              value={tab.id} 
-              className="flex gap-2"
-            >
-              {tab.label}
-              <Badge variant="secondary" className="ml-1">
-                {tab.id === 'all' ? totalMissions : (missionCountsByStatus[tab.id as MissionStatus] || 0)}
-              </Badge>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {/* Desktop: Tabs layout */}
+      {!isMobile && (
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
+          <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
+            {statusTabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.id}
+                value={tab.id} 
+                className="flex gap-2"
+              >
+                {tab.label}
+                <Badge variant="secondary" className="ml-1">
+                  {tab.id === 'all' ? totalMissions : (missionCountsByStatus[tab.id as MissionStatus] || 0)}
+                </Badge>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
 
-        <TabsContent value={activeTab}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as MissionStatus] || ''})` : ''}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                </div>
-              ) : filteredMissions.length === 0 ? (
-                <EmptyState />
-              ) : (
-                <div className="space-y-4">
-                  {filteredMissions.map((mission) => (
-                    <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                      <div className="flex flex-col gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
-                            <Badge className={missionStatusColors[mission.status]}>
-                              {missionStatusLabels[mission.status]}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {formatFullAddress(mission.pickup_address)} <span className="mx-1">→</span> {formatFullAddress(mission.delivery_address)}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {mission.distance_km?.toFixed(2) || '0'} km · Départ: {mission.D1_PEC || formatDate(mission.scheduled_date)}
-                          </p>
-                        </div>
-                        <div className="mt-2 flex flex-col gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            disabled={!isStatusButtonEnabled(mission)} 
-                            onClick={() => {
-                              console.log('Status button clicked for mission:', mission.id);
-                              setSelectedMission(mission);
-                              setStatusDialogOpen(true);
-                            }}
-                            title="Mettre à jour le statut"
-                            className="w-full text-sm py-1"
-                          >
-                            <Truck className="h-4 w-4 mr-2" />
-                            Mettre à jour le statut
-                          </Button>
-                          <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
-                            <Link to={`/driver/missions/${mission.id}`}>
-                              Détails
-                            </Link>
-                          </Button>
-                        </div>
+      {/* Mobile: Dropdown layout */}
+      {isMobile && (
+        <div className="mb-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                <span className="flex items-center gap-2">
+                  {getCurrentFilterLabel()}
+                  <Badge variant="secondary">
+                    {activeTab === 'all' ? totalMissions : (missionCountsByStatus[activeTab as MissionStatus] || 0)}
+                  </Badge>
+                </span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-full bg-background border shadow-lg z-50">
+              {statusTabs.map((tab) => (
+                <DropdownMenuItem
+                  key={tab.id}
+                  onSelect={() => setActiveTab(tab.id as MissionTab)}
+                  className="flex justify-between"
+                >
+                  <span>{tab.label}</span>
+                  <Badge variant="secondary">
+                    {tab.id === 'all' ? totalMissions : (missionCountsByStatus[tab.id as MissionStatus] || 0)}
+                  </Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as MissionStatus] || ''})` : ''}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredMissions.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="space-y-4">
+              {filteredMissions.map((mission) => (
+                <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
+                        <Badge className={missionStatusColors[mission.status]}>
+                          {missionStatusLabels[mission.status]}
+                        </Badge>
                       </div>
+                      <p className="text-sm text-gray-600">
+                        {formatFullAddress(mission.pickup_address)} <span className="mx-1">→</span> {formatFullAddress(mission.delivery_address)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {mission.distance_km?.toFixed(2) || '0'} km · Départ: {mission.D1_PEC || formatDate(mission.scheduled_date)}
+                      </p>
                     </div>
-                  ))}
+                    <div className="mt-2 flex flex-col gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        disabled={!isStatusButtonEnabled(mission)} 
+                        onClick={() => {
+                          console.log('Status button clicked for mission:', mission.id);
+                          setSelectedMission(mission);
+                          setStatusDialogOpen(true);
+                        }}
+                        title="Mettre à jour le statut"
+                        className="w-full text-sm py-1"
+                      >
+                        <Truck className="h-4 w-4 mr-2" />
+                        Mettre à jour le statut
+                      </Button>
+                      <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
+                        <Link to={`/driver/missions/${mission.id}`}>
+                          Détails
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Status Update Dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>

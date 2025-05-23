@@ -46,55 +46,55 @@ export const useGooglePlaces = () => {
 
   // Recherche d'adresses via Google Places (limité à la France)
   const searchPlaces = async (query: string) => {
-    if (!window.google || !query.trim()) {
-      setPredictions([]);
-      return;
+  if (!window.google || !query.trim()) {
+    setPredictions([]);
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    if (!serviceRef.current) {
+      serviceRef.current = new window.google.maps.places.AutocompleteService();
     }
 
-    setLoading(true);
+    const adjustedQuery = !query.includes('France') ? `${query}, France` : query;
 
-    try {
-      if (!serviceRef.current) {
-        serviceRef.current = new window.google.maps.places.AutocompleteService();
-      }
+    console.log("🚀 Appel à Google Places avec :", {
+      input: adjustedQuery,
+      types: ['address', 'establishment', 'airport'],
+      componentRestrictions: { country: 'fr' }
+    });
 
-      const adjustedQuery = !query.includes('France') ? `${query}, France` : query;
-
-      console.log("🚀 Appel à Google Places avec :", {
+    serviceRef.current.getPlacePredictions(
+      {
         input: adjustedQuery,
-        types: ['address', 'establishment', 'airport', 'locality'],
-        componentRestrictions: { country: 'fr' }
-      });
-
-      serviceRef.current.getPlacePredictions(
-        {
-          input: adjustedQuery,
-          types: ['address', 'establishment', 'airport', 'locality'],
-          componentRestrictions: {
-            country: 'fr'
-          }
-        },
-        (results: GoogleAddressSuggestion[], status: string) => {
-          console.log("📊 Réponse de Google Places :", {
-            status,
-            resultsCount: results?.length || 0
-          });
-
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-            setPredictions(results);
-          } else {
-            setPredictions([]);
-          }
-
-          setLoading(false);
+        types: ['address', 'establishment', 'airport'],
+        componentRestrictions: {
+          country: 'fr'
         }
-      );
-    } catch (error) {
-      console.error('Erreur lors de la recherche d\'adresses :', error);
-      setLoading(false);
-      setPredictions([]);
-    }
-  };
+      },
+      (results: GoogleAddressSuggestion[], status: string) => {
+        console.log("📊 Réponse de Google Places :", {
+          status,
+          resultsCount: results?.length || 0
+        });
+
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+          setPredictions(results);
+        } else {
+          setPredictions([]);
+        }
+
+        setLoading(false);
+      }
+    );
+  } catch (error) {
+    console.error('Erreur lors de la recherche d\'adresses :', error);
+    setLoading(false);
+    setPredictions([]);
+  }
+};
 
   // Récupère les détails complets d'une adresse via placeId
   const getPlaceDetails = async (placeId: string) => {

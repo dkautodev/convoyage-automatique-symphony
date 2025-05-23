@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, MapPin, Building2 } from 'lucide-react';
+import { X, MapPin } from 'lucide-react';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -148,11 +149,6 @@ export default function AddressAutocomplete({
     }
   };
   
-  // Helper function to determine if suggestion is an establishment
-  const isEstablishment = (prediction: any) => {
-    return prediction.types && prediction.types.includes('establishment');
-  };
-  
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
@@ -196,20 +192,9 @@ export default function AddressAutocomplete({
                 }}
                 className="px-4 py-3 hover:bg-muted cursor-pointer flex items-start gap-2 border-b last:border-0 border-gray-100"
               >
-                {isEstablishment(prediction) ? (
-                  <Building2 size={18} className="mt-1 text-blue-500 flex-shrink-0" />
-                ) : (
-                  <MapPin size={18} className="mt-1 text-primary flex-shrink-0" />
-                )}
+                <MapPin size={18} className="mt-1 text-primary flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-800">
-                    {prediction.structured_formatting.main_text}
-                    {isEstablishment(prediction) && (
-                      <span className="ml-2 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                        Établissement
-                      </span>
-                    )}
-                  </p>
+                  <p className="font-medium text-gray-800">{prediction.structured_formatting.main_text}</p>
                   <p className="text-sm text-muted-foreground">{prediction.structured_formatting.secondary_text}</p>
                 </div>
               </li>

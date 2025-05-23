@@ -67,7 +67,7 @@ export const useGooglePlaces = () => {
           input: adjustedQuery,
           types: ['address', 'establishment'], // Inclure adresses et établissements
           componentRestrictions: {
-            country: ['fr'] // 🔥 Limitation stricte à la France
+            country: 'fr' // Restriction à la France uniquement
           }
         },
         (results: GoogleAddressSuggestion[], status: string) => {
@@ -235,13 +235,14 @@ export const useGooglePlaces = () => {
                 reject(new Error('Impossible de calculer la distance'));
               }
             }
+          );
+        }
       );
-    });
-  } catch (error) {
-    console.error('Exception lors du calcul de la distance :', error);
-    return null;
-  }
-};
+    } catch (error) {
+      console.error('Exception lors du calcul de la distance :', error);
+      return null;
+    }
+  };
 
   // Efface les suggestions affichées
   const clearPredictions = () => {

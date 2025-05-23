@@ -69,7 +69,7 @@ export const useGooglePlaces = () => {
       serviceRef.current.getPlacePredictions(
         {
           input: adjustedQuery,
-          types: ['address', 'establishment', 'airport', 'city'],
+          types: ['address', 'establishment', 'airport', 'locality'],
           componentRestrictions: {
             country: 'fr'
           }

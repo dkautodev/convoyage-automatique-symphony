@@ -58,18 +58,19 @@ export const useGooglePlaces = () => {
       serviceRef.current = new window.google.maps.places.AutocompleteService();
     }
 
+    // Forcer "France" dans la requête si absent
     const adjustedQuery = !query.includes('France') ? `${query}, France` : query;
 
     console.log("🚀 Appel à Google Places avec :", {
       input: adjustedQuery,
-      types: ['address', 'establishment', 'airport'],
+      types: ['geocode', 'establishment'],
       componentRestrictions: { country: 'fr' }
     });
 
     serviceRef.current.getPlacePredictions(
       {
         input: adjustedQuery,
-        types: ['address', 'establishment', 'airport'],
+        types: ['geocode', 'establishment'],
         componentRestrictions: {
           country: 'fr'
         }

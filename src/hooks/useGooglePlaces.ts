@@ -62,7 +62,7 @@ export const useGooglePlaces = () => {
 
       console.log("🚀 Appel à Google Places avec :", {
         input: adjustedQuery,
-        types: ['address', 'establishment', 'airport', 'city'],
+        types: ['address', 'establishment', 'airport', 'locality'],
         componentRestrictions: { country: 'fr' }
       });
 

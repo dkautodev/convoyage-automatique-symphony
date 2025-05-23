@@ -58,25 +58,30 @@ export const useGooglePlaces = () => {
         serviceRef.current = new window.google.maps.places.AutocompleteService();
       }
 
-      // Forcer "France" dans la requête si absent
       const adjustedQuery = !query.includes('France') ? `${query}, France` : query;
 
-      // Appel à l'API Google Places
+      console.log("🚀 Appel à Google Places avec :", {
+        input: adjustedQuery,
+        types: ['address'],
+        componentRestrictions: { country: 'fr' }
+      });
+
       serviceRef.current.getPlacePredictions(
         {
           input: adjustedQuery,
-          types: ['address', 'establishment'], // Inclure adresses et établissements
+          types: ['address'],
           componentRestrictions: {
-            country: 'fr' // Restriction à la France uniquement
+            country: 'fr'
           }
         },
         (results: GoogleAddressSuggestion[], status: string) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            results &&
-            results.length > 0
-          ) {
-            setPredictions(results); // Aucun tri nécessaire maintenant
+          console.log("📊 Réponse de Google Places :", {
+            status,
+            resultsCount: results?.length || 0
+          });
+
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+            setPredictions(results);
           } else {
             setPredictions([]);
           }
@@ -135,7 +140,6 @@ export const useGooglePlaces = () => {
               return;
             }
 
-            // Gestion robuste de la géométrie
             let latitude: number = 0;
             let longitude: number = 0;
 
@@ -185,66 +189,6 @@ export const useGooglePlaces = () => {
     }
   };
 
-  // Calcul de distance entre deux points
-  const calculateDistance = async (
-    origin: { lat: number; lng: number },
-    destination: { lat: number; lng: number }
-  ) => {
-    if (!window.google) return null;
-
-    try {
-      if (!origin.lat || !origin.lng || !destination.lat || !destination.lng) {
-        console.error('Coordonnées invalides pour le calcul de distance', origin, destination);
-        return null;
-      }
-
-      const service = new window.google.maps.DistanceMatrixService();
-
-      return new Promise<{ distance: string; duration: string; distanceValue: number }>(
-        (resolve, reject) => {
-          service.getDistanceMatrix(
-            {
-              origins: [new window.google.maps.LatLng(origin.lat, origin.lng)],
-              destinations: [new window.google.maps.LatLng(destination.lat, destination.lng)],
-              travelMode: window.google.maps.TravelMode.DRIVING,
-              unitSystem: window.google.maps.UnitSystem.METRIC,
-            },
-            (response: any, status: string) => {
-              if (
-                status === 'OK' &&
-                response &&
-                response.rows &&
-                response.rows[0] &&
-                response.rows[0].elements &&
-                response.rows[0].elements[0] &&
-                response.rows[0].elements[0].status === 'OK'
-              ) {
-                const element = response.rows[0].elements[0];
-                const distance = element.distance.text;
-                const duration = element.duration.text;
-                const distanceValue = element.distance.value;
-
-                console.log('Distance calculée :', distance, 'Durée :', duration);
-                resolve({
-                  distance,
-                  duration,
-                  distanceValue
-                });
-              } else {
-                console.error('Erreur lors du calcul de la distance :', status, response);
-                reject(new Error('Impossible de calculer la distance'));
-              }
-            }
-          );
-        }
-      );
-    } catch (error) {
-      console.error('Exception lors du calcul de la distance :', error);
-      return null;
-    }
-  };
-
-  // Efface les suggestions affichées
   const clearPredictions = () => {
     setPredictions([]);
   };
@@ -256,7 +200,6 @@ export const useGooglePlaces = () => {
     mapPosition,
     searchPlaces,
     getPlaceDetails,
-    calculateDistance,
     clearPredictions
   };
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { GoogleAddressSuggestion, GoogleGeocodingResult } from '../types/auth';
 
@@ -55,17 +54,17 @@ export const useGooglePlaces = () => {
         serviceRef.current = new window.google.maps.places.AutocompleteService();
       }
       
-      // Modifier ici pour inclure les pays européens mais prioriser la France
+      // Include both addresses and establishments (companies) in search
       serviceRef.current.getPlacePredictions(
         { 
           input: query, 
-          types: ['address'],
-          // Ajouter plusieurs pays européens tout en priorisant la France
+          types: ['address', 'establishment'],
+          // Include European countries with France prioritized
           componentRestrictions: { country: ['fr', 'de', 'es', 'it', 'be', 'ch', 'nl', 'pt', 'gb', 'at', 'pl'] }
         },
         (results: GoogleAddressSuggestion[], status: string) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-            // Trier les résultats pour prioriser les adresses françaises
+            // Sort results to prioritize French addresses
             const sortedResults = [...results].sort((a, b) => {
               const aIsFrance = a.description.includes('France');
               const bIsFrance = b.description.includes('France');
@@ -102,13 +101,14 @@ export const useGooglePlaces = () => {
           if (status === 'OK' && results && results.length > 0) {
             const result = results[0];
             
-            // Extraire les composants d'adresse
+            // Extract address components including establishment name
             const addressComponents = {
               street_number: '',
               route: '',
               locality: '',
               postal_code: '',
-              country: ''
+              country: '',
+              establishment: '' // Add establishment name
             };
             
             result.address_components.forEach(component => {
@@ -122,21 +122,19 @@ export const useGooglePlaces = () => {
                 addressComponents.postal_code = component.long_name;
               } else if (component.types.includes('country')) {
                 addressComponents.country = component.long_name;
+              } else if (component.types.includes('establishment')) {
+                addressComponents.establishment = component.long_name;
               }
             });
             
-            // Fix: Handle the latitude and longitude extraction properly
+            // Handle latitude and longitude extraction
             let latitude: number = 0;
             let longitude: number = 0;
             
-            // Access the location object directly to avoid TypeScript errors
             const location = result.geometry.location;
             
-            // Check if location has lat and lng as functions or properties
             if (location) {
-              // Handle location as a direct object with lat/lng properties
               if (typeof location === 'object') {
-                // Si location.lat est une fonction
                 if (typeof location.lat === 'function' && typeof location.lng === 'function') {
                   try {
                     latitude = location.lat();
@@ -145,7 +143,6 @@ export const useGooglePlaces = () => {
                     console.error('Error calling lat/lng functions:', e);
                   }
                 }
-                // Si location.lat est une propriété directe
                 else if (typeof location.lat === 'number' && typeof location.lng === 'number') {
                   latitude = location.lat;
                   longitude = location.lng;
@@ -153,7 +150,7 @@ export const useGooglePlaces = () => {
               }
             }
             
-            // Améliorer l'objet résultat avec les données extraites
+            // Enhanced result with extracted data including establishment name
             const enhancedResult = {
               ...result,
               extracted_data: {
@@ -161,6 +158,7 @@ export const useGooglePlaces = () => {
                 city: addressComponents.locality,
                 postal_code: addressComponents.postal_code,
                 country: addressComponents.country,
+                establishment: addressComponents.establishment, // Include establishment name
               },
               lat: latitude,
               lng: longitude
@@ -175,7 +173,6 @@ export const useGooglePlaces = () => {
             console.log("Détails de l'adresse récupérés:", enhancedResult);
             resolve(enhancedResult);
             
-            // Effacer les prédictions après avoir récupéré les détails
             setPredictions([]);
           } else {
             console.error("Erreur lors de la récupération des détails:", status);
@@ -219,13 +216,12 @@ export const useGooglePlaces = () => {
                 response.rows[0].elements[0].status === 'OK') {
               const distance = response.rows[0].elements[0].distance.text;
               const duration = response.rows[0].elements[0].duration.text;
-              // IMPORTANT: Ajouter la valeur numérique de la distance en mètres
               const distanceValue = response.rows[0].elements[0].distance.value;
               console.log('Distance calculée:', distance, 'Durée:', duration);
               resolve({
                 distance,
                 duration,
-                distanceValue // Ajouter cette valeur
+                distanceValue
               });
             } else {
               console.error('Erreur lors du calcul de la distance:', status, response);

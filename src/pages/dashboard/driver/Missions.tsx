@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/auth';
@@ -258,7 +257,7 @@ const DriverMissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MissionTab)}>
-        <TabsList className="w-full mb-4 flex flex-wrap gap-2">
+        <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
           {statusTabs.map((tab) => (
             <TabsTrigger 
               key={tab.id}
@@ -292,7 +291,7 @@ const DriverMissionsPage = () => {
                 <div className="space-y-4">
                   {filteredMissions.map((mission) => (
                     <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
@@ -307,7 +306,7 @@ const DriverMissionsPage = () => {
                             {mission.distance_km?.toFixed(2) || '0'} km · Départ: {mission.D1_PEC || formatDate(mission.scheduled_date)}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="mt-2 flex flex-col gap-2">
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -318,10 +317,12 @@ const DriverMissionsPage = () => {
                               setStatusDialogOpen(true);
                             }}
                             title="Mettre à jour le statut"
+                            className="w-full text-sm py-1"
                           >
-                            <Truck className="h-4 w-4" />
+                            <Truck className="h-4 w-4 mr-2" />
+                            Mettre à jour le statut
                           </Button>
-                          <Button variant="outline" size="sm" asChild>
+                          <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
                             <Link to={`/driver/missions/${mission.id}`}>
                               Détails
                             </Link>

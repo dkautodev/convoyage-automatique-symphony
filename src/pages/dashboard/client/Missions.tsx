@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
@@ -147,7 +146,7 @@ const ClientMissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full mb-4 flex flex-wrap">
+        <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
           <TabsTrigger value={ALL_TABS_VALUE} className="flex gap-2">
             Toutes
             <Badge variant="secondary" className="ml-1">
@@ -192,7 +191,7 @@ const ClientMissionsPage = () => {
               <div className="space-y-4">
                 {filteredMissions.map(mission => (
                   <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                    <div className="flex flex-col gap-3">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
@@ -207,11 +206,13 @@ const ClientMissionsPage = () => {
                           Départ: {formatDate(mission.D1_PEC)} · Livraison: {formatDate(mission.D2_LIV)}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" asChild className="md:self-center mt-2 md:mt-0">
-                        <Link to={`/client/missions/${mission.id}`}>
-                          Détails
-                        </Link>
-                      </Button>
+                      <div className="mt-2">
+                        <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
+                          <Link to={`/client/missions/${mission.id}`}>
+                            Détails
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

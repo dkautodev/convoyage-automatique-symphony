@@ -21,6 +21,7 @@ type MissionTab = 'all' | MissionStatus;
 
 // Define the order of statuses like in client missions page
 const ORDERED_STATUSES: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
+
 const MissionsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<MissionTab>('all');
@@ -245,7 +246,6 @@ const MissionsPage = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des missions</h2>
         <div className="flex gap-2">
-          
           <Button onClick={handleCreateNewMission}>
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle mission
@@ -268,7 +268,7 @@ const MissionsPage = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full mb-4 flex flex-wrap">
+        <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
           <TabsTrigger value="all" className="flex gap-2">
             Toutes
             <Badge variant="secondary" className="ml-1">
@@ -304,7 +304,7 @@ const MissionsPage = () => {
                   </Button>
                 </div> : filteredMissions.length === 0 ? <EmptyState /> : <div className="space-y-4">
                   {filteredMissions.map(mission => <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
@@ -322,11 +322,12 @@ const MissionsPage = () => {
                       }) || '0 €'}
                           </p>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openStatusDialog(mission)} title="Modifier le statut">
-                            <Truck className="h-4 w-4" />
+                        <div className="mt-2 flex flex-col gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openStatusDialog(mission)} title="Modifier le statut" className="w-full text-sm py-1">
+                            <Truck className="h-4 w-4 mr-2" />
+                            Modifier le statut
                           </Button>
-                          <Button variant="outline" size="sm" asChild>
+                          <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
                             <Link to={`/admin/missions/${mission.id}`}>
                               Détails
                             </Link>

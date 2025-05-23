@@ -43,53 +43,52 @@ export const useGooglePlaces = () => {
   }, []);
 
   const searchPlaces = async (query: string) => {
-  if (!window.google || !query.trim()) {
-    setPredictions([]);
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    if (!serviceRef.current) {
-      serviceRef.current = new window.google.maps.places.AutocompleteService();
+    if (!window.google || !query.trim()) {
+      setPredictions([]);
+      return;
     }
 
-    // Forcer "France" dans la requête si aucun n'est présent
-    const adjustedQuery = !query.includes('France') 
-      ? `${query}, France` 
-      : query;
-
-    serviceRef.current.getPlacePredictions(
-      {
-        input: adjustedQuery,
-        types: ['address', 'establishment'], // Optionnel : inclure les établissements
-        componentRestrictions: {
-          country: ['fr'] // Exclure TOUS les autres pays européens
-        }
-      },
-      (results: GoogleAddressSuggestion[], status: string) => {
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          results &&
-          results.length > 0
-        ) {
-          // Ne plus trier, car seul "France" est autorisé
-          setPredictions(results);
-        } else {
-          setPredictions([]);
-        }
-
-        setLoading(false);
+    setLoading(true);
+    
+    try {
+      if (!serviceRef.current) {
+        serviceRef.current = new window.google.maps.places.AutocompleteService();
       }
-    );
-  } catch (error) {
-    console.error('Erreur lors de la recherche d\'adresses :', error);
-    setLoading(false);
-    setPredictions([]);
-  }
-};
-  
+      
+      // Modifier ici pour inclure les pays européens mais prioriser la France
+      serviceRef.current.getPlacePredictions(
+        { 
+          input: query, 
+          types: ['address'],
+          // Ajouter plusieurs pays européens tout en priorisant la France
+          componentRestrictions: { country: ['fr', 'de', 'es', 'it', 'be', 'ch', 'nl', 'pt', 'gb', 'at', 'pl'] }
+        },
+        (results: GoogleAddressSuggestion[], status: string) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+            // Trier les résultats pour prioriser les adresses françaises
+            const sortedResults = [...results].sort((a, b) => {
+              const aIsFrance = a.description.includes('France');
+              const bIsFrance = b.description.includes('France');
+              
+              if (aIsFrance && !bIsFrance) return -1;
+              if (!aIsFrance && bIsFrance) return 1;
+              return 0;
+            });
+            
+            setPredictions(sortedResults);
+          } else {
+            setPredictions([]);
+          }
+          setLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Erreur lors de la recherche d\'adresses :', error);
+      setLoading(false);
+      setPredictions([]);
+    }
+  };
+
   const getPlaceDetails = async (placeId: string) => {
     if (!window.google) return null;
     

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,8 +7,7 @@ import { BarChart, CreditCard, Package, User, Users, Truck, Building } from 'luc
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB, missionStatusLabels, missionStatusColors } from '@/types/supabase';
-import { formatAddressDisplay, formatClientName } from '@/utils/missionUtils';
-import { MissionNumberLink } from '@/components/mission/MissionNumberLink';
+import { formatAddressDisplay, formatMissionNumber, formatClientName } from '@/utils/missionUtils';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
       
-      {/* Tableau de missions simplifié avec MissionNumberLink */}
+      {/* Tableau de missions simplifié */}
       <Card className="bg-white">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <MissionNumberLink mission={mission} className="font-medium" />
+                        <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
                         <Badge className={missionStatusColors[mission.status]}>
                           {missionStatusLabels[mission.status]}
                         </Badge>

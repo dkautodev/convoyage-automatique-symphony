@@ -159,7 +159,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
       
-      {/* Tableau de missions simplifié */}
+      {/* Tableau de missions simplifié avec MissionNumberLink */}
       <Card className="bg-white">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>

@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
-import { useNavigate, useBeforeUnload } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useBeforeUnload, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreateMissionForm from '@/components/mission/CreateMissionForm';
 import { useAuth } from '@/hooks/useAuth';
+import { typedSupabase } from '@/types/database';
+import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
+import { toast } from 'sonner';
 import { 
   AlertDialog,
   AlertDialogAction, 
@@ -19,9 +22,13 @@ import {
 export default function CreateMissionPage() {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const livId = searchParams.get('livId');
   const [formDirty, setFormDirty] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [livMission, setLivMission] = useState<Mission | null>(null);
+  const [loading, setLoading] = useState(false);
   
   // Avertir l'utilisateur avant de fermer l'onglet/navigateur
   useBeforeUnload(
@@ -36,6 +43,55 @@ export default function CreateMissionPage() {
       [formDirty]
     )
   );
+
+  // Récupérer la mission LIV si livId est présent
+  useEffect(() => {
+    if (livId) {
+      fetchLivMission();
+    }
+  }, [livId]);
+
+  const fetchLivMission = async () => {
+    if (!livId) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await typedSupabase
+        .from('missions')
+        .select('*')
+        .eq('id', livId)
+        .single();
+      
+      if (error) {
+        console.error('Erreur lors de la récupération de la mission LIV:', error);
+        toast.error('Mission LIV introuvable');
+        navigate('/mission/create');
+        return;
+      }
+      
+      // Vérifier que c'est bien une mission LIV
+      if (data.mission_type !== 'LIV') {
+        toast.error('Cette mission n\'est pas de type LIV');
+        navigate('/mission/create');
+        return;
+      }
+      
+      // Vérifier qu'elle n'est pas déjà liée
+      if (data.linked_mission_id) {
+        toast.error('Cette mission LIV est déjà liée à une mission RES');
+        navigate(`/${profile?.role}/missions/${livId}`);
+        return;
+      }
+      
+      setLivMission(convertMissionFromDB(data as unknown as MissionFromDB));
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors du chargement de la mission LIV');
+      navigate('/mission/create');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFormChange = (isDirty: boolean) => {
     setFormDirty(isDirty);
@@ -55,12 +111,23 @@ export default function CreateMissionPage() {
   const handleBack = () => {
     if (formDirty) {
       // Stocker la destination en attente
-      const destination = profile?.role === 'admin' ? '/admin/missions' : '/client/missions';
+      let destination = '/client/missions';
+      if (profile?.role === 'admin') {
+        destination = '/admin/missions';
+      }
+      
+      // Si on créait une RES, retourner à la mission LIV
+      if (livId) {
+        destination = `/${profile?.role}/missions/${livId}`;
+      }
+      
       setPendingNavigation(destination);
       setShowExitDialog(true);
     } else {
       // Pas de modifications, naviguer directement
-      if (profile?.role === 'admin') {
+      if (livId) {
+        navigate(`/${profile?.role}/missions/${livId}`);
+      } else if (profile?.role === 'admin') {
         navigate('/admin/missions');
       } else {
         navigate('/client/missions');
@@ -81,6 +148,16 @@ export default function CreateMissionPage() {
       navigate(pendingNavigation);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="container max-w-5xl mx-auto py-8">
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <>
@@ -90,10 +167,27 @@ export default function CreateMissionPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
-          <h1 className="text-2xl font-bold">Créer une nouvelle mission</h1>
+          <h1 className="text-2xl font-bold">
+            {livMission ? 'Créer une mission de restitution (RES)' : 'Créer une nouvelle mission'}
+          </h1>
         </div>
         
-        <CreateMissionForm onSuccess={handleSuccess} onDirtyChange={handleFormChange} />
+        {livMission && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              <strong>Mission LIV liée :</strong> #{livMission.mission_number || livMission.id.slice(0, 8)}
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              Les adresses et contacts seront automatiquement inversés. Le prix sera calculé avec une remise de 30%.
+            </p>
+          </div>
+        )}
+        
+        <CreateMissionForm 
+          onSuccess={handleSuccess} 
+          onDirtyChange={handleFormChange}
+          livMission={livMission}
+        />
       </div>
       
       <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>

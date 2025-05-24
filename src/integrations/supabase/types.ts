@@ -306,6 +306,8 @@ export type Database = {
           H2_LIV: string | null
           H2_PEC: string | null
           id: string
+          is_linked: boolean | null
+          linked_mission_id: string | null
           mission_number: string | null
           mission_type: string | null
           notes: string | null
@@ -351,6 +353,8 @@ export type Database = {
           H2_LIV?: string | null
           H2_PEC?: string | null
           id?: string
+          is_linked?: boolean | null
+          linked_mission_id?: string | null
           mission_number?: string | null
           mission_type?: string | null
           notes?: string | null
@@ -396,6 +400,8 @@ export type Database = {
           H2_LIV?: string | null
           H2_PEC?: string | null
           id?: string
+          is_linked?: boolean | null
+          linked_mission_id?: string | null
           mission_number?: string | null
           mission_type?: string | null
           notes?: string | null
@@ -423,6 +429,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missions_linked_mission_id_fkey"
+            columns: ["linked_mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
             referencedColumns: ["id"]
           },
         ]

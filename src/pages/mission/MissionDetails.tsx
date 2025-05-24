@@ -28,6 +28,8 @@ import { MissionDocumentsSection } from '@/components/mission/sections/MissionDo
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
+import { RestitutionButton } from '@/components/mission/RestitutionButton';
+import { LinkedMissionSection } from '@/components/mission/LinkedMissionSection';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 
 const MissionDetailsPage = () => {
@@ -239,6 +241,11 @@ const MissionDetailsPage = () => {
           <p className="text-gray-500">Créée le {formattedDate}</p>
         </div>
         <div className="flex gap-2">
+          {/* Bouton Restitution - Pour Admin et Client */}
+          {(isAdmin || isClient) && (
+            <RestitutionButton mission={mission} />
+          )}
+          
           {/* Admin buttons */}
           {isAdmin && (
             <>
@@ -321,6 +328,9 @@ const MissionDetailsPage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Section des missions liées */}
+      <LinkedMissionSection mission={mission} />
 
       {/* General Information Section - Hide pricing info for drivers */}
       <MissionGeneralInfoSection 

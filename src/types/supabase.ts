@@ -53,6 +53,12 @@ export interface Address {
   country?: string;
   lat?: number;
   lng?: number;
+  extracted_data?: {
+    street?: string;
+    city?: string;
+    postal_code?: string;
+    country?: string;
+  };
   [key: string]: any; // Add index signature to make it compatible with Json type
 }
 
@@ -113,6 +119,8 @@ export interface MissionFromDB {
   H1_LIV?: string | null;
   H2_PEC?: string | null;
   H2_LIV?: string | null;
+  linked_mission_id?: string | null;
+  is_linked?: boolean;
 }
 
 export function convertMissionFromDB(mission: MissionFromDB): Mission {
@@ -143,7 +151,9 @@ export function convertMissionFromDB(mission: MissionFromDB): Mission {
     H1_PEC: mission.H1_PEC || null,
     H1_LIV: mission.H1_LIV || null,
     H2_PEC: mission.H2_PEC || null,
-    H2_LIV: mission.H2_LIV || null
+    H2_LIV: mission.H2_LIV || null,
+    linked_mission_id: mission.linked_mission_id || null,
+    is_linked: mission.is_linked || false
   };
 }
 
@@ -181,5 +191,7 @@ export interface Mission {
   H1_LIV?: string | null;
   H2_PEC?: string | null;
   H2_LIV?: string | null;
+  linked_mission_id?: string | null;
+  is_linked?: boolean;
   [key: string]: any;
 }

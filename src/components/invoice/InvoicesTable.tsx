@@ -9,9 +9,8 @@ import { formatMissionNumber, formatClientName } from '@/utils/missionUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
-import { Check, X } from 'lucide-react';
+import { Check, X, Eye } from 'lucide-react';
 import GenerateInvoiceButton from './GenerateInvoiceButton';
-import { Card } from '@/components/ui/card';
 
 interface InvoicesTableProps {
   missions: Mission[];
@@ -119,74 +118,66 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   if (layout === 'stacked') {
     return (
       <>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {missions.map(mission => (
-            <Card key={mission.id} className="p-4 mb-4">
-              <div className="grid grid-cols-12 gap-2">
-                {/* Row 1: Number + Generate button */}
-                <div className="col-span-8 font-medium">
-                  #{formatMissionNumber(mission)}
-                </div>
-                <div className="col-span-4 flex justify-end">
-                  {userRole === 'admin' && (
-                    <GenerateInvoiceButton 
-                      mission={mission} 
-                      client={clientsData[mission.client_id]}
-                      className="h-8 w-8 p-0" 
-                    />
-                  )}
-                  {userRole === 'client' && (
-                    <GenerateInvoiceButton 
-                      mission={mission} 
-                      client={clientData}
-                      className="h-8 w-8 p-0"
-                    />
-                  )}
+            <div key={mission.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+              <div className="space-y-3">
+                {/* Row 1: Mission number + Status badge */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">#{formatMissionNumber(mission)}</span>
+                    <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs px-2 py-1`}>
+                      {getInvoiceStatusLabel(mission.status)}
+                    </Badge>
+                  </div>
+                  <GenerateInvoiceButton 
+                    mission={mission} 
+                    client={userRole === 'admin' ? clientsData[mission.client_id] : clientData}
+                    className="h-8 w-8 p-0" 
+                  />
                 </div>
                 
-                {/* Row 2: Date + Client + Status */}
-                <div className="col-span-5 text-xs text-gray-600">
-                  {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Date inconnue'}
-                </div>
+                {/* Row 2: Client name (only for admin) */}
                 {userRole === 'admin' && (
-                  <div className="col-span-3 text-xs truncate">
+                  <div className="text-sm text-gray-600">
                     {formatClientName(mission, clientsData)}
                   </div>
                 )}
-                <div className={`col-span-${userRole === 'admin' ? '4' : '7'} flex justify-end`}>
-                  <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs`}>
-                    {getInvoiceStatusLabel(mission.status)}
-                  </Badge>
+                
+                {/* Row 3: Date */}
+                <div className="text-xs text-gray-500">
+                  {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Date inconnue'}
                 </div>
                 
-                {/* Row 3: Amount + Actions */}
-                <div className="col-span-7 font-medium">
-                  {formatPrice(mission.price_ttc)}
-                </div>
-                <div className="col-span-5 flex justify-end">
-                  {userRole === 'admin' ? (
-                    <Button 
-                      variant={mission.status === 'livre' ? 'default' : 'outline'} 
-                      size="sm"
-                      onClick={() => handleStatusButtonClick(mission)}
-                      className="h-8 px-2 text-xs"
-                    >
-                      {mission.status === 'livre' ? (
-                        <><Check className="h-3 w-3 mr-1" /> Payer</>
-                      ) : (
-                        <><X className="h-3 w-3 mr-1" /> Impayé</>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" asChild className="h-8 px-2 text-xs">
+                {/* Row 4: Amount + Actions */}
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-lg">
+                    {formatPrice(mission.price_ttc)}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild className="h-8 w-8 p-0">
                       <Link to={`/${userRole}/missions/${mission.id}`}>
-                        Détails
+                        <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
-                  )}
+                    {userRole === 'admin' && (
+                      <Button 
+                        variant={mission.status === 'livre' ? 'default' : 'outline'} 
+                        size="sm"
+                        onClick={() => handleStatusButtonClick(mission)}
+                        className="h-8 px-3 text-xs"
+                      >
+                        {mission.status === 'livre' ? (
+                          <><Check className="h-3 w-3 mr-1" /> Payer</>
+                        ) : (
+                          <><X className="h-3 w-3 mr-1" /> Impayé</>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 
@@ -243,36 +234,29 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 {formatPrice(mission.price_ttc)}
               </TableCell>
               <TableCell className="text-center">
-                {userRole === 'admin' && (
-                  <GenerateInvoiceButton 
-                    mission={mission} 
-                    client={clientsData[mission.client_id]} 
-                  />
-                )}
-                {userRole === 'client' && (
-                  <GenerateInvoiceButton 
-                    mission={mission} 
-                    client={clientData} 
-                  />
-                )}
+                <GenerateInvoiceButton 
+                  mission={mission} 
+                  client={userRole === 'admin' ? clientsData[mission.client_id] : clientData} 
+                />
               </TableCell>
               <TableCell className="text-right">
-                {userRole === 'admin' ? (
-                  <Button 
-                    variant={mission.status === 'livre' ? 'default' : 'outline'} 
-                    size="icon"
-                    onClick={() => handleStatusButtonClick(mission)}
-                    title={mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}
-                  >
-                    {mission.status === 'livre' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" asChild>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" size="icon" asChild title="Voir les détails">
                     <Link to={`/${userRole}/missions/${mission.id}`}>
-                      Détails
+                      <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                )}
+                  {userRole === 'admin' && (
+                    <Button 
+                      variant={mission.status === 'livre' ? 'default' : 'outline'} 
+                      size="icon"
+                      onClick={() => handleStatusButtonClick(mission)}
+                      title={mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}
+                    >
+                      {mission.status === 'livre' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

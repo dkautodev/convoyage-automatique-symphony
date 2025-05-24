@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { typedSupabase } from '@/types/database';
@@ -6,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Package, Plus, Search, Filter } from 'lucide-react';
+import { Package, Plus, Search, Filter, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatAddressDisplay } from '@/utils/missionUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ALL_TABS_VALUE = 'all';
 
@@ -27,12 +29,14 @@ const ORDERED_STATUSES: MissionStatus[] = [
 
 const ClientMissionsPage = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<string>(ALL_TABS_VALUE);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
     fetchMissions();
@@ -145,26 +149,127 @@ const ClientMissionsPage = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
-          <TabsTrigger value={ALL_TABS_VALUE} className="flex gap-2">
-            Toutes
-            <Badge variant="secondary" className="ml-1">
-              {missions.length}
-            </Badge>
-          </TabsTrigger>
+      {/* Mobile Status Filter Button */}
+      {isMobile && (
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="w-full flex items-center justify-between"
+          >
+            <span>Filtres par statut</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
+          </Button>
           
-          {/* Always display all statuses in the defined order, even if count is 0 */}
-          {ORDERED_STATUSES.map(status => (
-            <TabsTrigger key={status} value={status} className="flex gap-2">
-              {missionStatusLabels[status]}
+          {showMobileFilters && (
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-2">
+              <Button
+                variant={activeTab === ALL_TABS_VALUE ? 'default' : 'outline'}
+                className="flex items-center gap-2 text-xs justify-center"
+                onClick={() => setActiveTab(ALL_TABS_VALUE)}
+              >
+                Toutes
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {missions.length}
+                </Badge>
+              </Button>
+              
+              {ORDERED_STATUSES.map(status => (
+                <Button
+                  key={status}
+                  variant={activeTab === status ? 'default' : 'outline'}
+                  className="flex items-center gap-1 text-xs justify-center"
+                  onClick={() => setActiveTab(status)}
+                >
+                  <span className="truncate">{missionStatusLabels[status]}</span>
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {missionCountsByStatus[status] || 0}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isMobile ? (
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
+            <TabsTrigger value={ALL_TABS_VALUE} className="flex gap-2">
+              Toutes
               <Badge variant="secondary" className="ml-1">
-                {missionCountsByStatus[status] || 0}
+                {missions.length}
               </Badge>
             </TabsTrigger>
-          ))}
-        </TabsList>
-        
+            
+            {/* Always display all statuses in the defined order, even if count is 0 */}
+            {ORDERED_STATUSES.map(status => (
+              <TabsTrigger key={status} value={status} className="flex gap-2">
+                {missionStatusLabels[status]}
+                <Badge variant="secondary" className="ml-1">
+                  {missionCountsByStatus[status] || 0}
+                </Badge>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                {loading ? "Chargement des missions..." : `${filteredMissions.length} mission(s)`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-client"></div>
+                </div>
+              ) : error ? (
+                <div className="text-center py-10 text-red-500">
+                  <p className="font-medium">Erreur lors du chargement des missions</p>
+                  <p className="text-sm mt-1">{error.message}</p>
+                  <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+                    Réessayer
+                  </Button>
+                </div>
+              ) : filteredMissions.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <div className="space-y-4">
+                  {filteredMissions.map(mission => (
+                    <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                      <div className="flex flex-col gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
+                            <Badge className={missionStatusColors[mission.status]}>
+                              {missionStatusLabels[mission.status]}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {mission.pickup_address?.formatted_address || formatAddressDisplay(mission.pickup_address)} → {mission.delivery_address?.formatted_address || formatAddressDisplay(mission.delivery_address)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Départ: {formatDate(mission.D1_PEC)} · Livraison: {formatDate(mission.D2_LIV)}
+                          </p>
+                        </div>
+                        <div className="mt-2">
+                          <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
+                            <Link to={`/client/missions/${mission.id}`}>
+                              Détails
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </Tabs>
+      ) : (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -220,7 +325,7 @@ const ClientMissionsPage = () => {
             )}
           </CardContent>
         </Card>
-      </Tabs>
+      )}
     </div>
   );
 };

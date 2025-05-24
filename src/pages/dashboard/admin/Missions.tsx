@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Search, Filter, FileText, Truck } from 'lucide-react';
+import { Package, Plus, Search, Filter, FileText, Truck, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useClients } from '@/hooks/useClients';
 import { useProfiles } from '@/hooks/useProfiles';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // Define valid tab values type that includes 'all' and all mission statuses
 type MissionTab = 'all' | MissionStatus;
@@ -24,6 +26,7 @@ const ORDERED_STATUSES: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_e
 
 const MissionsPage = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<MissionTab>('all');
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +34,7 @@ const MissionsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [clientsData, setClientsData] = useState<Record<string, any>>({});
   const [driversData, setDriversData] = useState<Record<string, any>>({});
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // État pour la boîte de dialogue de changement de statut
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -242,6 +246,7 @@ const MissionsPage = () => {
 
   // Filtrer les chauffeurs en fonction du terme de recherche
   const filteredDrivers = driversList.filter(driver => driver.label.toLowerCase().includes(driverSearchTerm.toLowerCase()));
+
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des missions</h2>
@@ -267,79 +272,177 @@ const MissionsPage = () => {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
-          <TabsTrigger value="all" className="flex gap-2">
-            Toutes
-            <Badge variant="secondary" className="ml-1">
-              {missions.length}
-            </Badge>
-          </TabsTrigger>
+      {/* Mobile Status Filter Button */}
+      {isMobile && (
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="w-full flex items-center justify-between"
+          >
+            <span>Filtres par statut</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${showMobileFilters ? 'rotate-180' : ''}`} />
+          </Button>
           
-          {/* Always display all statuses in the defined order, even if count is 0 */}
-          {ORDERED_STATUSES.map(status => <TabsTrigger key={status} value={status} className="flex gap-2">
-              {missionStatusLabels[status]}
-              <Badge variant="secondary" className="ml-1">
-                {missionCountsByStatus[status] || 0}
-              </Badge>
-            </TabsTrigger>)}
-        </TabsList>
+          {showMobileFilters && (
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-2">
+              <Button
+                variant={activeTab === 'all' ? 'default' : 'outline'}
+                className="flex items-center gap-2 text-xs justify-center"
+                onClick={() => setActiveTab('all')}
+              >
+                Toutes
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {missions.length}
+                </Badge>
+              </Button>
+              
+              {ORDERED_STATUSES.map(status => (
+                <Button
+                  key={status}
+                  variant={activeTab === status ? 'default' : 'outline'}
+                  className="flex items-center gap-1 text-xs justify-center"
+                  onClick={() => setActiveTab(status)}
+                >
+                  <span className="truncate">{missionStatusLabels[status]}</span>
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {missionCountsByStatus[status] || 0}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-        <TabsContent value={activeTab}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as MissionStatus] || ''})` : ''}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin"></div>
-                </div> : error ? <div className="text-center py-10 text-red-500">
-                  <p className="font-medium">Erreur lors du chargement des missions</p>
-                  <p className="text-sm mt-1">{error.message}</p>
-                  <Button variant="outline" className="mt-4" onClick={() => fetchMissions()}>
-                    Réessayer
-                  </Button>
-                </div> : filteredMissions.length === 0 ? <EmptyState /> : <div className="space-y-4">
-                  {filteredMissions.map(mission => <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                      <div className="flex flex-col gap-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
-                            <Badge className={missionStatusColors[mission.status]}>
-                              {missionStatusLabels[mission.status]}
-                            </Badge>
+      {!isMobile ? (
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
+            <TabsTrigger value="all" className="flex gap-2">
+              Toutes
+              <Badge variant="secondary" className="ml-1">
+                {missions.length}
+              </Badge>
+            </TabsTrigger>
+            
+            {/* Always display all statuses in the defined order, even if count is 0 */}
+            {ORDERED_STATUSES.map(status => <TabsTrigger key={status} value={status} className="flex gap-2">
+                {missionStatusLabels[status]}
+                <Badge variant="secondary" className="ml-1">
+                  {missionCountsByStatus[status] || 0}
+                </Badge>
+              </TabsTrigger>)}
+          </TabsList>
+
+          <TabsContent value={activeTab}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as MissionStatus] || ''})` : ''}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? <div className="flex justify-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin"></div>
+                  </div> : error ? <div className="text-center py-10 text-red-500">
+                    <p className="font-medium">Erreur lors du chargement des missions</p>
+                    <p className="text-sm mt-1">{error.message}</p>
+                    <Button variant="outline" className="mt-4" onClick={() => fetchMissions()}>
+                      Réessayer
+                    </Button>
+                  </div> : filteredMissions.length === 0 ? <EmptyState /> : <div className="space-y-4">
+                    {filteredMissions.map(mission => <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                        <div className="flex flex-col gap-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
+                              <Badge className={missionStatusColors[mission.status]}>
+                                {missionStatusLabels[mission.status]}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Client: {formatClientName(mission, clientsData)} · {mission.distance_km?.toFixed(2) || '0'} km · {mission.price_ttc?.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        }) || '0 €'}
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-600">
-                            {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Client: {formatClientName(mission, clientsData)} · {mission.distance_km?.toFixed(2) || '0'} km · {mission.price_ttc?.toLocaleString('fr-FR', {
-                        style: 'currency',
-                        currency: 'EUR'
-                      }) || '0 €'}
-                          </p>
+                          <div className="mt-2 flex flex-col gap-2">
+                            <Button variant="outline" size="sm" onClick={() => openStatusDialog(mission)} title="Modifier le statut" className="w-full text-sm py-1">
+                              <Truck className="h-4 w-4 mr-2" />
+                              Modifier le statut
+                            </Button>
+                            <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
+                              <Link to={`/admin/missions/${mission.id}`}>
+                                Détails
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
-                        <div className="mt-2 flex flex-col gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openStatusDialog(mission)} title="Modifier le statut" className="w-full text-sm py-1">
-                            <Truck className="h-4 w-4 mr-2" />
-                            Modifier le statut
-                          </Button>
-                          <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
-                            <Link to={`/admin/missions/${mission.id}`}>
-                              Détails
-                            </Link>
-                          </Button>
+                      </div>)}
+                  </div>}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Liste des missions {activeTab !== 'all' ? `(${missionStatusLabels[activeTab as MissionStatus] || ''})` : ''}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? <div className="flex justify-center py-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-admin"></div>
+              </div> : error ? <div className="text-center py-10 text-red-500">
+                <p className="font-medium">Erreur lors du chargement des missions</p>
+                <p className="text-sm mt-1">{error.message}</p>
+                <Button variant="outline" className="mt-4" onClick={() => fetchMissions()}>
+                  Réessayer
+                </Button>
+              </div> : filteredMissions.length === 0 ? <EmptyState /> : <div className="space-y-4">
+                {filteredMissions.map(mission => <div key={mission.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium">Mission #{formatMissionNumber(mission)}</p>
+                          <Badge className={missionStatusColors[mission.status]}>
+                            {missionStatusLabels[mission.status]}
+                          </Badge>
                         </div>
+                        <p className="text-sm text-gray-600">
+                          {formatAddressDisplay(mission.pickup_address)} → {formatAddressDisplay(mission.delivery_address)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Client: {formatClientName(mission, clientsData)} · {mission.distance_km?.toFixed(2) || '0'} km · {mission.price_ttc?.toLocaleString('fr-FR', {
+                      style: 'currency',
+                      currency: 'EUR'
+                    }) || '0 €'}
+                        </p>
                       </div>
-                    </div>)}
-                </div>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                      <div className="mt-2 flex flex-col gap-2">
+                        <Button variant="outline" size="sm" onClick={() => openStatusDialog(mission)} title="Modifier le statut" className="w-full text-sm py-1">
+                          <Truck className="h-4 w-4 mr-2" />
+                          Modifier le statut
+                        </Button>
+                        <Button variant="outline" size="sm" asChild className="w-full text-sm py-1">
+                          <Link to={`/admin/missions/${mission.id}`}>
+                            Détails
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>)}
+              </div>}
+          </CardContent>
+        </Card>
+      )}
       
       {/* Boîte de dialogue pour modifier rapidement le statut */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>

@@ -206,10 +206,8 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
     if (pickupAddressData && deliveryAddressData && vehicleType) {
       // Calculer la distance entre les deux adresses
       const distance = calculateDistance(
-        pickupAddressData.geometry.location.lat(),
-        pickupAddressData.geometry.location.lng(),
-        deliveryAddressData.geometry.location.lat(),
-        deliveryAddressData.geometry.location.lng()
+        pickupAddressData,
+        deliveryAddressData
       );
       setCalculatedDistance(distance);
 
@@ -789,9 +787,49 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
   );
 }
 
-// Function to calculate distance between two coordinates
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+// Function to calculate distance between two address objects
+function calculateDistance(pickupData: any, deliveryData: any) {
   const R = 6371; // Radius of the earth in km
+  
+  // Extract coordinates safely, handling both function calls and direct properties
+  let lat1: number, lon1: number, lat2: number, lon2: number;
+  
+  // Handle pickup coordinates
+  if (pickupData.geometry && pickupData.geometry.location) {
+    const pickupLocation = pickupData.geometry.location;
+    if (typeof pickupLocation.lat === 'function' && typeof pickupLocation.lng === 'function') {
+      lat1 = pickupLocation.lat();
+      lon1 = pickupLocation.lng();
+    } else if (typeof pickupLocation.lat === 'number' && typeof pickupLocation.lng === 'number') {
+      lat1 = pickupLocation.lat;
+      lon1 = pickupLocation.lng;
+    } else {
+      console.error('Invalid pickup location format:', pickupLocation);
+      return 0;
+    }
+  } else {
+    console.error('Invalid pickup data structure:', pickupData);
+    return 0;
+  }
+  
+  // Handle delivery coordinates
+  if (deliveryData.geometry && deliveryData.geometry.location) {
+    const deliveryLocation = deliveryData.geometry.location;
+    if (typeof deliveryLocation.lat === 'function' && typeof deliveryLocation.lng === 'function') {
+      lat2 = deliveryLocation.lat();
+      lon2 = deliveryLocation.lng();
+    } else if (typeof deliveryLocation.lat === 'number' && typeof deliveryLocation.lng === 'number') {
+      lat2 = deliveryLocation.lat;
+      lon2 = deliveryLocation.lng;
+    } else {
+      console.error('Invalid delivery location format:', deliveryLocation);
+      return 0;
+    }
+  } else {
+    console.error('Invalid delivery data structure:', deliveryData);
+    return 0;
+  }
+  
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a =

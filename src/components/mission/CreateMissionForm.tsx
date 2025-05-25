@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePricing } from '@/hooks/usePricing';
 import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { typedSupabase } from '@/types/database';
-import { vehicleCategoryLabels, VehicleCategory, MissionStatus } from '@/types/supabase';
+import { vehicleCategoryLabels, VehicleCategory, MissionStatus, Mission } from '@/types/supabase';
 import { Address } from '@/types/supabase';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -174,10 +174,12 @@ const createMissionSchema = z.object({
 type CreateMissionFormValues = z.infer<typeof createMissionSchema>;
 export default function CreateMissionForm({
   onSuccess,
-  onDirtyChange
+  onDirtyChange,
+  livMission
 }: {
   onSuccess?: (missionId: string) => void;
   onDirtyChange?: (isDirty: boolean) => void;
+  livMission?: Mission | null;
 }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -212,7 +214,7 @@ export default function CreateMissionForm({
     resolver: zodResolver(createMissionSchema),
     mode: 'onSubmit', // Changement important: n'affiche les erreurs qu'après soumission
     defaultValues: {
-      mission_type: undefined,
+      mission_type: livMission ? 'RES' : undefined,
       vehicle_category: undefined,
       pickup_address: '',
       delivery_address: '',
@@ -282,6 +284,81 @@ export default function CreateMissionForm({
     }
   };
 
+  // Pre-fill form when creating RES from LIV
+  useEffect(() => {
+    if (livMission) {
+      console.log('Pre-filling form with LIV mission data:', livMission);
+      
+      // Set mission type to RES
+      form.setValue('mission_type', 'RES');
+      
+      // Invert addresses and contacts
+      if (livMission.delivery_address?.formatted_address) {
+        form.setValue('pickup_address', livMission.delivery_address.formatted_address);
+        setPickupAddressData(livMission.delivery_address);
+      }
+      if (livMission.pickup_address?.formatted_address) {
+        form.setValue('delivery_address', livMission.pickup_address.formatted_address);
+        setDeliveryAddressData(livMission.pickup_address);
+      }
+
+      // Invert contacts
+      if (livMission.contact_delivery_name) {
+        form.setValue('contact_pickup_name', livMission.contact_delivery_name);
+      }
+      if (livMission.contact_delivery_phone) {
+        form.setValue('contact_pickup_phone', livMission.contact_delivery_phone);
+      }
+      if (livMission.contact_delivery_email) {
+        form.setValue('contact_pickup_email', livMission.contact_delivery_email);
+      }
+      
+      if (livMission.contact_pickup_name) {
+        form.setValue('contact_delivery_name', livMission.contact_pickup_name);
+      }
+      if (livMission.contact_pickup_phone) {
+        form.setValue('contact_delivery_phone', livMission.contact_pickup_phone);
+      }
+      if (livMission.contact_pickup_email) {
+        form.setValue('contact_delivery_email', livMission.contact_pickup_email);
+      }
+
+      // Copy vehicle information
+      if (livMission.vehicle_category) {
+        form.setValue('vehicle_category', livMission.vehicle_category);
+      }
+      if (livMission.vehicle_make) {
+        form.setValue('vehicle_make', livMission.vehicle_make);
+      }
+      if (livMission.vehicle_model) {
+        form.setValue('vehicle_model', livMission.vehicle_model);
+      }
+      if (livMission.vehicle_fuel) {
+        form.setValue('vehicle_fuel', livMission.vehicle_fuel);
+      }
+      if (livMission.vehicle_year) {
+        form.setValue('vehicle_year', livMission.vehicle_year);
+      }
+      if (livMission.vehicle_registration) {
+        form.setValue('vehicle_registration', livMission.vehicle_registration);
+      }
+      if (livMission.vehicle_vin) {
+        form.setValue('vehicle_vin', livMission.vehicle_vin);
+      }
+
+      // Pre-select client and driver for admin
+      if (profile?.role === 'admin') {
+        if (livMission.client_id) {
+          form.setValue('client_id', livMission.client_id);
+          setSelectedClientId(livMission.client_id);
+        }
+        if (livMission.chauffeur_id) {
+          form.setValue('chauffeur_id', livMission.chauffeur_id);
+        }
+      }
+    }
+  }, [livMission, form, profile]);
+
   async function calculatePrice() {
     try {
       setCalculatingPrice(true);
@@ -348,7 +425,7 @@ export default function CreateMissionForm({
         console.log('No vehicle ID found for the selected vehicle category');
       }
       console.log("Prix calculé:", priceResult);
-      toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC`);
+      toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC${livMission ? ' (remise 30%)' : ''}`);
     } catch (error) {
       console.error('Erreur lors du calcul de la distance:', error);
       toast.error('Une erreur est survenue lors du calcul du prix');
@@ -500,7 +577,10 @@ export default function CreateMissionForm({
         scheduled_date: new Date().toISOString(),
         vat_rate: 20,
         // Taux de TVA par défaut
-        mission_type: values.mission_type || 'LIV'
+        mission_type: values.mission_type || 'LIV',
+        // Link to LIV mission if creating RES
+        linked_mission_id: livMission ? livMission.id : null,
+        is_linked: livMission ? true : false
       };
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
       try {
@@ -572,7 +652,9 @@ export default function CreateMissionForm({
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Créer une nouvelle mission</CardTitle>
+        <CardTitle>
+          {livMission ? 'Créer une mission de restitution (RES)' : 'Créer une nouvelle mission'}
+        </CardTitle>
         <CardDescription>
           Étape {currentStep} sur {totalSteps}
         </CardDescription>
@@ -594,11 +676,12 @@ export default function CreateMissionForm({
                           onValueChange={field.onChange} 
                           defaultValue={field.value} 
                           className="grid grid-cols-2 gap-4"
+                          disabled={!!livMission} // Disable if creating RES from LIV
                         >
                           <FormItem>
-                            <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                            <FormLabel className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${livMission ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <FormControl>
-                                <RadioGroupItem value="LIV" className="sr-only" />
+                                <RadioGroupItem value="LIV" className="sr-only" disabled={!!livMission} />
                               </FormControl>
                               <div className="text-center space-y-2">
                                 <div className="text-4xl mb-2">🚚</div>
@@ -610,7 +693,7 @@ export default function CreateMissionForm({
                             </FormLabel>
                           </FormItem>
                           <FormItem>
-                            <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary">
+                            <FormLabel className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${livMission ? 'border-primary' : ''}`}>
                               <FormControl>
                                 <RadioGroupItem value="RES" className="sr-only" />
                               </FormControl>
@@ -633,132 +716,229 @@ export default function CreateMissionForm({
             )}
 
             {/* Étape 2: Sélection du véhicule, adresses et prix */}
-            {currentStep === 2 && <div className="space-y-6">
-                <FormField control={form.control} name="vehicle_category" render={({
-              field
-            }) => <FormItem>
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                <FormField 
+                  control={form.control} 
+                  name="vehicle_category" 
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Type de véhicule</FormLabel>
-                      <Select onValueChange={value => field.onChange(value as VehicleCategory)} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value as VehicleCategory)} 
+                        defaultValue={field.value}
+                        disabled={!!livMission} // Lock for RES missions
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un type de véhicule" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(vehicleCategoryLabels).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
+                          {Object.entries(vehicleCategoryLabels).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormDescription>
                         Ce choix déterminera le tarif applicable à cette mission.
+                        {livMission && <span className="text-blue-600 block">Verrouillé depuis la mission LIV</span>}
                       </FormDescription>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="space-y-4">
-                  <FormField control={form.control} name="pickup_address" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Adresse de départ</FormLabel>
+                  <FormField 
+                    control={form.control} 
+                    name="pickup_address" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Adresse de départ
+                          {livMission && <span className="text-blue-600 ml-2">(Adresse de livraison de la mission LIV)</span>}
+                        </FormLabel>
                         <FormControl>
                           <AddressAutocomplete 
                             value={field.value} 
-                            onChange={value => field.onChange(value)} 
+                            onChange={(value) => field.onChange(value)} 
                             onSelect={(address, placeId) => {
                               onSelectPickupAddress(address, placeId, window.selectedAddressData);
                             }} 
                             placeholder="Saisissez l'adresse de départ" 
-                            error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined} 
+                            error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
+                            disabled={!!livMission} // Lock for RES missions
                           />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
 
-                  <FormField control={form.control} name="delivery_address" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>Adresse de livraison</FormLabel>
+                  <FormField 
+                    control={form.control} 
+                    name="delivery_address" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Adresse de livraison
+                          {livMission && <span className="text-blue-600 ml-2">(Adresse de départ de la mission LIV)</span>}
+                        </FormLabel>
                         <FormControl>
                           <AddressAutocomplete 
                             value={field.value} 
-                            onChange={value => field.onChange(value)} 
+                            onChange={(value) => field.onChange(value)} 
                             onSelect={(address, placeId) => {
                               onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
                             }} 
                             placeholder="Saisissez l'adresse de livraison" 
-                            error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined} 
+                            error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
+                            disabled={!!livMission} // Lock for RES missions
                           />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
 
                   <div className="flex justify-center my-4">
-                    <Button type="button" variant="outline" onClick={calculatePrice} disabled={calculatingPrice} className="flex items-center gap-2">
-                      {calculatingPrice ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
-                      Calculer le prix
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={calculatePrice} 
+                      disabled={calculatingPrice} 
+                      className="flex items-center gap-2"
+                    >
+                      {calculatingPrice ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Calculator className="h-4 w-4" />
+                      )}
+                      Calculer le prix{livMission ? ' (remise 30%)' : ''}
                     </Button>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                    <FormField control={form.control} name="distance_km" render={({
-                  field
-                }) => <FormItem>
+                    <FormField 
+                      control={form.control} 
+                      name="distance_km" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Distance (km)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} readOnly />
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01" 
+                              value={field.value || ''} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
+                              readOnly 
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    <FormField control={form.control} name="price_ht" render={({
-                  field
-                }) => <FormItem>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="price_ht" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Prix HT (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} readOnly />
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01" 
+                              value={field.value || ''} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
+                              readOnly 
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    <FormField control={form.control} name="price_ttc" render={({
-                  field
-                }) => <FormItem>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="price_ttc" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Prix TTC (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || undefined)} readOnly />
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01" 
+                              value={field.value || ''} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
+                              readOnly 
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
-              </div>}
+              </div>
+            )}
 
             {/* Étape 3: Informations du véhicule */}
-            {currentStep === 3 && <div className="space-y-6">
+            {currentStep === 3 && (
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="vehicle_make" render={({
-                field
-              }) => <FormItem>
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_make" 
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Marque du véhicule *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ex: Renault, Peugeot" />
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: Renault, Peugeot" 
+                            disabled={!!livMission}
+                          />
                         </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
-                      </FormItem>} />
-                  <FormField control={form.control} name="vehicle_model" render={({
-                field
-              }) => <FormItem>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_model" 
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Modèle *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ex: Clio, 308" />
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: Clio, 308" 
+                            disabled={!!livMission}
+                          />
                         </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="vehicle_fuel" render={({
-                field
-              }) => <FormItem>
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_fuel" 
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Carburant *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={!!livMission}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Sélectionner le type de carburant" />
@@ -772,95 +952,149 @@ export default function CreateMissionForm({
                             <SelectItem value="GPL">GPL</SelectItem>
                           </SelectContent>
                         </Select>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
-                      </FormItem>} />
-                  <FormField control={form.control} name="vehicle_year" render={({
-                field
-              }) => <FormItem>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_year" 
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Année</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" min="1900" max="2100" placeholder="Ex: 2020" value={field.value || ''} onChange={e => field.onChange(parseInt(e.target.value) || undefined)} />
+                          <Input 
+                            {...field} 
+                            type="number" 
+                            min="1900" 
+                            max="2100" 
+                            placeholder="Ex: 2020" 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            disabled={!!livMission}
+                          />
                         </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="vehicle_registration" render={({
-                field
-              }) => <FormItem>
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_registration" 
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Immatriculation *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ex: AB-123-CD" />
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: AB-123-CD" 
+                            disabled={!!livMission}
+                          />
                         </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
-                      </FormItem>} />
-                  <FormField control={form.control} name="vehicle_vin" render={({
-                field
-              }) => <FormItem>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_vin" 
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Numéro VIN (Numéro de châssis)</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Ex: WVWZZZ1JZXW000001" />
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: WVWZZZ1JZXW000001" 
+                            disabled={!!livMission}
+                          />
                         </FormControl>
-                        
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              </div>}
+              </div>
+            )}
 
             {/* Étape 4: Contacts, créneaux horaires et notes */}
-            {currentStep === 4 && <div className="space-y-6">
-                {/* Contact au lieu de départ et créneau horaire */}
+            {currentStep === 4 && (
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium">Contact au lieu de départ</h3>
+                      <h3 className="text-lg font-medium">
+                        Contact au lieu de départ
+                        {livMission && <span className="text-blue-600 text-sm block">(Contact de livraison de la mission LIV)</span>}
+                      </h3>
                       <ContactSelector 
                         onSelectContact={handlePickupContactSelect} 
                         clientId={selectedClientId || undefined} 
                       />
                     </div>
                     
-                    <FormField control={form.control} name="contact_pickup_name" render={({
-                  field
-                }) => <FormItem>
+                    <FormField 
+                      control={form.control} 
+                      name="contact_pickup_name" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Nom complet ou société" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    <FormField control={form.control} name="contact_pickup_phone" render={({
-                  field
-                }) => <FormItem>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_pickup_phone" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Téléphone *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Numéro de téléphone" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    <FormField control={form.control} name="contact_pickup_email" render={({
-                  field
-                }) => <FormItem>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_pickup_email" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" placeholder="Adresse email" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    {/* Créneau horaire de ramassage - modifié pour être aligné correctement */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de ramassage</h4>
                       <div className="grid grid-cols-3 gap-4">
-                        <FormField control={form.control} name="D1_PEC" render={({
-                      field
-                    }) => <FormItem className="flex flex-col">
+                        <FormField 
+                          control={form.control} 
+                          name="D1_PEC" 
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
                               <FormLabel className="mb-2">Date</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <FormControl>
-                                    <Button variant={"outline"} className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}>
+                                    <Button 
+                                      variant={"outline"} 
+                                      className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                                    >
                                       {field.value ? (
                                         format(field.value, "dd/MM/yyyy")
                                       ) : (
@@ -871,83 +1105,116 @@ export default function CreateMissionForm({
                                   </FormControl>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
-                                  <CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                  <CalendarComponent 
+                                    mode="single" 
+                                    selected={field.value} 
+                                    onSelect={field.onChange} 
+                                    initialFocus 
+                                  />
                                 </PopoverContent>
                               </Popover>
                               <FormMessage />
-                            </FormItem>} />
-                        <FormField control={form.control} name="H1_PEC" render={({
-                      field
-                    }) => <FormItem>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H1_PEC" 
+                          render={({ field }) => (
+                            <FormItem>
                               <FormLabel className="mb-2">Heure début</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
-                        <FormField control={form.control} name="H2_PEC" render={({
-                      field
-                    }) => <FormItem>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H2_PEC" 
+                          render={({ field }) => (
+                            <FormItem>
                               <FormLabel className="mb-2">Heure fin</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
                   
-                  {/* Contact au lieu de livraison et créneau horaire */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium">Contact au lieu de livraison</h3>
+                      <h3 className="text-lg font-medium">
+                        Contact au lieu de livraison
+                        {livMission && <span className="text-blue-600 text-sm block">(Contact de départ de la mission LIV)</span>}
+                      </h3>
                       <ContactSelector 
                         onSelectContact={handleDeliveryContactSelect} 
                         clientId={selectedClientId || undefined} 
                       />
                     </div>
                     
-                    <FormField control={form.control} name="contact_delivery_name" render={({
-                  field
-                }) => <FormItem>
+                    <FormField 
+                      control={form.control} 
+                      name="contact_delivery_name" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Nom / Société *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Nom complet ou société" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    <FormField control={form.control} name="contact_delivery_phone" render={({
-                  field
-                }) => <FormItem>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_delivery_phone" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Téléphone *</FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Numéro de téléphone" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
-                    <FormField control={form.control} name="contact_delivery_email" render={({
-                  field
-                }) => <FormItem>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_delivery_email" 
+                      render={({ field }) => (
+                        <FormItem>
                           <FormLabel>Email *</FormLabel>
                           <FormControl>
                             <Input {...field} type="email" placeholder="Adresse email" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    {/* Créneau horaire de livraison - modifié pour être aligné correctement */}
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">Créneau de livraison</h4>
                       <div className="grid grid-cols-3 gap-4">
-                        <FormField control={form.control} name="D2_LIV" render={({
-                      field
-                    }) => <FormItem className="flex flex-col">
+                        <FormField 
+                          control={form.control} 
+                          name="D2_LIV" 
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
                               <FormLabel className="mb-2">Date</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <FormControl>
-                                    <Button variant={"outline"} className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}>
+                                    <Button 
+                                      variant={"outline"} 
+                                      className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                                    >
                                       {field.value ? (
                                         format(field.value, "dd/MM/yyyy")
                                       ) : (
@@ -958,54 +1225,84 @@ export default function CreateMissionForm({
                                   </FormControl>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
-                                  <CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                  <CalendarComponent 
+                                    mode="single" 
+                                    selected={field.value} 
+                                    onSelect={field.onChange} 
+                                    initialFocus 
+                                  />
                                 </PopoverContent>
                               </Popover>
                               <FormMessage />
-                            </FormItem>} />
-                        <FormField control={form.control} name="H1_LIV" render={({
-                      field
-                    }) => <FormItem>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H1_LIV" 
+                          render={({ field }) => (
+                            <FormItem>
                               <FormLabel className="mb-2">Heure début</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
-                        <FormField control={form.control} name="H2_LIV" render={({
-                      field
-                    }) => <FormItem>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H2_LIV" 
+                          render={({ field }) => (
+                            <FormItem>
                               <FormLabel className="mb-2">Heure fin</FormLabel>
                               <FormControl>
                                 <TimeSelect value={field.value} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Notes */}
-                <FormField control={form.control} name="notes" render={({
-              field
-            }) => <FormItem>
+                <FormField 
+                  control={form.control} 
+                  name="notes" 
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Notes / Instructions spéciales</FormLabel>
                       <FormControl>
-                        <Textarea {...field} placeholder="Informations supplémentaires, codes d'accès, instructions particulières..." className="h-32" />
+                        <Textarea 
+                          {...field} 
+                          placeholder="Informations supplémentaires, codes d'accès, instructions particulières..." 
+                          className="h-32" 
+                        />
                       </FormControl>
                       <FormMessage />
                       <p className="text-sm font-bold mt-2">Les fichiers pourront être téléchargées dans la page de la mission crée</p>
-                    </FormItem>} />
-              </div>}
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             {/* Étape 5: Attribution (Admin seulement) */}
-            {currentStep === 5 && profile?.role === 'admin' && <div className="space-y-6">
-                <FormField control={form.control} name="client_id" render={({
-              field
-            }) => <FormItem>
+            {currentStep === 5 && profile?.role === 'admin' && (
+              <div className="space-y-6">
+                <FormField 
+                  control={form.control} 
+                  name="client_id" 
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Client</FormLabel>
-                      <Select onValueChange={handleClientChange} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={handleClientChange} 
+                        defaultValue={field.value}
+                        disabled={!!livMission} // Pre-selected for RES missions
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un client" />
@@ -1013,17 +1310,33 @@ export default function CreateMissionForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="no_client_selected" disabled>Sélectionner un client</SelectItem>
-                          {loadingClients ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : clientProfiles.map((client: ProfileOption) => <SelectItem key={client.id} value={client.id}>{client.label || client.email || client.id}</SelectItem>)}
+                          {loadingClients ? (
+                            <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                          ) : (
+                            clientProfiles.map((client: ProfileOption) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.label || client.email || client.id}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
+                      {livMission && <FormDescription className="text-blue-600">Pré-sélectionné depuis la mission LIV</FormDescription>}
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
 
-                <FormField control={form.control} name="chauffeur_id" render={({
-              field
-            }) => <FormItem>
+                <FormField 
+                  control={form.control} 
+                  name="chauffeur_id" 
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Chauffeur</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value || ''}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un chauffeur (optionnel)" />
@@ -1031,31 +1344,55 @@ export default function CreateMissionForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
-                          {loadingDrivers ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : driverProfiles.map((driver: ProfileOption) => <SelectItem key={driver.id} value={driver.id}>{driver.label || driver.email || driver.id}</SelectItem>)}
+                          {loadingDrivers ? (
+                            <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                          ) : (
+                            driverProfiles.map((driver: ProfileOption) => (
+                              <SelectItem key={driver.id} value={driver.id}>
+                                {driver.label || driver.email || driver.id}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
                         Vous pouvez assigner un chauffeur maintenant ou plus tard
+                        {livMission && <span className="text-blue-600 block">Pré-sélectionné depuis la mission LIV (modifiable)</span>}
                       </FormDescription>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
 
-                <FormField control={form.control} name="chauffeur_price_ht" render={({
-              field
-            }) => <FormItem>
+                <FormField 
+                  control={form.control} 
+                  name="chauffeur_price_ht" 
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Prix chauffeur HT (€)</FormLabel>
                       <FormControl>
-                        <Input {...field} type="number" step="0.01" placeholder="0.00" value={field.value || ''} onChange={e => field.onChange(parseFloat(e.target.value) || 0)} />
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                        />
                       </FormControl>
                       <FormDescription>
                         Prix payé au chauffeur pour cette mission (hors taxes)
                       </FormDescription>
                       <FormMessage />
-                    </FormItem>} />
+                    </FormItem>
+                  )}
+                />
 
-                <FormField control={form.control} name="status" render={({
-              field
-            }) => <FormItem>
+                <FormField 
+                  control={form.control} 
+                  name="status" 
+                  render={({ field }) => (
+                    <FormItem>
                       <FormLabel>Statut initial</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -1070,13 +1407,21 @@ export default function CreateMissionForm({
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>} />
-              </div>}
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
             {/* Boutons de navigation */}
             <div className="flex flex-col space-y-4">
               <div className="flex justify-between pt-6">
-                <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={prevStep} 
+                  disabled={currentStep === 1}
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
                 </Button>
 
@@ -1092,7 +1437,11 @@ export default function CreateMissionForm({
                       </a> en créant la mission
                     </p>
                     <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                      {isSubmitting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="mr-2 h-4 w-4" />
+                      )}
                       Créer la mission
                     </Button>
                   </div>

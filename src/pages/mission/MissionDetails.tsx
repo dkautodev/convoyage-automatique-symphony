@@ -25,6 +25,7 @@ import { MissionDriverSection } from '@/components/mission/sections/MissionDrive
 import { ClientMissionDriverSection } from '@/components/mission/sections/ClientMissionDriverSection';
 import { MissionStatusSection } from '@/components/mission/sections/MissionStatusSection';
 import { MissionDocumentsSection } from '@/components/mission/sections/MissionDocumentsSection';
+import { MissionDocumentManagementSection } from '@/components/mission/sections/MissionDocumentManagementSection';
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
@@ -241,86 +242,12 @@ const MissionDetailsPage = () => {
           <p className="text-gray-500">Créée le {formattedDate}</p>
         </div>
         <div className="flex gap-2">
-          {/* Bouton Restitution - Pour Admin et Client */}
-          {(isAdmin || isClient) && (
-            <RestitutionButton mission={mission} />
-          )}
-          
           {/* Admin buttons */}
           {isAdmin && (
-            <>
-              <Button onClick={handleEditMission} variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier infos
-              </Button>
-              <Button 
-                variant="outline" 
-                className="relative"
-                onClick={() => setDocumentsDialogOpen(true)}
-              >
-                + Ajouter des documents
-                {documentsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
-                    {documentsCount}
-                  </span>
-                )}
-                {documentsCount === 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
-                    0
-                  </span>
-                )}
-              </Button>
-              <Button onClick={handleShowHistory} variant="outline">
-                <History className="h-4 w-4 mr-2" />
-                Historique
-              </Button>
-            </>
-          )}
-          
-          {/* Client buttons */}
-          {isClient && (
-            <>
-              <Button 
-                variant="outline" 
-                className="relative"
-                onClick={() => setDocumentsDialogOpen(true)}
-              >
-                + Ajouter des documents
-                {documentsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
-                    {documentsCount}
-                  </span>
-                )}
-                {documentsCount === 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
-                    0
-                  </span>
-                )}
-              </Button>
-            </>
-          )}
-          
-          {/* Driver buttons */}
-          {isDriver && (
-            <>
-              <Button 
-                variant="outline" 
-                className="relative"
-                onClick={() => setDocumentsDialogOpen(true)}
-              >
-                + Ajouter des documents
-                {documentsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
-                    {documentsCount}
-                  </span>
-                )}
-                {documentsCount === 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
-                    0
-                  </span>
-                )}
-              </Button>
-            </>
+            <Button onClick={handleEditMission} variant="outline">
+              <Edit className="h-4 w-4 mr-2" />
+              Modifier infos
+            </Button>
           )}
           
           <Button onClick={handleBack} variant="outline">
@@ -331,6 +258,19 @@ const MissionDetailsPage = () => {
 
       {/* Section des missions liées */}
       <LinkedMissionSection mission={mission} />
+
+      {/* Nouvelle section de gestion des documents - EN PREMIÈRE POSITION */}
+      <MissionDocumentManagementSection
+        mission={mission}
+        client={isDriver ? undefined : client}
+        adminProfile={adminProfile}
+        driverName={driverName}
+        documentsCount={documentsCount}
+        isAdmin={isAdmin}
+        isClient={isClient}
+        isDriver={isDriver}
+        onDocumentsClick={() => setDocumentsDialogOpen(true)}
+      />
 
       {/* General Information Section - Hide pricing info for drivers */}
       <MissionGeneralInfoSection 
@@ -349,8 +289,14 @@ const MissionDetailsPage = () => {
         <ClientMissionDriverSection mission={mission} />
       )}
       
-      {/* Status Management Section (Admin only) */}
-      {isAdmin && <MissionStatusSection mission={mission} refetchMission={fetchMission} />}
+      {/* Status Management Section (Admin only) - AVEC BOUTON HISTORIQUE EN BAS */}
+      {isAdmin && (
+        <MissionStatusSection 
+          mission={mission} 
+          refetchMission={fetchMission} 
+          onShowHistory={handleShowHistory}
+        />
+      )}
       
       {/* Documents Section - For both Admin and Client */}
       <div id="documents-section">

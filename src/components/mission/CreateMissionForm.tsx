@@ -24,8 +24,8 @@ import ContactSelector from '@/components/mission/ContactSelector';
 import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
-  vehicleCategory: z.nativeEnum(VehicleCategory, {
-    required_error: "Veuillez sélectionner une catégorie de véhicule.",
+  vehicleCategory: z.string().refine((val) => Object.keys(vehicleCategoryLabels).includes(val), {
+    message: "Veuillez sélectionner une catégorie de véhicule valide.",
   }),
   pickupAddress: z.string().min(2, {
     message: "L'adresse de prise en charge est requise.",
@@ -123,12 +123,18 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
     const currentDelivery = form.getValues('deliveryAddress');
     
     // Inverser les adresses
-    form.setValue('pickupAddress', livMission.delivery_address?.formatted_address || '');
-    form.setValue('deliveryAddress', livMission.pickup_address?.formatted_address || '');
+    const deliveryAddr = livMission.delivery_address as any;
+    const pickupAddr = livMission.pickup_address as any;
+    
+    form.setValue('pickupAddress', deliveryAddr?.formatted_address || '');
+    form.setValue('deliveryAddress', pickupAddr?.formatted_address || '');
     
     // Stocker les données d'adresse inversées
     if (livMission.delivery_address) {
-      window.selectedAddressData = livMission.delivery_address;
+      setPickupAddressData(livMission.delivery_address);
+    }
+    if (livMission.pickup_address) {
+      setDeliveryAddressData(livMission.pickup_address);
     }
   };
 
@@ -138,7 +144,6 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
     form.setValue('deliveryAddress', '');
     setPickupAddressData(null);
     setDeliveryAddressData(null);
-    window.selectedAddressData = null;
   };
 
   // Fonction pour inverser les contacts
@@ -179,16 +184,16 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
       
       // Verrouiller la date de prise en charge sur la date de livraison de la LIV
       if (livMission.D2_LIV) {
-        const livDeliveryDate = new Date(livMission.D2_LIV);
+        const livDeliveryDate = new Date(livMission.D2_LIV as string);
         form.setValue('D1_PEC', livDeliveryDate);
       }
       
       // Verrouiller les créneaux de prise en charge sur les créneaux de livraison de la LIV
       if (livMission.H1_LIV) {
-        form.setValue('H1_PEC', livMission.H1_LIV);
+        form.setValue('H1_PEC', livMission.H1_LIV as string);
       }
       if (livMission.H2_LIV) {
-        form.setValue('H2_PEC', livMission.H2_LIV);
+        form.setValue('H2_PEC', livMission.H2_LIV as string);
       }
     }
   }, [livMission, isResMode, form]);
@@ -209,7 +214,7 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
       setCalculatedDistance(distance);
 
       // Calculer le prix estimé
-      computePrice(distance, vehicleType);
+      computePrice(distance, vehicleType as VehicleCategory);
     } else {
       setCalculatedDistance(null);
     }
@@ -234,18 +239,18 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
       }
 
       const missionData = {
-        client_id: profile?.id,
+        client_id: profile?.id!,
         status: 'en_acceptation' as const,
         pickup_address: pickupAddressData,
         delivery_address: deliveryAddressData,
-        distance_km: calculatedDistance,
+        distance_km: calculatedDistance!,
         price_ht: finalPriceHT,
         price_ttc: finalPriceTTC,
         vat_rate: 20,
-        scheduled_date: data.D1_PEC?.toISOString(),
-        created_by: profile?.id,
+        scheduled_date: data.D1_PEC.toISOString(),
+        created_by: profile?.id!,
         mission_type: isResMode ? 'RES' : 'LIV',
-        vehicle_category: data.vehicleCategory,
+        vehicle_category: data.vehicleCategory as VehicleCategory,
         vehicle_make: data.vehicleMake || null,
         vehicle_model: data.vehicleModel || null,
         vehicle_registration: data.vehicleRegistration || null,
@@ -272,7 +277,7 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
 
       const { data: mission, error } = await typedSupabase
         .from('missions')
-        .insert([missionData])
+        .insert(missionData)
         .select()
         .single();
 
@@ -403,7 +408,7 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
               <Label htmlFor="vehicleCategory">Catégorie *</Label>
               <Select
                 value={form.watch('vehicleCategory') || ''}
-                onValueChange={(value) => form.setValue('vehicleCategory', value as VehicleCategory)}
+                onValueChange={(value) => form.setValue('vehicleCategory', value)}
                 disabled={isResMode && !allowVehicleChange}
               >
                 <SelectTrigger className={isResMode && !allowVehicleChange ? 'bg-gray-100' : ''}>
@@ -494,7 +499,7 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
                     <Calendar
                       mode="single"
                       selected={form.watch('D1_PEC') || undefined}
-                      onSelect={(date) => form.setValue('D1_PEC', date || null)}
+                      onSelect={(date) => form.setValue('D1_PEC', date || new Date())}
                       disabled={(date) => date < new Date()}
                       initialFocus
                     />
@@ -525,7 +530,7 @@ export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission
                     <Calendar
                       mode="single"
                       selected={form.watch('D2_LIV') || undefined}
-                      onSelect={(date) => form.setValue('D2_LIV', date || null)}
+                      onSelect={(date) => form.setValue('D2_LIV', date || undefined)}
                       disabled={(date) => date < new Date()}
                       initialFocus
                     />

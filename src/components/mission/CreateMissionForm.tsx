@@ -420,12 +420,12 @@ export default function CreateMissionForm({
       if (livMission) {
         priceResult = {
           ...priceResult,
-          priceHT: priceResult.priceHT * 0.7,
-          priceTTC: priceResult.priceTTC * 0.7
+          priceHT: Math.round(priceResult.priceHT * 0.7 * 100) / 100,
+          priceTTC: Math.round(priceResult.priceTTC * 0.7 * 100) / 100
         };
       }
 
-      form.setValue('distance_km', distanceKm);
+      form.setValue('distance_km', Math.round(distanceKm * 100) / 100);
       form.setValue('price_ht', priceResult.priceHT);
       form.setValue('price_ttc', priceResult.priceTTC);
 
@@ -823,7 +823,7 @@ export default function CreateMissionForm({
                               {...field} 
                               type="number" 
                               step="0.01" 
-                              value={field.value || ''} 
+                              value={field.value ? field.value.toFixed(2) : ''} 
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
                               readOnly 
                             />
@@ -843,7 +843,7 @@ export default function CreateMissionForm({
                               {...field} 
                               type="number" 
                               step="0.01" 
-                              value={field.value || ''} 
+                              value={field.value ? field.value.toFixed(2) : ''} 
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
                               readOnly 
                             />
@@ -863,7 +863,7 @@ export default function CreateMissionForm({
                               {...field} 
                               type="number" 
                               step="0.01" 
-                              value={field.value || ''} 
+                              value={field.value ? field.value.toFixed(2) : ''} 
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
                               readOnly 
                             />
@@ -877,7 +877,7 @@ export default function CreateMissionForm({
               </div>
             )}
 
-            {/* Étape 3: Informations du véhicule - Champs vides pour RES */}
+            {/* Étape 3: Informations du véhicule - Tous les champs déverrouillés pour RES */}
             {currentStep === 3 && (
               <div className="space-y-6">
                 {livMission && (
@@ -933,7 +933,6 @@ export default function CreateMissionForm({
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
-                          disabled={!!livMission}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -948,7 +947,6 @@ export default function CreateMissionForm({
                             <SelectItem value="GPL">GPL</SelectItem>
                           </SelectContent>
                         </Select>
-                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -968,10 +966,8 @@ export default function CreateMissionForm({
                             placeholder="Ex: 2020" 
                             value={field.value || ''} 
                             onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                            disabled={!!livMission}
                           />
                         </FormControl>
-                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -989,10 +985,8 @@ export default function CreateMissionForm({
                           <Input 
                             {...field} 
                             placeholder="Ex: AB-123-CD" 
-                            disabled={!!livMission}
                           />
                         </FormControl>
-                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1007,10 +1001,8 @@ export default function CreateMissionForm({
                           <Input 
                             {...field} 
                             placeholder="Ex: WVWZZZ1JZXW000001" 
-                            disabled={!!livMission}
                           />
                         </FormControl>
-                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}

@@ -13,6 +13,7 @@ interface AddressAutocompleteProps {
   placeholder?: string;
   className?: string;
   error?: string;
+  disabled?: boolean;
 }
 
 // Déclarer une variable globale pour stocker temporairement les données d'adresse
@@ -28,7 +29,8 @@ export default function AddressAutocomplete({
   onSelect,
   placeholder = 'Enter address...',
   className,
-  error
+  error,
+  disabled = false
 }: AddressAutocompleteProps) {
   const { predictions, loading, searchPlaces, getPlaceDetails, clearPredictions } = useGooglePlaces();
   const [focused, setFocused] = useState(false);
@@ -40,7 +42,7 @@ export default function AddressAutocomplete({
   
   // Debounce search input
   useEffect(() => {
-    if (isAddressSelected) return; // Ne pas rechercher si une adresse a été sélectionnée
+    if (isAddressSelected || disabled) return; // Ne pas rechercher si une adresse a été sélectionnée ou si désactivé
     
     const timer = setTimeout(() => {
       // Afficher les suggestions uniquement si l'input est en focus
@@ -56,7 +58,7 @@ export default function AddressAutocomplete({
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [value, searchPlaces, clearPredictions, isAddressSelected, focused]);
+  }, [value, searchPlaces, clearPredictions, isAddressSelected, focused, disabled]);
 
   // Add click outside listener to close suggestions
   useEffect(() => {
@@ -105,6 +107,8 @@ export default function AddressAutocomplete({
   };
 
   const handleClear = () => {
+    if (disabled) return; // Ne pas permettre de vider si désactivé
+    
     onChange('');
     setShowSuggestions(false);
     setIsAddressSelected(false);
@@ -117,6 +121,8 @@ export default function AddressAutocomplete({
   
   // Gérer le focus pour mieux contrôler l'affichage des suggestions
   const handleFocus = () => {
+    if (disabled) return; // Ne pas permettre le focus si désactivé
+    
     setFocused(true);
     // Seulement montrer les suggestions si l'adresse n'a pas été sélectionnée et qu'il y a une valeur
     if (value && !isAddressSelected) {
@@ -139,6 +145,8 @@ export default function AddressAutocomplete({
   
   // Permettre à l'utilisateur de recommencer la saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return; // Ne pas permettre la modification si désactivé
+    
     const newValue = e.target.value;
     onChange(newValue);
     
@@ -160,9 +168,10 @@ export default function AddressAutocomplete({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className={`pr-10 ${className} ${error ? 'border-red-500' : ''}`}
+          className={`pr-10 ${className} ${error ? 'border-red-500' : ''} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+          disabled={disabled}
         />
-        {value && (
+        {value && !disabled && (
           <Button
             type="button"
             variant="ghost"
@@ -180,7 +189,7 @@ export default function AddressAutocomplete({
       
       {/* Conditionnellement afficher les suggestions seulement quand focused est true,
           une adresse n'est pas déjà sélectionnée, et nous avons des prédictions */}
-      {showSuggestions && predictions.length > 0 && !isAddressSelected && focused && (
+      {showSuggestions && predictions.length > 0 && !isAddressSelected && focused && !disabled && (
         <Card ref={suggestionsRef} className="absolute z-50 w-full mt-1 shadow-lg overflow-hidden">
           <ul className="py-1 max-h-60 overflow-auto">
             {predictions.map((prediction) => (
@@ -203,7 +212,7 @@ export default function AddressAutocomplete({
         </Card>
       )}
       
-      {loading && focused && !isAddressSelected && (
+      {loading && focused && !isAddressSelected && !disabled && (
         <div className="absolute right-3 top-3">
           <div className="h-4 w-4 border-t-2 border-primary rounded-full animate-spin"></div>
         </div>

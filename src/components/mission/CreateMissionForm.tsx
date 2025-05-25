@@ -1,846 +1,1456 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, Calculator, Loader2, RotateCcw } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { typedSupabase } from '@/types/database';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 import { useAuth } from '@/hooks/useAuth';
 import { usePricing } from '@/hooks/usePricing';
-import { VehicleCategory, vehicleCategoryLabels, Mission } from '@/types/supabase';
-import AddressAutocomplete from '@/components/AddressAutocomplete';
-import ContactSelector from '@/components/mission/ContactSelector';
-import { Badge } from '@/components/ui/badge';
+import { useGooglePlaces } from '@/hooks/useGooglePlaces';
+import { typedSupabase } from '@/types/database';
+import { vehicleCategoryLabels, VehicleCategory, MissionStatus, Mission } from '@/types/supabase';
+import { Address } from '@/types/supabase';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { TimeSelect } from '@/components/ui/time-select';
+import { format } from 'date-fns';
+import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
+import ContactSelector from './ContactSelector';
+import { Contact } from '@/types/contact';
 
-const formSchema = z.object({
-  vehicleCategory: z.string().refine((val) => Object.keys(vehicleCategoryLabels).includes(val), {
-    message: "Veuillez sélectionner une catégorie de véhicule valide.",
-  }),
-  pickupAddress: z.string().min(2, {
-    message: "L'adresse de prise en charge est requise.",
-  }),
-  deliveryAddress: z.string().min(2, {
-    message: "L'adresse de livraison est requise.",
-  }),
-  D1_PEC: z.date({
-    required_error: "La date de prise en charge est requise.",
-  }),
-  D2_LIV: z.date().optional(),
-  H1_PEC: z.string().optional(),
-  H2_PEC: z.string().optional(),
-  H1_LIV: z.string().optional(),
-  H2_LIV: z.string().optional(),
-  contactPickupName: z.string().optional(),
-  contactPickupPhone: z.string().optional(),
-  contactPickupEmail: z.string().optional(),
-  contactDeliveryName: z.string().optional(),
-  contactDeliveryPhone: z.string().optional(),
-  contactDeliveryEmail: z.string().optional(),
-  vehicleMake: z.string().optional(),
-  vehicleModel: z.string().optional(),
-  vehicleRegistration: z.string().optional(),
-  vehicleFuel: z.string().optional(),
-  vehicleYear: z.string().optional().transform((val) => {
-    if (!val) return undefined;
-    const parsed = parseInt(val, 10);
-    return isNaN(parsed) ? undefined : parsed;
-  }),
-  vehicleVin: z.string().optional(),
-  notes: z.string().optional(),
+// Étape 1: Type de mission
+const missionTypeSchema = z.object({
+  mission_type: z.enum(['LIV', 'RES'], {
+    required_error: 'Veuillez sélectionner un type de mission'
+  })
 });
 
-type FormData = z.infer<typeof formSchema>;
+// Étape 2: Véhicule, adresses et prix
+const vehicleAndAddressSchema = z.object({
+  vehicle_category: z.enum(['citadine', 'berline', '4x4_suv', 'utilitaire_3_5m3', 'utilitaire_6_12m3', 'utilitaire_12_15m3', 'utilitaire_15_20m3', 'utilitaire_plus_20m3'], {
+    required_error: 'Veuillez sélectionner un type de véhicule'
+  }),
+  pickup_address: z.string().min(1, 'L\'adresse de départ est requise'),
+  pickup_address_data: z.any().optional(),
+  delivery_address: z.string().min(1, 'L\'adresse de livraison est requise'),
+  delivery_address_data: z.any().optional(),
+  distance_km: z.number().optional(),
+  price_ht: z.number().optional(),
+  price_ttc: z.number().optional(),
+  vehicle_id: z.number().nullable().optional()
+});
 
-interface CreateMissionFormProps {
+// Étape 3: Information du véhicule - VIN devient optionnel
+const vehicleInfoSchema = z.object({
+  vehicle_make: z.string().min(1, 'La marque du véhicule est requise'),
+  vehicle_model: z.string().min(1, 'Le modèle du véhicule est requis'),
+  vehicle_fuel: z.string().min(1, 'Le type de carburant est requis'),
+  vehicle_year: z.number().int().positive().optional(),
+  vehicle_registration: z.string().min(1, 'L\'immatriculation est requise'),
+  vehicle_vin: z.string().optional() // VIN est maintenant optionnel
+});
+
+// Fonction pour comparer deux horaires (pour validation)
+const parseTime = (time: string): number => {
+  if (!time) return 0;
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+// Créer le schéma de base pour l'étape 4
+const baseContactsAndNotesSchema = z.object({
+  contact_pickup_name: z.string().min(1, 'Le nom du contact de départ est requis'),
+  contact_pickup_phone: z.string().min(1, 'Le téléphone du contact de départ est requis'),
+  contact_pickup_email: z.string().min(1, 'L\'email du contact de départ est requis').email('Email invalide'),
+  // Nouveaux champs pour créneaux de ramassage
+  D1_PEC: z.date({
+    required_error: 'La date de ramassage est requise'
+  }),
+  H1_PEC: z.string().min(1, 'L\'heure de début de ramassage est requise'),
+  H2_PEC: z.string().min(1, 'L\'heure de fin de ramassage est requise'),
+  contact_delivery_name: z.string().min(1, 'Le nom du contact de livraison est requis'),
+  contact_delivery_phone: z.string().min(1, 'Le téléphone du contact de livraison est requis'),
+  contact_delivery_email: z.string().min(1, 'L\'email du contact de livraison est requis').email('Email invalide'),
+  // Nouveaux champs pour créneaux de livraison
+  D2_LIV: z.date({
+    required_error: 'La date de livraison est requise'
+  }),
+  H1_LIV: z.string().min(1, 'L\'heure de début de livraison est requise'),
+  H2_LIV: z.string().min(1, 'L\'heure de fin de livraison est requise'),
+  notes: z.string().optional()
+});
+
+// Fonctions de validation personnalisées
+const contactsAndNotesSchema = baseContactsAndNotesSchema.superRefine((data, ctx) => {
+  // Valider que l'heure de fin de ramassage est après l'heure de début
+  if (data.H1_PEC && data.H2_PEC) {
+    const h1PecTime = parseTime(data.H1_PEC);
+    const h2PecTime = parseTime(data.H2_PEC);
+    
+    if (h2PecTime <= h1PecTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "L'heure de fin de ramassage doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
+        path: ["H2_PEC"],
+      });
+    }
+  }
+
+  // Valider que l'heure de fin de livraison est après l'heure de début
+  if (data.H1_LIV && data.H2_LIV) {
+    const h1LivTime = parseTime(data.H1_LIV);
+    const h2LivTime = parseTime(data.H2_LIV);
+    
+    if (h2LivTime <= h1LivTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "L'heure de fin de livraison doit être ultérieure à l'heure de début (au moins 15 minutes d'écart)",
+        path: ["H2_LIV"],
+      });
+    }
+  }
+
+  // Vérifier que la date de livraison est égale ou postérieure à la date de ramassage
+  if (data.D1_PEC && data.D2_LIV) {
+    const pickupDate = new Date(data.D1_PEC);
+    const deliveryDate = new Date(data.D2_LIV);
+    
+    if (deliveryDate < pickupDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La date de livraison doit être égale ou ultérieure à la date de ramassage",
+        path: ["D2_LIV"],
+      });
+    }
+  }
+});
+
+// Étape 5: Attribution (Admin seulement)
+const attributionSchema = z.object({
+  client_id: z.string().uuid().optional(),
+  status: z.enum(['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident']).default('en_acceptation'),
+  chauffeur_id: z.string().nullable().optional(),
+  chauffeur_price_ht: z.number().optional()
+});
+
+// Schéma complet - On utilise spread pour ajouter correctement les propriétés
+const createMissionSchema = z.object({
+  mission_type: missionTypeSchema.shape.mission_type,
+  // Étape 2
+  vehicle_category: vehicleAndAddressSchema.shape.vehicle_category,
+  pickup_address: vehicleAndAddressSchema.shape.pickup_address,
+  pickup_address_data: vehicleAndAddressSchema.shape.pickup_address_data,
+  delivery_address: vehicleAndAddressSchema.shape.delivery_address,
+  delivery_address_data: vehicleAndAddressSchema.shape.delivery_address_data,
+  distance_km: vehicleAndAddressSchema.shape.distance_km,
+  price_ht: vehicleAndAddressSchema.shape.price_ht,
+  price_ttc: vehicleAndAddressSchema.shape.price_ttc,
+  vehicle_id: vehicleAndAddressSchema.shape.vehicle_id,
+  // Étape 3
+  vehicle_make: vehicleInfoSchema.shape.vehicle_make,
+  vehicle_model: vehicleInfoSchema.shape.vehicle_model,
+  vehicle_fuel: vehicleInfoSchema.shape.vehicle_fuel,
+  vehicle_year: vehicleInfoSchema.shape.vehicle_year,
+  vehicle_registration: vehicleInfoSchema.shape.vehicle_registration,
+  vehicle_vin: vehicleInfoSchema.shape.vehicle_vin,
+  // Étape 4 - Nous utilisons directement le schéma de base, puis appliquons la validation raffinée
+  ...baseContactsAndNotesSchema.shape,
+  // Étape 5
+  client_id: attributionSchema.shape.client_id,
+  status: attributionSchema.shape.status,
+  chauffeur_id: attributionSchema.shape.chauffeur_id,
+  chauffeur_price_ht: attributionSchema.shape.chauffeur_price_ht
+});
+
+type CreateMissionFormValues = z.infer<typeof createMissionSchema>;
+export default function CreateMissionForm({
+  onSuccess,
+  onDirtyChange,
+  livMission
+}: {
   onSuccess?: (missionId: string) => void;
   onDirtyChange?: (isDirty: boolean) => void;
   livMission?: Mission | null;
-}
-
-export default function CreateMissionForm({ onSuccess, onDirtyChange, livMission }: CreateMissionFormProps) {
-  const { profile } = useAuth();
-  const { computePrice, prices, loading: pricingLoading } = usePricing();
-  
+}) {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
+  const {
+    user,
+    profile
+  } = useAuth();
+  const {
+    computePrice,
+    prices
+  } = usePricing();
+  const {
+    calculateDistance
+  } = useGooglePlaces();
+  const [calculatingPrice, setCalculatingPrice] = useState(false);
   const [pickupAddressData, setPickupAddressData] = useState<any>(null);
   const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
-  
-  const [isResMode, setIsResMode] = useState(!!livMission);
-  const [allowVehicleChange, setAllowVehicleChange] = useState(false);
-  const [allowAddressChange, setAllowAddressChange] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [formTouched, setFormTouched] = useState(false);
+  const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const {
+    profiles: clientProfiles,
+    loading: loadingClients
+  } = useProfiles('client');
+  const {
+    profiles: driverProfiles,
+    loading: loadingDrivers
+  } = useProfiles('chauffeur');
+  const form = useForm<CreateMissionFormValues>({
+    resolver: zodResolver(createMissionSchema),
+    mode: 'onSubmit', // Changement important: n'affiche les erreurs qu'après soumission
     defaultValues: {
-      vehicleCategory: 'citadine',
-      pickupAddress: '',
-      deliveryAddress: '',
-      D1_PEC: new Date(),
-      D2_LIV: new Date(),
+      mission_type: livMission ? 'RES' : undefined,
+      vehicle_category: undefined,
+      pickup_address: '',
+      delivery_address: '',
+      vehicle_make: '',
+      vehicle_model: '',
+      vehicle_fuel: '',
+      vehicle_registration: '',
+      vehicle_vin: '',
+      contact_pickup_name: '',
+      contact_pickup_phone: '',
+      contact_pickup_email: '',
+      contact_delivery_name: '',
+      contact_delivery_phone: '',
+      contact_delivery_email: '',
+      notes: '',
+      status: 'en_acceptation',
+      chauffeur_id: null,
+      chauffeur_price_ht: 0,
+      vehicle_id: null,
+      // Nouveaux champs par défaut
+      D1_PEC: undefined,
       H1_PEC: '',
       H2_PEC: '',
+      D2_LIV: undefined,
       H1_LIV: '',
-      H2_LIV: '',
-      contactPickupName: '',
-      contactPickupPhone: '',
-      contactPickupEmail: '',
-      contactDeliveryName: '',
-      contactDeliveryPhone: '',
-      contactDeliveryEmail: '',
-      vehicleMake: '',
-      vehicleModel: '',
-      vehicleRegistration: '',
-      vehicleFuel: '',
-      vehicleYear: undefined,
-      vehicleVin: '',
-      notes: '',
-    },
+      H2_LIV: ''
+    }
   });
 
-  const { watch, setValue, formState: { isDirty } } = form;
-
+  // Observer l'état "dirty" du formulaire et le communiquer au parent
   useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
-
-  // Fonction pour inverser les adresses
-  const invertAddresses = () => {
-    if (!livMission) return;
-    
-    const currentPickup = form.getValues('pickupAddress');
-    const currentDelivery = form.getValues('deliveryAddress');
-    
-    // Inverser les adresses
-    const deliveryAddr = livMission.delivery_address as any;
-    const pickupAddr = livMission.pickup_address as any;
-    
-    form.setValue('pickupAddress', deliveryAddr?.formatted_address || '');
-    form.setValue('deliveryAddress', pickupAddr?.formatted_address || '');
-    
-    // Stocker les données d'adresse inversées
-    if (livMission.delivery_address) {
-      setPickupAddressData(livMission.delivery_address);
+    if (onDirtyChange) {
+      onDirtyChange(form.formState.isDirty);
     }
-    if (livMission.pickup_address) {
-      setDeliveryAddressData(livMission.pickup_address);
-    }
-  };
+  }, [form.formState.isDirty, onDirtyChange]);
 
-  // Fonction pour vider les champs d'adresse
-  const clearAddresses = () => {
-    form.setValue('pickupAddress', '');
-    form.setValue('deliveryAddress', '');
-    setPickupAddressData(null);
-    setDeliveryAddressData(null);
-  };
-
-  // Fonction pour inverser les contacts
-  const invertContacts = () => {
-    if (!livMission) return;
-    
-    // Inverser les contacts de prise en charge et de livraison
-    form.setValue('contactPickupName', livMission.contact_delivery_name || '');
-    form.setValue('contactPickupPhone', livMission.contact_delivery_phone || '');
-    form.setValue('contactPickupEmail', livMission.contact_delivery_email || '');
-    
-    form.setValue('contactDeliveryName', livMission.contact_pickup_name || '');
-    form.setValue('contactDeliveryPhone', livMission.contact_pickup_phone || '');
-    form.setValue('contactDeliveryEmail', livMission.contact_pickup_email || '');
-  };
-
-  // Fonction pour vider les contacts
-  const clearContacts = () => {
-    form.setValue('contactPickupName', '');
-    form.setValue('contactPickupPhone', '');
-    form.setValue('contactPickupEmail', '');
-    form.setValue('contactDeliveryName', '');
-    form.setValue('contactDeliveryPhone', '');
-    form.setValue('contactDeliveryEmail', '');
-  };
-
-  // Initialisation pour les missions RES
+  // Si le rôle est admin, initialiser le client_id avec undefined
   useEffect(() => {
-    if (livMission && isResMode) {
-      // Pré-remplir automatiquement avec les données inversées
-      invertAddresses();
-      invertContacts();
+    if (profile?.role === 'admin') {
+      form.setValue('client_id', undefined);
+    }
+  }, [profile, form]);
+
+  // Lorsqu'un client est sélectionné dans le dropdown
+  const handleClientChange = (clientId: string) => {
+    console.log('Client sélectionné:', clientId);
+    setSelectedClientId(clientId);
+    form.setValue('client_id', clientId);
+  };
+
+  // Déterminer le schéma à utiliser en fonction de l'étape actuelle et obtenir les noms des champs
+  const getCurrentSchemaFields = (step: number): string[] => {
+    switch (step) {
+      case 1:
+        return Object.keys(missionTypeSchema.shape);
+      case 2:
+        return Object.keys(vehicleAndAddressSchema.shape);
+      case 3:
+        return Object.keys(vehicleInfoSchema.shape);
+      case 4:
+        // Pour le schéma avec superRefine, on utilise le schéma de base pour obtenir les noms des champs
+        return Object.keys(baseContactsAndNotesSchema.shape);
+      case 5:
+        return Object.keys(attributionSchema.shape);
+      default:
+        return Object.keys(missionTypeSchema.shape);
+    }
+  };
+
+  // Pre-fill form when creating RES from LIV
+  useEffect(() => {
+    if (livMission) {
+      console.log('Pre-filling form with LIV mission data:', livMission);
       
-      // Définir la catégorie de véhicule par défaut
+      // Set mission type to RES
+      form.setValue('mission_type', 'RES');
+      
+      // Invert addresses and contacts
+      if (livMission.delivery_address?.formatted_address) {
+        form.setValue('pickup_address', livMission.delivery_address.formatted_address);
+        setPickupAddressData(livMission.delivery_address);
+      }
+      if (livMission.pickup_address?.formatted_address) {
+        form.setValue('delivery_address', livMission.pickup_address.formatted_address);
+        setDeliveryAddressData(livMission.pickup_address);
+      }
+
+      // Invert contacts
+      if (livMission.contact_delivery_name) {
+        form.setValue('contact_pickup_name', livMission.contact_delivery_name);
+      }
+      if (livMission.contact_delivery_phone) {
+        form.setValue('contact_pickup_phone', livMission.contact_delivery_phone);
+      }
+      if (livMission.contact_delivery_email) {
+        form.setValue('contact_pickup_email', livMission.contact_delivery_email);
+      }
+      
+      if (livMission.contact_pickup_name) {
+        form.setValue('contact_delivery_name', livMission.contact_pickup_name);
+      }
+      if (livMission.contact_pickup_phone) {
+        form.setValue('contact_delivery_phone', livMission.contact_pickup_phone);
+      }
+      if (livMission.contact_pickup_email) {
+        form.setValue('contact_delivery_email', livMission.contact_pickup_email);
+      }
+
+      // Copy vehicle information
       if (livMission.vehicle_category) {
-        form.setValue('vehicleCategory', livMission.vehicle_category);
+        form.setValue('vehicle_category', livMission.vehicle_category);
       }
-      
-      // Verrouiller la date de prise en charge sur la date de livraison de la LIV
-      if (livMission.D2_LIV) {
-        const livDeliveryDate = new Date(livMission.D2_LIV as string);
-        form.setValue('D1_PEC', livDeliveryDate);
+      if (livMission.vehicle_make) {
+        form.setValue('vehicle_make', livMission.vehicle_make);
       }
-      
-      // Verrouiller les créneaux de prise en charge sur les créneaux de livraison de la LIV
-      if (livMission.H1_LIV) {
-        form.setValue('H1_PEC', livMission.H1_LIV as string);
+      if (livMission.vehicle_model) {
+        form.setValue('vehicle_model', livMission.vehicle_model);
       }
-      if (livMission.H2_LIV) {
-        form.setValue('H2_PEC', livMission.H2_LIV as string);
+      if (livMission.vehicle_fuel) {
+        form.setValue('vehicle_fuel', livMission.vehicle_fuel);
+      }
+      if (livMission.vehicle_year) {
+        form.setValue('vehicle_year', livMission.vehicle_year);
+      }
+      if (livMission.vehicle_registration) {
+        form.setValue('vehicle_registration', livMission.vehicle_registration);
+      }
+      if (livMission.vehicle_vin) {
+        form.setValue('vehicle_vin', livMission.vehicle_vin);
+      }
+
+      // Pre-select client and driver for admin
+      if (profile?.role === 'admin') {
+        if (livMission.client_id) {
+          form.setValue('client_id', livMission.client_id);
+          setSelectedClientId(livMission.client_id);
+        }
+        if (livMission.chauffeur_id) {
+          form.setValue('chauffeur_id', livMission.chauffeur_id);
+        }
       }
     }
-  }, [livMission, isResMode, form]);
+  }, [livMission, form, profile]);
 
-  useEffect(() => {
-    const pickup = watch('pickupAddress');
-    const delivery = watch('deliveryAddress');
-    const vehicleType = watch('vehicleCategory');
-
-    if (pickupAddressData && deliveryAddressData && vehicleType) {
-      // Calculer la distance entre les deux adresses
-      const distance = calculateDistance(
-        pickupAddressData,
-        deliveryAddressData
-      );
-      setCalculatedDistance(distance);
-
-      // Calculer le prix estimé
-      computePrice(distance, vehicleType as VehicleCategory);
-    } else {
-      setCalculatedDistance(null);
-    }
-  }, [watch('pickupAddress'), watch('deliveryAddress'), watch('vehicleCategory'), pickupAddressData, deliveryAddressData, computePrice]);
-
-  const onSubmit = async (data: FormData) => {
+  async function calculatePrice() {
     try {
-      setIsSubmitting(true);
+      setCalculatingPrice(true);
 
+      // Vérifier si nous avons les données d'adresse nécessaires
       if (!pickupAddressData || !deliveryAddressData) {
-        toast.error('Veuillez sélectionner des adresses valides.');
+        toast.error('Veuillez sélectionner des adresses valides avant de calculer le prix');
+        setCalculatingPrice(false);
+        return;
+      }
+      const vehicleCategory = form.getValues('vehicle_category') as VehicleCategory;
+      if (!vehicleCategory) {
+        toast.error('Veuillez sélectionner un type de véhicule avant de calculer le prix');
+        setCalculatingPrice(false);
         return;
       }
 
-      // Calculer le prix avec remise de 30% pour les missions RES
-      let finalPriceHT = prices?.priceHT || 0;
-      let finalPriceTTC = prices?.priceTTC || 0;
-      
-      if (isResMode && livMission) {
-        finalPriceHT = finalPriceHT * 0.7; // Remise de 30%
-        finalPriceTTC = finalPriceTTC * 0.7; // Remise de 30%
+      // Extraire les coordonnées des adresses
+      const pickupCoords = {
+        lat: pickupAddressData.lat || (pickupAddressData.geometry?.location?.lat && typeof pickupAddressData.geometry.location.lat === 'function' ? pickupAddressData.geometry.location.lat() : null),
+        lng: pickupAddressData.lng || (pickupAddressData.geometry?.location?.lng && typeof pickupAddressData.geometry.location.lng === 'function' ? pickupAddressData.geometry.location.lng() : null)
+      };
+      const deliveryCoords = {
+        lat: deliveryAddressData.lat || (deliveryAddressData.geometry?.location?.lat && typeof deliveryAddressData.geometry.location.lat === 'function' ? deliveryAddressData.geometry.location.lat() : null),
+        lng: deliveryAddressData.lng || (deliveryAddressData.geometry?.location?.lng && typeof deliveryAddressData.geometry.location.lng === 'function' ? deliveryAddressData.geometry.location.lng() : null)
+      };
+      if (!pickupCoords.lat || !pickupCoords.lng || !deliveryCoords.lat || !deliveryCoords.lng) {
+        toast.error('Les coordonnées des adresses sont invalides');
+        setCalculatingPrice(false);
+        return;
+      }
+      console.log("Coordonnées de départ:", pickupCoords);
+      console.log("Coordonnées d'arrivée:", deliveryCoords);
+
+      // Utiliser directement l'instance de calculateDistance du hook
+      const result = await calculateDistance(pickupCoords, deliveryCoords);
+      if (!result) {
+        toast.error('Impossible de calculer la distance entre les adresses');
+        setCalculatingPrice(false);
+        return;
       }
 
-      const missionData = {
-        client_id: profile?.id!,
-        status: 'en_acceptation' as const,
-        pickup_address: pickupAddressData,
-        delivery_address: deliveryAddressData,
-        distance_km: calculatedDistance!,
-        price_ht: finalPriceHT,
-        price_ttc: finalPriceTTC,
-        vat_rate: 20,
-        scheduled_date: data.D1_PEC.toISOString(),
-        created_by: profile?.id!,
-        mission_type: isResMode ? 'RES' : 'LIV',
-        vehicle_category: data.vehicleCategory as VehicleCategory,
-        vehicle_make: data.vehicleMake || null,
-        vehicle_model: data.vehicleModel || null,
-        vehicle_registration: data.vehicleRegistration || null,
-        vehicle_fuel: data.vehicleFuel || null,
-        vehicle_year: data.vehicleYear || null,
-        vehicle_vin: data.vehicleVin || null,
-        vehicle_id: prices?.vehicleId || null,
-        notes: data.notes || null,
-        D1_PEC: data.D1_PEC ? format(data.D1_PEC, 'yyyy-MM-dd') : null,
-        D2_LIV: data.D2_LIV ? format(data.D2_LIV, 'yyyy-MM-dd') : null,
-        H1_PEC: data.H1_PEC || null,
-        H1_LIV: data.H1_LIV || null,
-        H2_PEC: data.H2_PEC || null,
-        H2_LIV: data.H2_LIV || null,
-        contact_pickup_name: data.contactPickupName || null,
-        contact_pickup_phone: data.contactPickupPhone || null,
-        contact_pickup_email: data.contactPickupEmail || null,
-        contact_delivery_name: data.contactDeliveryName || null,
-        contact_delivery_phone: data.contactDeliveryPhone || null,
-        contact_delivery_email: data.contactDeliveryEmail || null,
-        linked_mission_id: isResMode ? livMission?.id : null,
-        is_linked: isResMode
+      // Utiliser la valeur numérique précise de la distance au lieu de parser le texte
+      // distanceValue est en mètres, on convertit en km
+      const distanceKm = result.distanceValue / 1000;
+      console.log("Distance calculée:", distanceKm, "km");
+
+      // Calculer le prix basé sur la distance et le type de véhicule
+      const priceResult = await computePrice(distanceKm, vehicleCategory);
+      if (!priceResult) {
+        toast.error('Impossible de calculer le prix pour cette distance');
+        setCalculatingPrice(false);
+        return;
+      }
+      form.setValue('distance_km', distanceKm);
+      form.setValue('price_ht', priceResult.priceHT);
+      form.setValue('price_ttc', priceResult.priceTTC);
+
+      // Ajouter le vehicle_id si disponible
+      if (priceResult.vehicleId) {
+        form.setValue('vehicle_id', priceResult.vehicleId);
+        console.log('Vehicle ID set to:', priceResult.vehicleId);
+      } else {
+        console.log('No vehicle ID found for the selected vehicle category');
+      }
+      console.log("Prix calculé:", priceResult);
+      toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC${livMission ? ' (remise 30%)' : ''}`);
+    } catch (error) {
+      console.error('Erreur lors du calcul de la distance:', error);
+      toast.error('Une erreur est survenue lors du calcul du prix');
+    } finally {
+      setCalculatingPrice(false);
+    }
+  }
+
+  const nextStep = async () => {
+    setFormTouched(true);
+    
+    // Obtenir les noms des champs à valider pour l'étape actuelle
+    const fieldNames = getCurrentSchemaFields(currentStep);
+    
+    const isValid = await form.trigger(fieldNames as any);
+    if (!isValid) return;
+    
+    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    setFormTouched(false); // Réinitialiser formTouched pour la nouvelle étape
+  };
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setFormTouched(false); // Réinitialiser formTouched pour la nouvelle étape
+  };
+
+  const onSelectPickupAddress = (address: string, placeId: string, addressData?: any) => {
+    form.setValue('pickup_address', address);
+    setPickupAddressData(addressData);
+    form.setValue('pickup_address_data', addressData);
+  };
+
+  const onSelectDeliveryAddress = (address: string, placeId: string, addressData?: any) => {
+    form.setValue('delivery_address', address);
+    setDeliveryAddressData(addressData);
+    form.setValue('delivery_address_data', addressData);
+  };
+
+  const onSubmit = async (values: CreateMissionFormValues) => {
+    try {
+      setIsSubmitting(true);
+      console.log("Début de la soumission du formulaire avec les valeurs:", values);
+
+      // S'assurer que toutes les données requises sont présentes
+      if (!values.distance_km || !values.price_ht || !values.price_ttc) {
+        toast.error('Veuillez calculer le prix avant de créer la mission');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Déterminer le client_id à utiliser
+      let clientId = null;
+      if (profile?.role === 'admin') {
+        // Pour les admins: utiliser le client sélectionné dans le formulaire
+        if (values.client_id && values.client_id !== 'no_client_selected') {
+          clientId = values.client_id;
+          console.log("Admin: client_id from values =", clientId);
+        } else {
+          toast.error('Aucun client n\'a été sélectionné');
+          setIsSubmitting(false);
+          return;
+        }
+      } else if (profile?.role === 'client' && user?.id) {
+        // Pour les clients: utiliser leur propre ID
+        clientId = user.id;
+        console.log("Client: client_id (user.id) =", clientId);
+      } else {
+        toast.error('Impossible de déterminer le client pour cette mission');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Vérifier que nous avons un client_id valide
+      if (!clientId) {
+        toast.error('Aucun client valide n\'a été trouvé ou sélectionné');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // S'assurer que chauffeur_id n'est pas un des valeurs statiques
+      let chauffeurId = values.chauffeur_id;
+      if (!chauffeurId || chauffeurId === "no_driver_assigned") {
+        chauffeurId = null;
+      }
+      console.log("Client ID final:", clientId);
+      console.log("Chauffeur ID final:", chauffeurId);
+
+      // Préparer les données d'adresse pour la base de données
+      const pickupAddressData = values.pickup_address_data || {
+        formatted_address: values.pickup_address
+      };
+      const deliveryAddressData = values.delivery_address_data || {
+        formatted_address: values.delivery_address
       };
 
-      const { data: mission, error } = await typedSupabase
-        .from('missions')
-        .insert(missionData)
-        .select()
-        .single();
+      // Convertir les objets Address en Json compatible avec Supabase
+      const pickupAddressJson = pickupAddressData ? JSON.parse(JSON.stringify(pickupAddressData)) : {
+        formatted_address: values.pickup_address
+      };
+      const deliveryAddressJson = deliveryAddressData ? JSON.parse(JSON.stringify(deliveryAddressData)) : {
+        formatted_address: values.delivery_address
+      };
 
-      if (error) throw error;
+      // Préparer les données pour les nouveaux champs date/heure
+      let formattedD1PEC = null;
+      let formattedD2LIV = null;
+      if (values.D1_PEC) {
+        formattedD1PEC = format(values.D1_PEC, 'yyyy-MM-dd');
+      }
+      if (values.D2_LIV) {
+        formattedD2LIV = format(values.D2_LIV, 'yyyy-MM-dd');
+      }
 
-      // Si c'est une mission RES, mettre à jour la mission LIV pour indiquer qu'elle est liée
-      if (isResMode && livMission && mission) {
-        const { error: updateError } = await typedSupabase
-          .from('missions')
-          .update({ 
-            linked_mission_id: mission.id,
-            is_linked: true 
-          })
-          .eq('id', livMission.id);
-
-        if (updateError) {
-          console.error('Erreur lors de la mise à jour de la mission LIV:', updateError);
+      // Enregistrer la mission
+      const missionData = {
+        client_id: clientId,
+        status: values.status || 'en_acceptation',
+        pickup_address: pickupAddressJson,
+        delivery_address: deliveryAddressJson,
+        distance_km: values.distance_km,
+        price_ht: values.price_ht,
+        price_ttc: values.price_ttc,
+        vehicle_category: values.vehicle_category,
+        vehicle_id: values.vehicle_id || null,
+        vehicle_make: values.vehicle_make,
+        vehicle_model: values.vehicle_model,
+        vehicle_fuel: values.vehicle_fuel,
+        vehicle_year: values.vehicle_year ? parseInt(String(values.vehicle_year)) : null,
+        vehicle_registration: values.vehicle_registration,
+        vehicle_vin: values.vehicle_vin || null,
+        contact_pickup_name: values.contact_pickup_name,
+        contact_pickup_phone: values.contact_pickup_phone,
+        contact_pickup_email: values.contact_pickup_email,
+        // Nouveaux champs pour le ramassage
+        D1_PEC: formattedD1PEC,
+        H1_PEC: values.H1_PEC,
+        H2_PEC: values.H2_PEC,
+        contact_delivery_name: values.contact_delivery_name,
+        contact_delivery_phone: values.contact_delivery_phone,
+        contact_delivery_email: values.contact_delivery_email,
+        // Nouveaux champs pour la livraison
+        D2_LIV: formattedD2LIV,
+        H1_LIV: values.H1_LIV,
+        H2_LIV: values.H2_LIV,
+        notes: values.notes,
+        chauffeur_id: chauffeurId,
+        chauffeur_price_ht: values.chauffeur_price_ht || 0,
+        created_by: user?.id || '',
+        scheduled_date: new Date().toISOString(),
+        vat_rate: 20,
+        // Taux de TVA par défaut
+        mission_type: values.mission_type || 'LIV',
+        // Link to LIV mission if creating RES
+        linked_mission_id: livMission ? livMission.id : null,
+        is_linked: livMission ? true : false
+      };
+      console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
+      try {
+        console.log("Sending request to Supabase with data:", missionData);
+        const {
+          data,
+          error
+        } = await typedSupabase.from('missions').insert(missionData).select('id').single();
+        if (error) {
+          console.error('Erreur Supabase lors de la création de la mission:', error);
+          console.error('Detail:', error.details);
+          console.error('Message:', error.message);
+          console.error('Hint:', error.hint);
+          toast.error(`Erreur lors de la création de la mission: ${error.message}`);
+          return;
         }
+        console.log("Mission créée avec succès, données retournées:", data);
+        toast.success('Mission créée avec succès');
+        if (onSuccess && data?.id) {
+          onSuccess(data.id);
+        } else {
+          // Rediriger vers la page appropriée en fonction du rôle
+          if (profile?.role === 'admin') {
+            navigate('/admin/missions');
+          } else {
+            navigate('/client/missions');
+          }
+        }
+      } catch (dbError: any) {
+        console.error('Exception lors de l\'opération Supabase:', dbError);
+        console.error('Detail:', dbError.details || 'No details');
+        console.error('Message:', dbError.message || 'No message');
+        toast.error(`Exception lors de la création de la mission: ${dbError.message || 'Erreur inconnue'}`);
       }
-
-      toast.success(
-        isResMode 
-          ? 'Mission de restitution créée avec succès!' 
-          : 'Mission créée avec succès!'
-      );
-      
-      if (onSuccess && mission?.id) {
-        onSuccess(mission.id);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la création de la mission:', error);
-      toast.error('Erreur lors de la création de la mission');
+    } catch (error: any) {
+      console.error('Erreur globale lors de la création de la mission:', error);
+      toast.error(`Une erreur est survenue lors de la création de la mission: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Fonctions pour gérer les contacts sélectionnés
+  const handlePickupContactSelect = (contact: Contact) => {
+    form.setValue('contact_pickup_name', contact.name_s || '');
+    if (contact.email) form.setValue('contact_pickup_email', contact.email);
+    if (contact.phone) form.setValue('contact_pickup_phone', contact.phone);
+    toast.success(`Contact de départ sélectionné: ${contact.name_s || 'Sans nom'}`);
+  };
+  
+  const handleDeliveryContactSelect = (contact: Contact) => {
+    form.setValue('contact_delivery_name', contact.name_s || '');
+    if (contact.email) form.setValue('contact_delivery_email', contact.email);
+    if (contact.phone) form.setValue('contact_delivery_phone', contact.phone);
+    toast.success(`Contact de livraison sélectionné: ${contact.name_s || 'Sans nom'}`);
+  };
+
+  // Type guard pour vérifier si error est un FieldError
+  const getErrorMessageAsString = (error: any): string | undefined => {
+    if (error && typeof error === 'object' && 'message' in error) {
+      return error.message as string;
+    }
+    if (typeof error === 'string') {
+      return error;
+    }
+    return undefined;
+  };
+  
   return (
-    <div className="space-y-6">
-      {/* Section spéciale pour les missions RES */}
-      {isResMode && livMission && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-blue-800 flex items-center gap-2">
-              <RotateCcw className="h-5 w-5" />
-              Options de restitution
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAllowVehicleChange(!allowVehicleChange)}
-                className={allowVehicleChange ? 'bg-green-100' : ''}
-              >
-                {allowVehicleChange ? 'Verrouiller' : 'Changer'} catégorie véhicule
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setAllowAddressChange(!allowAddressChange)}
-                className={allowAddressChange ? 'bg-green-100' : ''}
-              >
-                {allowAddressChange ? 'Verrouiller' : 'Modifier'} adresses
-              </Button>
-              
-              {allowAddressChange && (
-                <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={invertAddresses}
-                  >
-                    Inverser adresses
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={clearAddresses}
-                  >
-                    Vider adresses
-                  </Button>
-                </>
-              )}
-              
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={invertContacts}
-              >
-                Inverser contacts
-              </Button>
-              
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={clearContacts}
-              >
-                Vider contacts
-              </Button>
-            </div>
-            
-            <div className="text-sm text-blue-600">
-              <p><strong>Prix appliqué :</strong> 30% de remise automatique</p>
-              <p><strong>Date/créneau PEC :</strong> Verrouillés sur ceux de livraison LIV</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Section Catégorie de véhicule */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Catégorie de véhicule</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="vehicleCategory">Catégorie *</Label>
-              <Select
-                value={form.watch('vehicleCategory') || ''}
-                onValueChange={(value) => form.setValue('vehicleCategory', value)}
-                disabled={isResMode && !allowVehicleChange}
-              >
-                <SelectTrigger className={isResMode && !allowVehicleChange ? 'bg-gray-100' : ''}>
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(vehicleCategoryLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.vehicleCategory && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.vehicleCategory.message}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Adresses */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Adresses</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="pickupAddress">Adresse de prise en charge *</Label>
-              <AddressAutocomplete
-                value={form.watch('pickupAddress') || ''}
-                onChange={(value) => form.setValue('pickupAddress', value)}
-                onSelect={(address, placeId, addressData) => {
-                  form.setValue('pickupAddress', address);
-                  setPickupAddressData(addressData);
-                }}
-                placeholder="Entrer l'adresse de prise en charge"
-                error={form.formState.errors.pickupAddress?.message}
-                disabled={isResMode && !allowAddressChange}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="deliveryAddress">Adresse de livraison *</Label>
-              <AddressAutocomplete
-                value={form.watch('deliveryAddress') || ''}
-                onChange={(value) => form.setValue('deliveryAddress', value)}
-                onSelect={(address, placeId, addressData) => {
-                  form.setValue('deliveryAddress', address);
-                  setDeliveryAddressData(addressData);
-                }}
-                placeholder="Entrer l'adresse de livraison"
-                error={form.formState.errors.deliveryAddress?.message}
-                disabled={isResMode && !allowAddressChange}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Planification */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Planification</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Date de prise en charge *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !form.watch('D1_PEC') && "text-muted-foreground",
-                        isResMode && "bg-gray-100 cursor-not-allowed"
-                      )}
-                      disabled={isResMode}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {form.watch('D1_PEC') ? (
-                        format(form.watch('D1_PEC')!, 'PPP', { locale: fr })
-                      ) : (
-                        <span>Sélectionner une date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={form.watch('D1_PEC') || undefined}
-                      onSelect={(date) => form.setValue('D1_PEC', date || new Date())}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div>
-                <Label>Date de livraison</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !form.watch('D2_LIV') && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {form.watch('D2_LIV') ? (
-                        format(form.watch('D2_LIV')!, 'PPP', { locale: fr })
-                      ) : (
-                        <span>Sélectionner une date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={form.watch('D2_LIV') || undefined}
-                      onSelect={(date) => form.setValue('D2_LIV', date || undefined)}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            {/* Créneaux horaires */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <Label htmlFor="H1_PEC">Créneau PEC début</Label>
-                <Input
-                  id="H1_PEC"
-                  type="time"
-                  {...form.register('H1_PEC')}
-                  disabled={isResMode}
-                  className={isResMode ? 'bg-gray-100' : ''}
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>
+          {livMission ? 'Créer une mission de restitution (RES)' : 'Créer une nouvelle mission'}
+        </CardTitle>
+        <CardDescription>
+          Étape {currentStep} sur {totalSteps}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Étape 1: Type de mission */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <FormField 
+                  control={form.control} 
+                  name="mission_type" 
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Type de mission</FormLabel>
+                      <FormControl>
+                        <RadioGroup 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value} 
+                          className="grid grid-cols-2 gap-4"
+                          disabled={!!livMission} // Disable if creating RES from LIV
+                        >
+                          <FormItem>
+                            <FormLabel className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${livMission ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                              <FormControl>
+                                <RadioGroupItem value="LIV" className="sr-only" disabled={!!livMission} />
+                              </FormControl>
+                              <div className="text-center space-y-2">
+                                <div className="text-4xl mb-2">🚚</div>
+                                <div className="font-semibold">Livraison</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Livraison d'un véhicule d'un point A vers un point B
+                                </div>
+                              </div>
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem>
+                            <FormLabel className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${livMission ? 'border-primary' : ''}`}>
+                              <FormControl>
+                                <RadioGroupItem value="RES" className="sr-only" />
+                              </FormControl>
+                              <div className="text-center space-y-2">
+                                <div className="text-4xl mb-2">🔄</div>
+                                <div className="font-semibold">Restitution</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Restitution d'un véhicule au client ou à un autre point
+                                </div>
+                              </div>
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div>
-                <Label htmlFor="H2_PEC">Créneau PEC fin</Label>
-                <Input
-                  id="H2_PEC"
-                  type="time"
-                  {...form.register('H2_PEC')}
-                  disabled={isResMode}
-                  className={isResMode ? 'bg-gray-100' : ''}
-                />
-              </div>
-              <div>
-                <Label htmlFor="H1_LIV">Créneau LIV début</Label>
-                <Input
-                  id="H1_LIV"
-                  type="time"
-                  {...form.register('H1_LIV')}
-                />
-              </div>
-              <div>
-                <Label htmlFor="H2_LIV">Créneau LIV fin</Label>
-                <Input
-                  id="H2_LIV"
-                  type="time"
-                  {...form.register('H2_LIV')}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Contacts */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contacts</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Contact prise en charge */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Contact prise en charge</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="contactPickupName">Nom</Label>
-                  <Input
-                    id="contactPickupName"
-                    {...form.register('contactPickupName')}
-                    placeholder="Nom du contact"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contactPickupPhone">Téléphone</Label>
-                  <Input
-                    id="contactPickupPhone"
-                    {...form.register('contactPickupPhone')}
-                    placeholder="Numéro de téléphone"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contactPickupEmail">Email</Label>
-                  <Input
-                    id="contactPickupEmail"
-                    type="email"
-                    {...form.register('contactPickupEmail')}
-                    placeholder="Adresse email"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Contact livraison */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Contact livraison</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="contactDeliveryName">Nom</Label>
-                  <Input
-                    id="contactDeliveryName"
-                    {...form.register('contactDeliveryName')}
-                    placeholder="Nom du contact"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contactDeliveryPhone">Téléphone</Label>
-                  <Input
-                    id="contactDeliveryPhone"
-                    {...form.register('contactDeliveryPhone')}
-                    placeholder="Numéro de téléphone"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contactDeliveryEmail">Email</Label>
-                  <Input
-                    id="contactDeliveryEmail"
-                    type="email"
-                    {...form.register('contactDeliveryEmail')}
-                    placeholder="Adresse email"
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Détails du véhicule */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Détails du véhicule</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="vehicleMake">Marque</Label>
-                <Input
-                  id="vehicleMake"
-                  {...form.register('vehicleMake')}
-                  placeholder="Marque du véhicule"
-                />
-              </div>
-              <div>
-                <Label htmlFor="vehicleModel">Modèle</Label>
-                <Input
-                  id="vehicleModel"
-                  {...form.register('vehicleModel')}
-                  placeholder="Modèle du véhicule"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="vehicleRegistration">Immatriculation</Label>
-                <Input
-                  id="vehicleRegistration"
-                  {...form.register('vehicleRegistration')}
-                  placeholder="Numéro d'immatriculation"
-                />
-              </div>
-              <div>
-                <Label htmlFor="vehicleFuel">Carburant</Label>
-                <Input
-                  id="vehicleFuel"
-                  {...form.register('vehicleFuel')}
-                  placeholder="Type de carburant"
-                />
-              </div>
-              <div>
-                <Label htmlFor="vehicleYear">Année</Label>
-                <Input
-                  id="vehicleYear"
-                  type="number"
-                  {...form.register('vehicleYear')}
-                  placeholder="Année de fabrication"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="vehicleVin">Numéro VIN</Label>
-              <Input
-                id="vehicleVin"
-                {...form.register('vehicleVin')}
-                placeholder="Numéro d'identification du véhicule"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Informations complémentaires</Label>
-              <Textarea
-                id="notes"
-                placeholder="Ajouter des notes ou informations importantes"
-                {...form.register('notes')}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section Prix */}
-        {prices && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-5 w-5" />
-                Estimation tarifaire
-                {isResMode && <Badge variant="secondary">30% de remise appliquée</Badge>}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Prix HT</Label>
-                  <div className="text-2xl font-bold">
-                    {isResMode ? (prices.priceHT * 0.7).toFixed(2) : prices.priceHT.toFixed(2)} €
-                  </div>
-                </div>
-                <div>
-                  <Label>Prix TTC</Label>
-                  <div className="text-2xl font-bold">
-                    {isResMode ? (prices.priceTTC * 0.7).toFixed(2) : prices.priceTTC.toFixed(2)} €
-                  </div>
-                </div>
-              </div>
-              {calculatedDistance && (
-                <p className="text-sm text-gray-600 mt-2">
-                  Distance estimée: {calculatedDistance.toFixed(1)} km
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="submit"
-            disabled={isSubmitting || pricingLoading || !prices}
-            className="min-w-32"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Création...
-              </>
-            ) : (
-              `Créer la mission${isResMode ? ' RES' : ''}`
             )}
-          </Button>
-        </div>
-      </form>
-    </div>
+
+            {/* Étape 2: Sélection du véhicule, adresses et prix */}
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                <FormField 
+                  control={form.control} 
+                  name="vehicle_category" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type de véhicule</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value as VehicleCategory)} 
+                        defaultValue={field.value}
+                        disabled={!!livMission} // Lock for RES missions
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un type de véhicule" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(vehicleCategoryLabels).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Ce choix déterminera le tarif applicable à cette mission.
+                        {livMission && <span className="text-blue-600 block">Verrouillé depuis la mission LIV</span>}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-4">
+                  <FormField 
+                    control={form.control} 
+                    name="pickup_address" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Adresse de départ
+                          {livMission && <span className="text-blue-600 ml-2">(Adresse de livraison de la mission LIV)</span>}
+                        </FormLabel>
+                        <FormControl>
+                          <AddressAutocomplete 
+                            value={field.value} 
+                            onChange={(value) => field.onChange(value)} 
+                            onSelect={(address, placeId) => {
+                              onSelectPickupAddress(address, placeId, window.selectedAddressData);
+                            }} 
+                            placeholder="Saisissez l'adresse de départ" 
+                            error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
+                            disabled={!!livMission} // Lock for RES missions
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField 
+                    control={form.control} 
+                    name="delivery_address" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Adresse de livraison
+                          {livMission && <span className="text-blue-600 ml-2">(Adresse de départ de la mission LIV)</span>}
+                        </FormLabel>
+                        <FormControl>
+                          <AddressAutocomplete 
+                            value={field.value} 
+                            onChange={(value) => field.onChange(value)} 
+                            onSelect={(address, placeId) => {
+                              onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
+                            }} 
+                            placeholder="Saisissez l'adresse de livraison" 
+                            error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
+                            disabled={!!livMission} // Lock for RES missions
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-center my-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={calculatePrice} 
+                      disabled={calculatingPrice} 
+                      className="flex items-center gap-2"
+                    >
+                      {calculatingPrice ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Calculator className="h-4 w-4" />
+                      )}
+                      Calculer le prix{livMission ? ' (remise 30%)' : ''}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField 
+                      control={form.control} 
+                      name="distance_km" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Distance (km)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01" 
+                              value={field.value || ''} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
+                              readOnly 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="price_ht" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prix HT (€)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01" 
+                              value={field.value || ''} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
+                              readOnly 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="price_ttc" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prix TTC (€)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="number" 
+                              step="0.01" 
+                              value={field.value || ''} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)} 
+                              readOnly 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Étape 3: Informations du véhicule */}
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_make" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marque du véhicule *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: Renault, Peugeot" 
+                            disabled={!!livMission}
+                          />
+                        </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_model" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modèle *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: Clio, 308" 
+                            disabled={!!livMission}
+                          />
+                        </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_fuel" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Carburant *</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={!!livMission}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner le type de carburant" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Diesel">Diesel</SelectItem>
+                            <SelectItem value="Essence">Essence</SelectItem>
+                            <SelectItem value="Hybride">Hybride</SelectItem>
+                            <SelectItem value="Électrique">Électrique</SelectItem>
+                            <SelectItem value="GPL">GPL</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_year" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Année</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="number" 
+                            min="1900" 
+                            max="2100" 
+                            placeholder="Ex: 2020" 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            disabled={!!livMission}
+                          />
+                        </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_registration" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Immatriculation *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: AB-123-CD" 
+                            disabled={!!livMission}
+                          />
+                        </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="vehicle_vin" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Numéro VIN (Numéro de châssis)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Ex: WVWZZZ1JZXW000001" 
+                            disabled={!!livMission}
+                          />
+                        </FormControl>
+                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Étape 4: Contacts, créneaux horaires et notes */}
+            {currentStep === 4 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">
+                        Contact au lieu de départ
+                        {livMission && <span className="text-blue-600 text-sm block">(Contact de livraison de la mission LIV)</span>}
+                      </h3>
+                      <ContactSelector 
+                        onSelectContact={handlePickupContactSelect} 
+                        clientId={selectedClientId || undefined} 
+                      />
+                    </div>
+                    
+                    <FormField 
+                      control={form.control} 
+                      name="contact_pickup_name" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom / Société *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nom complet ou société" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_pickup_phone" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Téléphone *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Numéro de téléphone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_pickup_email" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="Adresse email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium">Créneau de ramassage</h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField 
+                          control={form.control} 
+                          name="D1_PEC" 
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel className="mb-2">Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button 
+                                      variant={"outline"} 
+                                      className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, "dd/MM/yyyy")
+                                      ) : (
+                                        <span>Date</span>
+                                      )}
+                                      <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <CalendarComponent 
+                                    mode="single" 
+                                    selected={field.value} 
+                                    onSelect={field.onChange} 
+                                    initialFocus 
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H1_PEC" 
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="mb-2">Heure début</FormLabel>
+                              <FormControl>
+                                <TimeSelect value={field.value} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H2_PEC" 
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="mb-2">Heure fin</FormLabel>
+                              <FormControl>
+                                <TimeSelect value={field.value} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">
+                        Contact au lieu de livraison
+                        {livMission && <span className="text-blue-600 text-sm block">(Contact de départ de la mission LIV)</span>}
+                      </h3>
+                      <ContactSelector 
+                        onSelectContact={handleDeliveryContactSelect} 
+                        clientId={selectedClientId || undefined} 
+                      />
+                    </div>
+                    
+                    <FormField 
+                      control={form.control} 
+                      name="contact_delivery_name" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom / Société *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nom complet ou société" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_delivery_phone" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Téléphone *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Numéro de téléphone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="contact_delivery_email" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" placeholder="Adresse email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium">Créneau de livraison</h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField 
+                          control={form.control} 
+                          name="D2_LIV" 
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel className="mb-2">Date</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button 
+                                      variant={"outline"} 
+                                      className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, "dd/MM/yyyy")
+                                      ) : (
+                                        <span>Date</span>
+                                      )}
+                                      <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <CalendarComponent 
+                                    mode="single" 
+                                    selected={field.value} 
+                                    onSelect={field.onChange} 
+                                    initialFocus 
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H1_LIV" 
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="mb-2">Heure début</FormLabel>
+                              <FormControl>
+                                <TimeSelect value={field.value} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField 
+                          control={form.control} 
+                          name="H2_LIV" 
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="mb-2">Heure fin</FormLabel>
+                              <FormControl>
+                                <TimeSelect value={field.value} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <FormField 
+                  control={form.control} 
+                  name="notes" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes / Instructions spéciales</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Informations supplémentaires, codes d'accès, instructions particulières..." 
+                          className="h-32" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className="text-sm font-bold mt-2">Les fichiers pourront être téléchargées dans la page de la mission crée</p>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Étape 5: Attribution (Admin seulement) */}
+            {currentStep === 5 && profile?.role === 'admin' && (
+              <div className="space-y-6">
+                <FormField 
+                  control={form.control} 
+                  name="client_id" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client</FormLabel>
+                      <Select 
+                        onValueChange={handleClientChange} 
+                        defaultValue={field.value}
+                        disabled={!!livMission} // Pre-selected for RES missions
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un client" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="no_client_selected" disabled>Sélectionner un client</SelectItem>
+                          {loadingClients ? (
+                            <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                          ) : (
+                            clientProfiles.map((client: ProfileOption) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.label || client.email || client.id}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {livMission && <FormDescription className="text-blue-600">Pré-sélectionné depuis la mission LIV</FormDescription>}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField 
+                  control={form.control} 
+                  name="chauffeur_id" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chauffeur</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value || ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un chauffeur (optionnel)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="no_driver_assigned">Aucun chauffeur assigné</SelectItem>
+                          {loadingDrivers ? (
+                            <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                          ) : (
+                            driverProfiles.map((driver: ProfileOption) => (
+                              <SelectItem key={driver.id} value={driver.id}>
+                                {driver.label || driver.email || driver.id}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Vous pouvez assigner un chauffeur maintenant ou plus tard
+                        {livMission && <span className="text-blue-600 block">Pré-sélectionné depuis la mission LIV (modifiable)</span>}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField 
+                  control={form.control} 
+                  name="chauffeur_price_ht" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prix chauffeur HT (€)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Prix payé au chauffeur pour cette mission (hors taxes)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField 
+                  control={form.control} 
+                  name="status" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Statut initial</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="en_acceptation">En acceptation</SelectItem>
+                          <SelectItem value="accepte">Accepté</SelectItem>
+                          <SelectItem value="prise_en_charge">Prise en charge</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Boutons de navigation */}
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between pt-6">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={prevStep} 
+                  disabled={currentStep === 1}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Précédent
+                </Button>
+
+                {currentStep < totalSteps ? (
+                  <Button type="button" onClick={nextStep}>
+                    Suivant <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <p className="text-sm text-right">
+                      Le client accepte sans réserves les <a href="https://dkautomotive.fr/cgv" target="_blank" className="font-medium text-[#193366] hover:underline">
+                        CGV
+                      </a> en créant la mission
+                    </p>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="mr-2 h-4 w-4" />
+                      )}
+                      Créer la mission
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
-}
-
-// Function to calculate distance between two address objects
-function calculateDistance(pickupData: any, deliveryData: any) {
-  const R = 6371; // Radius of the earth in km
-  
-  // Extract coordinates safely, handling both function calls and direct properties
-  let lat1: number, lon1: number, lat2: number, lon2: number;
-  
-  // Handle pickup coordinates
-  if (pickupData.geometry && pickupData.geometry.location) {
-    const pickupLocation = pickupData.geometry.location;
-    if (typeof pickupLocation.lat === 'function' && typeof pickupLocation.lng === 'function') {
-      lat1 = pickupLocation.lat();
-      lon1 = pickupLocation.lng();
-    } else if (typeof pickupLocation.lat === 'number' && typeof pickupLocation.lng === 'number') {
-      lat1 = pickupLocation.lat;
-      lon1 = pickupLocation.lng;
-    } else {
-      console.error('Invalid pickup location format:', pickupLocation);
-      return 0;
-    }
-  } else {
-    console.error('Invalid pickup data structure:', pickupData);
-    return 0;
-  }
-  
-  // Handle delivery coordinates
-  if (deliveryData.geometry && deliveryData.geometry.location) {
-    const deliveryLocation = deliveryData.geometry.location;
-    if (typeof deliveryLocation.lat === 'function' && typeof deliveryLocation.lng === 'function') {
-      lat2 = deliveryLocation.lat();
-      lon2 = deliveryLocation.lng();
-    } else if (typeof deliveryLocation.lat === 'number' && typeof deliveryLocation.lng === 'number') {
-      lat2 = deliveryLocation.lat;
-      lon2 = deliveryLocation.lng;
-    } else {
-      console.error('Invalid delivery location format:', deliveryLocation);
-      return 0;
-    }
-  } else {
-    console.error('Invalid delivery data structure:', deliveryData);
-    return 0;
-  }
-  
-  const dLat = deg2rad(lat2 - lat1);
-  const dLon = deg2rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distance in km
-  return distance;
-}
-
-function deg2rad(deg: number) {
-  return deg * (Math.PI / 180)
 }

@@ -234,7 +234,6 @@ export default function CreateMissionForm({
       chauffeur_id: null,
       chauffeur_price_ht: 0,
       vehicle_id: null,
-      // Nouveaux champs par défaut
       D1_PEC: undefined,
       H1_PEC: '',
       H2_PEC: '',
@@ -258,32 +257,6 @@ export default function CreateMissionForm({
     }
   }, [profile, form]);
 
-  // Lorsqu'un client est sélectionné dans le dropdown
-  const handleClientChange = (clientId: string) => {
-    console.log('Client sélectionné:', clientId);
-    setSelectedClientId(clientId);
-    form.setValue('client_id', clientId);
-  };
-
-  // Déterminer le schéma à utiliser en fonction de l'étape actuelle et obtenir les noms des champs
-  const getCurrentSchemaFields = (step: number): string[] => {
-    switch (step) {
-      case 1:
-        return Object.keys(missionTypeSchema.shape);
-      case 2:
-        return Object.keys(vehicleAndAddressSchema.shape);
-      case 3:
-        return Object.keys(vehicleInfoSchema.shape);
-      case 4:
-        // Pour le schéma avec superRefine, on utilise le schéma de base pour obtenir les noms des champs
-        return Object.keys(baseContactsAndNotesSchema.shape);
-      case 5:
-        return Object.keys(attributionSchema.shape);
-      default:
-        return Object.keys(missionTypeSchema.shape);
-    }
-  };
-
   // Pre-fill form when creating RES from LIV
   useEffect(() => {
     if (livMission) {
@@ -292,7 +265,7 @@ export default function CreateMissionForm({
       // Set mission type to RES
       form.setValue('mission_type', 'RES');
       
-      // Invert addresses and contacts
+      // Invert addresses and lock them
       if (livMission.delivery_address?.formatted_address) {
         form.setValue('pickup_address', livMission.delivery_address.formatted_address);
         setPickupAddressData(livMission.delivery_address);
@@ -300,6 +273,11 @@ export default function CreateMissionForm({
       if (livMission.pickup_address?.formatted_address) {
         form.setValue('delivery_address', livMission.pickup_address.formatted_address);
         setDeliveryAddressData(livMission.pickup_address);
+      }
+
+      // Set vehicle category but don't copy other vehicle info (user will fill new vehicle)
+      if (livMission.vehicle_category) {
+        form.setValue('vehicle_category', livMission.vehicle_category);
       }
 
       // Invert contacts
@@ -323,27 +301,15 @@ export default function CreateMissionForm({
         form.setValue('contact_delivery_email', livMission.contact_pickup_email);
       }
 
-      // Copy vehicle information
-      if (livMission.vehicle_category) {
-        form.setValue('vehicle_category', livMission.vehicle_category);
+      // Lock pickup date/time to LIV delivery date/time
+      if (livMission.D2_LIV) {
+        form.setValue('D1_PEC', new Date(livMission.D2_LIV));
       }
-      if (livMission.vehicle_make) {
-        form.setValue('vehicle_make', livMission.vehicle_make);
+      if (livMission.H1_LIV) {
+        form.setValue('H1_PEC', livMission.H1_LIV);
       }
-      if (livMission.vehicle_model) {
-        form.setValue('vehicle_model', livMission.vehicle_model);
-      }
-      if (livMission.vehicle_fuel) {
-        form.setValue('vehicle_fuel', livMission.vehicle_fuel);
-      }
-      if (livMission.vehicle_year) {
-        form.setValue('vehicle_year', livMission.vehicle_year);
-      }
-      if (livMission.vehicle_registration) {
-        form.setValue('vehicle_registration', livMission.vehicle_registration);
-      }
-      if (livMission.vehicle_vin) {
-        form.setValue('vehicle_vin', livMission.vehicle_vin);
+      if (livMission.H2_LIV) {
+        form.setValue('H2_PEC', livMission.H2_LIV);
       }
 
       // Pre-select client and driver for admin
@@ -359,6 +325,32 @@ export default function CreateMissionForm({
     }
   }, [livMission, form, profile]);
 
+  // Déterminer le schéma à utiliser en fonction de l'étape actuelle et obtenir les noms des champs
+  const getCurrentSchemaFields = (step: number): string[] => {
+    switch (step) {
+      case 1:
+        return Object.keys(missionTypeSchema.shape);
+      case 2:
+        return Object.keys(vehicleAndAddressSchema.shape);
+      case 3:
+        return Object.keys(vehicleInfoSchema.shape);
+      case 4:
+        // Pour le schéma avec superRefine, on utilise le schéma de base pour obtenir les noms des champs
+        return Object.keys(baseContactsAndNotesSchema.shape);
+      case 5:
+        return Object.keys(attributionSchema.shape);
+      default:
+        return Object.keys(missionTypeSchema.shape);
+    }
+  };
+
+  // Lorsqu'un client est sélectionné dans le dropdown
+  const handleClientChange = (clientId: string) => {
+    console.log('Client sélectionné:', clientId);
+    setSelectedClientId(clientId);
+    form.setValue('client_id', clientId);
+  };
+
   async function calculatePrice() {
     try {
       setCalculatingPrice(true);
@@ -369,6 +361,7 @@ export default function CreateMissionForm({
         setCalculatingPrice(false);
         return;
       }
+      
       const vehicleCategory = form.getValues('vehicle_category') as VehicleCategory;
       if (!vehicleCategory) {
         toast.error('Veuillez sélectionner un type de véhicule avant de calculer le prix');
@@ -376,20 +369,30 @@ export default function CreateMissionForm({
         return;
       }
 
-      // Extraire les coordonnées des adresses
-      const pickupCoords = {
-        lat: pickupAddressData.lat || (pickupAddressData.geometry?.location?.lat && typeof pickupAddressData.geometry.location.lat === 'function' ? pickupAddressData.geometry.location.lat() : null),
-        lng: pickupAddressData.lng || (pickupAddressData.geometry?.location?.lng && typeof pickupAddressData.geometry.location.lng === 'function' ? pickupAddressData.geometry.location.lng() : null)
+      // Extraire les coordonnées des adresses de manière sécurisée
+      const getCoordinates = (addressData: any) => {
+        if (addressData.lat && addressData.lng) {
+          return { lat: addressData.lat, lng: addressData.lng };
+        }
+        if (addressData.geometry?.location) {
+          const location = addressData.geometry.location;
+          return {
+            lat: typeof location.lat === 'function' ? location.lat() : location.lat,
+            lng: typeof location.lng === 'function' ? location.lng() : location.lng
+          };
+        }
+        return null;
       };
-      const deliveryCoords = {
-        lat: deliveryAddressData.lat || (deliveryAddressData.geometry?.location?.lat && typeof deliveryAddressData.geometry.location.lat === 'function' ? deliveryAddressData.geometry.location.lat() : null),
-        lng: deliveryAddressData.lng || (deliveryAddressData.geometry?.location?.lng && typeof deliveryAddressData.geometry.location.lng === 'function' ? deliveryAddressData.geometry.location.lng() : null)
-      };
-      if (!pickupCoords.lat || !pickupCoords.lng || !deliveryCoords.lat || !deliveryCoords.lng) {
+
+      const pickupCoords = getCoordinates(pickupAddressData);
+      const deliveryCoords = getCoordinates(deliveryAddressData);
+
+      if (!pickupCoords?.lat || !pickupCoords?.lng || !deliveryCoords?.lat || !deliveryCoords?.lng) {
         toast.error('Les coordonnées des adresses sont invalides');
         setCalculatingPrice(false);
         return;
       }
+
       console.log("Coordonnées de départ:", pickupCoords);
       console.log("Coordonnées d'arrivée:", deliveryCoords);
 
@@ -402,17 +405,26 @@ export default function CreateMissionForm({
       }
 
       // Utiliser la valeur numérique précise de la distance au lieu de parser le texte
-      // distanceValue est en mètres, on convertit en km
       const distanceKm = result.distanceValue / 1000;
       console.log("Distance calculée:", distanceKm, "km");
 
       // Calculer le prix basé sur la distance et le type de véhicule
-      const priceResult = await computePrice(distanceKm, vehicleCategory);
+      let priceResult = await computePrice(distanceKm, vehicleCategory);
       if (!priceResult) {
         toast.error('Impossible de calculer le prix pour cette distance');
         setCalculatingPrice(false);
         return;
       }
+
+      // Appliquer remise de 30% pour les missions RES
+      if (livMission) {
+        priceResult = {
+          ...priceResult,
+          priceHT: priceResult.priceHT * 0.7,
+          priceTTC: priceResult.priceTTC * 0.7
+        };
+      }
+
       form.setValue('distance_km', distanceKm);
       form.setValue('price_ht', priceResult.priceHT);
       form.setValue('price_ttc', priceResult.priceTTC);
@@ -421,9 +433,8 @@ export default function CreateMissionForm({
       if (priceResult.vehicleId) {
         form.setValue('vehicle_id', priceResult.vehicleId);
         console.log('Vehicle ID set to:', priceResult.vehicleId);
-      } else {
-        console.log('No vehicle ID found for the selected vehicle category');
       }
+
       console.log("Prix calculé:", priceResult);
       toast.success(`Prix calculé avec succès: ${priceResult.priceTTC.toFixed(2)} € TTC${livMission ? ' (remise 30%)' : ''}`);
     } catch (error) {
@@ -479,7 +490,6 @@ export default function CreateMissionForm({
       // Déterminer le client_id à utiliser
       let clientId = null;
       if (profile?.role === 'admin') {
-        // Pour les admins: utiliser le client sélectionné dans le formulaire
         if (values.client_id && values.client_id !== 'no_client_selected') {
           clientId = values.client_id;
           console.log("Admin: client_id from values =", clientId);
@@ -489,7 +499,6 @@ export default function CreateMissionForm({
           return;
         }
       } else if (profile?.role === 'client' && user?.id) {
-        // Pour les clients: utiliser leur propre ID
         clientId = user.id;
         console.log("Client: client_id (user.id) =", clientId);
       } else {
@@ -498,20 +507,16 @@ export default function CreateMissionForm({
         return;
       }
 
-      // Vérifier que nous avons un client_id valide
       if (!clientId) {
         toast.error('Aucun client valide n\'a été trouvé ou sélectionné');
         setIsSubmitting(false);
         return;
       }
 
-      // S'assurer que chauffeur_id n'est pas un des valeurs statiques
       let chauffeurId = values.chauffeur_id;
       if (!chauffeurId || chauffeurId === "no_driver_assigned") {
         chauffeurId = null;
       }
-      console.log("Client ID final:", clientId);
-      console.log("Chauffeur ID final:", chauffeurId);
 
       // Préparer les données d'adresse pour la base de données
       const pickupAddressData = values.pickup_address_data || {
@@ -521,7 +526,6 @@ export default function CreateMissionForm({
         formatted_address: values.delivery_address
       };
 
-      // Convertir les objets Address en Json compatible avec Supabase
       const pickupAddressJson = pickupAddressData ? JSON.parse(JSON.stringify(pickupAddressData)) : {
         formatted_address: values.pickup_address
       };
@@ -539,7 +543,6 @@ export default function CreateMissionForm({
         formattedD2LIV = format(values.D2_LIV, 'yyyy-MM-dd');
       }
 
-      // Enregistrer la mission
       const missionData = {
         client_id: clientId,
         status: values.status || 'en_acceptation',
@@ -559,14 +562,12 @@ export default function CreateMissionForm({
         contact_pickup_name: values.contact_pickup_name,
         contact_pickup_phone: values.contact_pickup_phone,
         contact_pickup_email: values.contact_pickup_email,
-        // Nouveaux champs pour le ramassage
         D1_PEC: formattedD1PEC,
         H1_PEC: values.H1_PEC,
         H2_PEC: values.H2_PEC,
         contact_delivery_name: values.contact_delivery_name,
         contact_delivery_phone: values.contact_delivery_phone,
         contact_delivery_email: values.contact_delivery_email,
-        // Nouveaux champs pour la livraison
         D2_LIV: formattedD2LIV,
         H1_LIV: values.H1_LIV,
         H2_LIV: values.H2_LIV,
@@ -576,44 +577,36 @@ export default function CreateMissionForm({
         created_by: user?.id || '',
         scheduled_date: new Date().toISOString(),
         vat_rate: 20,
-        // Taux de TVA par défaut
         mission_type: values.mission_type || 'LIV',
-        // Link to LIV mission if creating RES
         linked_mission_id: livMission ? livMission.id : null,
         is_linked: livMission ? true : false
       };
+
       console.log("Mission data to save:", JSON.stringify(missionData, null, 2));
-      try {
-        console.log("Sending request to Supabase with data:", missionData);
-        const {
-          data,
-          error
-        } = await typedSupabase.from('missions').insert(missionData).select('id').single();
-        if (error) {
-          console.error('Erreur Supabase lors de la création de la mission:', error);
-          console.error('Detail:', error.details);
-          console.error('Message:', error.message);
-          console.error('Hint:', error.hint);
-          toast.error(`Erreur lors de la création de la mission: ${error.message}`);
-          return;
-        }
-        console.log("Mission créée avec succès, données retournées:", data);
-        toast.success('Mission créée avec succès');
-        if (onSuccess && data?.id) {
-          onSuccess(data.id);
+      
+      const { data, error } = await typedSupabase
+        .from('missions')
+        .insert(missionData)
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Erreur Supabase lors de la création de la mission:', error);
+        toast.error(`Erreur lors de la création de la mission: ${error.message}`);
+        return;
+      }
+
+      console.log("Mission créée avec succès, données retournées:", data);
+      toast.success('Mission créée avec succès');
+      
+      if (onSuccess && data?.id) {
+        onSuccess(data.id);
+      } else {
+        if (profile?.role === 'admin') {
+          navigate('/admin/missions');
         } else {
-          // Rediriger vers la page appropriée en fonction du rôle
-          if (profile?.role === 'admin') {
-            navigate('/admin/missions');
-          } else {
-            navigate('/client/missions');
-          }
+          navigate('/client/missions');
         }
-      } catch (dbError: any) {
-        console.error('Exception lors de l\'opération Supabase:', dbError);
-        console.error('Detail:', dbError.details || 'No details');
-        console.error('Message:', dbError.message || 'No message');
-        toast.error(`Exception lors de la création de la mission: ${dbError.message || 'Erreur inconnue'}`);
       }
     } catch (error: any) {
       console.error('Erreur globale lors de la création de la mission:', error);
@@ -676,7 +669,7 @@ export default function CreateMissionForm({
                           onValueChange={field.onChange} 
                           defaultValue={field.value} 
                           className="grid grid-cols-2 gap-4"
-                          disabled={!!livMission} // Disable if creating RES from LIV
+                          disabled={!!livMission}
                         >
                           <FormItem>
                             <FormLabel className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary ${livMission ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -727,7 +720,6 @@ export default function CreateMissionForm({
                       <Select 
                         onValueChange={(value) => field.onChange(value as VehicleCategory)} 
                         defaultValue={field.value}
-                        disabled={!!livMission} // Lock for RES missions
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -742,7 +734,7 @@ export default function CreateMissionForm({
                       </Select>
                       <FormDescription>
                         Ce choix déterminera le tarif applicable à cette mission.
-                        {livMission && <span className="text-blue-600 block">Verrouillé depuis la mission LIV</span>}
+                        {livMission && <span className="text-blue-600 block">Catégorie modifiable • Prix avec remise 30%</span>}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -757,7 +749,7 @@ export default function CreateMissionForm({
                       <FormItem>
                         <FormLabel>
                           Adresse de départ
-                          {livMission && <span className="text-blue-600 ml-2">(Adresse de livraison de la mission LIV)</span>}
+                          {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de livraison de la mission LIV)</span>}
                         </FormLabel>
                         <FormControl>
                           <AddressAutocomplete 
@@ -768,7 +760,7 @@ export default function CreateMissionForm({
                             }} 
                             placeholder="Saisissez l'adresse de départ" 
                             error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
-                            disabled={!!livMission} // Lock for RES missions
+                            disabled={!!livMission}
                           />
                         </FormControl>
                         <FormMessage />
@@ -783,7 +775,7 @@ export default function CreateMissionForm({
                       <FormItem>
                         <FormLabel>
                           Adresse de livraison
-                          {livMission && <span className="text-blue-600 ml-2">(Adresse de départ de la mission LIV)</span>}
+                          {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de départ de la mission LIV)</span>}
                         </FormLabel>
                         <FormControl>
                           <AddressAutocomplete 
@@ -794,7 +786,7 @@ export default function CreateMissionForm({
                             }} 
                             placeholder="Saisissez l'adresse de livraison" 
                             error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
-                            disabled={!!livMission} // Lock for RES missions
+                            disabled={!!livMission}
                           />
                         </FormControl>
                         <FormMessage />
@@ -885,9 +877,17 @@ export default function CreateMissionForm({
               </div>
             )}
 
-            {/* Étape 3: Informations du véhicule */}
+            {/* Étape 3: Informations du véhicule - Champs vides pour RES */}
             {currentStep === 3 && (
               <div className="space-y-6">
+                {livMission && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Nouveau véhicule :</strong> Saisissez les informations du véhicule à restituer (peut être différent de la mission LIV)
+                    </p>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField 
                     control={form.control} 
@@ -899,10 +899,8 @@ export default function CreateMissionForm({
                           <Input 
                             {...field} 
                             placeholder="Ex: Renault, Peugeot" 
-                            disabled={!!livMission}
                           />
                         </FormControl>
-                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -917,10 +915,8 @@ export default function CreateMissionForm({
                           <Input 
                             {...field} 
                             placeholder="Ex: Clio, 308" 
-                            disabled={!!livMission}
                           />
                         </FormControl>
-                        {livMission && <FormDescription className="text-blue-600">Verrouillé depuis la mission LIV</FormDescription>}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1023,7 +1019,7 @@ export default function CreateMissionForm({
               </div>
             )}
 
-            {/* Étape 4: Contacts, créneaux horaires et notes */}
+            {/* Étape 4: Contacts inversés et créneaux verrouillés pour RES */}
             {currentStep === 4 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1080,7 +1076,10 @@ export default function CreateMissionForm({
                     />
 
                     <div className="space-y-4">
-                      <h4 className="text-md font-medium">Créneau de ramassage</h4>
+                      <h4 className="text-md font-medium">
+                        Créneau de ramassage
+                        {livMission && <span className="text-blue-600 text-sm block">(Verrouillé sur le créneau de livraison LIV)</span>}
+                      </h4>
                       <div className="grid grid-cols-3 gap-4">
                         <FormField 
                           control={form.control} 
@@ -1093,7 +1092,8 @@ export default function CreateMissionForm({
                                   <FormControl>
                                     <Button 
                                       variant={"outline"} 
-                                      className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
+                                      className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"} ${livMission ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                      disabled={!!livMission}
                                     >
                                       {field.value ? (
                                         format(field.value, "dd/MM/yyyy")
@@ -1104,14 +1104,16 @@ export default function CreateMissionForm({
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <CalendarComponent 
-                                    mode="single" 
-                                    selected={field.value} 
-                                    onSelect={field.onChange} 
-                                    initialFocus 
-                                  />
-                                </PopoverContent>
+                                {!livMission && (
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <CalendarComponent 
+                                      mode="single" 
+                                      selected={field.value} 
+                                      onSelect={field.onChange} 
+                                      initialFocus 
+                                    />
+                                  </PopoverContent>
+                                )}
                               </Popover>
                               <FormMessage />
                             </FormItem>
@@ -1124,7 +1126,11 @@ export default function CreateMissionForm({
                             <FormItem>
                               <FormLabel className="mb-2">Heure début</FormLabel>
                               <FormControl>
-                                <TimeSelect value={field.value} onChange={field.onChange} />
+                                <TimeSelect 
+                                  value={field.value} 
+                                  onChange={field.onChange} 
+                                  disabled={!!livMission}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1137,7 +1143,11 @@ export default function CreateMissionForm({
                             <FormItem>
                               <FormLabel className="mb-2">Heure fin</FormLabel>
                               <FormControl>
-                                <TimeSelect value={field.value} onChange={field.onChange} />
+                                <TimeSelect 
+                                  value={field.value} 
+                                  onChange={field.onChange} 
+                                  disabled={!!livMission}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

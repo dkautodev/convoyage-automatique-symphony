@@ -242,17 +242,18 @@ const MissionDetailsPage = () => {
           <p className="text-gray-500">Créée le {formattedDate}</p>
         </div>
         <div className="flex gap-2">
+          {/* Bouton Restitution - Pour Admin et Client */}
+          {(isAdmin || isClient) && (
+            <RestitutionButton mission={mission} />
+          )}
+          
           {/* Admin buttons */}
           {isAdmin && (
             <Button onClick={handleEditMission} variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier infos
+              <Edit className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Modifier infos</span>
             </Button>
           )}
-          
-          <Button onClick={handleBack} variant="outline">
-            Retour aux missions
-          </Button>
         </div>
       </div>
 

@@ -40,10 +40,10 @@ export const RestitutionButton: React.FC<RestitutionButtonProps> = ({ mission })
     <Button 
       onClick={handleRestitutionClick}
       variant="outline"
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-600"
     >
       <ArrowLeftRight className="h-4 w-4" />
-      Restitution
+      <span className="hidden md:inline">Restitution</span>
     </Button>
   );
 };

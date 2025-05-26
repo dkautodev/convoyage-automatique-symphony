@@ -1,23 +1,22 @@
-// useProfiles.ts
-import React, { useState, useEffect } from 'react'; // ✅ Ajout de React pour les composants
-import { supabase } from '@/integrations/supabase/client'; // ✅ Import correct
-import { UserRole, ProfileOption } from '@/types/supabase'; // ✅ Export des types
 
-// Définition et export du type ProfileOption
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { UserRole } from '@/types/supabase';
+
 export interface ProfileOption {
   id: string;
   label: string;
   email: string;
 }
 
-// Hook personnalisé
 export const useProfiles = (role: UserRole) => {
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfiles = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -25,9 +24,12 @@ export const useProfiles = (role: UserRole) => {
           .eq('role', role)
           .eq('active', true)
           .order('company_name', { ascending: true });
-
-        if (error) throw error;
-
+          
+        if (error) {
+          throw error;
+        }
+        
+        // Format data for select options
         const options = data.map(profile => ({
           id: profile.id,
           label: role === 'client' 
@@ -35,18 +37,19 @@ export const useProfiles = (role: UserRole) => {
             : (profile.full_name || profile.email),
           email: profile.email
         }));
-
+        
+        console.log(`Loaded ${options.length} ${role} profiles:`, options);
         setProfiles(options);
-      } catch (err) {
-        console.error(`Erreur lors de la récupération des ${role}s:`, err);
-        setError("Impossible de charger les profils");
+      } catch (err: any) {
+        console.error(`Error fetching ${role} profiles:`, err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchProfiles();
   }, [role]);
-
+  
   return { profiles, loading, error };
 };

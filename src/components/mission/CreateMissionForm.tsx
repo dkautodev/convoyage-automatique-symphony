@@ -26,9 +26,6 @@ import { format } from 'date-fns';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import ContactSelector from './ContactSelector';
 import { Contact } from '@/types/contact';
-import { useProfiles, ProfileOption } from '@/hooks/useProfiles'; // ✅ Import de ProfileOption
-import { UserRole } from '@/types/supabase'; // ✅ Import de UserRole
-import { typedSupabase } from '@/integrations/supabase/client'; // ✅ supabase
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({

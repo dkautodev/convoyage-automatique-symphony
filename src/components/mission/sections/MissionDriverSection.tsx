@@ -10,6 +10,7 @@ import { typedSupabase } from '@/types/database';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import { User, DollarSign } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
+import { ProfileOption } from '@/hooks/useProfiles'; // ✅ Import de ProfileOption DC
 
 interface MissionDriverSectionProps {
   mission: Mission;

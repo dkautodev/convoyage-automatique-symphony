@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, FolderOpen } from 'lucide-react';
 import { Mission } from '@/types/supabase';
-import { RestitutionButton } from '@/components/mission/RestitutionButton';
 import { GenerateMissionSheetButton } from '@/components/mission/GenerateMissionSheetButton';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
 
@@ -41,11 +40,6 @@ export const MissionDocumentManagementSection: React.FC<MissionDocumentManagemen
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-3">
-          {/* Bouton Restitution - Pour Admin et Client */}
-          {(isAdmin || isClient) && (
-            <RestitutionButton mission={mission} />
-          )}
-          
           {/* Bouton Fiche de mission */}
           <GenerateMissionSheetButton mission={mission} driverName={driverName} />
           

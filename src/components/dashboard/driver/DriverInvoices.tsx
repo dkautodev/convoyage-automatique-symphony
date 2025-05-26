@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,13 +6,15 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Upload, Eye, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-
 interface DriverInvoicesProps {
   isAdmin: boolean;
 }
-
-const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
-  const { user } = useAuth();
+const DriverInvoices: React.FC<DriverInvoicesProps> = ({
+  isAdmin
+}) => {
+  const {
+    user
+  } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -29,58 +30,44 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
   useEffect(() => {
     const fetchDriverData = async () => {
       if (!user?.id && !isAdmin) return;
-      
       try {
         setLoading(true);
-        
-        let query = supabase
-          .from('missions')
-          .select('*')
-          .in('status', ['livre', 'termine']);
-          
+        let query = supabase.from('missions').select('*').in('status', ['livre', 'termine']);
         if (!isAdmin) {
           query = query.eq('chauffeur_id', user.id);
         }
-        
-        const { data, error } = await query.order('created_at', { ascending: false });
-        
+        const {
+          data,
+          error
+        } = await query.order('created_at', {
+          ascending: false
+        });
         if (error) throw error;
-        
-        const convertedMissions = data.map(mission => 
-          convertMissionFromDB(mission as unknown as MissionFromDB)
-        );
-        
+        const convertedMissions = data.map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
         setMissions(convertedMissions);
-        
+
         // Calculate stats
         const paidMissions = convertedMissions.filter(m => m.status === 'termine');
         const pendingMissions = convertedMissions.filter(m => m.status === 'livre');
-        
+
         // Calculate driver commission (70% of HT price)
         const driverCommission = 0.7;
-        
-        const totalPaid = paidMissions.reduce((sum, mission) => 
-          sum + ((mission.price_ht || 0) * driverCommission), 0
-        );
-        
-        const totalPending = pendingMissions.reduce((sum, mission) => 
-          sum + ((mission.price_ht || 0) * driverCommission), 0
-        );
-        
+        const totalPaid = paidMissions.reduce((sum, mission) => sum + (mission.price_ht || 0) * driverCommission, 0);
+        const totalPending = pendingMissions.reduce((sum, mission) => sum + (mission.price_ht || 0) * driverCommission, 0);
+
         // Count missions without invoice (completed but not delivered)
-        const { count: missionsWithoutInvoice } = await supabase
-          .from('missions')
-          .select('*', { count: 'exact' })
-          .eq('chauffeur_id', user?.id)
-          .eq('status', 'livre');
-        
+        const {
+          count: missionsWithoutInvoice
+        } = await supabase.from('missions').select('*', {
+          count: 'exact'
+        }).eq('chauffeur_id', user?.id).eq('status', 'livre');
+
         // Count total completed missions
-        const { count: totalMissions } = await supabase
-          .from('missions')
-          .select('*', { count: 'exact' })
-          .eq('chauffeur_id', user?.id)
-          .eq('status', 'termine');
-        
+        const {
+          count: totalMissions
+        } = await supabase.from('missions').select('*', {
+          count: 'exact'
+        }).eq('chauffeur_id', user?.id).eq('status', 'termine');
         setStats({
           paidInvoices: paidMissions.length,
           pendingInvoices: pendingMissions.length,
@@ -89,7 +76,6 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
           missionsWithoutInvoice: missionsWithoutInvoice || 0,
           totalMissions: totalMissions || 0
         });
-        
       } catch (err) {
         console.error('Error fetching driver invoices data:', err);
         toast.error("Erreur lors du chargement des données");
@@ -97,28 +83,21 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
         setLoading(false);
       }
     };
-
     fetchDriverData();
   }, [user?.id, isAdmin]);
-
   const formatPrice = (price: number) => {
     return price.toLocaleString('fr-FR', {
       style: 'currency',
       currency: 'EUR'
     });
   };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
+    return <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-driver"></div>
-      </div>
-    );
+      </div>;
   }
-
   if (isAdmin) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">Statistiques de facturation montant H.T. €</CardTitle>
@@ -140,12 +119,11 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
             <p className="text-sm text-gray-600">Gestion des factures des chauffeurs</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            {missions.map((mission) => (
-              <div key={mission.id} className="border-b pb-4 last:border-b-0">
+            {missions.map(mission => <div key={mission.id} className="border-b pb-4 last:border-b-0">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm sm:text-base">
+                      <span className="sm:text-base text-sm font-bold">
                         Mission {mission.mission_number || mission.id.slice(0, 8)}
                       </span>
                       <Button variant="outline" size="sm" className="text-xs">
@@ -169,23 +147,18 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            ))}
+              </div>)}
             
-            {missions.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+            {missions.length === 0 && <div className="text-center py-8 text-gray-500">
                 <p>Aucune mission facturée trouvée</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>;
   }
 
   // Driver view
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold text-center">Revenus du mois</h1>
       
       {/* Compteurs regroupés 2 par 2 */}
@@ -236,8 +209,6 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({ isAdmin }) => {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DriverInvoices;

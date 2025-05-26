@@ -1,22 +1,10 @@
-
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/types/supabase';
-
-export interface ProfileOption {
-  id: string;
-  label: string;
-  email: string;
-}
-
 export const useProfiles = (role: UserRole) => {
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -24,12 +12,12 @@ export const useProfiles = (role: UserRole) => {
           .eq('role', role)
           .eq('active', true)
           .order('company_name', { ascending: true });
-          
+        
         if (error) {
           throw error;
         }
         
-        // Format data for select options
+        // Formater les données
         const options = data.map(profile => ({
           id: profile.id,
           label: role === 'client' 
@@ -40,9 +28,9 @@ export const useProfiles = (role: UserRole) => {
         
         console.log(`Loaded ${options.length} ${role} profiles:`, options);
         setProfiles(options);
-      } catch (err: any) {
-        console.error(`Error fetching ${role} profiles:`, err);
-        setError(err.message);
+      } catch (err) {
+        console.error(`Erreur lors de la récupération des ${role}s:`, err);
+        setError("Impossible de charger les profils");
       } finally {
         setLoading(false);
       }

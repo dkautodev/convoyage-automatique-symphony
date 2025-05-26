@@ -288,6 +288,7 @@ export type Database = {
           chauffeur_paid: boolean | null
           chauffeur_price_ht: number | null
           client_id: string
+          client_paid: boolean | null
           completion_date: string | null
           contact_delivery_email: string | null
           contact_delivery_name: string | null
@@ -306,6 +307,7 @@ export type Database = {
           H2_LIV: string | null
           H2_PEC: string | null
           id: string
+          invoiceable: boolean | null
           is_linked: boolean | null
           linked_mission_id: string | null
           mission_number: string | null
@@ -335,6 +337,7 @@ export type Database = {
           chauffeur_paid?: boolean | null
           chauffeur_price_ht?: number | null
           client_id: string
+          client_paid?: boolean | null
           completion_date?: string | null
           contact_delivery_email?: string | null
           contact_delivery_name?: string | null
@@ -353,6 +356,7 @@ export type Database = {
           H2_LIV?: string | null
           H2_PEC?: string | null
           id?: string
+          invoiceable?: boolean | null
           is_linked?: boolean | null
           linked_mission_id?: string | null
           mission_number?: string | null
@@ -382,6 +386,7 @@ export type Database = {
           chauffeur_paid?: boolean | null
           chauffeur_price_ht?: number | null
           client_id?: string
+          client_paid?: boolean | null
           completion_date?: string | null
           contact_delivery_email?: string | null
           contact_delivery_name?: string | null
@@ -400,6 +405,7 @@ export type Database = {
           H2_LIV?: string | null
           H2_PEC?: string | null
           id?: string
+          invoiceable?: boolean | null
           is_linked?: boolean | null
           linked_mission_id?: string | null
           mission_number?: string | null

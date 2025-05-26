@@ -762,7 +762,7 @@ export default function CreateMissionForm({
                 </div>
               </div>}
 
-            {/* Étape 3: Informations du véhicule - Tous les champs déverrouillés pour RES */}
+            {/* Étape 3: Informations du véhicule - Tous les champs déverrouillés */}
             {currentStep === 3 && <div className="space-y-6">
                 {livMission && <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-800">
@@ -845,7 +845,7 @@ export default function CreateMissionForm({
                 </div>
               </div>}
 
-            {/* Étape 4: Contacts inversés et créneaux verrouillés pour RES */}
+            {/* Étape 4: Contacts inversés et créneaux */}
             {currentStep === 4 && <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -888,7 +888,7 @@ export default function CreateMissionForm({
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">
                         Créneau de ramassage
-                        {livMission}
+                        {livMission && <span className="text-blue-600 text-sm block">(Verrouillé - Créneau de livraison de la mission LIV)</span>}
                       </h4>
                       <div className="grid grid-cols-3 gap-4">
                         <FormField control={form.control} name="D1_PEC" render={({
@@ -1032,8 +1032,7 @@ export default function CreateMissionForm({
               field
             }) => <FormItem>
                       <FormLabel>Client</FormLabel>
-                      <Select onValueChange={handleClientChange} defaultValue={field.value} disabled={!!livMission} // Pre-selected for RES missions
-              >
+                      <Select onValueChange={handleClientChange} defaultValue={field.value} disabled={!!livMission}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un client" />

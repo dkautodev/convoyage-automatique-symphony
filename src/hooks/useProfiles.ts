@@ -53,9 +53,3 @@ export const useProfiles = (role: UserRole) => {
   
   return { profiles, loading, error };
 };
-console.log(`Requête Supabase pour les ${role}s:`, {
-  dataCount: data?.length || 0,
-  error: error?.message || 'Aucune erreur',
-  roleFilter: role,
-  activeFilter: true
-});

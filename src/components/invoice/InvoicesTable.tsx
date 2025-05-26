@@ -113,7 +113,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 {/* Row 1: Mission number + Status badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">#{formatMissionNumber(mission)}</span>
+                    <span className="font-extrabold text-lg">#{formatMissionNumber(mission)}</span>
                     <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs px-2 py-1`}>
                       {getInvoiceStatusLabel(mission.status)}
                     </Badge>

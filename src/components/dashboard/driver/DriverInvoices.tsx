@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,15 +7,15 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Upload, Eye, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+
 interface DriverInvoicesProps {
   isAdmin: boolean;
 }
+
 const DriverInvoices: React.FC<DriverInvoicesProps> = ({
   isAdmin
 }) => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -30,20 +31,27 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
   useEffect(() => {
     const fetchDriverData = async () => {
       if (!user?.id && !isAdmin) return;
+      
       try {
         setLoading(true);
-        let query = supabase.from('missions').select('*').in('status', ['livre', 'termine']);
+        
+        let query = supabase
+          .from('missions')
+          .select('*')
+          .in('status', ['livre', 'termine']);
+        
         if (!isAdmin) {
           query = query.eq('chauffeur_id', user.id);
         }
-        const {
-          data,
-          error
-        } = await query.order('created_at', {
-          ascending: false
-        });
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
         if (error) throw error;
-        const convertedMissions = data.map(mission => convertMissionFromDB(mission as unknown as MissionFromDB));
+        
+        const convertedMissions = data.map(mission => 
+          convertMissionFromDB(mission as unknown as MissionFromDB)
+        );
+        
         setMissions(convertedMissions);
 
         // Calculate stats
@@ -52,22 +60,27 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
 
         // Calculate driver commission (70% of HT price)
         const driverCommission = 0.7;
-        const totalPaid = paidMissions.reduce((sum, mission) => sum + (mission.price_ht || 0) * driverCommission, 0);
-        const totalPending = pendingMissions.reduce((sum, mission) => sum + (mission.price_ht || 0) * driverCommission, 0);
+        const totalPaid = paidMissions.reduce((sum, mission) => 
+          sum + (mission.price_ht || 0) * driverCommission, 0
+        );
+        const totalPending = pendingMissions.reduce((sum, mission) => 
+          sum + (mission.price_ht || 0) * driverCommission, 0
+        );
 
         // Count missions without invoice (completed but not delivered)
-        const {
-          count: missionsWithoutInvoice
-        } = await supabase.from('missions').select('*', {
-          count: 'exact'
-        }).eq('chauffeur_id', user?.id).eq('status', 'livre');
+        const { count: missionsWithoutInvoice } = await supabase
+          .from('missions')
+          .select('*', { count: 'exact' })
+          .eq('chauffeur_id', user?.id)
+          .eq('status', 'livre');
 
         // Count total completed missions
-        const {
-          count: totalMissions
-        } = await supabase.from('missions').select('*', {
-          count: 'exact'
-        }).eq('chauffeur_id', user?.id).eq('status', 'termine');
+        const { count: totalMissions } = await supabase
+          .from('missions')
+          .select('*', { count: 'exact' })
+          .eq('chauffeur_id', user?.id)
+          .eq('status', 'termine');
+
         setStats({
           paidInvoices: paidMissions.length,
           pendingInvoices: pendingMissions.length,
@@ -83,21 +96,28 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
         setLoading(false);
       }
     };
+
     fetchDriverData();
   }, [user?.id, isAdmin]);
+
   const formatPrice = (price: number) => {
     return price.toLocaleString('fr-FR', {
       style: 'currency',
       currency: 'EUR'
     });
   };
+
   if (loading) {
-    return <div className="flex items-center justify-center h-full">
+    return (
+      <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-driver"></div>
-      </div>;
+      </div>
+    );
   }
+
   if (isAdmin) {
-    return <div className="space-y-6">
+    return (
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">Statistiques de facturation montant H.T. €</CardTitle>
@@ -119,7 +139,8 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
             <p className="text-sm text-gray-600">Gestion des factures des chauffeurs</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            {missions.map(mission => <div key={mission.id} className="border-b pb-4 last:border-b-0">
+            {missions.map(mission => (
+              <div key={mission.id} className="border-b pb-4 last:border-b-0">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -147,18 +168,23 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>)}
+              </div>
+            ))}
             
-            {missions.length === 0 && <div className="text-center py-8 text-gray-500">
+            {missions.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
                 <p>Aucune mission facturée trouvée</p>
-              </div>}
+              </div>
+            )}
           </CardContent>
         </Card>
-      </div>;
+      </div>
+    );
   }
 
   // Driver view
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold text-center">Revenus du mois</h1>
       
       {/* Compteurs regroupés 2 par 2 */}
@@ -209,6 +235,55 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
           </Card>
         </div>
       </div>
-    </div>;
+
+      {/* Liste des missions avec gestion des factures - Vue chauffeur */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg sm:text-xl">Mes factures</CardTitle>
+          <p className="text-sm text-gray-600">Gérer vos factures pour chaque mission</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {missions.map(mission => (
+            <div key={mission.id} className="border-b pb-4 last:border-b-0">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="sm:text-base text-sm font-bold">
+                      Mission {mission.mission_number || mission.id.slice(0, 8)}
+                    </span>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Insérer une facture
+                    </Button>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    Montant: {formatPrice((mission.price_ht || 0) * 0.7)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-1">
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Upload className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          
+          {missions.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <p>Aucune mission facturée trouvée</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
+
 export default DriverInvoices;

@@ -42,6 +42,13 @@ export const missionStatusColors: Record<MissionStatus, string> = {
 // UserRole type that matches exactly what's expected in the database
 export type UserRole = 'admin' | 'client' | 'chauffeur';
 
+// Si ProfileOption est utilisé ailleurs, exportez-le aussi
+export interface ProfileOption {
+  id: string;
+  label: string;
+  email: string;
+}
+
 // Modified Address interface to make formatted_address optional
 export interface Address {
   formatted_address?: string;

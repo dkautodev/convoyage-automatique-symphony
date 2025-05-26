@@ -3,17 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import InvoicesTable from '@/components/invoice/InvoicesTable';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const AdminInvoicesPage = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [filteredMissions, setFilteredMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'livre' | 'termine'>('all');
   const [clientsData, setClientsData] = useState<Record<string, any>>({});
   const isMobile = useIsMobile();
   
@@ -64,7 +71,6 @@ const AdminInvoicesPage = () => {
       );
       
       setMissions(convertedMissions);
-      setFilteredMissions(convertedMissions);
     } catch (err) {
       console.error('Error fetching invoices:', err);
     } finally {
@@ -79,36 +85,53 @@ const AdminInvoicesPage = () => {
   
   // Search and filter
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredMissions(missions);
-      return;
+    let filtered = missions;
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(mission => mission.status === statusFilter);
     }
     
-    const lowerSearchQuery = searchQuery.toLowerCase();
-    const filtered = missions.filter(mission => {
-      // Search by mission number
-      const missionNumber = mission.mission_number || mission.id.substring(0, 8);
-      if (missionNumber.toLowerCase().includes(lowerSearchQuery)) return true;
-      
-      // Search by mission date
-      const missionDate = new Date(mission.created_at).toLocaleDateString('fr-FR');
-      if (missionDate.includes(lowerSearchQuery)) return true;
-      
-      // Search by client name
-      const clientInfo = clientsData[mission.client_id];
-      if (clientInfo?.name.toLowerCase().includes(lowerSearchQuery)) return true;
-      
-      return false;
-    });
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const lowerSearchQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter(mission => {
+        // Search by mission number
+        const missionNumber = mission.mission_number || mission.id.substring(0, 8);
+        if (missionNumber.toLowerCase().includes(lowerSearchQuery)) return true;
+        
+        // Search by mission date
+        const missionDate = new Date(mission.created_at).toLocaleDateString('fr-FR');
+        if (missionDate.includes(lowerSearchQuery)) return true;
+        
+        // Search by client name
+        const clientInfo = clientsData[mission.client_id];
+        if (clientInfo?.name.toLowerCase().includes(lowerSearchQuery)) return true;
+        
+        return false;
+      });
+    }
     
     setFilteredMissions(filtered);
-  }, [searchQuery, missions, clientsData]);
+  }, [searchQuery, missions, clientsData, statusFilter]);
+
+  const getFilterLabel = () => {
+    switch (statusFilter) {
+      case 'livre': return 'À payer';
+      case 'termine': return 'Payé';
+      default: return 'Tous';
+    }
+  };
+
+  const clearFilter = () => {
+    setStatusFilter('all');
+  };
   
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-neutral-900 text-center">Factures</h1>
       
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+      <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
           <Input 
@@ -119,12 +142,32 @@ const AdminInvoicesPage = () => {
             onChange={e => setSearchQuery(e.target.value)} 
           />
         </div>
-        <div className="flex gap-2 items-center">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter size={16} />
-            Filtrer
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
+              <Filter size={16} />
+              {getFilterLabel()}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setStatusFilter('all')}>
+              Tous
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter('livre')}>
+              À payer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setStatusFilter('termine')}>
+              Payé
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {statusFilter !== 'all' && (
+          <Button variant="ghost" size="sm" onClick={clearFilter} className="h-9 w-9 p-0">
+            <X size={16} />
           </Button>
-        </div>
+        )}
       </div>
       
       <Card>

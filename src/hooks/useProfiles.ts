@@ -1,7 +1,23 @@
+// useProfiles.ts
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { UserRole } from '@/types/supabase';
+import { useAuth } from '@/hooks/auth';
+
+// Définition et export du type ProfileOption
+export interface ProfileOption {
+  id: string;
+  label: string;
+  email: string;
+}
+
+// Hook personnalisé
 export const useProfiles = (role: UserRole) => {
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { profile } = useAuth(); // Utilisation de useAuth
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -17,7 +33,7 @@ export const useProfiles = (role: UserRole) => {
           throw error;
         }
         
-        // Formater les données
+        // Formatage des données
         const options = data.map(profile => ({
           id: profile.id,
           label: role === 'client' 
@@ -26,18 +42,18 @@ export const useProfiles = (role: UserRole) => {
           email: profile.email
         }));
         
-        console.log(`Loaded ${options.length} ${role} profiles:`, options);
+        console.log(`Loaded ${options.length} profiles`);
         setProfiles(options);
       } catch (err) {
-        console.error(`Erreur lors de la récupération des ${role}s:`, err);
+        console.error(`Erreur lors de la récupération des profils:`, err);
         setError("Impossible de charger les profils");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchProfiles();
   }, [role]);
-  
+
   return { profiles, loading, error };
 };

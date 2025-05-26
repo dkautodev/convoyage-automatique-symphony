@@ -106,7 +106,7 @@ const AdminInvoicesPage = () => {
   
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 text-center">Factures</h1>
+      <h1 className="text-2xl font-bold text-neutral-900 text-center">Factures</h1>
       
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <div className="relative flex-1">
@@ -131,7 +131,7 @@ const AdminInvoicesPage = () => {
         <CardHeader className="pb-3 md:pb-4">
           <CardTitle className="text-center md:text-left">Missions facturées</CardTitle>
         </CardHeader>
-        <CardContent className="px-3 md:px-4">
+        <CardContent className="px-3 md:px-6">
           <div className="overflow-x-auto -mx-3 md:mx-0">
             <InvoicesTable 
               missions={filteredMissions} 

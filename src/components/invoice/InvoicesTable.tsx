@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -118,14 +117,14 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   if (layout === 'stacked') {
     return (
       <>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {missions.map(mission => (
-            <div key={mission.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+            <div key={mission.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
               <div className="space-y-3">
                 {/* Row 1: Mission number + Status badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">#{formatMissionNumber(mission)}</span>
+                    <span className="font-medium">#{formatMissionNumber(mission)}</span>
                     <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs px-2 py-1`}>
                       {getInvoiceStatusLabel(mission.status)}
                     </Badge>
@@ -165,7 +164,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                         variant={mission.status === 'livre' ? 'default' : 'outline'} 
                         size="sm"
                         onClick={() => handleStatusButtonClick(mission)}
-                        className="h-8 px-3 text-xs"
+                        className="h-8 px-2 text-xs"
                       >
                         {mission.status === 'livre' ? (
                           <><Check className="h-3 w-3 mr-1" /> Payer</>

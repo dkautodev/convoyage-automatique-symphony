@@ -358,7 +358,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-white">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Revenus du mois</CardTitle>

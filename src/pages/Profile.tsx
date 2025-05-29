@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useDriverConfig } from '@/hooks/useDriverConfig';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +19,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Address } from '@/types/supabase';
 import { Loader2, Save } from 'lucide-react';
 import { Json } from '@/integrations/supabase/types';
@@ -37,6 +35,7 @@ function jsonToAddress(json: Json | null): Address {
     country: 'France'
   };
   
+  // Handle if json is an array
   if (Array.isArray(json)) {
     return {
       formatted_address: '',
@@ -47,6 +46,7 @@ function jsonToAddress(json: Json | null): Address {
     };
   }
   
+  // Make sure json is an object and not a string/number/boolean
   if (typeof json !== 'object' || json === null) {
     return {
       formatted_address: '',
@@ -57,6 +57,7 @@ function jsonToAddress(json: Json | null): Address {
     };
   }
   
+  // Now we know json is an object, we can safely access its properties
   const jsonObj = json as Record<string, Json>;
   
   return {
@@ -80,37 +81,20 @@ const profileSchema = z.object({
   phone_2: z.string().optional(),
   siret: z.string().optional(),
   tva_number: z.string().optional(),
+  // Retiré tva_applicable car cette colonne n'existe pas dans la table profiles
   // Adresse de facturation
   street: z.string().optional(),
   city: z.string().optional(),
   postal_code: z.string().optional(),
   country: z.string().default('France'),
-  // Champs spécifiques aux chauffeurs
-  license_number: z.string().optional(),
-  id_number: z.string().optional(),
-  legal_status: z.enum(['EI', 'EURL', 'SARL', 'SA', 'SAS', 'SASU', 'SNC', 'Scop', 'Association']).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const legalStatusLabels = {
-  'EI': 'Entreprise individuelle',
-  'EURL': 'Entreprise unipersonnelle à responsabilité limitée',
-  'SARL': 'Société à responsabilité limitée',
-  'SA': 'Société anonyme',
-  'SAS': 'Société par actions simplifiée',
-  'SASU': 'Société par actions simplifiée unipersonnelle',
-  'SNC': 'Société en nom collectif',
-  'Scop': 'Société coopérative de production',
-  'Association': 'Association'
-};
-
 const Profile = () => {
   const { profile, updateProfile } = useAuth();
-  const { updateDriverConfig, getDriverConfig, loading: driverConfigLoading } = useDriverConfig();
   const [isLoading, setIsLoading] = useState(false);
   const [addressInput, setAddressInput] = useState('');
-  const [driverConfig, setDriverConfig] = useState<any>(null);
 
   // Initialiser le formulaire avec React Hook Form
   const form = useForm<ProfileFormValues>({
@@ -127,39 +111,16 @@ const Profile = () => {
       city: '',
       postal_code: '',
       country: 'France',
-      license_number: '',
-      id_number: '',
-      legal_status: 'EI',
     },
   });
-
-  // Charger la configuration du chauffeur
-  useEffect(() => {
-    const loadDriverConfig = async () => {
-      if (profile && profile.role === 'chauffeur') {
-        try {
-          const config = await getDriverConfig(profile.id);
-          setDriverConfig(config);
-          
-          if (config) {
-            form.setValue('license_number', config.license_number || '');
-            form.setValue('id_number', config.id_number || '');
-            form.setValue('legal_status', config.legal_status || 'EI');
-          }
-        } catch (error) {
-          console.error('Error loading driver config:', error);
-        }
-      }
-    };
-
-    loadDriverConfig();
-  }, [profile, getDriverConfig, form]);
 
   // Remplir le formulaire avec les données du profil quand elles sont disponibles
   useEffect(() => {
     if (profile) {
+      // Convert billing_address from Json to Address type
       const billingAddress = jsonToAddress(profile.billing_address);
       
+      // Set the formatted address for the autocomplete input
       setAddressInput(billingAddress.formatted_address || '');
       
       form.reset({
@@ -170,19 +131,18 @@ const Profile = () => {
         phone_2: profile.phone_2 || '',
         siret: profile.siret || '',
         tva_number: profile.tva_number || '',
+        // Retirer la référence à tva_applicable qui n'existe pas dans la table profiles
         street: billingAddress.street || '',
         city: billingAddress.city || '',
         postal_code: billingAddress.postal_code || '',
         country: billingAddress.country || 'France',
-        license_number: driverConfig?.license_number || '',
-        id_number: driverConfig?.id_number || '',
-        legal_status: driverConfig?.legal_status || 'EI',
       });
     }
-  }, [profile, driverConfig, form]);
+  }, [profile, form]);
 
   // Handle address selection from Google Maps autocomplete
   const handleAddressSelect = (address: string, placeId: string, addressData?: any) => {
+    // Update the form fields with the selected address data
     if (addressData && addressData.extracted_data) {
       form.setValue('street', addressData.extracted_data.street);
       form.setValue('city', addressData.extracted_data.city);
@@ -196,11 +156,6 @@ const Profile = () => {
     try {
       setIsLoading(true);
 
-      if (!profile) {
-        toast.error('Profil utilisateur non trouvé');
-        return;
-      }
-
       // Construire l'objet d'adresse
       const billingAddress: Address = {
         formatted_address: addressInput || `${data.street || ''}, ${data.postal_code || ''} ${data.city || ''}, ${data.country || 'France'}`,
@@ -210,7 +165,7 @@ const Profile = () => {
         country: data.country || 'France',
       };
 
-      // Préparer les données à mettre à jour
+      // Préparer les données à mettre à jour, sans tva_applicable
       const updateData = {
         full_name: data.full_name,
         company_name: data.company_name,
@@ -218,27 +173,11 @@ const Profile = () => {
         phone_2: data.phone_2,
         siret: data.siret,
         tva_number: data.tva_number,
-        billing_address: billingAddress as any,
+        billing_address: billingAddress as any, // Type assertion to handle Json conversion
       };
 
       // Appeler la fonction de mise à jour du profil
       await updateProfile(updateData);
-
-      // Si c'est un chauffeur, mettre à jour aussi la configuration driver
-      if (profile.role === 'chauffeur') {
-        try {
-          await updateDriverConfig(profile.id, {
-            license_number: data.license_number,
-            id_number: data.id_number,
-            legal_status: data.legal_status,
-          });
-        } catch (driverError: any) {
-          console.error('Error updating driver config:', driverError);
-          toast.warning('Profil mis à jour mais erreur lors de la sauvegarde des informations chauffeur');
-          return;
-        }
-      }
-
       toast.success('Profil mis à jour avec succès');
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du profil:', error);
@@ -247,8 +186,6 @@ const Profile = () => {
       setIsLoading(false);
     }
   };
-
-  const isDriver = profile?.role === 'chauffeur';
 
   return (
     <div className="container mx-auto py-8">
@@ -366,71 +303,6 @@ const Profile = () => {
                   />
                 </div>
 
-                {isDriver && (
-                  <>
-                    <Separator className="my-4" />
-                    <h3 className="text-lg font-medium">Configuration Chauffeur</h3>
-                    
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="legal_status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Statut juridique</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Sélectionnez votre statut juridique" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {Object.entries(legalStatusLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="license_number"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Numéro de permis</FormLabel>
-                            <FormControl>
-                              <Input placeholder="12AB34567890" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid gap-6 sm:grid-cols-1">
-                      <FormField
-                        control={form.control}
-                        name="id_number"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Numéro document d'identité</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123456789012" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Numéro de carte d'identité ou de passeport
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </>
-                )}
-
                 <div className="grid gap-6 sm:grid-cols-2">
                   <FormField
                     control={form.control}
@@ -528,10 +400,10 @@ const Profile = () => {
                 <div className="flex justify-end">
                   <Button 
                     type="submit" 
-                    disabled={isLoading || driverConfigLoading}
+                    disabled={isLoading}
                     className="w-full sm:w-auto"
                   >
-                    {(isLoading || driverConfigLoading) ? (
+                    {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                         Enregistrement...
@@ -550,7 +422,7 @@ const Profile = () => {
         </Card>
         
         {/* Ajout de la section Documents pour les chauffeurs */}
-        {isDriver && <DocumentsSection />}
+        <DocumentsSection />
       </div>
     </div>
   );

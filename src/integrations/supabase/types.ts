@@ -161,7 +161,7 @@ export type Database = {
           id_document_path?: string | null
           id_number?: string | null
           kbis_document_path?: string | null
-          legal_status?: Database["public"]["Enums"]["legal_status_type"]
+          legal_status: Database["public"]["Enums"]["legal_status_type"]
           license_document_path?: string | null
           license_number?: string | null
           updated_at?: string
@@ -672,15 +672,6 @@ export type Database = {
           p_phone_1: string
           p_phone_2: string
           p_profile_completed: boolean
-        }
-        Returns: Json
-      }
-      update_driver_config_info: {
-        Args: {
-          p_user_id: string
-          p_license_number?: string
-          p_id_number?: string
-          p_legal_status?: Database["public"]["Enums"]["legal_status_type"]
         }
         Returns: Json
       }

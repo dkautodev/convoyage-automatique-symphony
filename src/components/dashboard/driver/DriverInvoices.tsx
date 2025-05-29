@@ -462,7 +462,12 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleUploadClick(mission)}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleUploadClick(mission)}
+                        disabled={!!mission.chauffeur_invoice}
+                      >
                         <Upload size={16} className="mr-1" />
                         Upload
                       </Button>

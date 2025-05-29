@@ -161,7 +161,7 @@ export type Database = {
           id_document_path?: string | null
           id_number?: string | null
           kbis_document_path?: string | null
-          legal_status: Database["public"]["Enums"]["legal_status_type"]
+          legal_status?: Database["public"]["Enums"]["legal_status_type"]
           license_document_path?: string | null
           license_number?: string | null
           updated_at?: string
@@ -514,6 +514,7 @@ export type Database = {
           profile_completed: boolean
           role: Database["public"]["Enums"]["user_role"]
           siret: string | null
+          tva_applicable: boolean | null
           tva_number: string | null
         }
         Insert: {
@@ -530,6 +531,7 @@ export type Database = {
           profile_completed?: boolean
           role: Database["public"]["Enums"]["user_role"]
           siret?: string | null
+          tva_applicable?: boolean | null
           tva_number?: string | null
         }
         Update: {
@@ -546,6 +548,7 @@ export type Database = {
           profile_completed?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           siret?: string | null
+          tva_applicable?: boolean | null
           tva_number?: string | null
         }
         Relationships: []
@@ -619,11 +622,17 @@ export type Database = {
     }
     Functions: {
       check_constraint_exists: {
-        Args: {
-          schema_name: string
-          table_name: string
-          constraint_name: string
-        }
+        Args:
+          | Record<PropertyKey, never>
+          | { schema_name: string; table_name: string; constraint_name: string }
+        Returns: boolean
+      }
+      create_update_client_profile_function: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      create_update_driver_profile_function: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       disable_driver_fields_constraint: {
@@ -635,10 +644,10 @@ export type Database = {
         Returns: string
       }
       get_default_vehicle_id: {
-        Args: {
-          category_param: Database["public"]["Enums"]["vehicle_category"]
-        }
-        Returns: number
+        Args:
+          | Record<PropertyKey, never>
+          | { category_param: Database["public"]["Enums"]["vehicle_category"] }
+        Returns: string
       }
       get_user_role: {
         Args: Record<PropertyKey, never> | { user_id: string }
@@ -651,6 +660,47 @@ export type Database = {
       is_owner_of_profile: {
         Args: { profile_id: string }
         Returns: boolean
+      }
+      update_client_profile: {
+        Args: {
+          p_user_id: string
+          p_full_name: string
+          p_company_name: string
+          p_billing_address: Json
+          p_siret: string
+          p_tva_number: string
+          p_phone_1: string
+          p_phone_2: string
+          p_profile_completed: boolean
+        }
+        Returns: Json
+      }
+      update_driver_config_info: {
+        Args: {
+          p_user_id: string
+          p_license_number?: string
+          p_id_number?: string
+          p_legal_status?: Database["public"]["Enums"]["legal_status_type"]
+        }
+        Returns: Json
+      }
+      update_driver_profile: {
+        Args: {
+          p_user_id: string
+          p_full_name: string
+          p_company_name: string
+          p_billing_address: Json
+          p_siret: string
+          p_tva_number: string
+          p_tva_applicable: boolean
+          p_phone_1: string
+          p_phone_2: string
+          p_driver_license: string
+          p_vehicle_type: string
+          p_vehicle_registration: string
+          p_profile_completed: boolean
+        }
+        Returns: Json
       }
     }
     Enums: {

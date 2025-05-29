@@ -8,6 +8,7 @@ import { Eye, Upload, Trash2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { uploadFile } from '@/integrations/supabase/storage';
+import { supabase } from '@/integrations/supabase/client';
 
 // Type pour les missions avec factures
 interface DriverMission {
@@ -246,11 +247,32 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
       return;
     }
     try {
+      // Supprimer le fichier du storage d'abord
+      let filePath = mission.chauffeur_invoice;
+      if (filePath.startsWith('/')) {
+        filePath = filePath.substring(1);
+      }
+      
+      console.log('Attempting to delete file from storage:', filePath);
+      
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([filePath]);
+      
+      if (storageError) {
+        console.error('Error deleting file from storage:', storageError);
+        // On continue même si la suppression du fichier échoue
+        toast.error("Erreur lors de la suppression du fichier, mais la référence sera supprimée");
+      } else {
+        console.log('File deleted successfully from storage');
+      }
+
       // Mettre à jour la mission pour supprimer la référence à la facture
       const { error } = await typedSupabase.from('missions').update({
         chauffeur_invoice: null,
         chauffeur_paid: false // Réinitialiser le statut de paiement
       }).eq('id', mission.id);
+      
       if (error) throw error;
       
       toast.success("Facture supprimée avec succès");

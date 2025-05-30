@@ -347,11 +347,11 @@ const DriversPage = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">N° de permis</h3>
-                  <p>{selectedDriver.license_number || 'Non défini'}</p>
+                  <p>{driverConfig?.license_number || 'Non défini'}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">N° d'identité</h3>
-                  <p>{selectedDriver.id_number || 'Non défini'}</p>
+                  <p>{driverConfig?.id_number || 'Non défini'}</p>
                 </div>
               </div>
               

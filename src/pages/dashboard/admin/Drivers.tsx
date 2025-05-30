@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,9 +20,6 @@ interface Driver {
   phone_1: string | null;
   created_at: string;
   billing_address?: Json | null;
-  // These fields might be in the drivers_config table, not in profiles
-  license_number?: string | null;
-  id_number?: string | null;
 }
 
 interface DriverDocument {
@@ -37,6 +35,8 @@ interface DriverConfig {
   id_document_path: string | null;
   kbis_document_path: string | null;
   vigilance_document_path: string | null;
+  license_number: string | null;
+  id_number: string | null;
 }
 
 const DriversPage = () => {

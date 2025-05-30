@@ -66,7 +66,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
           {!hideFinancials && <>
               <div className="space-y-2">
                 <p className="text-sm text-gray-500">Prix HT</p>
-                <p className="text-green-600 font-semibold">
+                <p className="font-medium text-stone-900">
                   {mission.price_ht?.toLocaleString('fr-FR', {
                 style: 'currency',
                 currency: 'EUR'

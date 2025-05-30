@@ -10,10 +10,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Edit, Save } from 'lucide-react';
+import { Edit, Save, Calculator } from 'lucide-react';
 import { typedSupabase } from '@/types/database';
 
 const missionEditSchema = z.object({
+  price_ht: z.string().optional(),
+  price_ttc: z.string().optional(),
   contact_pickup_name: z.string().optional(),
   contact_pickup_phone: z.string().optional(),
   contact_pickup_email: z.string().email('Email invalide').optional().or(z.literal('')),
@@ -55,6 +57,8 @@ export const MissionEditDialog: React.FC<MissionEditDialogProps> = ({
   const form = useForm<MissionEditFormValues>({
     resolver: zodResolver(missionEditSchema),
     defaultValues: {
+      price_ht: mission.price_ht ? String(mission.price_ht) : '',
+      price_ttc: mission.price_ttc ? String(mission.price_ttc) : '',
       contact_pickup_name: mission.contact_pickup_name || '',
       contact_pickup_phone: mission.contact_pickup_phone || '',
       contact_pickup_email: mission.contact_pickup_email || '',
@@ -77,6 +81,36 @@ export const MissionEditDialog: React.FC<MissionEditDialogProps> = ({
     }
   });
 
+  // Calculate TTC from HT with TVA rate (default 20%)
+  const calculateTTC = (priceHT: number): number => {
+    const vatRate = mission.vat_rate || 20;
+    return Math.round((priceHT * (1 + vatRate / 100)) * 100) / 100;
+  };
+
+  // Calculate HT from TTC with TVA rate (default 20%)
+  const calculateHT = (priceTTC: number): number => {
+    const vatRate = mission.vat_rate || 20;
+    return Math.round((priceTTC / (1 + vatRate / 100)) * 100) / 100;
+  };
+
+  // Handle HT price change to auto-calculate TTC
+  const handleHTChange = (value: string) => {
+    const htValue = parseFloat(value);
+    if (!isNaN(htValue) && htValue >= 0) {
+      const ttcValue = calculateTTC(htValue);
+      form.setValue('price_ttc', String(ttcValue));
+    }
+  };
+
+  // Handle TTC price change to auto-calculate HT
+  const handleTTCChange = (value: string) => {
+    const ttcValue = parseFloat(value);
+    if (!isNaN(ttcValue) && ttcValue >= 0) {
+      const htValue = calculateHT(ttcValue);
+      form.setValue('price_ht', String(htValue));
+    }
+  };
+
   const handleSubmit = async (data: MissionEditFormValues) => {
     try {
       setUpdating(true);
@@ -86,10 +120,24 @@ export const MissionEditDialog: React.FC<MissionEditDialogProps> = ({
       if (data.vehicle_year && !isNaN(parseInt(data.vehicle_year))) {
         vehicle_year = parseInt(data.vehicle_year);
       }
+
+      // Convert prices to numbers
+      let price_ht: number | null = null;
+      let price_ttc: number | null = null;
+      
+      if (data.price_ht && !isNaN(parseFloat(data.price_ht))) {
+        price_ht = parseFloat(data.price_ht);
+      }
+      
+      if (data.price_ttc && !isNaN(parseFloat(data.price_ttc))) {
+        price_ttc = parseFloat(data.price_ttc);
+      }
       
       const { error } = await typedSupabase
         .from('missions')
         .update({
+          price_ht,
+          price_ttc,
           contact_pickup_name: data.contact_pickup_name,
           contact_pickup_phone: data.contact_pickup_phone,
           contact_pickup_email: data.contact_pickup_email,
@@ -136,12 +184,69 @@ export const MissionEditDialog: React.FC<MissionEditDialogProps> = ({
             Modifier les informations de mission
           </DialogTitle>
           <DialogDescription>
-            Mettez à jour les contacts, les informations du véhicule, les dates et les notes.
+            Mettez à jour les prix, les contacts, les informations du véhicule, les dates et les notes.
           </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Section Prix - EN PREMIER */}
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <h3 className="font-medium mb-4 flex items-center gap-2 text-blue-800">
+                <Calculator className="h-4 w-4" />
+                Prix de la mission
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="price_ht"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prix HT (€)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="0.00" 
+                          type="number" 
+                          step="0.01"
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleHTChange(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="price_ttc"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prix TTC (€)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="0.00" 
+                          type="number" 
+                          step="0.01"
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleTTCChange(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                Taux de TVA: {mission.vat_rate || 20}% - Les prix se calculent automatiquement
+              </p>
+            </div>
+
             {/* Contact départ */}
             <div className="border-t pt-4 mt-4">
               <h3 className="font-medium mb-4">Contact pour le départ</h3>

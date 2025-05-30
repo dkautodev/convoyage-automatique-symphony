@@ -75,7 +75,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-gray-500">Prix TTC</p>
-                <p className="text-green-600 font-semibold">
+                <p className="text-stone-900 font-medium">
                   {mission.price_ttc?.toLocaleString('fr-FR', {
                 style: 'currency',
                 currency: 'EUR'

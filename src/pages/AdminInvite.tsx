@@ -203,22 +203,22 @@ export default function AdminInvite() {
     }
   };
   return <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Gestion des invitations administrateur</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Gestion des invitations administrateur</h1>
       
-      <div className="grid gap-6 md:grid-cols-12">
+      <div className="grid gap-6 lg:grid-cols-12">
         {/* Formulaire de création de token */}
-        <div className="md:col-span-5">
+        <div className="lg:col-span-5">
           <Card>
             <CardHeader>
-              <CardTitle>Créer un nouveau token d'invitation</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Créer un nouveau token d'invitation</CardTitle>
+              <CardDescription className="text-sm">
                 Permettez à un nouvel administrateur de s'inscrire avec un token d'invitation
               </CardDescription>
             </CardHeader>
             <CardContent>
               {error && <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>}
               
               <Form {...form}>
@@ -226,14 +226,14 @@ export default function AdminInvite() {
                   <FormField control={form.control} name="email" render={({
                   field
                 }) => <FormItem>
-                        <FormLabel>Email de l'administrateur</FormLabel>
+                        <FormLabel className="text-sm">Email de l'administrateur</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input {...field} placeholder="admin@example.com" className="pl-10" />
+                            <Input {...field} placeholder="admin@example.com" className="pl-10 text-sm" />
                           </div>
                         </FormControl>
-                        <FormDescription>
+                        <FormDescription className="text-xs">
                           L'email doit correspondre exactement à celui utilisé lors de l'inscription
                         </FormDescription>
                         <FormMessage />
@@ -242,10 +242,10 @@ export default function AdminInvite() {
                   <FormField control={form.control} name="expirationDays" render={({
                   field
                 }) => <FormItem>
-                        <FormLabel>Durée de validité (jours)</FormLabel>
+                        <FormLabel className="text-sm">Durée de validité (jours)</FormLabel>
                         <Select onValueChange={value => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="text-sm">
                               <SelectValue placeholder="Sélectionnez une durée" />
                             </SelectTrigger>
                           </FormControl>
@@ -257,13 +257,13 @@ export default function AdminInvite() {
                             <SelectItem value="30">30 jours</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-xs">
                           Après cette période, le token ne sera plus valide
                         </FormDescription>
                         <FormMessage />
                       </FormItem>} />
                   
-                  <Button type="submit" className="w-full mt-2" disabled={loading}>
+                  <Button type="submit" className="w-full mt-2 text-sm" disabled={loading}>
                     {loading ? "Création en cours..." : "Créer le token d'invitation"}
                   </Button>
                 </form>
@@ -273,55 +273,91 @@ export default function AdminInvite() {
         </div>
         
         {/* Liste des tokens */}
-        <div className="md:col-span-7">
+        <div className="lg:col-span-7">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>Historique des tokens d'invitation</CardTitle>
-              
+              <CardTitle className="text-lg sm:text-xl">Historique des tokens d'invitation</CardTitle>
             </CardHeader>
             <CardContent>
               {loadingTokens ? <div className="flex justify-center py-8">
                   <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                </div> : tokens.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+                </div> : tokens.length === 0 ? <div className="text-center py-8 text-muted-foreground text-sm">
                   Aucun token d'invitation trouvé dans l'historique
                 </div> : <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="font-bold">Email</TableHead>
-                        <TableHead className="font-bold">Token</TableHead>
-                        <TableHead className="font-bold">Expire le</TableHead>
-                        <TableHead className="font-bold">Statut</TableHead>
-                        
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tokens.map(token => {
-                    const isExpired = new Date(token.expires_at) < new Date();
-                    const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
-                    return <TableRow key={token.id}>
-                            <TableCell className="font-medium">{token.email}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <code className="bg-muted px-1 py-0.5 rounded text-sm">{token.token}</code>
-                                <Button variant="ghost" size="sm" onClick={() => handleCopyToken(token.token, token.id)} disabled={token.used || isExpired} title="Copier le token">
-                                  {copied === token.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                                </Button>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(token.expires_at).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${token.used ? "bg-blue-100 text-blue-800" : isExpired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
-                                {tokenStatus}
-                              </span>
-                            </TableCell>
-                            
-                          </TableRow>;
-                  })}
-                    </TableBody>
-                  </Table>
+                  {/* Version mobile - cartes empilées */}
+                  <div className="block sm:hidden space-y-4 p-4">
+                    {tokens.map(token => {
+                      const isExpired = new Date(token.expires_at) < new Date();
+                      const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
+                      return (
+                        <div key={token.id} className="border rounded-lg p-4 space-y-3">
+                          <div>
+                            <div className="font-medium text-sm mb-1">{token.email}</div>
+                            <div className="flex items-center justify-between">
+                              <code className="bg-muted px-2 py-1 rounded text-xs break-all">{token.token}</code>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleCopyToken(token.token, token.id)} 
+                                disabled={token.used || isExpired} 
+                                title="Copier le token"
+                                className="ml-2 flex-shrink-0"
+                              >
+                                {copied === token.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">
+                              Expire le {new Date(token.expires_at).toLocaleDateString()}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${token.used ? "bg-blue-100 text-blue-800" : isExpired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+                              {tokenStatus}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Version desktop - tableau */}
+                  <div className="hidden sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="font-bold">Email</TableHead>
+                          <TableHead className="font-bold">Token</TableHead>
+                          <TableHead className="font-bold">Expire le</TableHead>
+                          <TableHead className="font-bold">Statut</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {tokens.map(token => {
+                          const isExpired = new Date(token.expires_at) < new Date();
+                          const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
+                          return <TableRow key={token.id}>
+                              <TableCell className="font-medium">{token.email}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <code className="bg-muted px-1 py-0.5 rounded text-sm">{token.token}</code>
+                                  <Button variant="ghost" size="sm" onClick={() => handleCopyToken(token.token, token.id)} disabled={token.used || isExpired} title="Copier le token">
+                                    {copied === token.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                  </Button>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(token.expires_at).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${token.used ? "bg-blue-100 text-blue-800" : isExpired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
+                                  {tokenStatus}
+                                </span>
+                              </TableCell>
+                            </TableRow>;
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>}
             </CardContent>
           </Card>

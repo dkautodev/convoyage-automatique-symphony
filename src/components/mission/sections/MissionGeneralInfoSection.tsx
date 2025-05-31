@@ -172,7 +172,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
 
         {/* Notes */}
         {mission.notes && <div className="border-t pt-6">
-            <h3 className="font-medium mb-4">Notes complémentaires</h3>
+            <h3 className="mb-4 font-extrabold">Notes complémentaires</h3>
             <p className="text-sm text-gray-600 whitespace-pre-wrap">{mission.notes}</p>
           </div>}
       </CardContent>

@@ -18,6 +18,8 @@ import { missionStatusColors, missionStatusLabels } from '@/types/supabase';
 interface MissionStatusHistoryDrawerProps {
   statusHistory: any[];
   missionCreatedAt?: string;
+  adminProfile?: any;
+  driverName?: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -25,6 +27,8 @@ interface MissionStatusHistoryDrawerProps {
 export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProps> = React.memo(({ 
   statusHistory, 
   missionCreatedAt,
+  adminProfile,
+  driverName,
   isOpen,
   onClose 
 }) => {
@@ -59,8 +63,19 @@ export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProp
       return 'Système';
     }
     
-    // Pour l'instant, on retourne l'UUID, mais on va améliorer ça
-    return userId === '480c267e-c3f8-45c7-aedc-1b5de2e3314d' ? 'Admin DK AUTOMOTIVE' : userId;
+    // Si c'est l'admin
+    if (userId === '480c267e-c3f8-45c7-aedc-1b5de2e3314d' || 
+        (adminProfile && userId === adminProfile.id)) {
+      return 'Admin DK AUTOMOTIVE';
+    }
+    
+    // Si on a le nom du chauffeur et que c'est lui qui a fait le changement
+    if (driverName && driverName !== 'Non assigné') {
+      return driverName;
+    }
+    
+    // Fallback
+    return 'Utilisateur';
   };
 
   return (
@@ -116,7 +131,7 @@ export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProp
                         Modifié par: {formatUserName(entry.changed_by, entry.notes)}
                       </div>
                     )}
-                    {entry.notes && !entry.notes.includes('Status changed from') && (
+                    {entry.notes && !entry.notes.includes('Status changed from') && !entry.notes.includes('Statut modifié de') && (
                       <div className="mt-2 text-sm bg-gray-50 p-2 rounded">
                         {entry.notes}
                       </div>

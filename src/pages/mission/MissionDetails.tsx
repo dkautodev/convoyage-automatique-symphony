@@ -313,6 +313,8 @@ const MissionDetailsPage = () => {
       <MissionStatusHistoryDrawer 
         statusHistory={statusHistory} 
         missionCreatedAt={mission?.created_at}
+        adminProfile={adminProfile}
+        driverName={driverName}
         isOpen={historyDrawerOpen} 
         onClose={() => setHistoryDrawerOpen(false)} 
       />

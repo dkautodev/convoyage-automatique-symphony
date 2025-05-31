@@ -65,4 +65,3 @@ export const MissionStatusHistory: React.FC<MissionStatusHistoryProps> = React.m
     </Card>
   );
 });
-

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Clock, X } from 'lucide-react';
-import { missionStatusColors, missionStatusLabels } from '@/utils/missionUtils';
+import { missionStatusColors, missionStatusLabels } from '@/types/supabase';
 
 interface MissionStatusHistoryDrawerProps {
   statusHistory: any[];
@@ -91,4 +91,3 @@ export const MissionStatusHistoryDrawer: React.FC<MissionStatusHistoryDrawerProp
     </Drawer>
   );
 });
-

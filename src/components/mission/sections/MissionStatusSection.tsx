@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,9 +34,15 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   }, [mission.id]);
 
   const fetchStatusHistory = async () => {
-    if (!mission.id) return;
+    if (!mission.id) {
+      console.log('No mission ID provided for status history fetch');
+      return;
+    }
+    
     try {
       setLoading(true);
+      console.log('Fetching status history for mission:', mission.id);
+      
       const { data, error } = await typedSupabase
         .from('mission_status_history')
         .select('*')
@@ -45,9 +50,11 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
         .order('changed_at', { ascending: false });
       
       if (error) {
+        console.error('Error fetching status history:', error);
         throw error;
       }
       
+      console.log('Status history data received:', data);
       setStatusHistory(data || []);
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique:', error);
@@ -66,18 +73,22 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
 
     try {
       setUpdating(true);
+      console.log('Updating mission status from', mission.status, 'to', selectedStatus);
+      
       const { error } = await typedSupabase
         .from('missions')
         .update({ status: selectedStatus })
         .eq('id', mission.id);
       
       if (error) {
+        console.error('Error updating mission status:', error);
         throw error;
       }
       
+      console.log('Mission status updated successfully');
       toast.success(`Statut mis à jour: ${missionStatusLabels[selectedStatus]}`);
       refetchMission();
-      fetchStatusHistory();
+      fetchStatusHistory(); // Refetch history after status update
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error(`Erreur: ${error.message || 'Impossible de mettre à jour le statut'}`);
@@ -178,7 +189,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
               {mission.status === 'en_acceptation' && (
                 <Button
                   variant="destructive"
-                  onClick={openCancelDialog}
+                  onClick={() => setCancelDialogOpen(true)}
                   disabled={cancelling}
                   className="w-full sm:w-auto"
                 >
@@ -192,7 +203,7 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
           <div className="pt-4 border-t">
             <Button onClick={onShowHistory} variant="outline" className="w-full sm:w-auto">
               <History className="h-4 w-4 mr-2" />
-              Voir l'historique des statuts
+              Voir l'historique des statuts {statusHistory.length > 0 && `(${statusHistory.length})`}
             </Button>
           </div>
         </div>

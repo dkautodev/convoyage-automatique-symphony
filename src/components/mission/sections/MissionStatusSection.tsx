@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -75,9 +76,13 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       setUpdating(true);
       console.log('Updating mission status from', mission.status, 'to', selectedStatus);
       
+      // Mettre à jour uniquement le statut pour éviter les triggers multiples
       const { error } = await typedSupabase
         .from('missions')
-        .update({ status: selectedStatus })
+        .update({ 
+          status: selectedStatus,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', mission.id);
       
       if (error) {
@@ -87,8 +92,13 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       
       console.log('Mission status updated successfully');
       toast.success(`Statut mis à jour: ${missionStatusLabels[selectedStatus]}`);
-      refetchMission();
-      fetchStatusHistory(); // Refetch history after status update
+      
+      // Attendre un peu avant de rafraîchir pour laisser le trigger s'exécuter
+      setTimeout(() => {
+        refetchMission();
+        fetchStatusHistory();
+      }, 500);
+      
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error(`Erreur: ${error.message || 'Impossible de mettre à jour le statut'}`);
@@ -96,15 +106,6 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
     } finally {
       setUpdating(false);
     }
-  };
-
-  // Fonction pour ouvrir la boîte de dialogue de confirmation
-  const openCancelDialog = () => {
-    if (mission.status !== 'en_acceptation') {
-      toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
-      return;
-    }
-    setCancelDialogOpen(true);
   };
 
   // Fonction pour annuler le devis après confirmation
@@ -127,9 +128,11 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       }
       
       toast.success('Le devis a été annulé avec succès');
-      refetchMission();
-      fetchStatusHistory();
-      setCancelDialogOpen(false);
+      setTimeout(() => {
+        refetchMission();
+        fetchStatusHistory();
+        setCancelDialogOpen(false);
+      }, 500);
     } catch (error: any) {
       console.error('Erreur lors de l\'annulation du devis:', error);
       toast.error(`Erreur: ${error.message || 'Impossible d\'annuler le devis'}`);

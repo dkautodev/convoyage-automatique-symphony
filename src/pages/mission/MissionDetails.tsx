@@ -312,6 +312,7 @@ const MissionDetailsPage = () => {
       {/* Status History Drawer */}
       <MissionStatusHistoryDrawer 
         statusHistory={statusHistory} 
+        missionCreatedAt={mission?.created_at}
         isOpen={historyDrawerOpen} 
         onClose={() => setHistoryDrawerOpen(false)} 
       />

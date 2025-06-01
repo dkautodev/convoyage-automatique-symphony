@@ -95,7 +95,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
           )}
         </div>
 
-        {/* Adresses */}
+        {/* Adresses - Grid 2 colonnes responsive */}
         <div className="border-t pt-6">
           <h3 className="font-medium mb-4 flex items-center gap-2">
             <MapPin className="h-4 w-4" />
@@ -127,34 +127,31 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
           </div>
         </div>
 
-        {/* Créneaux horaires */}
+        {/* Créneaux horaires - Grid 2 colonnes avec 3 lignes */}
         <div className="border-t pt-6">
           <h3 className="font-medium mb-4 flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Créneaux horaires
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500">Départ</p>
-              <p className="text-sm">
-                {formatDate(mission.D1_PEC)}
-                {(mission.H1_PEC || mission.H2_PEC) && (
-                  <span className="ml-2 text-gray-600">
-                    {formatTimeRange(mission.H1_PEC, mission.H2_PEC)}
-                  </span>
-                )}
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            {/* Première ligne : Labels */}
+            <div className="text-sm text-gray-500 mb-2">Départ</div>
+            <div className="text-sm text-gray-500 mb-2">Livraison</div>
+            
+            {/* Deuxième ligne : Dates */}
+            <div className="text-sm mb-2">
+              {formatDate(mission.D1_PEC)}
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500">Livraison</p>
-              <p className="text-sm">
-                {formatDate(mission.D2_LIV)}
-                {(mission.H1_LIV || mission.H2_LIV) && (
-                  <span className="ml-2 text-gray-600">
-                    {formatTimeRange(mission.H1_LIV, mission.H2_LIV)}
-                  </span>
-                )}
-              </p>
+            <div className="text-sm mb-2">
+              {formatDate(mission.D2_LIV)}
+            </div>
+            
+            {/* Troisième ligne : Créneaux horaires */}
+            <div className="text-sm text-gray-600">
+              {formatTimeRange(mission.H1_PEC, mission.H2_PEC)}
+            </div>
+            <div className="text-sm text-gray-600">
+              {formatTimeRange(mission.H1_LIV, mission.H2_LIV)}
             </div>
           </div>
         </div>

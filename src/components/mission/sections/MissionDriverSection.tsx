@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,22 +9,25 @@ import { typedSupabase } from '@/types/database';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import { User, DollarSign } from 'lucide-react';
 import { useAuth } from '@/hooks/auth';
-
 interface MissionDriverSectionProps {
   mission: Mission;
   refetchMission: () => void;
 }
-
-export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({ 
-  mission, 
-  refetchMission 
+export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
+  mission,
+  refetchMission
 }) => {
-  const { profiles: driverProfiles, loading } = useProfiles('chauffeur');
+  const {
+    profiles: driverProfiles,
+    loading
+  } = useProfiles('chauffeur');
   const [selectedDriverId, setSelectedDriverId] = useState(mission.chauffeur_id || '');
   const [driverPrice, setDriverPrice] = useState(mission.chauffeur_price_ht?.toString() || '0');
   const [updating, setUpdating] = useState(false);
-  const { profile } = useAuth();
-  
+  const {
+    profile
+  } = useAuth();
+
   // S'assurer que le prix du chauffeur est correctement initialisé
   useEffect(() => {
     if (mission.chauffeur_price_ht !== undefined && mission.chauffeur_price_ht !== null) {
@@ -43,33 +45,26 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
   // Find the current driver
   const currentDriver = driverProfiles.find(driver => driver.id === mission.chauffeur_id);
   const currentDriverName = currentDriver ? currentDriver.label : mission.chauffeur_id ? 'Chauffeur inconnu' : 'Non assigné';
-
   const handleUpdateDriver = async () => {
     if (updating) return;
-    
     try {
       setUpdating(true);
-      
+
       // Déterminer si nous envoyons null pour le chauffeur_id
       const chauffeurIdValue = selectedDriverId === 'no_driver' ? null : selectedDriverId || null;
-      
+
       // Si aucun chauffeur n'est assigné, le prix est automatiquement mis à 0
-      const chauffeurPriceValue = chauffeurIdValue ? (driverPrice ? parseFloat(driverPrice) : 0) : 0;
-      
+      const chauffeurPriceValue = chauffeurIdValue ? driverPrice ? parseFloat(driverPrice) : 0 : 0;
       const updates = {
         chauffeur_id: chauffeurIdValue,
         chauffeur_price_ht: chauffeurPriceValue
       };
-      
-      const { error } = await typedSupabase
-        .from('missions')
-        .update(updates)
-        .eq('id', mission.id);
-      
+      const {
+        error
+      } = await typedSupabase.from('missions').update(updates).eq('id', mission.id);
       if (error) {
         throw error;
       }
-      
       toast.success('Chauffeur mis à jour avec succès');
       refetchMission();
     } catch (error: any) {
@@ -79,11 +74,9 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
       setUpdating(false);
     }
   };
-
-  return (
-    <Card className="mb-6">
+  return <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <User className="h-5 w-5" />
           Gestion du chauffeur
         </CardTitle>
@@ -104,25 +97,15 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium block mb-2">Sélectionner un chauffeur</label>
-              <Select 
-                value={selectedDriverId} 
-                onValueChange={setSelectedDriverId}
-                disabled={updating}
-              >
+              <Select value={selectedDriverId} onValueChange={setSelectedDriverId} disabled={updating}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisir un chauffeur" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="no_driver">Aucun chauffeur assigné</SelectItem>
-                  {loading ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                  ) : (
-                    driverProfiles.map(driver => (
-                      <SelectItem key={driver.id} value={driver.id}>
+                  {loading ? <SelectItem value="loading" disabled>Chargement...</SelectItem> : driverProfiles.map(driver => <SelectItem key={driver.id} value={driver.id}>
                         {driver.label}
-                      </SelectItem>
-                    ))
-                  )}
+                      </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -135,30 +118,18 @@ export const MissionDriverSection: React.FC<MissionDriverSectionProps> = ({
                 </div>
               </label>
               <div className="flex gap-2">
-                <Input
-                  type="number"
-                  value={driverPrice}
-                  onChange={(e) => setDriverPrice(e.target.value)}
-                  placeholder="0.00"
-                  disabled={updating || selectedDriverId === 'no_driver'} // Désactiver si aucun chauffeur n'est sélectionné
-                />
+                <Input type="number" value={driverPrice} onChange={e => setDriverPrice(e.target.value)} placeholder="0.00" disabled={updating || selectedDriverId === 'no_driver'} // Désactiver si aucun chauffeur n'est sélectionné
+              />
                 <span className="flex items-center">€</span>
               </div>
-              {selectedDriverId === 'no_driver' && (
-                <p className="text-xs text-muted-foreground mt-1">Prix à 0 si aucun chauffeur n'est assigné</p>
-              )}
+              {selectedDriverId === 'no_driver' && <p className="text-xs text-muted-foreground mt-1">Prix à 0 si aucun chauffeur n'est assigné</p>}
             </div>
           </div>
           
-          <Button 
-            onClick={handleUpdateDriver} 
-            disabled={updating}
-            className="w-full sm:w-auto"
-          >
+          <Button onClick={handleUpdateDriver} disabled={updating} className="w-full sm:w-auto">
             {updating ? 'Mise à jour...' : 'Mettre à jour le chauffeur'}
           </Button>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };

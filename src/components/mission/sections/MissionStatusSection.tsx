@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,13 +9,11 @@ import { typedSupabase } from '@/types/database';
 import { Clock, CheckCircle2, History } from 'lucide-react';
 import { missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-
 interface MissionStatusSectionProps {
   mission: Mission;
   refetchMission: () => void;
   onShowHistory: () => void;
 }
-
 export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   mission,
   refetchMission,
@@ -33,28 +30,24 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
   useEffect(() => {
     fetchStatusHistory();
   }, [mission.id]);
-
   const fetchStatusHistory = async () => {
     if (!mission.id) {
       console.log('No mission ID provided for status history fetch');
       return;
     }
-    
     try {
       setLoading(true);
       console.log('Fetching status history for mission:', mission.id);
-      
-      const { data, error } = await typedSupabase
-        .from('mission_status_history')
-        .select('*')
-        .eq('mission_id', mission.id)
-        .order('changed_at', { ascending: false });
-      
+      const {
+        data,
+        error
+      } = await typedSupabase.from('mission_status_history').select('*').eq('mission_id', mission.id).order('changed_at', {
+        ascending: false
+      });
       if (error) {
         console.error('Error fetching status history:', error);
         throw error;
       }
-      
       console.log('Status history data received:', data);
       setStatusHistory(data || []);
     } catch (error) {
@@ -64,41 +57,35 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       setLoading(false);
     }
   };
-
   const handleUpdateStatus = async () => {
     if (updating) return;
     if (selectedStatus === mission.status) {
       toast.info('Aucun changement de statut détecté');
       return;
     }
-
     try {
       setUpdating(true);
       console.log('Updating mission status from', mission.status, 'to', selectedStatus);
-      
+
       // Mettre à jour uniquement le statut pour éviter les triggers multiples
-      const { error } = await typedSupabase
-        .from('missions')
-        .update({ 
-          status: selectedStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', mission.id);
-      
+      const {
+        error
+      } = await typedSupabase.from('missions').update({
+        status: selectedStatus,
+        updated_at: new Date().toISOString()
+      }).eq('id', mission.id);
       if (error) {
         console.error('Error updating mission status:', error);
         throw error;
       }
-      
       console.log('Mission status updated successfully');
       toast.success(`Statut mis à jour: ${missionStatusLabels[selectedStatus]}`);
-      
+
       // Attendre un peu avant de rafraîchir pour laisser le trigger s'exécuter
       setTimeout(() => {
         refetchMission();
         fetchStatusHistory();
       }, 500);
-      
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour du statut:', error);
       toast.error(`Erreur: ${error.message || 'Impossible de mettre à jour le statut'}`);
@@ -115,18 +102,16 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       toast.error('Seuls les devis en cours d\'acceptation peuvent être annulés');
       return;
     }
-
     try {
       setCancelling(true);
-      const { error } = await typedSupabase
-        .from('missions')
-        .update({ status: 'annule' })
-        .eq('id', mission.id);
-      
+      const {
+        error
+      } = await typedSupabase.from('missions').update({
+        status: 'annule'
+      }).eq('id', mission.id);
       if (error) {
         throw error;
       }
-      
       toast.success('Le devis a été annulé avec succès');
       setTimeout(() => {
         refetchMission();
@@ -143,11 +128,9 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
 
   // All possible mission statuses for the dropdown
   const statuses: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
-
-  return (
-    <Card className="mb-6">
+  return <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <CheckCircle2 className="h-5 w-5" />
           Gestion du statut
         </CardTitle>
@@ -165,40 +148,27 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium block mb-2">Changer le statut</label>
-                <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as MissionStatus)} disabled={updating}>
+                <Select value={selectedStatus} onValueChange={value => setSelectedStatus(value as MissionStatus)} disabled={updating}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un statut" />
                   </SelectTrigger>
                   <SelectContent>
-                    {statuses.map((status) => (
-                      <SelectItem key={status} value={status}>
+                    {statuses.map(status => <SelectItem key={status} value={status}>
                         {missionStatusLabels[status]}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={handleUpdateStatus}
-                disabled={updating || selectedStatus === mission.status}
-                className="w-full sm:w-auto"
-              >
+              <Button onClick={handleUpdateStatus} disabled={updating || selectedStatus === mission.status} className="w-full sm:w-auto">
                 {updating ? 'Mise à jour...' : 'Mettre à jour le statut'}
               </Button>
               
-              {mission.status === 'en_acceptation' && (
-                <Button
-                  variant="destructive"
-                  onClick={() => setCancelDialogOpen(true)}
-                  disabled={cancelling}
-                  className="w-full sm:w-auto"
-                >
+              {mission.status === 'en_acceptation' && <Button variant="destructive" onClick={() => setCancelDialogOpen(true)} disabled={cancelling} className="w-full sm:w-auto">
                   {cancelling ? 'Annulation...' : 'Annuler le devis'}
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
 
@@ -223,17 +193,12 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleCancelQuote} 
-                className="bg-red-600 hover:bg-red-700 text-white" 
-                disabled={cancelling}
-              >
+              <AlertDialogAction onClick={handleCancelQuote} className="bg-red-600 hover:bg-red-700 text-white" disabled={cancelling}>
                 {cancelling ? 'Annulation en cours...' : 'Confirmer l\'annulation'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };

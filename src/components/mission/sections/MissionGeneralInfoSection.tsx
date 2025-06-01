@@ -35,7 +35,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
   };
   return <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Package className="h-5 w-5" />
           Informations générales
         </CardTitle>

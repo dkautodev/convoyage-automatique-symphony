@@ -193,7 +193,7 @@ const MissionDetailsPage = () => {
   return <div className="space-y-6 overflow-y-auto pb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-bold flex items-center gap-2 text-lg">
+          <h2 className="font-bold flex items-center gap-2 text-xl">
             
             Mission #{missionNumber}
             <Badge className={missionStatusColors[mission.status]}>

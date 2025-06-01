@@ -194,13 +194,13 @@ const MissionDetailsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-bold flex items-center gap-2 text-lg">
-            <Package className="h-5 w-5" />
+            
             Mission #{missionNumber}
             <Badge className={missionStatusColors[mission.status]}>
               {missionStatusLabels[mission.status]}
             </Badge>
           </h2>
-          <p className="text-gray-500">Créée le {formattedDate}</p>
+          <p className="text-gray-500 text-xs">Créée le {formattedDate}</p>
         </div>
         <div className="flex gap-2">
           {/* Bouton Restitution - Pour Admin et Client */}

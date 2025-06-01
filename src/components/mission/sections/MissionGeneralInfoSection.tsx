@@ -166,32 +166,32 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
               <Car className="h-4 w-4" />
               Informations véhicule
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
               {(mission.vehicle_make || mission.vehicle_model) && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Marque / Modèle</p>
-                  <p className="text-sm">
+                <div className="flex justify-between items-start">
+                  <span className="text-sm text-gray-500 min-w-[120px]">Marque / Modèle</span>
+                  <span className="font-medium text-right flex-1">
                     {[mission.vehicle_make, mission.vehicle_model].filter(Boolean).join(' ')}
                     {mission.vehicle_year && <span className="text-gray-500"> ({mission.vehicle_year})</span>}
-                  </p>
+                  </span>
                 </div>
               )}
               {mission.vehicle_registration && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Immatriculation</p>
-                  <p className="text-sm">{mission.vehicle_registration}</p>
+                <div className="flex justify-between items-start">
+                  <span className="text-sm text-gray-500 min-w-[120px]">Immatriculation</span>
+                  <span className="font-medium text-right flex-1">{mission.vehicle_registration}</span>
                 </div>
               )}
               {mission.vehicle_vin && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500">VIN</p>
-                  <p className="text-sm">{mission.vehicle_vin}</p>
+                <div className="flex justify-between items-start">
+                  <span className="text-sm text-gray-500 min-w-[120px]">VIN</span>
+                  <span className="font-medium text-right flex-1">{mission.vehicle_vin}</span>
                 </div>
               )}
               {mission.vehicle_fuel && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Carburant</p>
-                  <p className="text-sm">{mission.vehicle_fuel}</p>
+                <div className="flex justify-between items-start">
+                  <span className="text-sm text-gray-500 min-w-[120px]">Carburant</span>
+                  <span className="font-medium text-right flex-1">{mission.vehicle_fuel}</span>
                 </div>
               )}
             </div>

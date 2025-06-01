@@ -66,7 +66,7 @@ export const GenerateMissionSheetButton: React.FC<GenerateMissionSheetButtonProp
       ) : (
         <FileText className="h-4 w-4" />
       )}
-      Fiche de mission
+      Mission
     </Button>
   );
 };

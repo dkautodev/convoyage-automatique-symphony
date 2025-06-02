@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { typedSupabase } from '@/types/database';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +10,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import GenerateInvoiceButton from '@/components/invoice/GenerateInvoiceButton';
 import { formatMissionNumber, formatAddressDisplay, formatFullAddress, getAddressString } from '@/utils/missionUtils';
-
 const ClientDashboard = () => {
   const navigate = useNavigate();
   const {
@@ -28,7 +26,6 @@ const ClientDashboard = () => {
     pendingMissions: 0
   });
   const isMobile = useIsMobile();
-
   useEffect(() => {
     const fetchClientData = async () => {
       if (!user?.id) return;
@@ -106,17 +103,14 @@ const ClientDashboard = () => {
     };
     fetchClientData();
   }, [user]);
-
   const handleCreateNewMission = () => {
     navigate('/mission/create');
   };
-
   if (loading) {
     return <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-client"></div>
       </div>;
   }
-  
   if (error) {
     return <div className="flex flex-col items-center justify-center h-full p-6">
         <div className="text-red-500 mb-4">
@@ -149,11 +143,9 @@ const ClientDashboard = () => {
       <FileText size={40} className="text-gray-300 mx-auto mb-3" />
       <p className="text-gray-500">Vos documents apparaîtront ici</p>
     </div>;
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-client">Tableau de bord client</h2>
+        
         <Button onClick={handleCreateNewMission}>
           <Plus size={16} className="mr-2" />
           <span className="whitespace-nowrap">Nouvelle mission</span>
@@ -245,9 +237,7 @@ const ClientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {missions.length > 0 ? (
-              missions.map((mission) => (
-                <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            {missions.length > 0 ? missions.map(mission => <div key={mission.id} className="border-b pb-3 last:border-b-0 last:pb-0 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2 mb-1">
                       <p className="font-medium">Mission #{mission.mission_number || mission.id.slice(0, 8)}</p>
@@ -259,27 +249,21 @@ const ClientDashboard = () => {
                       {getAddressString(mission.pickup_address)} → {getAddressString(mission.delivery_address)} · {mission.distance_km?.toFixed(2) || '0'} km
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                      {new Date(mission.created_at).toLocaleDateString('fr-FR')} · {mission.price_ttc?.toLocaleString('fr-FR', {
+                  style: 'currency',
+                  currency: 'EUR'
+                }) || '0 €'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {(mission.status === 'livre' || mission.status === 'termine') && (
-                      <GenerateInvoiceButton 
-                        mission={mission} 
-                        client={profile}
-                      />
-                    )}
+                    {(mission.status === 'livre' || mission.status === 'termine') && <GenerateInvoiceButton mission={mission} client={profile} />}
                     <Button variant="outline" size="sm" className="self-start" asChild>
                       <Link to={`/client/missions/${mission.id}`}>
                         {isMobile ? "Détails" : "Voir la mission"}
                       </Link>
                     </Button>
                   </div>
-                </div>
-              ))
-            ) : (
-              <EmptyMissionsState />
-            )}
+                </div>) : <EmptyMissionsState />}
           </div>
         </CardContent>
       </Card>
@@ -294,8 +278,6 @@ const ClientDashboard = () => {
           <EmptyDocumentsState />
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default ClientDashboard;

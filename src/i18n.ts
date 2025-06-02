@@ -7,13 +7,13 @@ const resources = {
   en: {
     translation: {
       // Ajouter les clés de traduction en anglais ici
-      "welcome": "Welcome to ConvoySync",
+      "welcome": "Welcome to DKAUTOMOTIVE",
     }
   },
   fr: {
     translation: {
       // Ajouter les clés de traduction en français ici
-      "welcome": "Bienvenue sur ConvoySync",
+      "welcome": "Bienvenue sur DKAUTOMOTIVE",
     }
   }
 };

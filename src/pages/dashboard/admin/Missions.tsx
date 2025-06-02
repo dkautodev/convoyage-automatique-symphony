@@ -23,7 +23,6 @@ type MissionTab = 'all' | MissionStatus;
 
 // Define the order of statuses like in client missions page
 const ORDERED_STATUSES: MissionStatus[] = ['en_acceptation', 'accepte', 'prise_en_charge', 'livraison', 'livre', 'termine', 'annule', 'incident'];
-
 const MissionsPage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -57,7 +56,6 @@ const MissionsPage = () => {
     profiles: driversList,
     loading: driversLoading
   } = useProfiles('chauffeur');
-
   useEffect(() => {
     fetchMissions();
   }, []);
@@ -226,11 +224,8 @@ const MissionsPage = () => {
   const EmptyState = () => <div className="text-center py-10 text-neutral-500">
       <Package className="h-12 w-12 mx-auto text-neutral-300 mb-3" />
       <p className="font-medium">Aucune mission à afficher pour le moment.</p>
-      <p className="text-sm mt-1">Créez votre première mission en cliquant sur "Nouvelle mission"</p>
-      <Button className="mt-4" onClick={handleCreateNewMission}>
-        <Plus className="mr-2 h-4 w-4" />
-        Nouvelle mission
-      </Button>
+      
+      
     </div>;
 
   // Tous les statuts disponibles pour la boîte de dialogue de changement de statut
@@ -252,7 +247,6 @@ const MissionsPage = () => {
     if (activeTab === 'all') return 'Toutes';
     return missionStatusLabels[activeTab as MissionStatus] || 'Toutes';
   };
-
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des missions</h2>
@@ -279,8 +273,7 @@ const MissionsPage = () => {
       </div>
 
       {/* Desktop: Tabs layout */}
-      {!isMobile && (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      {!isMobile && <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:flex lg:flex-wrap gap-1">
             <TabsTrigger value="all" className="flex gap-2">
               Toutes
@@ -330,9 +323,9 @@ const MissionsPage = () => {
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               Client: {formatClientName(mission, clientsData)} · {mission.distance_km?.toFixed(2) || '0'} km · {mission.price_ttc?.toLocaleString('fr-FR', {
-                          style: 'currency',
-                          currency: 'EUR'
-                        }) || '0 €'}
+                        style: 'currency',
+                        currency: 'EUR'
+                      }) || '0 €'}
                             </p>
                           </div>
                           <div className="mt-2 flex flex-col gap-2">
@@ -352,12 +345,10 @@ const MissionsPage = () => {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
-      )}
+        </Tabs>}
 
       {/* Mobile: Dropdown layout */}
-      {isMobile && (
-        <div className="space-y-4">
+      {isMobile && <div className="space-y-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-full justify-between">
@@ -377,14 +368,12 @@ const MissionsPage = () => {
                   {missions.length}
                 </Badge>
               </DropdownMenuItem>
-              {ORDERED_STATUSES.map(status => (
-                <DropdownMenuItem key={status} onSelect={() => setActiveTab(status)} className="flex justify-between">
+              {ORDERED_STATUSES.map(status => <DropdownMenuItem key={status} onSelect={() => setActiveTab(status)} className="flex justify-between">
                   <span>{missionStatusLabels[status]}</span>
                   <Badge variant="secondary">
                     {missionCountsByStatus[status] || 0}
                   </Badge>
-                </DropdownMenuItem>
-              ))}
+                </DropdownMenuItem>)}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -419,9 +408,9 @@ const MissionsPage = () => {
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             Client: {formatClientName(mission, clientsData)} · {mission.distance_km?.toFixed(2) || '0'} km · {mission.price_ttc?.toLocaleString('fr-FR', {
-                        style: 'currency',
-                        currency: 'EUR'
-                      }) || '0 €'}
+                      style: 'currency',
+                      currency: 'EUR'
+                    }) || '0 €'}
                           </p>
                         </div>
                         <div className="mt-2 flex flex-col gap-2">
@@ -440,8 +429,7 @@ const MissionsPage = () => {
                 </div>}
             </CardContent>
           </Card>
-        </div>
-      )}
+        </div>}
       
       {/* Boîte de dialogue pour modifier rapidement le statut */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>

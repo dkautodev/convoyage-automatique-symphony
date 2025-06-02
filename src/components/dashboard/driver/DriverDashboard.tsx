@@ -10,7 +10,6 @@ import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils'
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-
 const DriverDashboard = () => {
   const {
     profile,
@@ -206,7 +205,7 @@ const DriverDashboard = () => {
   }
   return <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Tableau de bord chauffeur</h1>
+        
         <div className="flex gap-2">
           <Button asChild>
             <Link to="/driver/missions">
@@ -478,5 +477,4 @@ const DriverDashboard = () => {
       </Dialog>
     </div>;
 };
-
 export default DriverDashboard;

@@ -23,7 +23,6 @@ import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDia
 import { RestitutionButton } from '@/components/mission/RestitutionButton';
 import { LinkedMissionSection } from '@/components/mission/LinkedMissionSection';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
-
 const MissionDetailsPage = () => {
   const {
     id
@@ -49,7 +48,6 @@ const MissionDetailsPage = () => {
   const isClient = profile?.role === 'client';
   const isDriver = profile?.role === 'chauffeur';
   const userRole = profile?.role || 'client';
-
   useEffect(() => {
     fetchMission();
     if (id) {
@@ -62,7 +60,6 @@ const MissionDetailsPage = () => {
       fetchAdminProfile();
     }
   }, [id, isAdmin]);
-  
   const fetchAdminProfile = async () => {
     try {
       const {
@@ -76,7 +73,6 @@ const MissionDetailsPage = () => {
       console.error('Error fetching admin profile:', error);
     }
   };
-  
   const fetchMission = async () => {
     if (!id) return;
     try {
@@ -124,7 +120,6 @@ const MissionDetailsPage = () => {
       setLoading(false);
     }
   };
-  
   const fetchStatusHistory = async (missionId: string) => {
     try {
       const {
@@ -142,7 +137,6 @@ const MissionDetailsPage = () => {
       console.error('Erreur lors de la récupération de l\'historique:', error);
     }
   };
-  
   const fetchDocumentsCount = async (missionId: string) => {
     try {
       const {
@@ -161,26 +155,21 @@ const MissionDetailsPage = () => {
       console.error('Erreur lors de la récupération du nombre de documents:', error);
     }
   };
-  
   const handleBack = () => {
     const basePath = userRole === 'admin' ? '/admin/missions' : userRole === 'chauffeur' ? '/driver/missions' : '/client/missions';
     navigate(basePath);
   };
-  
   const handleEditMission = () => {
     setEditDialogOpen(true);
   };
-  
   const handleShowHistory = () => {
     setHistoryDrawerOpen(true);
   };
-
   if (loading) {
     return <div className="flex justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>;
   }
-
   if (!mission) {
     return <div className="space-y-4">
         <div className="text-center py-8">
@@ -193,7 +182,6 @@ const MissionDetailsPage = () => {
         </div>
       </div>;
   }
-
   const missionNumber = formatMissionNumber(mission);
   const formattedDate = mission.created_at ? new Date(mission.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -202,11 +190,10 @@ const MissionDetailsPage = () => {
     hour: '2-digit',
     minute: '2-digit'
   }) : 'Date inconnue';
-
   return <div className="space-y-6 overflow-y-auto pb-8">
       {/* Mobile layout - Title and buttons side by side */}
       <div className="flex md:hidden justify-between items-start">
-        <div className="flex flex-col">
+        <div className="flex flex-col mx-[7px]">
           <h2 className="font-bold text-xl mb-1">
             Mission #{missionNumber}
           </h2>
@@ -280,5 +267,4 @@ const MissionDetailsPage = () => {
       {mission && documentsDialogOpen && <MissionDocumentsDialog mission={mission} isOpen={documentsDialogOpen} onClose={() => setDocumentsDialogOpen(false)} onDocumentsUpdated={() => fetchDocumentsCount(mission.id)} />}
     </div>;
 };
-
 export default MissionDetailsPage;

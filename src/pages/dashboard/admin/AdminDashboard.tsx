@@ -191,7 +191,7 @@ const AdminDashboard = () => {
   };
   return <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-admin">Tableau de bord administrateur</h2>
+        
         <div className="flex space-x-2">
           <Button onClick={handleCreateNewMission}>
             <Plus className="mr-2 h-4 w-4" />

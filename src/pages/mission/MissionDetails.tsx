@@ -23,6 +23,7 @@ import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDia
 import { RestitutionButton } from '@/components/mission/RestitutionButton';
 import { LinkedMissionSection } from '@/components/mission/LinkedMissionSection';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
+
 const MissionDetailsPage = () => {
   const {
     id
@@ -48,6 +49,7 @@ const MissionDetailsPage = () => {
   const isClient = profile?.role === 'client';
   const isDriver = profile?.role === 'chauffeur';
   const userRole = profile?.role || 'client';
+
   useEffect(() => {
     fetchMission();
     if (id) {
@@ -60,6 +62,7 @@ const MissionDetailsPage = () => {
       fetchAdminProfile();
     }
   }, [id, isAdmin]);
+  
   const fetchAdminProfile = async () => {
     try {
       const {
@@ -73,6 +76,7 @@ const MissionDetailsPage = () => {
       console.error('Error fetching admin profile:', error);
     }
   };
+  
   const fetchMission = async () => {
     if (!id) return;
     try {
@@ -120,6 +124,7 @@ const MissionDetailsPage = () => {
       setLoading(false);
     }
   };
+  
   const fetchStatusHistory = async (missionId: string) => {
     try {
       const {
@@ -137,6 +142,7 @@ const MissionDetailsPage = () => {
       console.error('Erreur lors de la récupération de l\'historique:', error);
     }
   };
+  
   const fetchDocumentsCount = async (missionId: string) => {
     try {
       const {
@@ -155,21 +161,26 @@ const MissionDetailsPage = () => {
       console.error('Erreur lors de la récupération du nombre de documents:', error);
     }
   };
+  
   const handleBack = () => {
     const basePath = userRole === 'admin' ? '/admin/missions' : userRole === 'chauffeur' ? '/driver/missions' : '/client/missions';
     navigate(basePath);
   };
+  
   const handleEditMission = () => {
     setEditDialogOpen(true);
   };
+  
   const handleShowHistory = () => {
     setHistoryDrawerOpen(true);
   };
+
   if (loading) {
     return <div className="flex justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>;
   }
+
   if (!mission) {
     return <div className="space-y-4">
         <div className="text-center py-8">
@@ -182,6 +193,7 @@ const MissionDetailsPage = () => {
         </div>
       </div>;
   }
+
   const missionNumber = formatMissionNumber(mission);
   const formattedDate = mission.created_at ? new Date(mission.created_at).toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -190,11 +202,23 @@ const MissionDetailsPage = () => {
     hour: '2-digit',
     minute: '2-digit'
   }) : 'Date inconnue';
+
   return <div className="space-y-6 overflow-y-auto pb-8">
-      <div className="flex items-center justify-between">
+      {/* Title and Status - Centered on mobile, at top */}
+      <div className="flex flex-col md:hidden text-center space-y-2">
+        <h2 className="font-bold text-xl flex items-center justify-center gap-2">
+          Mission #{missionNumber}
+        </h2>
+        <Badge className={`${missionStatusColors[mission.status]} mx-auto`}>
+          {missionStatusLabels[mission.status]}
+        </Badge>
+        <p className="text-gray-500 text-xs">Créée le {formattedDate}</p>
+      </div>
+
+      {/* Desktop layout - Original header */}
+      <div className="hidden md:flex items-center justify-between">
         <div>
           <h2 className="font-bold flex items-center gap-2 text-xl">
-            
             Mission #{missionNumber}
             <Badge className={missionStatusColors[mission.status]}>
               {missionStatusLabels[mission.status]}
@@ -212,6 +236,18 @@ const MissionDetailsPage = () => {
               <span className="hidden md:inline">Modifier infos</span>
             </Button>}
         </div>
+      </div>
+
+      {/* Mobile buttons - Below title */}
+      <div className="flex md:hidden gap-2 justify-center">
+        {/* Bouton Restitution - Pour Admin et Client */}
+        {(isAdmin || isClient) && <RestitutionButton mission={mission} />}
+        
+        {/* Admin buttons */}
+        {isAdmin && <Button onClick={handleEditMission} variant="outline">
+            <Edit className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Modifier infos</span>
+          </Button>}
       </div>
 
       {/* Section des missions liées */}
@@ -244,4 +280,5 @@ const MissionDetailsPage = () => {
       {mission && documentsDialogOpen && <MissionDocumentsDialog mission={mission} isOpen={documentsDialogOpen} onClose={() => setDocumentsDialogOpen(false)} onDocumentsUpdated={() => fetchDocumentsCount(mission.id)} />}
     </div>;
 };
+
 export default MissionDetailsPage;

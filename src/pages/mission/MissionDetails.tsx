@@ -204,15 +204,29 @@ const MissionDetailsPage = () => {
   }) : 'Date inconnue';
 
   return <div className="space-y-6 overflow-y-auto pb-8">
-      {/* Title and Status - Centered on mobile, at top */}
-      <div className="flex flex-col md:hidden text-center space-y-2">
-        <h2 className="font-bold text-xl flex items-center justify-center gap-2">
-          Mission #{missionNumber}
-        </h2>
-        <Badge className={`${missionStatusColors[mission.status]} mx-auto`}>
-          {missionStatusLabels[mission.status]}
-        </Badge>
-        <p className="text-gray-500 text-xs">Créée le {formattedDate}</p>
+      {/* Mobile layout - Title and buttons side by side */}
+      <div className="flex md:hidden justify-between items-start">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="font-bold text-xl">
+              Mission #{missionNumber}
+            </h2>
+            <Badge className={missionStatusColors[mission.status]}>
+              {missionStatusLabels[mission.status]}
+            </Badge>
+          </div>
+          <p className="text-gray-500 text-xs">Créée le {formattedDate}</p>
+        </div>
+        
+        <div className="flex flex-col gap-2 ml-4">
+          {/* Admin buttons - Modifier en premier */}
+          {isAdmin && <Button onClick={handleEditMission} variant="outline" size="sm">
+              <Edit className="h-4 w-4" />
+            </Button>}
+          
+          {/* Bouton Restitution - Pour Admin et Client */}
+          {(isAdmin || isClient) && <RestitutionButton mission={mission} />}
+        </div>
       </div>
 
       {/* Desktop layout - Original header */}
@@ -236,18 +250,6 @@ const MissionDetailsPage = () => {
               <span className="hidden md:inline">Modifier infos</span>
             </Button>}
         </div>
-      </div>
-
-      {/* Mobile buttons - Below title */}
-      <div className="flex md:hidden gap-2 justify-center">
-        {/* Bouton Restitution - Pour Admin et Client */}
-        {(isAdmin || isClient) && <RestitutionButton mission={mission} />}
-        
-        {/* Admin buttons */}
-        {isAdmin && <Button onClick={handleEditMission} variant="outline">
-            <Edit className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Modifier infos</span>
-          </Button>}
       </div>
 
       {/* Section des missions liées */}

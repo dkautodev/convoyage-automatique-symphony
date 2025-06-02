@@ -207,15 +207,13 @@ const MissionDetailsPage = () => {
       {/* Mobile layout - Title and buttons side by side */}
       <div className="flex md:hidden justify-between items-start">
         <div className="flex flex-col">
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="font-bold text-xl">
-              Mission #{missionNumber}
-            </h2>
-            <Badge className={missionStatusColors[mission.status]}>
-              {missionStatusLabels[mission.status]}
-            </Badge>
-          </div>
-          <p className="text-gray-500 text-xs">Créée le {formattedDate}</p>
+          <h2 className="font-bold text-xl mb-1">
+            Mission #{missionNumber}
+          </h2>
+          <p className="text-gray-500 text-xs mb-2">Créée le {formattedDate}</p>
+          <Badge className={missionStatusColors[mission.status]}>
+            {missionStatusLabels[mission.status]}
+          </Badge>
         </div>
         
         <div className="flex flex-col gap-2 ml-4">

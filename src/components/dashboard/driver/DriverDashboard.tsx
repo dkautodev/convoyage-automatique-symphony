@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle, Truck } from 'lucide-react';
+import { MapPin, Package, Clock, CreditCard, Calendar, Phone, CheckCircle, Truck, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils'
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+
 const DriverDashboard = () => {
   const {
     profile,
@@ -369,8 +370,7 @@ const DriverDashboard = () => {
             <div className="flex justify-between mt-4">
               <Button variant="outline" asChild>
                 <Link to={`/driver/missions/${currentMission.id}`}>
-                  <Phone className="mr-2 h-4 w-4" />
-                  Détails de la mission
+                  <Search className="mr-2 h-4 w-4" />
                 </Link>
               </Button>
 

@@ -199,6 +199,14 @@ const DriverDashboard = () => {
         return "Mettre à jour le statut";
     }
   };
+
+  // Helper function to format date in DD-MM-YYYY format
+  const formatDateDDMMYYYY = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}`;
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -322,7 +330,7 @@ const DriverDashboard = () => {
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Départ</h3>
                   <p>{formatAddressDisplay(currentMission.pickup_address)}</p>
                   <p className="text-sm text-muted-foreground">
-                    Départ : {currentMission.D1_PEC ? `${currentMission.D1_PEC} ` : ''}
+                    Départ : {currentMission.D1_PEC ? `${formatDateDDMMYYYY(currentMission.D1_PEC)} ` : ''}
                     {currentMission.H1_PEC ? `à ${currentMission.H1_PEC}` : ''}
                   </p>
                 </div>
@@ -330,7 +338,7 @@ const DriverDashboard = () => {
                   <h3 className="text-sm font-medium text-muted-foreground mb-1">Destination</h3>
                   <p>{formatAddressDisplay(currentMission.delivery_address)}</p>
                   <p className="text-sm text-muted-foreground">
-                    Arrivée : {currentMission.D2_LIV ? `${currentMission.D2_LIV} ` : ''}
+                    Arrivée : {currentMission.D2_LIV ? `${formatDateDDMMYYYY(currentMission.D2_LIV)} ` : ''}
                     {currentMission.H1_LIV ? `à ${currentMission.H1_LIV}` : ''}
                   </p>
                 </div>
@@ -413,7 +421,7 @@ const DriverDashboard = () => {
                   <div className="flex justify-between mb-1">
                     <div className="font-medium">Mission #{formatMissionNumber(mission)}</div>
                     <div className="text-sm text-amber-500 font-medium">
-                      {mission.D1_PEC || new Date(mission.scheduled_date || '').toLocaleDateString('fr-FR')}
+                      {mission.D1_PEC ? formatDateDDMMYYYY(mission.D1_PEC) : new Date(mission.scheduled_date || '').toLocaleDateString('fr-FR')}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
@@ -477,4 +485,5 @@ const DriverDashboard = () => {
       </Dialog>
     </div>;
 };
+
 export default DriverDashboard;

@@ -109,11 +109,11 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
     return <>
         <div className="space-y-4">
           {missions.map(mission => <div key={mission.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
-              <div className="space-y-3 py-[3px] my-[15px] px-[20px]">
+              <div className="space-y-3 my-[15px] py-0 px-[19px]">
                 {/* Row 1: Mission number + Status badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-xl">#{formatMissionNumber(mission)}</span>
+                    <span className="font-extrabold text-lg">#{formatMissionNumber(mission)}</span>
                     <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs px-2 py-1`}>
                       {getInvoiceStatusLabel(mission.status)}
                     </Badge>

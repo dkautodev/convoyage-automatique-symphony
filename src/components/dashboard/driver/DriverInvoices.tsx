@@ -445,7 +445,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
                           </Button>}
                       </div>
                       {/* Deuxième ligne pour le bouton de paiement sur mobile, inline sur desktop */}
-                      {isAdmin && <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice} className="w-full sm:w-auto sm:hidden px-0 mx-[4px]">
+                      {isAdmin && <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice} className="w-full sm:w-auto sm:hidden px-0 mx-[2px]">
                           <Check size={16} className="mr-1" />
                           {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
                         </Button>}

@@ -440,7 +440,8 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
                         </Button>
                         {isAdmin && <Button variant="outline" size="sm" onClick={() => handleDeleteInvoice(mission)} disabled={!mission.chauffeur_invoice} className="text-red-500 hover:bg-red-50">
                             <Trash2 size={16} className="mr-1" />
-                            Supprimer
+                            <span className="hidden sm:inline">Supprimer</span>
+                            <span className="sm:hidden">supp.</span>
                           </Button>}
                       </div>
                       {/* Deuxième ligne pour le bouton de paiement sur mobile, inline sur desktop */}

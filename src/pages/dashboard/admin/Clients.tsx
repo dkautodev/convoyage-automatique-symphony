@@ -104,7 +104,7 @@ const ClientsPage = () => {
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Liste des clients</h1>
+          <h1 className="text-3xl font-bold my-[12px]">Liste des clients</h1>
           <p className="text-muted-foreground mt-1">Gérer les profils des clients et leurs documents</p>
         </div>
         

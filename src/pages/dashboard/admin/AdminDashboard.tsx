@@ -193,10 +193,7 @@ const AdminDashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         
         <div className="flex space-x-2">
-          <Button 
-            onClick={handleCreateNewMission}
-            className="sm:bg-primary sm:text-primary-foreground sm:hover:bg-primary/90 sm:w-auto w-full bg-neutral-900 text-white hover:bg-neutral-800 h-12 text-base font-medium rounded-lg"
-          >
+          <Button onClick={handleCreateNewMission} className="sm:bg-primary sm:text-primary-foreground sm:hover:bg-primary/90 sm:w-auto w-full bg-neutral-900 text-white hover:bg-neutral-800 h-10 text-xs font-normal rounded-sm">
             <Plus className="mr-2 h-4 w-4" />
             <span className="whitespace-nowrap">Nouvelle mission</span>
           </Button>

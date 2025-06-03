@@ -133,7 +133,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 
                 {/* Row 4: Amount + Actions */}
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-lg">
+                  <span className="text-lg font-semibold">
                     {formatPrice(mission.price_ttc)}
                   </span>
                   <div className="flex gap-2">

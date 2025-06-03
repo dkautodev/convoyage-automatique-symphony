@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +10,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { Check, X, Eye } from 'lucide-react';
 import GenerateInvoiceButton from './GenerateInvoiceButton';
-
 interface InvoicesTableProps {
   missions: Mission[];
   clientsData?: Record<string, any>;
@@ -21,7 +19,6 @@ interface InvoicesTableProps {
   onMissionStatusUpdate?: () => void;
   layout?: 'table' | 'stacked';
 }
-
 const InvoicesTable: React.FC<InvoicesTableProps> = ({
   missions,
   clientsData = {},
@@ -33,21 +30,15 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 }) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedMission, setSelectedMission] = React.useState<Mission | null>(null);
-
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-8">
+    return <div className="flex justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-700"></div>
-      </div>
-    );
+      </div>;
   }
-
   if (missions.length === 0) {
-    return (
-      <div className="text-center py-8 text-neutral-500">
+    return <div className="text-center py-8 text-neutral-500">
         <p className="font-medium">Aucune mission à facturer</p>
-      </div>
-    );
+      </div>;
   }
 
   // Format price for display
@@ -67,15 +58,13 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
   // Toggle mission status between 'livre' and 'termine'
   const toggleMissionStatus = async (mission: Mission) => {
     if (!mission) return;
-
     const newStatus = mission.status === 'livre' ? 'termine' : 'livre';
-
     try {
-      const { error } = await supabase
-        .from('missions')
-        .update({ status: newStatus })
-        .eq('id', mission.id);
-
+      const {
+        error
+      } = await supabase.from('missions').update({
+        status: newStatus
+      }).eq('id', mission.id);
       if (error) throw error;
 
       // Show success message
@@ -89,7 +78,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
       console.error('Erreur lors de la mise à jour du statut:', err);
       toast.error("Erreur lors de la mise à jour du statut");
     }
-
     setIsDialogOpen(false);
     setSelectedMission(null);
   };
@@ -118,36 +106,28 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
 
   // Stacked layout for mobile devices
   if (layout === 'stacked') {
-    return (
-      <>
+    return <>
         <div className="space-y-4">
-          {missions.map((mission) => (
-            <div key={mission.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
-              <div className="space-y-3 py-2">
+          {missions.map(mission => <div key={mission.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+              <div className="space-y-3 py-[3px] my-[15px] px-[20px]">
                 {/* Row 1: Mission number + Status badge */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">#{formatMissionNumber(mission)}</span>
+                    <span className="font-extrabold text-xl">#{formatMissionNumber(mission)}</span>
                     <Badge className={`${getInvoiceStatusColor(mission.status)} text-xs px-2 py-1`}>
                       {getInvoiceStatusLabel(mission.status)}
                     </Badge>
                   </div>
-                  <GenerateInvoiceButton 
-                    mission={mission} 
-                    client={userRole === 'admin' ? clientsData[mission.client_id] : clientData} 
-                    className="h-8 w-8 p-0" 
-                  />
+                  <GenerateInvoiceButton mission={mission} client={userRole === 'admin' ? clientsData[mission.client_id] : clientData} className="h-8 w-8 p-0" />
                 </div>
                 
                 {/* Row 2: Client name (only for admin) */}
-                {userRole === 'admin' && (
-                  <div className="text-sm text-gray-600">
+                {userRole === 'admin' && <div className="text-sm text-gray-600">
                     {formatClientName(mission, clientsData)}
-                  </div>
-                )}
+                  </div>}
                 
                 {/* Row 3: Date */}
-                <div className="text-sm text-gray-600">
+                <div className="text-xs text-gray-500">
                   {mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Date inconnue'}
                 </div>
                 
@@ -162,31 +142,13 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
-                    {userRole === 'admin' && (
-                      <Button 
-                        variant={mission.status === 'livre' ? 'default' : 'outline'} 
-                        size="sm" 
-                        onClick={() => handleStatusButtonClick(mission)}
-                        className="h-8 px-2 text-xs"
-                      >
-                        {mission.status === 'livre' ? (
-                          <>
-                            <Check className="h-3 w-3 mr-1" />
-                            Payer
-                          </>
-                        ) : (
-                          <>
-                            <X className="h-3 w-3 mr-1" />
-                            Impayé
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    {userRole === 'admin' && <Button variant={mission.status === 'livre' ? 'default' : 'outline'} size="sm" onClick={() => handleStatusButtonClick(mission)} className="h-8 px-2 text-xs">
+                        {mission.status === 'livre' ? <><Check className="h-3 w-3 mr-1" /> Payer</> : <><X className="h-3 w-3 mr-1" /> Impayé</>}
+                      </Button>}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
 
         <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -199,22 +161,17 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel className="w-full sm:w-auto">Annuler</AlertDialogCancel>
-              <AlertDialogAction 
-                className="w-full sm:w-auto" 
-                onClick={() => selectedMission && toggleMissionStatus(selectedMission)}
-              >
+              <AlertDialogAction className="w-full sm:w-auto" onClick={() => selectedMission && toggleMissionStatus(selectedMission)}>
                 Confirmer
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </>
-    );
+      </>;
   }
 
   // Table layout for larger screens
-  return (
-    <>
+  return <>
       <Table>
         <TableHeader>
           <TableRow>
@@ -228,8 +185,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {missions.map((mission) => (
-            <TableRow key={mission.id}>
+          {missions.map(mission => <TableRow key={mission.id}>
               <TableCell className="font-medium">#{formatMissionNumber(mission)}</TableCell>
               <TableCell>{mission.D2_LIV ? formatDate(mission.D2_LIV) : 'Non spécifiée'}</TableCell>
               {userRole === 'admin' && <TableCell>{formatClientName(mission, clientsData)}</TableCell>}
@@ -242,10 +198,7 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                 {formatPrice(mission.price_ttc)}
               </TableCell>
               <TableCell className="text-center">
-                <GenerateInvoiceButton 
-                  mission={mission} 
-                  client={userRole === 'admin' ? clientsData[mission.client_id] : clientData} 
-                />
+                <GenerateInvoiceButton mission={mission} client={userRole === 'admin' ? clientsData[mission.client_id] : clientData} />
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex gap-2 justify-end">
@@ -254,20 +207,12 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  {userRole === 'admin' && (
-                    <Button 
-                      variant={mission.status === 'livre' ? 'default' : 'outline'} 
-                      size="icon" 
-                      onClick={() => handleStatusButtonClick(mission)}
-                      title={mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}
-                    >
+                  {userRole === 'admin' && <Button variant={mission.status === 'livre' ? 'default' : 'outline'} size="icon" onClick={() => handleStatusButtonClick(mission)} title={mission.status === 'livre' ? 'Marquer payé' : 'Marquer à payer'}>
                       {mission.status === 'livre' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
               </TableCell>
-            </TableRow>
-          ))}
+            </TableRow>)}
         </TableBody>
       </Table>
 
@@ -287,8 +232,6 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 };
-
 export default InvoicesTable;

@@ -317,7 +317,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
   return <div className="space-y-6">
       {isAdmin ? <Card className="bg-white">
           <CardHeader>
-            <CardTitle>Statistiques de facturation montant H.T. €</CardTitle>
+            <CardTitle className="text-left text-xl">Statistiques de facturation montant H.T. €</CardTitle>
             <CardDescription>Synthèse des paiements chauffeur</CardDescription>
           </CardHeader>
           <CardContent>

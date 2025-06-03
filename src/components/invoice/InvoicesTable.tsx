@@ -285,9 +285,8 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialog>
-      </AlertDialog>
-    </>
-  );
-};
+      </>
+    );
+  };
 
 export default InvoicesTable;

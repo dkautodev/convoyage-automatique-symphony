@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -284,9 +285,10 @@ const InvoicesTable: React.FC<InvoicesTableProps> = ({
               Confirmer
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialog>
-      </>
-    );
-  };
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
 
 export default InvoicesTable;

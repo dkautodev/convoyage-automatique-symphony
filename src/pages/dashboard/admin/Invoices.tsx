@@ -111,8 +111,8 @@ const AdminInvoicesPage = () => {
   const clearFilter = () => {
     setStatusFilter('all');
   };
-  return <div className="space-y-6">
-      <h1 className="font-bold text-neutral-900 text-center my-[15px] text-2xl">Factures</h1>
+  return <div className="space-y-6 px-[15px]">
+      <h1 className="font-bold text-neutral-900 text-center text-2xl my-[14px]">Factures</h1>
       
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1">

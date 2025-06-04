@@ -235,9 +235,7 @@ const DriversPage = () => {
   // Filter drivers based on search term
   const filteredDrivers = searchTerm ? drivers.filter(driver => (driver.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (driver.email || '').toLowerCase().includes(searchTerm.toLowerCase())) : drivers;
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestion des chauffeurs</h2>
-      </div>
+      
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

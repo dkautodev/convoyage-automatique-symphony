@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Contact } from '@/types/contact';
-import { Trash } from 'lucide-react';
+import { Trash, User, Mail, Phone } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,22 +50,50 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
     <div className="border rounded-md overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Nom complet / société</TableHead>
-            <TableHead>Téléphone</TableHead>
-            <TableHead>Email</TableHead>
-            {showClientInfo && <TableHead className="min-w-[120px]">Client</TableHead>}
-            <TableHead className="w-24">Actions</TableHead>
+          <TableRow className="bg-muted/50">
+            <TableHead className="bg-white">Nom / Contact</TableHead>
+            <TableHead className="bg-white">Téléphone</TableHead>
+            <TableHead className="bg-white">Email</TableHead>
+            {showClientInfo && <TableHead className="bg-white min-w-[120px]">Client</TableHead>}
+            <TableHead className="bg-white w-24 text-left">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {contacts.map((contact) => (
-            <TableRow key={contact.id}>
+            <TableRow key={contact.id} className="h-16">
               <TableCell className="font-medium">
-                {contact.name_s || '-'}
+                <div className="flex items-center gap-3">
+                  <User className="h-4 w-4 text-neutral-500 flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <div className="font-semibold text-gray-900">
+                      {contact.name_s || 'Sans nom'}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Contact
+                    </div>
+                  </div>
+                </div>
               </TableCell>
-              <TableCell>{contact.phone || '-'}</TableCell>
-              <TableCell>{contact.email || '-'}</TableCell>
+              <TableCell>
+                {contact.phone ? (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3 w-3 text-neutral-500" />
+                    <span>{contact.phone}</span>
+                  </div>
+                ) : (
+                  '-'
+                )}
+              </TableCell>
+              <TableCell>
+                {contact.email ? (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3 w-3 text-neutral-500" />
+                    <span>{contact.email}</span>
+                  </div>
+                ) : (
+                  '-'
+                )}
+              </TableCell>
               {showClientInfo && (
                 <TableCell className="min-w-[120px] whitespace-nowrap">
                   {clientData && clientData[contact.client_id] 
@@ -76,8 +104,9 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
               <TableCell>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                      <Trash className="h-4 w-4 text-red-500" />
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 bg-white border-gray-200 hover:bg-gray-50">
+                      <Trash className="h-3.5 w-3.5 text-red-500" />
+                      Supprimer
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -106,4 +135,3 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
     </div>
   );
 });
-

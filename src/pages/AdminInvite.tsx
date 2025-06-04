@@ -202,8 +202,8 @@ export default function AdminInvite() {
       toast.error("Impossible de copier le lien d'invitation");
     }
   };
-  return <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Gestion des invitations administrateur</h1>
+  return <div className="container mx-auto py-0 px-0">
+      
       
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Formulaire de création de token */}
@@ -287,22 +287,14 @@ export default function AdminInvite() {
                   {/* Version mobile - cartes empilées */}
                   <div className="block sm:hidden space-y-4 p-4">
                     {tokens.map(token => {
-                      const isExpired = new Date(token.expires_at) < new Date();
-                      const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
-                      return (
-                        <div key={token.id} className="border rounded-lg p-4 space-y-3">
+                  const isExpired = new Date(token.expires_at) < new Date();
+                  const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
+                  return <div key={token.id} className="border rounded-lg p-4 space-y-3">
                           <div>
                             <div className="font-medium text-sm mb-1">{token.email}</div>
                             <div className="flex items-center justify-between">
                               <code className="bg-muted px-2 py-1 rounded text-xs break-all">{token.token}</code>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleCopyToken(token.token, token.id)} 
-                                disabled={token.used || isExpired} 
-                                title="Copier le token"
-                                className="ml-2 flex-shrink-0"
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => handleCopyToken(token.token, token.id)} disabled={token.used || isExpired} title="Copier le token" className="ml-2 flex-shrink-0">
                                 {copied === token.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                               </Button>
                             </div>
@@ -315,9 +307,8 @@ export default function AdminInvite() {
                               {tokenStatus}
                             </span>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>;
+                })}
                   </div>
 
                   {/* Version desktop - tableau */}
@@ -333,9 +324,9 @@ export default function AdminInvite() {
                       </TableHeader>
                       <TableBody>
                         {tokens.map(token => {
-                          const isExpired = new Date(token.expires_at) < new Date();
-                          const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
-                          return <TableRow key={token.id}>
+                      const isExpired = new Date(token.expires_at) < new Date();
+                      const tokenStatus = token.used ? "Utilisé" : isExpired ? "Expiré" : "Actif";
+                      return <TableRow key={token.id}>
                               <TableCell className="font-medium">{token.email}</TableCell>
                               <TableCell>
                                 <div className="flex items-center space-x-2">
@@ -354,7 +345,7 @@ export default function AdminInvite() {
                                 </span>
                               </TableCell>
                             </TableRow>;
-                        })}
+                    })}
                       </TableBody>
                     </Table>
                   </div>

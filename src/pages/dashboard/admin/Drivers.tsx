@@ -240,8 +240,8 @@ const DriversPage = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="text-xl">Liste des chauffeurs</CardTitle>
-            <CardDescription>Gérer les profils des chauffeurs et leurs documents</CardDescription>
+            <CardTitle className="text-2xl">Liste des chauffeurs</CardTitle>
+            <CardDescription className="text-sm">Gérer les profils des chauffeurs et leurs documents</CardDescription>
           </div>
           <div className="relative w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />

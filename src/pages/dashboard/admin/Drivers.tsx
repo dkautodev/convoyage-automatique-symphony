@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -238,6 +237,13 @@ const DriversPage = () => {
     }
   };
 
+  // Helper function to format registration date
+  const formatRegistrationDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}`;
+  };
+
   // Filter drivers based on search term
   const filteredDrivers = searchTerm
     ? drivers.filter(driver => 
@@ -361,7 +367,9 @@ const DriversPage = () => {
               </div>
               
               <div className="border-t pt-4">
-                <h3 className="font-semibold mb-2">Documents</h3>
+                <h3 className="font-semibold mb-2">
+                  Documents (date d'inscription : {formatRegistrationDate(selectedDriver.created_at)})
+                </h3>
                 <Table>
                   <TableHeader>
                     <TableRow>

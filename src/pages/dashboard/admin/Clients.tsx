@@ -11,7 +11,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -23,7 +22,6 @@ const ClientsPage = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
   const [clientToView, setClientToView] = useState<Client | null>(null);
   const isMobile = useIsMobile();
-
   const loadClients = async () => {
     setLoading(true);
     try {
@@ -35,16 +33,13 @@ const ClientsPage = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     loadClients();
   }, []);
-
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
     return client.company_name && client.company_name.toLowerCase().includes(searchLower) || client.siret && client.siret.toLowerCase().includes(searchLower) || client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || client.full_name && client.full_name.toLowerCase().includes(searchLower) || client.email && client.email.toLowerCase().includes(searchLower);
   });
-
   const handleNewClient = () => {
     const newClient: Client = {
       id: '',
@@ -62,22 +57,18 @@ const ClientsPage = () => {
     setSelectedClient(newClient);
     setIsDialogOpen(true);
   };
-
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setIsDialogOpen(true);
   };
-
   const handleViewClient = (client: Client) => {
     setClientToView(client);
     setIsViewDialogOpen(true);
   };
-
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
   };
-
   const handleConfirmDelete = async () => {
     if (clientToDelete) {
       try {
@@ -97,12 +88,10 @@ const ClientsPage = () => {
       }
     }
   };
-
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedClient(null);
   };
-
   const formatAddress = (address: any) => {
     if (!address) return 'Non spécifié';
     const {
@@ -113,12 +102,10 @@ const ClientsPage = () => {
     } = address;
     return `${street || ''}, ${postal_code || ''} ${city || ''}, ${country || ''}`;
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Titre principal centré */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Gestion des clients</h1>
+        
       </div>
 
       {/* Responsive layout */}
@@ -137,24 +124,15 @@ const ClientsPage = () => {
           <div className="w-full max-w-md mx-auto">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input 
-                type="search" 
-                placeholder="Rechercher un client..." 
-                className="pl-8 w-full" 
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
+              <Input type="search" placeholder="Rechercher un client..." className="pl-8 w-full" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
           </div>
         </div>
 
         <div className="p-0">
-          {loading ? (
-            <div className="text-center py-10 text-neutral-500">
+          {loading ? <div className="text-center py-10 text-neutral-500">
               <p>Chargement des clients...</p>
-            </div>
-          ) : filteredClients.length > 0 ? (
-            <Table>
+            </div> : filteredClients.length > 0 ? <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="bg-white">Nom / Entreprise</TableHead>
@@ -164,8 +142,7 @@ const ClientsPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.map(client => (
-                  <TableRow key={client.id} className="h-16">
+                {filteredClients.map(client => <TableRow key={client.id} className="h-16">
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
                         <Building className="h-4 w-4 text-neutral-500 flex-shrink-0" />
@@ -179,45 +156,30 @@ const ClientsPage = () => {
                         </div>
                       </div>
                     </TableCell>
-                    {!isMobile && (
-                      <TableCell>
+                    {!isMobile && <TableCell>
                         <div className="flex items-center gap-2">
                           <Mail className="h-3 w-3 text-neutral-500" />
                           <span>{client.email}</span>
                         </div>
-                      </TableCell>
-                    )}
-                    {!isMobile && (
-                      <TableCell>
-                        {client.phone1 && (
-                          <div className="flex items-center gap-2">
+                      </TableCell>}
+                    {!isMobile && <TableCell>
+                        {client.phone1 && <div className="flex items-center gap-2">
                             <Phone className="h-3 w-3 text-neutral-500" />
                             <span>{client.phone1}</span>
-                          </div>
-                        )}
-                      </TableCell>
-                    )}
+                          </div>}
+                      </TableCell>}
                     <TableCell>
-                      <Button 
-                        variant="outline" 
-                        size={isMobile ? "icon" : "sm"} 
-                        onClick={() => handleViewClient(client)} 
-                        className="flex items-center gap-1 bg-white border-gray-200 hover:bg-gray-50"
-                      >
+                      <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => handleViewClient(client)} className="flex items-center gap-1 bg-white border-gray-200 hover:bg-gray-50">
                         <User className="h-3.5 w-3.5" />
                         {!isMobile && "Voir le profil"}
                       </Button>
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-10 text-neutral-500">
+            </Table> : <div className="text-center py-10 text-neutral-500">
               <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
               {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
-            </div>
-          )}
+            </div>}
         </div>
       </div>
 
@@ -249,8 +211,7 @@ const ClientsPage = () => {
             </DialogTitle>
           </DialogHeader>
           
-          {clientToView && (
-            <div className="space-y-6 mt-4 text-sm">
+          {clientToView && <div className="space-y-6 mt-4 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground mb-1">Informations générales</h3>
@@ -313,12 +274,9 @@ const ClientsPage = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default ClientsPage;

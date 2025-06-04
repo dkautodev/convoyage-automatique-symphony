@@ -1,15 +1,12 @@
-
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Truck, Home, Package, Users, Tag, UserPlus, Contact, FileText, Settings, User, ListCheck, CreditCard, TrendingUp, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-
 interface SidebarProps {
   userRole: string;
   onClose?: () => void;
 }
-
 const Sidebar: React.FC<SidebarProps> = ({
   userRole,
   onClose
@@ -132,38 +129,28 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   // Merge role-specific items with common items
   const allItems = [...roleItems, ...commonItems];
-  
-  return (
-    <div className="bg-white w-64 h-full shadow-lg flex flex-col">
+  return <div className="bg-white w-64 h-full shadow-lg flex flex-col">
       {/* Logo Section with close button on mobile */}
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+      <div className="px-4 border-b border-gray-200 flex items-center justify-between py-[16px]">
         <img src="/lovable-uploads/4922f807-dfd8-4cf6-b440-ee35efade638.png" alt="DK Automotive Logo" className="h-8" />
-        {isMobile && onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10" aria-label="Fermer">
+        {isMobile && onClose && <Button variant="ghost" size="sm" onClick={onClose} className="h-10 w-10" aria-label="Fermer">
             <X size={20} />
-          </Button>
-        )}
+          </Button>}
       </div>
       
       {/* Navigation Section - expanded to take available space */}
       <nav className="px-4 py-6 flex-1 overflow-y-auto">
         <ul className="space-y-2">
-          {allItems.map(item => (
-            <li key={item.path}>
-              <NavLink 
-                to={item.path} 
-                onClick={handleNavClick}
-                className={({isActive}) => `flex items-center px-4 py-3 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}
-              >
+          {allItems.map(item => <li key={item.path}>
+              <NavLink to={item.path} onClick={handleNavClick} className={({
+            isActive
+          }) => `flex items-center px-4 py-3 rounded-md transition-colors ${isActive ? `${getRoleColorClass('bg')} ${getRoleColorClass('text')}` : `text-neutral-600 ${getRoleColorClass('hover-bg')}`}`}>
                 <span className="mr-3">{item.icon}</span>
                 <span>{item.label}</span>
               </NavLink>
-            </li>
-          ))}
+            </li>)}
         </ul>
       </nav>
-    </div>
-  );
+    </div>;
 };
-
 export default Sidebar;

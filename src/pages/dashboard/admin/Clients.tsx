@@ -102,19 +102,13 @@ const ClientsPage = () => {
     return `${street || ''}, ${postal_code || ''} ${city || ''}, ${country || ''}`;
   };
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Liste des clients</h1>
-          <p className="text-muted-foreground mt-1">Gérer les profils des clients et leurs documents</p>
-        </div>
-        
-      </div>
+      
 
       <div className="bg-white rounded-lg shadow-sm">
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-2">
             <Building className="h-5 w-5 text-muted-foreground" />
-            <h2 className="font-medium">Liste des clients</h2>
+            <h2 className="font-bold text-2xl">Liste des clients</h2>
           </div>
           <div className="relative w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />

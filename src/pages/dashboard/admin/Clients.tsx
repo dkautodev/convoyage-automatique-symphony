@@ -10,6 +10,7 @@ import ClientDetails from '@/components/ClientDetails';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -20,6 +21,7 @@ const ClientsPage = () => {
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
   const [clientToView, setClientToView] = useState<Client | null>(null);
+
   const loadClients = async () => {
     setLoading(true);
     try {
@@ -31,13 +33,20 @@ const ClientsPage = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     loadClients();
   }, []);
+
   const filteredClients = clients.filter(client => {
     const searchLower = searchTerm.toLowerCase();
-    return client.company_name && client.company_name.toLowerCase().includes(searchLower) || client.siret && client.siret.toLowerCase().includes(searchLower) || client.vat_number && client.vat_number.toLowerCase().includes(searchLower) || client.full_name && client.full_name.toLowerCase().includes(searchLower) || client.email && client.email.toLowerCase().includes(searchLower);
+    return client.company_name && client.company_name.toLowerCase().includes(searchLower) ||
+           client.siret && client.siret.toLowerCase().includes(searchLower) ||
+           client.vat_number && client.vat_number.toLowerCase().includes(searchLower) ||
+           client.full_name && client.full_name.toLowerCase().includes(searchLower) ||
+           client.email && client.email.toLowerCase().includes(searchLower);
   });
+
   const handleNewClient = () => {
     // Create a new empty client object
     const newClient: Client = {
@@ -56,18 +65,22 @@ const ClientsPage = () => {
     setSelectedClient(newClient);
     setIsDialogOpen(true);
   };
+
   const handleEditClient = (client: Client) => {
     setSelectedClient(client);
     setIsDialogOpen(true);
   };
+
   const handleViewClient = (client: Client) => {
     setClientToView(client);
     setIsViewDialogOpen(true);
   };
+
   const handleDeleteClick = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
   };
+
   const handleConfirmDelete = async () => {
     if (clientToDelete) {
       try {
@@ -87,10 +100,12 @@ const ClientsPage = () => {
       }
     }
   };
+
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedClient(null);
   };
+
   const formatAddress = (address: any) => {
     if (!address) return 'Non spécifié';
     const {
@@ -101,75 +116,114 @@ const ClientsPage = () => {
     } = address;
     return `${street || ''}, ${postal_code || ''} ${city || ''}, ${country || ''}`;
   };
-  return <div className="space-y-6">
-      
 
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center gap-2">
-            <Building className="h-5 w-5 text-muted-foreground" />
-            <h2 className="font-bold text-2xl">Liste des clients</h2>
-          </div>
-          <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-            <Input type="search" placeholder="Rechercher un client..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-          </div>
-        </div>
+  return (
+    <div className="space-y-6">
+      {/* Titre principal centré et en gras */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900">Liste des clients</h1>
+      </div>
 
-        <div className="p-0">
-          {loading ? <div className="text-center py-10 text-neutral-500">
+      <Card className="bg-white rounded-lg shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between p-6 border-b">
+          <div className="flex items-center gap-3">
+            <Building className="h-6 w-6 text-gray-600" />
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900">Liste des clients</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">Gérer les profils des clients et leurs informations</p>
+            </div>
+          </div>
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input 
+              type="search" 
+              placeholder="Rechercher un client..." 
+              className="pl-10 h-10 border-gray-200" 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+            />
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="text-center py-10 text-gray-500">
               <p>Chargement des clients...</p>
-            </div> : filteredClients.length > 0 ? <Table>
+            </div>
+          ) : filteredClients.length > 0 ? (
+            <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="bg-white">Nom / Entreprise</TableHead>
-                  <TableHead className="bg-white">Email</TableHead>
-                  <TableHead className="bg-white">Téléphone</TableHead>
-                  <TableHead className="text-left bg-white">Actions</TableHead>
+                <TableRow className="bg-gray-50/50">
+                  <TableHead className="bg-gray-50 font-semibold text-gray-700 py-4">Nom / Entreprise</TableHead>
+                  <TableHead className="bg-gray-50 font-semibold text-gray-700 py-4">Email</TableHead>
+                  <TableHead className="bg-gray-50 font-semibold text-gray-700 py-4">Téléphone</TableHead>
+                  <TableHead className="text-right bg-gray-50 font-semibold text-gray-700 py-4">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.map(client => <TableRow key={client.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        {client.company_name && <div className="flex items-center gap-2">
-                            <Building className="h-4 w-4 text-neutral-500" />
-                            {client.company_name}
-                          </div>}
-                        {client.full_name && <div className="flex items-center gap-2 text-sm text-neutral-600">
-                            <User className="h-3 w-3 text-neutral-500" />
-                            {client.full_name}
-                          </div>}
+                {filteredClients.map((client) => (
+                  <TableRow key={client.id} className="border-b hover:bg-gray-50/30" style={{ height: '80px' }}>
+                    <TableCell className="py-6">
+                      <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                        <div className="flex flex-col">
+                          <div className="font-semibold text-gray-900">
+                            {client.company_name || client.full_name || 'Nom non défini'}
+                          </div>
+                          {client.company_name && client.full_name && (
+                            <div className="text-sm text-gray-500 mt-1">
+                              {client.full_name}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-neutral-500" />
-                        {client.email}
+                    <TableCell className="py-6">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-700">{client.email}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {client.phone1 && <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 text-neutral-500" />
-                          {client.phone1}
-                        </div>}
+                    <TableCell className="py-6">
+                      {client.phone1 && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-700">{client.phone1}</span>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => handleViewClient(client)} className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5" />
+                    <TableCell className="text-right py-6">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewClient(client)} 
+                        className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 rounded-md"
+                      >
+                        <User className="h-4 w-4 mr-2" />
                         Voir le profil
                       </Button>
                     </TableCell>
-                  </TableRow>)}
+                  </TableRow>
+                ))}
               </TableBody>
-            </Table> : <div className="text-center py-10 text-neutral-500">
+            </Table>
+          ) : (
+            <div className="text-center py-10 text-gray-500">
               <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
-              {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
-            </div>}
-        </div>
-      </div>
+              {!searchTerm && (
+                <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      <ClientDetails client={selectedClient} open={isDialogOpen} onClose={handleDialogClose} onSave={loadClients} />
+      <ClientDetails 
+        client={selectedClient} 
+        open={isDialogOpen} 
+        onClose={handleDialogClose} 
+        onSave={loadClients} 
+      />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -197,7 +251,8 @@ const ClientsPage = () => {
             </DialogTitle>
           </DialogHeader>
           
-          {clientToView && <div className="space-y-6 mt-4 text-sm">
+          {clientToView && (
+            <div className="space-y-6 mt-4 text-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-muted-foreground mb-1">Informations générales</h3>
@@ -260,9 +315,12 @@ const ClientsPage = () => {
                   </div>
                 </div>
               </div>
-            </div>}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default ClientsPage;

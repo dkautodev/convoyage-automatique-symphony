@@ -205,7 +205,7 @@ export default function AdminInvite() {
   return <div className="container mx-auto py-0 px-0">
       
       
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid gap-6 lg:grid-cols-12 my-[5px]">
         {/* Formulaire de création de token */}
         <div className="lg:col-span-5">
           <Card>

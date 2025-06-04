@@ -10,7 +10,7 @@ const RootLayout = () => {
     <AuthProvider>
       <AlertProvider>
         <Outlet />
-        <Toaster position="top-center" richColors closeButton duration={5000} />
+        <Toaster position="bottom-right" richColors closeButton duration={2000} />
       </AlertProvider>
     </AuthProvider>
   );

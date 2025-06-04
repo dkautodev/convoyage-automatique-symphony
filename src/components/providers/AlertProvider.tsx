@@ -45,10 +45,10 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
       visible: true,
     });
 
-    // Auto-hide after 5 seconds
+    // Auto-hide after 2 seconds
     setTimeout(() => {
       hideAlert();
-    }, 5000);
+    }, 2000);
   };
 
   const hideAlert = () => {
@@ -61,7 +61,7 @@ export const AlertProvider: React.FC<AlertProviderProps> = ({ children }) => {
     <AlertContext.Provider value={{ showAlert, hideAlert }}>
       {children}
       {alert && alert.visible && (
-        <div className="fixed top-4 right-4 z-50 w-80">
+        <div className="fixed bottom-4 right-4 sm:bottom-4 sm:right-4 z-50 w-80 sm:w-80 left-1/2 sm:left-auto transform -translate-x-1/2 sm:translate-x-0">
           <Alert 
             variant={alert.type === 'success' ? 'default' : alert.type}
             className={`relative ${alert.type === 'success' ? 'border-green-500 bg-green-50 text-green-700' : ''}`}

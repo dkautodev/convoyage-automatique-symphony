@@ -11,6 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Separator } from '@/components/ui/separator';
+
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -110,21 +112,22 @@ const ClientsPage = () => {
 
       {/* Responsive layout */}
       <div className="bg-white rounded-lg shadow-sm">
-        {/* Header avec titre et icône centré sur mobile */}
+        {/* Header avec titre et icône centré sur mobile, inline sur desktop */}
         <div className="p-6 border-b">
-          <div className="flex flex-col items-center text-center mb-4">
-            <div className="flex items-center gap-2 mb-2">
+          <div className={`${isMobile ? 'flex flex-col items-center text-center mb-4' : 'flex items-center justify-between'}`}>
+            <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : ''}`}>
               <Building className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-bold text-2xl">Liste des clients</h2>
+              {!isMobile && <p className="text-sm text-gray-500 ml-2">Gérez tous vos clients</p>}
             </div>
-            <p className="text-sm text-gray-500">Gérez tous vos clients</p>
-          </div>
-          
-          {/* Barre de recherche pleine largeur sous le titre */}
-          <div className="w-full max-w-md mx-auto">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input type="search" placeholder="Rechercher un client..." className="pl-8 w-full" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            {isMobile && <p className="text-sm text-gray-500 mb-4">Gérez tous vos clients</p>}
+            
+            {/* Barre de recherche - pleine largeur sur mobile, inline sur desktop */}
+            <div className={`${isMobile ? 'w-full max-w-md mx-auto' : 'w-64'}`}>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
+                <Input type="search" placeholder="Rechercher un client..." className="pl-8 w-full" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+              </div>
             </div>
           </div>
         </div>
@@ -279,4 +282,5 @@ const ClientsPage = () => {
       </Dialog>
     </div>;
 };
+
 export default ClientsPage;

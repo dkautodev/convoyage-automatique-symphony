@@ -116,7 +116,7 @@ const ClientsPage = () => {
           <div className={`${isMobile ? 'flex flex-col items-center text-center mb-4' : 'flex items-center justify-between'}`}>
             <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : ''}`}>
               <Building className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-bold text-2xl">Liste des clients</h2>
+              <h2 className="font-bold text-2xl my-[5px]">Liste des clients</h2>
               {!isMobile}
             </div>
             {isMobile}

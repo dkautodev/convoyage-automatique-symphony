@@ -119,7 +119,7 @@ const ClientsPage = () => {
               <h2 className="font-bold text-2xl">Liste des clients</h2>
               {!isMobile}
             </div>
-            {isMobile && <p className="text-sm text-gray-500 mb-4">Gérez tous vos clients</p>}
+            {isMobile}
             
             {/* Barre de recherche - pleine largeur sur mobile, inline sur desktop */}
             <div className={`${isMobile ? 'w-full max-w-md mx-auto' : 'w-64'}`}>

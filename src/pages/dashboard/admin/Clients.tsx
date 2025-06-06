@@ -12,7 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
-
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -118,7 +117,7 @@ const ClientsPage = () => {
             <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : ''}`}>
               <Building className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-bold text-2xl">Liste des clients</h2>
-              {!isMobile && <p className="text-sm text-gray-500 ml-2">Gérez tous vos clients</p>}
+              {!isMobile}
             </div>
             {isMobile && <p className="text-sm text-gray-500 mb-4">Gérez tous vos clients</p>}
             
@@ -282,5 +281,4 @@ const ClientsPage = () => {
       </Dialog>
     </div>;
 };
-
 export default ClientsPage;

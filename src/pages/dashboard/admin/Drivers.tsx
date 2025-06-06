@@ -10,6 +10,7 @@ import { typedSupabase } from '@/types/database';
 import { format } from 'date-fns';
 import { Address } from '@/hooks/auth/types';
 import { Json } from '@/integrations/supabase/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Updated Driver interface to match what's coming from the database
 interface Driver {
@@ -48,6 +49,7 @@ const DriversPage = () => {
   const {
     toast
   } = useToast();
+  const isMobile = useIsMobile();
   useEffect(() => {
     fetchDrivers();
   }, []);
@@ -235,18 +237,26 @@ const DriversPage = () => {
   // Filter drivers based on search term
   const filteredDrivers = searchTerm ? drivers.filter(driver => (driver.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (driver.email || '').toLowerCase().includes(searchTerm.toLowerCase())) : drivers;
   return <div className="space-y-6">
-      
-
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-2xl">Liste des chauffeurs</CardTitle>
-            <CardDescription className="text-sm">Gérer les profils des chauffeurs et leurs documents</CardDescription>
+        <CardHeader>
+          <div className={`${isMobile ? 'flex flex-col items-center text-center' : 'flex flex-row items-center justify-between'}`}>
+            <div className={isMobile ? 'mb-4' : ''}>
+              <CardTitle className="text-2xl">Liste des chauffeurs</CardTitle>
+              <CardDescription className="text-sm">Gérer les profils des chauffeurs et leurs documents</CardDescription>
+            </div>
+            {!isMobile && (
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input type="text" placeholder="Rechercher un chauffeur..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
+              </div>
+            )}
           </div>
-          <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input type="text" placeholder="Rechercher un chauffeur..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
-          </div>
+          {isMobile && (
+            <div className="relative w-full max-w-md mx-auto">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input type="text" placeholder="Rechercher un chauffeur..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 w-full" />
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {loading ? <div className="flex justify-center py-10">
@@ -258,22 +268,20 @@ const DriversPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nom</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Téléphone</TableHead>
-                    
+                    {!isMobile && <TableHead>Email</TableHead>}
+                    {!isMobile && <TableHead>Téléphone</TableHead>}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredDrivers.map(driver => <TableRow key={driver.id}>
                       <TableCell className="font-medium">{driver.full_name || 'Non défini'}</TableCell>
-                      <TableCell>{driver.email}</TableCell>
-                      <TableCell>{driver.phone_1 || 'Non défini'}</TableCell>
-                      
+                      {!isMobile && <TableCell>{driver.email}</TableCell>}
+                      {!isMobile && <TableCell>{driver.phone_1 || 'Non défini'}</TableCell>}
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" onClick={() => handleDriverSelect(driver)} className="ml-2">
-                          <User className="mr-2 h-4 w-4" />
-                          Voir le profil
+                        <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => handleDriverSelect(driver)} className="ml-2">
+                          <User className="h-4 w-4" />
+                          {!isMobile && <span className="ml-2">Voir le profil</span>}
                         </Button>
                       </TableCell>
                     </TableRow>)}

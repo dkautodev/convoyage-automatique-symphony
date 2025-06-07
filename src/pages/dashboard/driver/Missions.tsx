@@ -243,7 +243,7 @@ const DriverMissionsPage = () => {
     return currentTab ? currentTab.label : 'Toutes';
   };
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center py-[5px]">
         <h2 className="text-2xl font-bold">Vos missions</h2>
       </div>
 

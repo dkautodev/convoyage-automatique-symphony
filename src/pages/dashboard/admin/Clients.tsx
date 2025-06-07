@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Separator } from '@/components/ui/separator';
+
 const ClientsPage = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -112,7 +113,7 @@ const ClientsPage = () => {
       {/* Responsive layout */}
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header avec titre et icône centré sur mobile, inline sur desktop */}
-        <div className="p-6 border-b">
+        <div className="p-6">
           <div className={`${isMobile ? 'flex flex-col items-center text-center mb-4' : 'flex items-center justify-between'}`}>
             <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : ''}`}>
               <Building className="h-5 w-5 text-muted-foreground" />
@@ -281,4 +282,5 @@ const ClientsPage = () => {
       </Dialog>
     </div>;
 };
+
 export default ClientsPage;

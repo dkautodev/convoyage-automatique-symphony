@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +7,15 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,7 +34,7 @@ function jsonToAddress(json: Json | null): Address {
     postal_code: '',
     country: 'France'
   };
-
+  
   // Handle if json is an array
   if (Array.isArray(json)) {
     return {
@@ -36,7 +45,7 @@ function jsonToAddress(json: Json | null): Address {
       country: 'France'
     };
   }
-
+  
   // Make sure json is an object and not a string/number/boolean
   if (typeof json !== 'object' || json === null) {
     return {
@@ -47,9 +56,10 @@ function jsonToAddress(json: Json | null): Address {
       country: 'France'
     };
   }
-
+  
   // Now we know json is an object, we can safely access its properties
   const jsonObj = json as Record<string, Json>;
+  
   return {
     formatted_address: typeof jsonObj.formatted_address === 'string' ? jsonObj.formatted_address : '',
     street: typeof jsonObj.street === 'string' ? jsonObj.street : '',
@@ -64,12 +74,8 @@ function jsonToAddress(json: Json | null): Address {
 
 // Définition du schéma de validation pour le formulaire
 const profileSchema = z.object({
-  full_name: z.string().min(2, {
-    message: 'Le nom complet doit contenir au moins 2 caractères'
-  }),
-  email: z.string().email({
-    message: 'Email invalide'
-  }).optional(),
+  full_name: z.string().min(2, { message: 'Le nom complet doit contenir au moins 2 caractères' }),
+  email: z.string().email({ message: 'Email invalide' }).optional(),
   company_name: z.string().optional(),
   phone_1: z.string().optional(),
   phone_2: z.string().optional(),
@@ -80,14 +86,13 @@ const profileSchema = z.object({
   street: z.string().optional(),
   city: z.string().optional(),
   postal_code: z.string().optional(),
-  country: z.string().default('France')
+  country: z.string().default('France'),
 });
+
 type ProfileFormValues = z.infer<typeof profileSchema>;
+
 const Profile = () => {
-  const {
-    profile,
-    updateProfile
-  } = useAuth();
+  const { profile, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [addressInput, setAddressInput] = useState('');
 
@@ -105,8 +110,8 @@ const Profile = () => {
       street: '',
       city: '',
       postal_code: '',
-      country: 'France'
-    }
+      country: 'France',
+    },
   });
 
   // Remplir le formulaire avec les données du profil quand elles sont disponibles
@@ -114,9 +119,10 @@ const Profile = () => {
     if (profile) {
       // Convert billing_address from Json to Address type
       const billingAddress = jsonToAddress(profile.billing_address);
-
+      
       // Set the formatted address for the autocomplete input
       setAddressInput(billingAddress.formatted_address || '');
+      
       form.reset({
         full_name: profile.full_name || '',
         email: profile.email || '',
@@ -129,7 +135,7 @@ const Profile = () => {
         street: billingAddress.street || '',
         city: billingAddress.city || '',
         postal_code: billingAddress.postal_code || '',
-        country: billingAddress.country || 'France'
+        country: billingAddress.country || 'France',
       });
     }
   }, [profile, form]);
@@ -156,7 +162,7 @@ const Profile = () => {
         street: data.street || '',
         city: data.city || '',
         postal_code: data.postal_code || '',
-        country: data.country || 'France'
+        country: data.country || 'France',
       };
 
       // Préparer les données à mettre à jour, sans tva_applicable
@@ -167,7 +173,7 @@ const Profile = () => {
         phone_2: data.phone_2,
         siret: data.siret,
         tva_number: data.tva_number,
-        billing_address: billingAddress as any // Type assertion to handle Json conversion
+        billing_address: billingAddress as any, // Type assertion to handle Json conversion
       };
 
       // Appeler la fonction de mise à jour du profil
@@ -180,7 +186,9 @@ const Profile = () => {
       setIsLoading(false);
     }
   };
-  return <div className="container mx-auto py-[15px]">
+
+  return (
+    <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Mon Profil</h1>
       
       <div className="grid gap-6">
@@ -195,50 +203,70 @@ const Profile = () => {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <FormField control={form.control} name="full_name" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="full_name"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Nom complet</FormLabel>
                         <FormControl>
                           <Input placeholder="John Doe" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <FormField control={form.control} name="email" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="john.doe@example.com" {...field} disabled />
+                          <Input 
+                            placeholder="john.doe@example.com" 
+                            {...field} 
+                            disabled 
+                          />
                         </FormControl>
                         <FormDescription>
                           L'email ne peut pas être modifié
                         </FormDescription>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <FormField control={form.control} name="phone_1" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="phone_1"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Téléphone principal</FormLabel>
                         <FormControl>
                           <Input placeholder="+33 6 12 34 56 78" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <FormField control={form.control} name="phone_2" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="phone_2"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Téléphone secondaire</FormLabel>
                         <FormControl>
                           <Input placeholder="+33 6 98 76 54 32" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <Separator className="my-4" />
@@ -246,37 +274,49 @@ const Profile = () => {
                 <h3 className="text-lg font-medium">Informations Entreprise</h3>
                 
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <FormField control={form.control} name="company_name" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="company_name"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Nom de l'entreprise</FormLabel>
                         <FormControl>
                           <Input placeholder="Entreprise SAS" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <FormField control={form.control} name="siret" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="siret"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Numéro SIRET</FormLabel>
                         <FormControl>
                           <Input placeholder="12345678901234" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <FormField control={form.control} name="tva_number" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="tva_number"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Numéro TVA</FormLabel>
                         <FormControl>
                           <Input placeholder="FR12345678901" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <Separator className="my-4" />
@@ -286,63 +326,94 @@ const Profile = () => {
                 <div className="grid gap-6">
                   <FormItem>
                     <FormLabel>Adresse</FormLabel>
-                    <AddressAutocomplete value={addressInput} onChange={setAddressInput} onSelect={handleAddressSelect} placeholder="Recherchez une adresse..." className="w-full" error={form.formState.errors.street?.message} />
+                    <AddressAutocomplete
+                      value={addressInput}
+                      onChange={setAddressInput}
+                      onSelect={handleAddressSelect}
+                      placeholder="Recherchez une adresse..."
+                      className="w-full"
+                      error={form.formState.errors.street?.message}
+                    />
                   </FormItem>
                 </div>
 
                 <div className="grid gap-6">
-                  <FormField control={form.control} name="street" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="street"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Rue</FormLabel>
                         <FormControl>
                           <Input placeholder="123 Rue de la Paix" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-3">
-                  <FormField control={form.control} name="city" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Ville</FormLabel>
                         <FormControl>
                           <Input placeholder="Paris" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <FormField control={form.control} name="postal_code" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="postal_code"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Code Postal</FormLabel>
                         <FormControl>
                           <Input placeholder="75000" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <FormField control={form.control} name="country" render={({
-                  field
-                }) => <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel>Pays</FormLabel>
                         <FormControl>
                           <Input placeholder="France" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>} />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                    {isLoading ? <>
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full sm:w-auto"
+                  >
+                    {isLoading ? (
+                      <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                         Enregistrement...
-                      </> : <>
+                      </>
+                    ) : (
+                      <>
                         <Save className="mr-2 h-4 w-4" /> 
                         Enregistrer les modifications
-                      </>}
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
@@ -353,6 +424,8 @@ const Profile = () => {
         {/* Ajout de la section Documents pour les chauffeurs */}
         <DocumentsSection />
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Profile;

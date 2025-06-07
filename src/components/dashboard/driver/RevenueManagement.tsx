@@ -10,7 +10,6 @@ import { fr } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ArrowLeft, Calendar, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 interface MonthlyStats {
   year: number;
   month: number;
@@ -24,9 +23,10 @@ interface MonthlyStats {
   unpaidCount: number;
   noInvoiceCount: number;
 }
-
 const RevenueManagement = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [loading, setLoading] = useState(true);
   const [yearlyStats, setYearlyStats] = useState<MonthlyStats[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats | null>(null);
@@ -42,7 +42,6 @@ const RevenueManagement = () => {
     unpaidCount: 0,
     noInvoiceCount: 0
   });
-
   useEffect(() => {
     if (user) {
       fetchAvailableYears();
@@ -50,17 +49,15 @@ const RevenueManagement = () => {
       fetchCurrentMonthStats();
     }
   }, [user, selectedYear]);
-
   const fetchAvailableYears = async () => {
     try {
-      const { data, error } = await typedSupabase
-        .from('missions')
-        .select('created_at')
-        .eq('chauffeur_id', user?.id)
-        .order('created_at', { ascending: true });
-
+      const {
+        data,
+        error
+      } = await typedSupabase.from('missions').select('created_at').eq('chauffeur_id', user?.id).order('created_at', {
+        ascending: true
+      });
       if (error) throw error;
-
       if (data && data.length > 0) {
         const years = [...new Set(data.map(item => new Date(item.created_at).getFullYear()))];
         setAvailableYears(years);
@@ -71,28 +68,25 @@ const RevenueManagement = () => {
       console.error('Error fetching available years:', error);
     }
   };
-
   const fetchYearlyData = async (year: number) => {
     try {
       setLoading(true);
-      
       const startDate = startOfYear(new Date(year, 0, 1));
       const endDate = endOfYear(new Date(year, 0, 1));
-      
-      const { data, error } = await typedSupabase
-        .from('missions')
-        .select('*')
-        .eq('chauffeur_id', user?.id)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
-      
+      const {
+        data,
+        error
+      } = await typedSupabase.from('missions').select('*').eq('chauffeur_id', user?.id).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
       if (error) throw error;
-      
-      const monthlyData: MonthlyStats[] = Array.from({ length: 12 }, (_, i) => {
+      const monthlyData: MonthlyStats[] = Array.from({
+        length: 12
+      }, (_, i) => {
         return {
           year: year,
           month: i + 1,
-          monthName: format(new Date(year, i, 1), 'MMMM', { locale: fr }),
+          monthName: format(new Date(year, i, 1), 'MMMM', {
+            locale: fr
+          }),
           completedMissions: 0,
           totalAmount: 0,
           paidAmount: 0,
@@ -103,7 +97,6 @@ const RevenueManagement = () => {
           noInvoiceCount: 0
         };
       });
-      
       let yearlyTotalMissions = 0;
       let yearlyTotalRevenue = 0;
       let yearlyPaidAmount = 0;
@@ -112,19 +105,18 @@ const RevenueManagement = () => {
       let yearlyPaidCount = 0;
       let yearlyUnpaidCount = 0;
       let yearlyNoInvoiceCount = 0;
-      
       data?.forEach(mission => {
         const missionDate = new Date(mission.created_at);
         const month = missionDate.getMonth();
         const price = mission.chauffeur_price_ht || 0;
-        
+
         // Count completed missions with status 'livre' or 'termine'
         if (mission.status === 'livre' || mission.status === 'termine') {
           monthlyData[month].completedMissions += 1;
           monthlyData[month].totalAmount += price;
           yearlyTotalMissions += 1;
           yearlyTotalRevenue += price;
-          
+
           // Check invoice and payment status
           if (mission.chauffeur_invoice) {
             if (mission.chauffeur_paid) {
@@ -146,7 +138,6 @@ const RevenueManagement = () => {
           }
         }
       });
-      
       setYearlyStats(monthlyData);
       setYearlyTotal({
         missions: yearlyTotalMissions,
@@ -158,33 +149,28 @@ const RevenueManagement = () => {
         unpaidCount: yearlyUnpaidCount,
         noInvoiceCount: yearlyNoInvoiceCount
       });
-      
     } catch (error) {
       console.error('Error fetching yearly data:', error);
     } finally {
       setLoading(false);
     }
   };
-
   const fetchCurrentMonthStats = async () => {
     try {
       const now = new Date();
       const startDate = startOfMonth(now);
       const endDate = endOfMonth(now);
-      
-      const { data, error } = await typedSupabase
-        .from('missions')
-        .select('*')
-        .eq('chauffeur_id', user?.id)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
-      
+      const {
+        data,
+        error
+      } = await typedSupabase.from('missions').select('*').eq('chauffeur_id', user?.id).gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
       if (error) throw error;
-      
       const stats: MonthlyStats = {
         year: now.getFullYear(),
         month: now.getMonth() + 1,
-        monthName: format(now, 'MMMM yyyy', { locale: fr }),
+        monthName: format(now, 'MMMM yyyy', {
+          locale: fr
+        }),
         completedMissions: 0,
         totalAmount: 0,
         paidAmount: 0,
@@ -194,15 +180,14 @@ const RevenueManagement = () => {
         unpaidCount: 0,
         noInvoiceCount: 0
       };
-      
       data?.forEach(mission => {
         const price = mission.chauffeur_price_ht || 0;
-        
+
         // Count completed missions with status 'livre' or 'termine'
         if (mission.status === 'livre' || mission.status === 'termine') {
           stats.completedMissions += 1;
           stats.totalAmount += price;
-          
+
           // Check invoice and payment status
           if (mission.chauffeur_invoice) {
             if (mission.chauffeur_paid) {
@@ -218,7 +203,6 @@ const RevenueManagement = () => {
           }
         }
       });
-      
       setMonthlyStats(stats);
     } catch (error) {
       console.error('Error fetching current month stats:', error);
@@ -228,42 +212,34 @@ const RevenueManagement = () => {
   // Préparation des données pour le graphique en barres horizontales
   const prepareHorizontalBarData = (stats: MonthlyStats) => {
     const total = stats.totalAmount;
-    return [
-      {
-        name: 'Payé',
-        value: stats.paidAmount,
-        percentage: total > 0 ? Math.round((stats.paidAmount / total) * 100) : 0,
-        color: '#4ade80',
-        count: stats.paidCount
-      },
-      {
-        name: 'En attente',
-        value: stats.unpaidAmount,
-        percentage: total > 0 ? Math.round((stats.unpaidAmount / total) * 100) : 0,
-        color: '#f97316',
-        count: stats.unpaidCount
-      },
-      {
-        name: 'Sans facture',
-        value: stats.noInvoiceAmount,
-        percentage: total > 0 ? Math.round((stats.noInvoiceAmount / total) * 100) : 0,
-        color: '#a1a1aa',
-        count: stats.noInvoiceCount
-      }
-    ];
+    return [{
+      name: 'Payé',
+      value: stats.paidAmount,
+      percentage: total > 0 ? Math.round(stats.paidAmount / total * 100) : 0,
+      color: '#4ade80',
+      count: stats.paidCount
+    }, {
+      name: 'En attente',
+      value: stats.unpaidAmount,
+      percentage: total > 0 ? Math.round(stats.unpaidAmount / total * 100) : 0,
+      color: '#f97316',
+      count: stats.unpaidCount
+    }, {
+      name: 'Sans facture',
+      value: stats.noInvoiceAmount,
+      percentage: total > 0 ? Math.round(stats.noInvoiceAmount / total * 100) : 0,
+      color: '#a1a1aa',
+      count: stats.noInvoiceCount
+    }];
   };
 
   // Colors for charts
   const COLORS = ['#4ade80', '#f97316', '#a1a1aa'];
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" asChild className="h-8 w-8">
-            <Link to="/driver/dashboard">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+            
           </Button>
           <h1 className="text-2xl font-bold">Pilotage Chiffre d'Affaires</h1>
         </div>
@@ -276,12 +252,9 @@ const RevenueManagement = () => {
         </TabsList>
         
         <TabsContent value="month" className="space-y-6">
-          {loading ? (
-            <div className="flex justify-center py-12">
+          {loading ? <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : monthlyStats ? (
-            <>
+            </div> : monthlyStats ? <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader className="pb-2">
@@ -300,7 +273,10 @@ const RevenueManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {monthlyStats.totalAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      {monthlyStats.totalAmount.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  })}
                     </div>
                     <p className="text-sm text-muted-foreground">Total des missions</p>
                   </CardContent>
@@ -312,7 +288,10 @@ const RevenueManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      {monthlyStats.paidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      {monthlyStats.paidAmount.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  })}
                     </div>
                     <p className="text-sm text-muted-foreground">{monthlyStats.paidCount} facture(s) payée(s)</p>
                   </CardContent>
@@ -326,13 +305,19 @@ const RevenueManagement = () => {
                     <div className="flex justify-between">
                       <div>
                         <div className="text-xl font-bold text-orange-500">
-                          {monthlyStats.unpaidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                          {monthlyStats.unpaidAmount.toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      })}
                         </div>
                         <p className="text-xs text-muted-foreground">{monthlyStats.unpaidCount} en attente</p>
                       </div>
                       <div>
                         <div className="text-xl font-bold text-gray-500">
-                          {monthlyStats.noInvoiceAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                          {monthlyStats.noInvoiceAmount.toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      })}
                         </div>
                         <p className="text-xs text-muted-foreground">{monthlyStats.noInvoiceCount} sans facture</p>
                       </div>
@@ -350,25 +335,26 @@ const RevenueManagement = () => {
                 <CardContent className="flex flex-col items-center justify-center gap-6">
                   {/* Horizontal Bar Chart */}
                   <div className="w-full h-64">
-                    {prepareHorizontalBarData(monthlyStats).map((item, index) => (
-                      <div key={`bar-${index}`} className="flex items-center mb-4">
+                    {prepareHorizontalBarData(monthlyStats).map((item, index) => <div key={`bar-${index}`} className="flex items-center mb-4">
                         <div className="flex-1">
                           <p className="font-medium mb-1 flex items-center">
-                            <span className="w-4 h-4 mr-2 inline-block" style={{ backgroundColor: item.color }}></span>
+                            <span className="w-4 h-4 mr-2 inline-block" style={{
+                        backgroundColor: item.color
+                      }}></span>
                             {item.name}
                           </p>
                           <div className="relative h-8">
-                            <div 
-                              className="absolute left-0 top-0 h-full" 
-                              style={{ 
-                                width: `${item.percentage}%`, 
-                                backgroundColor: item.color,
-                                minWidth: item.value > 0 ? '2%' : '0%'
-                              }}
-                            ></div>
+                            <div className="absolute left-0 top-0 h-full" style={{
+                        width: `${item.percentage}%`,
+                        backgroundColor: item.color,
+                        minWidth: item.value > 0 ? '2%' : '0%'
+                      }}></div>
                             <div className="absolute right-0 top-1/2 -translate-y-1/2 pr-2 flex items-center">
                               <span className="font-mono font-bold text-right">
-                                {item.value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                                {item.value.toLocaleString('fr-FR', {
+                            style: 'currency',
+                            currency: 'EUR'
+                          })}
                               </span>
                               <span className="ml-2 text-xs text-gray-500">
                                 {item.percentage > 0 ? `(${item.percentage}%)` : ''}
@@ -376,30 +362,23 @@ const RevenueManagement = () => {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
               </Card>
-            </>
-          ) : (
-            <Card>
+            </> : <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-lg font-medium">Aucune donnée disponible pour ce mois</p>
                 <p className="text-sm text-muted-foreground">Vous n'avez pas encore de missions terminées ce mois-ci.</p>
               </CardContent>
-            </Card>
-          )}
+            </Card>}
         </TabsContent>
         
         <TabsContent value="year" className="space-y-6">
-          {loading ? (
-            <div className="flex justify-center py-12">
+          {loading ? <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <>
+            </div> : <>
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-lg font-semibold">Année {selectedYear}</h2>
@@ -407,16 +386,9 @@ const RevenueManagement = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {availableYears.map((year) => (
-                    <Button
-                      key={year}
-                      variant={selectedYear === year ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedYear(year)}
-                    >
+                  {availableYears.map(year => <Button key={year} variant={selectedYear === year ? "default" : "outline"} size="sm" onClick={() => setSelectedYear(year)}>
                       {year}
-                    </Button>
-                  ))}
+                    </Button>)}
                 </div>
               </div>
               
@@ -438,7 +410,10 @@ const RevenueManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {yearlyTotal.revenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      {yearlyTotal.revenue.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  })}
                     </div>
                     <p className="text-sm text-muted-foreground">Total des missions</p>
                   </CardContent>
@@ -450,7 +425,10 @@ const RevenueManagement = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      {yearlyTotal.paid.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      {yearlyTotal.paid.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                  })}
                     </div>
                     <p className="text-sm text-muted-foreground">{yearlyTotal.paidCount} facture(s) payée(s)</p>
                   </CardContent>
@@ -464,13 +442,19 @@ const RevenueManagement = () => {
                     <div className="flex justify-between">
                       <div>
                         <div className="text-xl font-bold text-orange-500">
-                          {yearlyTotal.unpaid.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                          {yearlyTotal.unpaid.toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      })}
                         </div>
                         <p className="text-xs text-muted-foreground">{yearlyTotal.unpaidCount} en attente</p>
                       </div>
                       <div>
                         <div className="text-xl font-bold text-gray-500">
-                          {yearlyTotal.noInvoice.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                          {yearlyTotal.noInvoice.toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      })}
                         </div>
                         <p className="text-xs text-muted-foreground">{yearlyTotal.noInvoiceCount} sans facture</p>
                       </div>
@@ -488,45 +472,49 @@ const RevenueManagement = () => {
                 <CardContent>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={yearlyStats}
-                        margin={{
-                          top: 5,
-                          right: 30,
-                          left: 20,
-                          bottom: 5,
-                        }}
-                      >
+                      <BarChart data={yearlyStats} margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5
+                  }}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="monthName" 
-                          tickFormatter={(value) => value.charAt(0).toUpperCase() + value.slice(1, 3)}
-                        />
-                        <YAxis 
-                          tickFormatter={(value) => 
-                            `${(value / 1000).toFixed(0)}k€`
-                          }
-                        />
-                        <Tooltip 
-                          formatter={(value, name) => {
-                            const formattedValue = Number(value).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
-                            let displayName;
-                            switch (name) {
-                              case "paidAmount": displayName = "Payé"; break;
-                              case "unpaidAmount": displayName = "En attente"; break;
-                              case "noInvoiceAmount": displayName = "Sans facture"; break;
-                              default: displayName = name;
-                            }
-                            return [formattedValue, displayName];
-                          }}
-                        />
-                        <Legend 
-                          payload={[
-                            { value: 'Payé', type: 'rect', color: '#4ade80' },
-                            { value: 'En attente', type: 'rect', color: '#f97316' },
-                            { value: 'Sans facture', type: 'rect', color: '#a1a1aa' },
-                          ]}
-                        />
+                        <XAxis dataKey="monthName" tickFormatter={value => value.charAt(0).toUpperCase() + value.slice(1, 3)} />
+                        <YAxis tickFormatter={value => `${(value / 1000).toFixed(0)}k€`} />
+                        <Tooltip formatter={(value, name) => {
+                      const formattedValue = Number(value).toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                      });
+                      let displayName;
+                      switch (name) {
+                        case "paidAmount":
+                          displayName = "Payé";
+                          break;
+                        case "unpaidAmount":
+                          displayName = "En attente";
+                          break;
+                        case "noInvoiceAmount":
+                          displayName = "Sans facture";
+                          break;
+                        default:
+                          displayName = name;
+                      }
+                      return [formattedValue, displayName];
+                    }} />
+                        <Legend payload={[{
+                      value: 'Payé',
+                      type: 'rect',
+                      color: '#4ade80'
+                    }, {
+                      value: 'En attente',
+                      type: 'rect',
+                      color: '#f97316'
+                    }, {
+                      value: 'Sans facture',
+                      type: 'rect',
+                      color: '#a1a1aa'
+                    }]} />
                         <Bar dataKey="paidAmount" stackId="a" fill="#4ade80" name="Payé" />
                         <Bar dataKey="unpaidAmount" stackId="a" fill="#f97316" name="En attente" />
                         <Bar dataKey="noInvoiceAmount" stackId="a" fill="#a1a1aa" name="Sans facture" />
@@ -556,8 +544,7 @@ const RevenueManagement = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {yearlyStats.map((monthData) => (
-                          <tr key={monthData.month} className="border-b">
+                        {yearlyStats.map(monthData => <tr key={monthData.month} className="border-b">
                             <td className="py-2 px-2 font-medium capitalize">
                               {monthData.monthName}
                             </td>
@@ -565,33 +552,56 @@ const RevenueManagement = () => {
                               {monthData.completedMissions}
                             </td>
                             <td className="py-2 px-2 text-right">
-                              {monthData.totalAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              {monthData.totalAmount.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                             </td>
                             <td className="py-2 px-2 text-right text-green-600">
-                              {monthData.paidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              {monthData.paidAmount.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                             </td>
                             <td className="py-2 px-2 text-right text-orange-600">
-                              {monthData.unpaidAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              {monthData.unpaidAmount.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                             </td>
                             <td className="py-2 px-2 text-right text-gray-500">
-                              {monthData.noInvoiceAmount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              {monthData.noInvoiceAmount.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                             </td>
-                          </tr>
-                        ))}
+                          </tr>)}
                         <tr className="font-semibold bg-muted/50">
                           <td className="py-2 px-2">Total</td>
                           <td className="py-2 px-2 text-right">{yearlyTotal.missions}</td>
                           <td className="py-2 px-2 text-right">
-                            {yearlyTotal.revenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                            {yearlyTotal.revenue.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                           </td>
                           <td className="py-2 px-2 text-right text-green-600">
-                            {yearlyTotal.paid.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                            {yearlyTotal.paid.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                           </td>
                           <td className="py-2 px-2 text-right text-orange-600">
-                            {yearlyTotal.unpaid.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                            {yearlyTotal.unpaid.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                           </td>
                           <td className="py-2 px-2 text-right text-gray-500">
-                            {yearlyTotal.noInvoice.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                            {yearlyTotal.noInvoice.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        })}
                           </td>
                         </tr>
                       </tbody>
@@ -599,12 +609,9 @@ const RevenueManagement = () => {
                   </div>
                 </CardContent>
               </Card>
-            </>
-          )}
+            </>}
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 };
-
 export default RevenueManagement;

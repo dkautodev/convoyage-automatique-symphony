@@ -133,10 +133,7 @@ export default function CreateMissionPage() {
   return <>
       <div className="container max-w-5xl mx-auto py-8 space-y-6 px-0">
         <div className="flex items-center">
-          <Button variant="ghost" onClick={handleBack} className="mr-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </Button>
+          
           <h1 className="text-2xl font-bold">
             {livMission ? 'Créer une mission de restitution (RES)' : 'Créer une nouvelle mission'}
           </h1>

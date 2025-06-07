@@ -124,7 +124,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
           
           {/* Content area with padding and overflow handling */}
-          <div className="p-3 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto py-[15px] px-[14px]">
+          <div className="p-3 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto py-0 px-[15px]">
             {renderDashboardContent()}
           </div>
         </div>

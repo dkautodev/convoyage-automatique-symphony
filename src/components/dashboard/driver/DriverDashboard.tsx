@@ -10,7 +10,6 @@ import { formatAddressDisplay, formatMissionNumber } from '@/utils/missionUtils'
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-
 const DriverDashboard = () => {
   const {
     profile,
@@ -206,7 +205,6 @@ const DriverDashboard = () => {
     const date = new Date(dateString);
     return `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}`;
   };
-
   if (loading) {
     return <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -215,7 +213,7 @@ const DriverDashboard = () => {
   return <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 py-[9px]">
           <Button asChild>
             <Link to="/driver/missions">
               <MapPin className="mr-2 h-4 w-4" />
@@ -485,5 +483,4 @@ const DriverDashboard = () => {
       </Dialog>
     </div>;
 };
-
 export default DriverDashboard;

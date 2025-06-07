@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useBeforeUnload, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -8,20 +7,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { toast } from 'sonner';
-import { 
-  AlertDialog,
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from '@/components/ui/alert-dialog';
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 export default function CreateMissionPage() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const {
+    profile
+  } = useAuth();
   const [searchParams] = useSearchParams();
   const livId = searchParams.get('livId');
   const [formDirty, setFormDirty] = useState(false);
@@ -29,20 +20,15 @@ export default function CreateMissionPage() {
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [livMission, setLivMission] = useState<Mission | null>(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Avertir l'utilisateur avant de fermer l'onglet/navigateur
-  useBeforeUnload(
-    React.useCallback(
-      (event) => {
-        if (formDirty) {
-          event.preventDefault();
-          // Le message est contrôlé par le navigateur, pas par ce texte
-          return (event.returnValue = "Voulez-vous vraiment quitter cette page ? Les modifications non enregistrées seront perdues.");
-        }
-      },
-      [formDirty]
-    )
-  );
+  useBeforeUnload(React.useCallback(event => {
+    if (formDirty) {
+      event.preventDefault();
+      // Le message est contrôlé par le navigateur, pas par ce texte
+      return event.returnValue = "Voulez-vous vraiment quitter cette page ? Les modifications non enregistrées seront perdues.";
+    }
+  }, [formDirty]));
 
   // Récupérer la mission LIV si livId est présent
   useEffect(() => {
@@ -50,39 +36,34 @@ export default function CreateMissionPage() {
       fetchLivMission();
     }
   }, [livId]);
-
   const fetchLivMission = async () => {
     if (!livId) return;
-    
     try {
       setLoading(true);
-      const { data, error } = await typedSupabase
-        .from('missions')
-        .select('*')
-        .eq('id', livId)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await typedSupabase.from('missions').select('*').eq('id', livId).single();
       if (error) {
         console.error('Erreur lors de la récupération de la mission LIV:', error);
         toast.error('Mission LIV introuvable');
         navigate('/mission/create');
         return;
       }
-      
+
       // Vérifier que c'est bien une mission LIV
       if (data.mission_type !== 'LIV') {
         toast.error('Cette mission n\'est pas de type LIV');
         navigate('/mission/create');
         return;
       }
-      
+
       // Vérifier qu'elle n'est pas déjà liée
       if (data.linked_mission_id) {
         toast.error('Cette mission LIV est déjà liée à une mission RES');
         navigate(`/${profile?.role}/missions/${livId}`);
         return;
       }
-      
       setLivMission(convertMissionFromDB(data as unknown as MissionFromDB));
     } catch (error) {
       console.error('Erreur:', error);
@@ -92,11 +73,9 @@ export default function CreateMissionPage() {
       setLoading(false);
     }
   };
-
   const handleFormChange = (isDirty: boolean) => {
     setFormDirty(isDirty);
   };
-  
   const handleSuccess = (missionId: string) => {
     // Réinitialiser l'état dirty puisque la mission est sauvegardée
     setFormDirty(false);
@@ -107,7 +86,6 @@ export default function CreateMissionPage() {
       navigate(`/client/missions/${missionId}`);
     }
   };
-  
   const handleBack = () => {
     if (formDirty) {
       // Stocker la destination en attente
@@ -115,12 +93,11 @@ export default function CreateMissionPage() {
       if (profile?.role === 'admin') {
         destination = '/admin/missions';
       }
-      
+
       // Si on créait une RES, retourner à la mission LIV
       if (livId) {
         destination = `/${profile?.role}/missions/${livId}`;
       }
-      
       setPendingNavigation(destination);
       setShowExitDialog(true);
     } else {
@@ -134,13 +111,11 @@ export default function CreateMissionPage() {
       }
     }
   };
-  
   const handleCancelExit = () => {
     // Annuler la navigation
     setShowExitDialog(false);
     setPendingNavigation(null);
   };
-  
   const handleConfirmExit = () => {
     // Confirmer la navigation
     setShowExitDialog(false);
@@ -148,20 +123,15 @@ export default function CreateMissionPage() {
       navigate(pendingNavigation);
     }
   };
-
   if (loading) {
-    return (
-      <div className="container max-w-5xl mx-auto py-8">
+    return <div className="container max-w-5xl mx-auto py-8">
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </div>
-      </div>
-    );
+      </div>;
   }
-  
-  return (
-    <>
-      <div className="container max-w-5xl mx-auto py-8 space-y-6">
+  return <>
+      <div className="container max-w-5xl mx-auto py-8 space-y-6 px-0">
         <div className="flex items-center">
           <Button variant="ghost" onClick={handleBack} className="mr-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -172,22 +142,16 @@ export default function CreateMissionPage() {
           </h1>
         </div>
         
-        {livMission && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        {livMission && <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
               <strong>Mission LIV liée :</strong> #{livMission.mission_number || livMission.id.slice(0, 8)}
             </p>
             <p className="text-xs text-blue-600 mt-1">
               Les adresses et contacts seront automatiquement inversés. Le prix sera calculé avec une remise de 30%.
             </p>
-          </div>
-        )}
+          </div>}
         
-        <CreateMissionForm 
-          onSuccess={handleSuccess} 
-          onDirtyChange={handleFormChange}
-          livMission={livMission}
-        />
+        <CreateMissionForm onSuccess={handleSuccess} onDirtyChange={handleFormChange} livMission={livMission} />
       </div>
       
       <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
@@ -204,6 +168,5 @@ export default function CreateMissionPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>;
 }

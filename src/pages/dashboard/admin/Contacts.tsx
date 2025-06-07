@@ -52,7 +52,7 @@ const AdminContactsPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="p-6">
+        <div className="p-6 px-0">
           <ContactsTable contacts={filteredContacts} loading={loading || loadingClients} showClientInfo={true} clientData={clients} onDeleteContact={handleDeleteContact} className="px-[10px]" />
         </div>
       </div>

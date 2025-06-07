@@ -36,7 +36,7 @@ const ClientContactsPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-muted-foreground" />

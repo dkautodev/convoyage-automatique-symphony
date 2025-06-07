@@ -47,7 +47,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
   }
   
   return (
-    <div className="border rounded-md overflow-x-auto">
+    <div className="rounded-md overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">

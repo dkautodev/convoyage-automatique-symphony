@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useContacts } from '@/hooks/useContacts';
 import { useClients } from '@/hooks/useClients';
@@ -35,25 +36,31 @@ const AdminContactsPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-bold text-2xl">Liste des contacts</h2>
-            </div>
-            
+        <div className="p-6">
+          {/* Titre avec icône */}
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-bold text-2xl">Liste des contacts</h2>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative w-64">
+          
+          {/* Barre de recherche et bouton - responsive */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
-              <Input type="search" placeholder="Rechercher un contact..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+              <Input 
+                type="search" 
+                placeholder="Rechercher un contact..." 
+                className="pl-8" 
+                value={searchTerm} 
+                onChange={e => setSearchTerm(e.target.value)} 
+              />
             </div>
             <AddContactDialog onAddContact={handleAddContact} />
           </div>
         </div>
         
         <div className="p-6 px-0">
-          <ContactsTable contacts={filteredContacts} loading={loading || loadingClients} showClientInfo={true} clientData={clients} onDeleteContact={handleDeleteContact} className="px-[10px]" />
+          <ContactsTable contacts={filteredContacts} loading={loading || loadingClients} showClientInfo={true} clientData={clients} onDeleteContact={handleDeleteContact} />
         </div>
       </div>
     </div>;

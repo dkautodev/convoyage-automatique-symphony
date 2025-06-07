@@ -47,9 +47,9 @@ export const AddContactDialog: React.FC<AddContactDialogProps> = ({ onAddContact
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Ajouter un contact
+        <Button className="flex-shrink-0">
+          <UserPlus className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Ajouter un contact</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

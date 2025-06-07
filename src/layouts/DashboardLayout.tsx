@@ -117,14 +117,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         {isMobile && sidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-30" onClick={closeSidebar} />}
         
         {/* Main content area - flex-1 to take up all available space */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 px-0">
           {/* Fixed header */}
           <div className="sticky top-0 z-10 bg-white shadow-sm">
             <DashboardHeader toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
           </div>
           
           {/* Content area with padding and overflow handling */}
-          <div className="p-3 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto py-0 my-[10px] px-px">
+          <div className="p-3 sm:p-6 flex-1 overflow-x-hidden overflow-y-auto py-0 my-0 px-0">
             {renderDashboardContent()}
           </div>
         </div>

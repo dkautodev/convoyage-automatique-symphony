@@ -314,7 +314,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
     const currentMonthMissions = getCurrentMonthMissions();
     return currentMonthMissions.filter(mission => mission.chauffeur_paid).reduce((sum, mission) => sum + mission.chauffeur_price_ht, 0);
   };
-  return <div className="space-y-6">
+  return <div className="space-y-6 mx-[5px]">
       {isAdmin ? <Card className="bg-white">
           <CardHeader>
             <CardTitle className="text-left text-xl">Statistiques de facturation montant H.T. €</CardTitle>
@@ -331,7 +331,7 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
               </div>
             </div>
           </CardContent>
-        </Card> : <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        </Card> : <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-[5px]">
           <Card className="bg-white">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Revenus du mois</CardTitle>

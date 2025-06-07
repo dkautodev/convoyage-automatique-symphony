@@ -41,7 +41,7 @@ const AdminContactsPage: React.FC = () => {
               <Users className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-bold text-2xl">Liste des contacts</h2>
             </div>
-            <p className="text-sm text-gray-500 mt-1">Gérez tous les contacts de vos clients</p>
+            
           </div>
           <div className="flex items-center gap-3">
             <div className="relative w-64">

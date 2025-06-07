@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useContacts } from '@/hooks/useContacts';
 import { useClients } from '@/hooks/useClients';
@@ -36,7 +35,7 @@ const AdminContactsPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="flex items-center justify-between p-6">
+        <div className="flex items-center justify-between p-6 border-b">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-muted-foreground" />
@@ -54,7 +53,7 @@ const AdminContactsPage: React.FC = () => {
         </div>
         
         <div className="p-6">
-          <ContactsTable contacts={filteredContacts} loading={loading || loadingClients} showClientInfo={true} clientData={clients} onDeleteContact={handleDeleteContact} />
+          <ContactsTable contacts={filteredContacts} loading={loading || loadingClients} showClientInfo={true} clientData={clients} onDeleteContact={handleDeleteContact} className="px-[10px]" />
         </div>
       </div>
     </div>;

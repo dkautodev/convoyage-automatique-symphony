@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -29,6 +28,7 @@ interface ContactsTableProps {
   showClientInfo?: boolean;
   clientData?: Record<string, { name: string }>;
   onDeleteContact: (id: number) => Promise<void>;
+  className?: string;
 }
 
 export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
@@ -36,7 +36,8 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
   loading,
   showClientInfo = false,
   clientData,
-  onDeleteContact
+  onDeleteContact,
+  className
 }) => {
   if (loading) {
     return <div className="text-center py-8">Chargement des contacts...</div>;
@@ -47,7 +48,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
   }
   
   return (
-    <div className="rounded-md overflow-x-auto">
+    <div className={`rounded-md overflow-x-auto ${className || ''}`}>
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">

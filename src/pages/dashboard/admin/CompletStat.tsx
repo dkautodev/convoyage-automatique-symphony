@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -28,6 +27,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface MonthlyData {
   month: string;
@@ -35,6 +40,7 @@ interface MonthlyData {
   revenue: number;
   vat: number;
   driverPayments: number;
+  total_ht: number;
 }
 interface DriverPayment {
   driver: string;
@@ -75,6 +81,7 @@ const CompletStat = () => {
   const [driverPayments, setDriverPayments] = useState<DriverPayment[]>([]);
   const [clientPayments, setClientPayments] = useState<ClientPayment[]>([]);
   const [years, setYears] = useState<number[]>([]);
+  const [detailsMonth, setDetailsMonth] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats(year);
@@ -113,7 +120,7 @@ const CompletStat = () => {
     }
 
     if (!missions || missions.length === 0) {
-      setMonthlyData(months.map(m => ({ month: m, year: selectedYear, revenue: 0, vat: 0, driverPayments: 0 })));
+      setMonthlyData(months.map(m => ({ month: m, year: selectedYear, revenue: 0, vat: 0, driverPayments: 0, total_ht: 0 })));
       setDriverPayments([]);
       setClientPayments([]);
       setLoading(false);
@@ -148,6 +155,7 @@ const CompletStat = () => {
         revenue: 0,
         vat: 0,
         driverPayments: 0,
+        total_ht: 0,
       };
     });
 
@@ -163,6 +171,7 @@ const CompletStat = () => {
         monthlyStats[monthName].revenue += mission.price_ht || 0;
         monthlyStats[monthName].vat += vat;
         monthlyStats[monthName].driverPayments += mission.chauffeur_price_ht || 0;
+        monthlyStats[monthName].total_ht += mission.price_ht || 0;
       }
 
       const driverProfile = mission.chauffeur_id ? profilesMap.get(mission.chauffeur_id) : null;
@@ -214,6 +223,20 @@ const CompletStat = () => {
   const totalRevenue = monthlyData.reduce((acc, x) => acc + x.revenue, 0);
   const totalVat = monthlyData.reduce((acc, x) => acc + x.vat, 0);
   const totalDriverPayments = monthlyData.reduce((acc, x) => acc + x.driverPayments, 0);
+
+  const monthlyDriverSummary = useMemo(() => {
+    const summaryMap: Record<string, number> = {};
+
+    driverPayments.forEach((payment) => {
+      summaryMap[payment.month] =
+        (summaryMap[payment.month] || 0) + payment.total;
+    });
+
+    return months.map((month) => ({
+      month: month,
+      total: summaryMap[month] || 0,
+    }));
+  }, [driverPayments]);
 
   return (
     <div className="space-y-6">
@@ -288,17 +311,25 @@ const CompletStat = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Chauffeur</TableHead>
                 <TableHead>Mois</TableHead>
-                <TableHead>Total</TableHead>
+                <TableHead>Total (HT)</TableHead>
+                <TableHead>Détail</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {driverPayments.map((row) => (
-                <TableRow key={row.driver + row.month}>
-                  <TableCell>{row.driver}</TableCell>
+              {monthlyDriverSummary.map((row) => (
+                <TableRow key={row.month}>
                   <TableCell>{row.month}</TableCell>
                   <TableCell>{formatCurrency(row.total)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => setDetailsMonth(row.month)}
+                      disabled={row.total === 0}
+                    >
+                      Voir le détail
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -336,6 +367,46 @@ const CompletStat = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={!!detailsMonth}
+        onOpenChange={(open) => !open && setDetailsMonth(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Détail des paiements pour {detailsMonth} {year}
+            </DialogTitle>
+          </DialogHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Chauffeur</TableHead>
+                <TableHead>Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {driverPayments.filter((p) => p.month === detailsMonth).length >
+              0 ? (
+                driverPayments
+                  .filter((p) => p.month === detailsMonth)
+                  .map((payment) => (
+                    <TableRow key={payment.driver + payment.month}>
+                      <TableCell>{payment.driver}</TableCell>
+                      <TableCell>{formatCurrency(payment.total)}</TableCell>
+                    </TableRow>
+                  ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center">
+                    Aucun paiement pour ce mois.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -206,7 +206,6 @@ export default function CreateMissionForm({
     profiles: driverProfiles,
     loading: loadingDrivers
   } = useProfiles('chauffeur');
-
   const form = useForm<CreateMissionFormValues>({
     resolver: zodResolver(createMissionSchema),
     mode: 'onSubmit',
@@ -623,7 +622,6 @@ export default function CreateMissionForm({
       toast.error('Impossible d\'échanger les adresses pour une mission RES liée');
       return;
     }
-
     const currentPickupAddress = form.getValues('pickup_address');
     const currentDeliveryAddress = form.getValues('delivery_address');
 
@@ -639,10 +637,8 @@ export default function CreateMissionForm({
     // Mettre à jour les données dans le formulaire
     form.setValue('pickup_address_data', deliveryAddressData);
     form.setValue('delivery_address_data', tempPickupData);
-
     toast.success('Adresses échangées avec succès');
   };
-
   return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>
@@ -730,10 +726,7 @@ export default function CreateMissionForm({
                       <FormField control={form.control} name="pickup_address" render={({
                     field
                   }) => <FormItem>
-                            <FormLabel>
-                              Adresse de départ
-                              {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de livraison de la mission LIV)</span>}
-                            </FormLabel>
+                            
                             <div className="relative">
                               {/* Icône de point de départ */}
                               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
@@ -741,16 +734,9 @@ export default function CreateMissionForm({
                               </div>
                               <FormControl>
                                 <div className="pl-10">
-                                  <AddressAutocomplete 
-                                    value={field.value} 
-                                    onChange={value => field.onChange(value)} 
-                                    onSelect={(address, placeId) => {
-                                      onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                                    }} 
-                                    placeholder="Saisissez l'adresse de départ" 
-                                    error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined} 
-                                    disabled={!!livMission} 
-                                  />
+                                  <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
+                            onSelectPickupAddress(address, placeId, window.selectedAddressData);
+                          }} placeholder="Saisissez l'adresse de départ" error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined} disabled={!!livMission} />
                                 </div>
                               </FormControl>
                             </div>
@@ -759,14 +745,7 @@ export default function CreateMissionForm({
 
                       {/* Bouton pour échanger les adresses - centré et stylé */}
                       <div className="flex justify-center relative z-10">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={swapAddresses}
-                          disabled={!!livMission}
-                          className="flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 shadow-sm"
-                        >
+                        <Button type="button" variant="outline" size="sm" onClick={swapAddresses} disabled={!!livMission} className="flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 shadow-sm">
                           <ArrowUpDown className="h-4 w-4 text-gray-600" />
                         </Button>
                       </div>
@@ -774,10 +753,7 @@ export default function CreateMissionForm({
                       <FormField control={form.control} name="delivery_address" render={({
                     field
                   }) => <FormItem>
-                            <FormLabel>
-                              Adresse de livraison
-                              {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de départ de la mission LIV)</span>}
-                            </FormLabel>
+                            
                             <div className="relative">
                               {/* Icône de point de livraison */}
                               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
@@ -785,16 +761,9 @@ export default function CreateMissionForm({
                               </div>
                               <FormControl>
                                 <div className="pl-10">
-                                  <AddressAutocomplete 
-                                    value={field.value} 
-                                    onChange={value => field.onChange(value)} 
-                                    onSelect={(address, placeId) => {
-                                      onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                                    }} 
-                                    placeholder="Saisissez l'adresse de livraison" 
-                                    error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined} 
-                                    disabled={!!livMission} 
-                                  />
+                                  <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
+                            onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
+                          }} placeholder="Saisissez l'adresse de livraison" error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined} disabled={!!livMission} />
                                 </div>
                               </FormControl>
                             </div>

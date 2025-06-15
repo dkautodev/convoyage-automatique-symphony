@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import ContactSelector from './ContactSelector';
 import { Contact } from '@/types/contact';
+import MissionAddressFields from "./CreateMissionForm/MissionAddressFields";
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({
@@ -716,84 +717,28 @@ export default function CreateMissionForm({
                       <FormMessage />
                     </FormItem>} />
 
-                <div>
-                  <label className="block text-base font-medium mb-2 text-gray-800">
-                    Adresse de départ et de livraison
-                  </label>
-                  <div className="flex w-full items-stretch">
-                    {/* Colonne d'icônes à gauche */}
-                    <div className="flex flex-col items-center py-2" style={{width: '2.25rem', minWidth: '2.25rem'}}>
-                      {/* Cercle noir (départ) */}
-                      <div className="w-5 h-5 rounded-full border-4 border-black mb-1 bg-white" />
-                      {/* Les 3 points gris */}
-                      <div className="flex flex-col items-center flex-1 justify-center py-1 gap-[2px]">
-                        <div className="w-1 h-1 rounded-full bg-gray-300" />
-                        <div className="w-1 h-1 rounded-full bg-gray-300" />
-                        <div className="w-1 h-1 rounded-full bg-gray-300" />
-                      </div>
-                      {/* Pin rouge (SVG custom, adaptée) */}
-                      <svg width="22" height="22" viewBox="0 0 22 22" className="mt-1" fill="none">
-                        <circle cx="11" cy="11" r="10" stroke="#F87171" strokeWidth="2" fill="none"/>
-                        <path d="M11 6C8.24 6 6 8.22 6 10.96c0 2.67 2.18 5.29 4.07 7.12a1 1 0 0 0 1.42 0C15.82 16.25 18 13.63 18 10.96 18 8.22 15.76 6 13 6Zm0 5.13a2.13 2.13 0 1 1 0-4.26 2.13 2.13 0 0 1 0 4.26Z" stroke="#F87171" strokeWidth="1" fill="none"/>
-                        <circle cx="11" cy="9.5" r="1.2" fill="#F87171" />
-                      </svg>
-                    </div>
-                    {/* Colonne des deux champs adresse */}
-                    <div className="flex flex-col flex-1 gap-3">
-                      <FormField control={form.control} name="pickup_address" render={({ field }) => 
-                        <FormItem>
-                          <FormControl>
-                            <AddressAutocomplete
-                              value={field.value}
-                              onChange={value => field.onChange(value)}
-                              onSelect={(address, placeId) => {
-                                onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                              }}
-                              placeholder="Saisissez l'adresse de départ"
-                              error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
-                              disabled={!!livMission}
-                              className="w-full max-w-full h-12 text-lg placeholder-gray-400"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      } />
-                      <FormField control={form.control} name="delivery_address" render={({ field }) => 
-                        <FormItem>
-                          <FormControl>
-                            <AddressAutocomplete
-                              value={field.value}
-                              onChange={value => field.onChange(value)}
-                              onSelect={(address, placeId) => {
-                                onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                              }}
-                              placeholder="Saisissez l'adresse de livraison"
-                              error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
-                              disabled={!!livMission}
-                              className="w-full max-w-full h-12 text-lg placeholder-gray-400"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      } />
-                    </div>
-                    {/* Colonne bouton swap à droite */}
-                    <div className="flex flex-col items-center justify-center ml-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={swapAddresses}
-                        disabled={!!livMission}
-                        className="rounded-full border-2 border-gray-300 bg-white hover:bg-gray-50 shadow-none w-12 h-12 flex items-center justify-center"
-                        aria-label="Échanger les adresses"
-                        tabIndex={0}
-                      >
-                        <ArrowUpDown className="h-6 w-6 text-gray-500" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                {/* Bloc adresses refactorisé */}
+                <MissionAddressFields
+                  pickupAddress={form.getValues('pickup_address')}
+                  deliveryAddress={form.getValues('delivery_address')}
+                  onPickupChange={value => {
+                    form.setValue('pickup_address', value);
+                  }}
+                  onDeliveryChange={value => {
+                    form.setValue('delivery_address', value);
+                  }}
+                  onSelectPickup={(address, placeId, addressData) => {
+                    onSelectPickupAddress(address, placeId, addressData);
+                  }}
+                  onSelectDelivery={(address, placeId, addressData) => {
+                    onSelectDeliveryAddress(address, placeId, addressData);
+                  }}
+                  onSwap={swapAddresses}
+                  pickupDisabled={!!livMission}
+                  deliveryDisabled={!!livMission}
+                  errorPickup={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
+                  errorDelivery={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
+                />
 
                 {/* Calcul et résultats prix/distance identique */}
                 <div className="flex justify-center my-4">

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText, ArrowLeftRight } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText, ArrowLeftRight, ArrowUpDown, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -721,49 +721,87 @@ export default function CreateMissionForm({
                     </FormItem>} />
 
                 <div className="space-y-4">
-                  <FormField control={form.control} name="pickup_address" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>
-                          Adresse de départ
-                          {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de livraison de la mission LIV)</span>}
-                        </FormLabel>
-                        <FormControl>
-                          <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
-                    onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                  }} placeholder="Saisissez l'adresse de départ" error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined} disabled={!!livMission} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
+                  {/* Conteneur pour les adresses avec style inspiré de l'image */}
+                  <div className="relative">
+                    {/* Ligne de connexion entre les points */}
+                    <div className="absolute left-6 top-16 bottom-16 w-0.5 border-l-2 border-dashed border-gray-300 z-0"></div>
+                    
+                    <div className="space-y-4">
+                      <FormField control={form.control} name="pickup_address" render={({
+                    field
+                  }) => <FormItem>
+                            <FormLabel>
+                              Adresse de départ
+                              {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de livraison de la mission LIV)</span>}
+                            </FormLabel>
+                            <div className="relative">
+                              {/* Icône de point de départ */}
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                                <div className="w-3 h-3 bg-gray-400 rounded-full border-2 border-white shadow-sm"></div>
+                              </div>
+                              <FormControl>
+                                <div className="pl-10">
+                                  <AddressAutocomplete 
+                                    value={field.value} 
+                                    onChange={value => field.onChange(value)} 
+                                    onSelect={(address, placeId) => {
+                                      onSelectPickupAddress(address, placeId, window.selectedAddressData);
+                                    }} 
+                                    placeholder="Saisissez l'adresse de départ" 
+                                    error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined} 
+                                    disabled={!!livMission} 
+                                  />
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>} />
 
-                  {/* Bouton pour échanger les adresses */}
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={swapAddresses}
-                      disabled={!!livMission}
-                      className="flex items-center gap-2"
-                    >
-                      <ArrowLeftRight className="h-4 w-4" />
-                    </Button>
+                      {/* Bouton pour échanger les adresses - centré et stylé */}
+                      <div className="flex justify-center relative z-10">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={swapAddresses}
+                          disabled={!!livMission}
+                          className="flex items-center justify-center w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:bg-gray-50 shadow-sm"
+                        >
+                          <ArrowUpDown className="h-4 w-4 text-gray-600" />
+                        </Button>
+                      </div>
+
+                      <FormField control={form.control} name="delivery_address" render={({
+                    field
+                  }) => <FormItem>
+                            <FormLabel>
+                              Adresse de livraison
+                              {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de départ de la mission LIV)</span>}
+                            </FormLabel>
+                            <div className="relative">
+                              {/* Icône de point de livraison */}
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
+                                <MapPin className="w-5 h-5 text-red-500" />
+                              </div>
+                              <FormControl>
+                                <div className="pl-10">
+                                  <AddressAutocomplete 
+                                    value={field.value} 
+                                    onChange={value => field.onChange(value)} 
+                                    onSelect={(address, placeId) => {
+                                      onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
+                                    }} 
+                                    placeholder="Saisissez l'adresse de livraison" 
+                                    error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined} 
+                                    disabled={!!livMission} 
+                                  />
+                                </div>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>} />
+                    </div>
                   </div>
-
-                  <FormField control={form.control} name="delivery_address" render={({
-                field
-              }) => <FormItem>
-                        <FormLabel>
-                          Adresse de livraison
-                          {livMission && <span className="text-blue-600 ml-2">(Verrouillée - Adresse de départ de la mission LIV)</span>}
-                        </FormLabel>
-                        <FormControl>
-                          <AddressAutocomplete value={field.value} onChange={value => field.onChange(value)} onSelect={(address, placeId) => {
-                    onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                  }} placeholder="Saisissez l'adresse de livraison" error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined} disabled={!!livMission} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>} />
 
                   <div className="flex justify-center my-4">
                     <Button type="button" variant="outline" onClick={calculatePrice} disabled={calculatingPrice} className="flex items-center gap-2">

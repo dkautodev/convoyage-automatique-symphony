@@ -919,7 +919,7 @@ export default function CreateMissionForm({
 
                     <div className="space-y-4">
                       <h4 className="text-md font-medium">
-                        Créneau de ramassage
+                        Créneau d'enlèvement
                         {livMission && <span className="text-blue-600 text-sm block">(Verrouillé - Créneau de livraison de la mission LIV)</span>}
                       </h4>
                       <div className="grid grid-cols-3 gap-4">

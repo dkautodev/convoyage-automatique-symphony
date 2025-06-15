@@ -46,69 +46,42 @@ export const ClientPaymentsTable: React.FC<ClientPaymentsTableProps> = ({
     }));
   }, [clientPayments]);
 
-  // Responsive: Table desktop / Cards mobile
   return (
     <Card className="bg-white">
       <CardHeader>
-        <CardTitle>Paiements clients <span className="hidden sm:inline">(HT, TTC, TVA)</span></CardTitle>
+        <CardTitle>Paiements clients par mois (HT, TTC & TVA)</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="sm:block hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mois</TableHead>
-                <TableHead>Total HT</TableHead>
-                <TableHead>Total TTC</TableHead>
-                <TableHead>TVA</TableHead>
-                <TableHead>Détail</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Mois</TableHead>
+              <TableHead>Total HT</TableHead>
+              <TableHead>Total TTC</TableHead>
+              <TableHead>TVA collectée</TableHead>
+              <TableHead>Détail</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {monthlyClientSummary.map((row) => (
+              <TableRow key={row.month}>
+                <TableCell>{row.month}</TableCell>
+                <TableCell>{formatCurrency(row.total_ht)}</TableCell>
+                <TableCell>{formatCurrency(row.total_ttc)}</TableCell>
+                <TableCell>{formatCurrency(row.vat)}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    onClick={() => onDetailsClick(row.month)}
+                    disabled={row.total_ttc === 0}
+                  >
+                    Voir le détail
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {monthlyClientSummary.map((row) => (
-                <TableRow key={row.month}>
-                  <TableCell>{row.month}</TableCell>
-                  <TableCell>{formatCurrency(row.total_ht)}</TableCell>
-                  <TableCell>{formatCurrency(row.total_ttc)}</TableCell>
-                  <TableCell>{formatCurrency(row.vat)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      onClick={() => onDetailsClick(row.month)}
-                      disabled={row.total_ttc === 0}
-                    >
-                      Voir le détail
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        {/* Mobile: Cards */}
-        <div className="sm:hidden flex flex-col gap-3">
-          {monthlyClientSummary.map((row) => (
-            <div key={row.month} className="bg-white rounded shadow-sm p-3 flex items-center justify-between border">
-              <div>
-                <div className="font-medium">{row.month}</div>
-                <div className="text-xs text-gray-500">
-                  HT: {formatCurrency(row.total_ht)}<br />
-                  TTC: {formatCurrency(row.total_ttc)}<br />
-                  TVA: {formatCurrency(row.vat)}
-                </div>
-              </div>
-              <Button
-                className="text-xs"
-                variant="outline"
-                size="sm"
-                onClick={() => onDetailsClick(row.month)}
-                disabled={row.total_ttc === 0}
-              >
-                Détail
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

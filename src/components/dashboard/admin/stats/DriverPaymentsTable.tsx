@@ -34,61 +34,38 @@ export const DriverPaymentsTable: React.FC<DriverPaymentsTableProps> = ({
     }));
   }, [driverPayments]);
 
-  // Responsive: Card view for mobile, table for desktop
   return (
     <Card className="bg-white">
       <CardHeader>
-        <CardTitle>Paiements chauffeurs <span className="hidden sm:inline">par mois</span></CardTitle>
+        <CardTitle>Paiements chauffeurs par mois</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="sm:block hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mois</TableHead>
-                <TableHead>Total (HT)</TableHead>
-                <TableHead>Détail</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Mois</TableHead>
+              <TableHead>Total (HT)</TableHead>
+              <TableHead>Détail</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {monthlyDriverSummary.map((row) => (
+              <TableRow key={row.month}>
+                <TableCell>{row.month}</TableCell>
+                <TableCell>{formatCurrency(row.total)}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    onClick={() => onDetailsClick(row.month)}
+                    disabled={row.total === 0}
+                  >
+                    Voir le détail
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {monthlyDriverSummary.map((row) => (
-                <TableRow key={row.month}>
-                  <TableCell>{row.month}</TableCell>
-                  <TableCell>{formatCurrency(row.total)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      onClick={() => onDetailsClick(row.month)}
-                      disabled={row.total === 0}
-                    >
-                      Voir le détail
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        {/* Mobile: Cards */}
-        <div className="sm:hidden flex flex-col gap-3">
-          {monthlyDriverSummary.map((row) => (
-            <div key={row.month} className="bg-white rounded shadow-sm p-3 flex items-center justify-between border">
-              <div>
-                <div className="font-medium">{row.month}</div>
-                <div className="text-sm text-gray-500">Total : {formatCurrency(row.total)}</div>
-              </div>
-              <Button
-                className="text-xs"
-                variant="outline"
-                size="sm"
-                onClick={() => onDetailsClick(row.month)}
-                disabled={row.total === 0}
-              >
-                Détail
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

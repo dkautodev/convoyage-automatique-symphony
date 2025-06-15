@@ -61,16 +61,15 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
       </Card>;
   }
   return <div className="space-y-6">
-    {/* Profitability Table */}
-    <Card className="bg-white">
-      <CardHeader>
-        <CardTitle>
-          Analyse détaillée <span className="hidden sm:inline">de la marge chauffeur</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Desktop: Table */}
-        <div className="sm:block hidden">
+      {/* Profitability Matrix */}
+      
+
+      {/* Profitability Table */}
+      <Card className="bg-white">
+        <CardHeader>
+          <CardTitle>Analyse détaillée de la marge chauffeur</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
@@ -84,64 +83,31 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
             </TableHeader>
             <TableBody>
               {performancesWithChauffeurPay.sort((a, b) => b.profitability - a.profitability).map(perf => {
-                const status = getRentabilityStatus(perf.profitability);
-                const StatusIcon = status.icon;
-                return <TableRow key={perf.category}>
-                  <TableCell className="font-medium">
-                    {CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category}
-                  </TableCell>
-                  <TableCell className="text-right">{perf.totalMissions}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(perf.totalRevenue)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(perf.chauffeurPay)}</TableCell>
-                  <TableCell className="text-right">
-                    <span className={perf.profitability >= 0 ? "text-green-600" : "text-red-600"}>
-                      {perf.profitability.toFixed(1)}%
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant="secondary" className={`${status.color} text-white`}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {status.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>;
-              })}
-            </TableBody>
-          </Table>
-        </div>
-        {/* Mobile: Cards */}
-        <div className="sm:hidden flex flex-col gap-2">
-          {performancesWithChauffeurPay
-            .sort((a, b) => b.profitability - a.profitability)
-            .map(perf => {
               const status = getRentabilityStatus(perf.profitability);
               const StatusIcon = status.icon;
-              return (
-                <div key={perf.category} className="rounded shadow-sm p-2 border flex flex-col gap-1 bg-white text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">
-                      {CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category}
-                    </span>
-                    <Badge variant="secondary" className={`${status.color} text-white flex items-center`}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {status.status}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                    <span>Missions : <b>{perf.totalMissions}</b></span>
-                    <span>CA : <b>{formatCurrency(perf.totalRevenue)}</b></span>
-                    <span>Paie : <b>{formatCurrency(perf.chauffeurPay)}</b></span>
-                    <span>Renta.: 
-                      <b className={perf.profitability >= 0 ? "text-green-600" : "text-red-600"}>
-                        {perf.profitability.toFixed(1)}%
-                      </b>
-                    </span>
-                  </div>
-                </div>
-              );
+              return <TableRow key={perf.category}>
+                      <TableCell className="font-medium">
+                        {CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category}
+                      </TableCell>
+                      <TableCell className="text-right">{perf.totalMissions}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(perf.totalRevenue)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(perf.chauffeurPay)}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={perf.profitability >= 0 ? "text-green-600" : "text-red-600"}>
+                          {perf.profitability.toFixed(1)}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="secondary" className={`${status.color} text-white`}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {status.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>;
             })}
-        </div>
-      </CardContent>
-    </Card>
-  </div>;
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>;
 };

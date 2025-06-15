@@ -1,36 +1,19 @@
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Contact } from '@/types/contact';
 import { Trash, User, Mail, Phone } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 interface ContactsTableProps {
   contacts: Contact[];
   loading: boolean;
   showClientInfo?: boolean;
-  clientData?: Record<string, { name: string }>;
+  clientData?: Record<string, {
+    name: string;
+  }>;
   onDeleteContact: (id: number) => Promise<void>;
   className?: string;
 }
-
 export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
   contacts,
   loading,
@@ -42,13 +25,10 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
   if (loading) {
     return <div className="text-center py-8">Chargement des contacts...</div>;
   }
-  
   if (contacts.length === 0) {
     return <div className="text-center py-8">Aucun contact trouvé</div>;
   }
-  
-  return (
-    <div className={`rounded-md overflow-x-auto ${className || ''}`}>
+  return <div className={`rounded-md overflow-x-auto ${className || ''}`}>
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
@@ -60,8 +40,7 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {contacts.map((contact) => (
-            <TableRow key={contact.id} className="h-16">
+          {contacts.map(contact => <TableRow key={contact.id} className="h-16">
               <TableCell className="font-medium">
                 <div className="flex items-center gap-3">
                   <User className="h-4 w-4 text-neutral-500 flex-shrink-0" />
@@ -69,39 +48,25 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
                     <div className="font-semibold text-gray-900">
                       {contact.name_s || 'Sans nom'}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Contact
-                    </div>
+                    
                   </div>
                 </div>
               </TableCell>
               <TableCell>
-                {contact.phone ? (
-                  <div className="flex items-center gap-2">
+                {contact.phone ? <div className="flex items-center gap-2">
                     <Phone className="h-3 w-3 text-neutral-500" />
                     <span>{contact.phone}</span>
-                  </div>
-                ) : (
-                  '-'
-                )}
+                  </div> : '-'}
               </TableCell>
               <TableCell>
-                {contact.email ? (
-                  <div className="flex items-center gap-2">
+                {contact.email ? <div className="flex items-center gap-2">
                     <Mail className="h-3 w-3 text-neutral-500" />
                     <span>{contact.email}</span>
-                  </div>
-                ) : (
-                  '-'
-                )}
+                  </div> : '-'}
               </TableCell>
-              {showClientInfo && (
-                <TableCell className="min-w-[120px] whitespace-nowrap">
-                  {clientData && clientData[contact.client_id] 
-                    ? clientData[contact.client_id].name 
-                    : 'Client inconnu'}
-                </TableCell>
-              )}
+              {showClientInfo && <TableCell className="min-w-[120px] whitespace-nowrap">
+                  {clientData && clientData[contact.client_id] ? clientData[contact.client_id].name : 'Client inconnu'}
+                </TableCell>}
               <TableCell>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -119,20 +84,15 @@ export const ContactsTable: React.FC<ContactsTableProps> = React.memo(({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction 
-                        className="bg-red-500 hover:bg-red-600" 
-                        onClick={() => onDeleteContact(contact.id)}
-                      >
+                      <AlertDialogAction className="bg-red-500 hover:bg-red-600" onClick={() => onDeleteContact(contact.id)}>
                         Supprimer
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </TableCell>
-            </TableRow>
-          ))}
+            </TableRow>)}
         </TableBody>
       </Table>
-    </div>
-  );
+    </div>;
 });

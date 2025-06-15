@@ -15,6 +15,9 @@ import { AnnualEvolutionByCategory } from "@/components/dashboard/admin/stats/An
 import { CategoryPerformanceComparison } from "@/components/dashboard/admin/stats/CategoryPerformanceComparison";
 import { ProfitabilityAnalysis } from "@/components/dashboard/admin/stats/ProfitabilityAnalysis";
 import { ExportToolbar } from "@/components/dashboard/admin/stats/ExportToolbar";
+import { StatsPDFDocument } from "@/components/dashboard/admin/stats/StatsPDFDocument";
+import { pdf } from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
 const CompletStatContent = () => {
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [detailsMonth, setDetailsMonth] = useState<string | null>(null);
@@ -39,9 +42,25 @@ const CompletStatContent = () => {
     categoryPerformances,
     categoryTotals
   } = useAdvancedStats(year, filters);
-  const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    console.log("Export PDF functionality to be implemented");
+  const handleExportPDF = async () => {
+    // Génère le PDF synthèse annuelle et télécharge
+    try {
+      const doc = (
+        <StatsPDFDocument
+          year={year}
+          monthlyData={monthlyData}
+          totalRevenue={totalRevenue}
+          totalVat={totalVat}
+          totalDriverPayments={totalDriverPayments}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      saveAs(blob, `statistiques_${year}.pdf`);
+    } catch (e) {
+      // Ajout console log pour faciliter debug si crash
+      console.error("Erreur génération PDF :", e);
+      alert("Échec export PDF.");
+    }
   };
   const handleExportExcel = () => {
     // TODO: Implement Excel export

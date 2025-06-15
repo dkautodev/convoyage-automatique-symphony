@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -27,7 +26,7 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { typedSupabase } from "@/types/database";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MonthlyData {
   month: string;
@@ -82,7 +81,7 @@ const CompletStat = () => {
 
   // Récupérer toutes les années présentes dans _missions_
   const fetchYears = async () => {
-    const { data } = await typedSupabase.from("missions").select("created_at");
+    const { data } = await supabase.from("missions").select("created_at");
     if (data) {
       const yrs = Array.from(
         new Set(data.map((x: any) => new Date(x.created_at).getFullYear()))
@@ -94,24 +93,51 @@ const CompletStat = () => {
   // Calcul agrégé sur toutes les missions terminées
   const fetchStats = async (selectedYear: number) => {
     setLoading(true);
-    // Récupère missions terminées de l'année demandée avec info client/driver
-    const { data: missions } = await typedSupabase
-      .from("missions")
-      .select(
-        `*, profiles:profiles!missions_client_id_fkey(full_name, company_name, email), driver:profiles!missions_chauffeur_id_fkey(full_name, company_name, email)`
-      )
-      .gte("created_at", `${selectedYear}-01-01`)
-      .lte("created_at", `${selectedYear}-12-31`);
 
-    if (!missions) {
-      setMonthlyData([]);
+    const { data: missions, error: missionsError } = await supabase
+      .from("missions")
+      .select(`*`)
+      .eq('status', 'termine')
+      .gte("created_at", `${selectedYear}-01-01T00:00:00.000Z`)
+      .lte("created_at", `${selectedYear}-12-31T23:59:59.999Z`);
+
+    if (missionsError) {
+        console.error("Error fetching missions:", missionsError);
+        setMonthlyData([]);
+        setDriverPayments([]);
+        setClientPayments([]);
+        setLoading(false);
+        return;
+    }
+
+    if (!missions || missions.length === 0) {
+      setMonthlyData(months.map(m => ({ month: m, year: selectedYear, revenue: 0, vat: 0, driverPayments: 0 })));
       setDriverPayments([]);
       setClientPayments([]);
       setLoading(false);
       return;
     }
 
-    // Initialisation stats par mois
+    const clientIds = Array.from(new Set(missions.map(m => m.client_id).filter(id => id)));
+    const driverIds = Array.from(new Set(missions.map(m => m.chauffeur_id).filter(id => id)));
+    const profileIds = Array.from(new Set([...clientIds, ...driverIds]));
+
+    let profilesMap = new Map();
+    if (profileIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, company_name, email')
+            .in('id', profileIds);
+
+        if (profilesError) {
+            console.error("Error fetching profiles:", profilesError);
+        } else if (profiles) {
+            profiles.forEach(profile => {
+                profilesMap.set(profile.id, profile);
+            });
+        }
+    }
+
     const monthlyStats: Record<string, MonthlyData> = {};
     months.forEach((m) => {
       monthlyStats[m] = {
@@ -131,61 +157,42 @@ const CompletStat = () => {
       const monthName = months[date.getMonth()];
       const vat = (mission.price_ttc || 0) - (mission.price_ht || 0);
 
-      if (mission.status === "termine") {
-        // Par mois
-        if (monthlyStats[monthName]) {
-          monthlyStats[monthName].revenue += mission.price_ht || 0;
-          monthlyStats[monthName].vat += vat;
-          monthlyStats[monthName].driverPayments += mission.chauffeur_price_ht || 0;
+      if (monthlyStats[monthName]) {
+        monthlyStats[monthName].revenue += mission.price_ht || 0;
+        monthlyStats[monthName].vat += vat;
+        monthlyStats[monthName].driverPayments += mission.chauffeur_price_ht || 0;
+      }
+
+      const driverProfile = mission.chauffeur_id ? profilesMap.get(mission.chauffeur_id) : null;
+      if (driverProfile) {
+        const driverName = driverProfile.full_name || driverProfile.company_name || driverProfile.email || "Inconnu";
+        const driverKey = driverName + "-" + monthName;
+        if (!driverStats[driverKey]) {
+          driverStats[driverKey] = {
+            driver: driverName,
+            month: monthName,
+            year: selectedYear,
+            total: 0,
+          };
         }
-        // Paiement chauffeur (nom ou société ou email)
-        if (mission.driver) {
-          const driverKey =
-            (mission.driver.full_name ||
-              mission.driver.company_name ||
-              mission.driver.email ||
-              "Inconnu") +
-            "-" +
-            monthName;
-          if (!driverStats[driverKey]) {
-            driverStats[driverKey] = {
-              driver:
-                mission.driver.full_name ||
-                mission.driver.company_name ||
-                mission.driver.email ||
-                "Inconnu",
-              month: monthName,
-              year: selectedYear,
-              total: 0,
-            };
-          }
-          driverStats[driverKey].total += mission.chauffeur_price_ht || 0;
+        driverStats[driverKey].total += mission.chauffeur_price_ht || 0;
+      }
+
+      const clientProfile = mission.client_id ? profilesMap.get(mission.client_id) : null;
+      if (clientProfile) {
+        const clientName = clientProfile.company_name || clientProfile.full_name || clientProfile.email || "Inconnu";
+        const clientKey = clientName + "-" + monthName;
+        if (!clientStats[clientKey]) {
+          clientStats[clientKey] = {
+            client: clientName,
+            month: monthName,
+            year: selectedYear,
+            total: 0,
+            vat: 0,
+          };
         }
-        // Paiement client + TVA collectée
-        if (mission.profiles) {
-          const clientKey =
-            (mission.profiles.company_name ||
-              mission.profiles.full_name ||
-              mission.profiles.email ||
-              "Inconnu") +
-            "-" +
-            monthName;
-          if (!clientStats[clientKey]) {
-            clientStats[clientKey] = {
-              client:
-                mission.profiles.company_name ||
-                mission.profiles.full_name ||
-                mission.profiles.email ||
-                "Inconnu",
-              month: monthName,
-              year: selectedYear,
-              total: 0,
-              vat: 0,
-            };
-          }
-          clientStats[clientKey].total += mission.price_ttc || 0;
-          clientStats[clientKey].vat += vat;
-        }
+        clientStats[clientKey].total += mission.price_ttc || 0;
+        clientStats[clientKey].vat += vat;
       }
     });
 

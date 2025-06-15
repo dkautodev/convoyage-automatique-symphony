@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Calculator, Calendar, Clock, FileText, ArrowLeftRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
@@ -206,6 +206,7 @@ export default function CreateMissionForm({
     profiles: driverProfiles,
     loading: loadingDrivers
   } = useProfiles('chauffeur');
+
   const form = useForm<CreateMissionFormValues>({
     resolver: zodResolver(createMissionSchema),
     mode: 'onSubmit',
@@ -615,6 +616,33 @@ export default function CreateMissionForm({
     }
     return undefined;
   };
+
+  // Fonction pour échanger les adresses
+  const swapAddresses = () => {
+    if (livMission) {
+      toast.error('Impossible d\'échanger les adresses pour une mission RES liée');
+      return;
+    }
+
+    const currentPickupAddress = form.getValues('pickup_address');
+    const currentDeliveryAddress = form.getValues('delivery_address');
+
+    // Échanger les valeurs des champs
+    form.setValue('pickup_address', currentDeliveryAddress);
+    form.setValue('delivery_address', currentPickupAddress);
+
+    // Échanger les données d'adresse
+    const tempPickupData = pickupAddressData;
+    setPickupAddressData(deliveryAddressData);
+    setDeliveryAddressData(tempPickupData);
+
+    // Mettre à jour les données dans le formulaire
+    form.setValue('pickup_address_data', deliveryAddressData);
+    form.setValue('delivery_address_data', tempPickupData);
+
+    toast.success('Adresses échangées avec succès');
+  };
+
   return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>
@@ -707,6 +735,21 @@ export default function CreateMissionForm({
                         </FormControl>
                         <FormMessage />
                       </FormItem>} />
+
+                  {/* Bouton pour échanger les adresses */}
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={swapAddresses}
+                      disabled={!!livMission}
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowLeftRight className="h-4 w-4" />
+                      Échanger les adresses
+                    </Button>
+                  </div>
 
                   <FormField control={form.control} name="delivery_address" render={({
                 field

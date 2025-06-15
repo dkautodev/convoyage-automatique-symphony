@@ -6,12 +6,10 @@ import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Responsive
 import { formatCurrency } from "@/utils/statsUtils";
 import { CategoryPerformance, CATEGORY_LABELS, CATEGORY_COLORS, VehicleCategory } from "@/types/advancedStats";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-
 interface ProfitabilityAnalysisProps {
   categoryPerformances: CategoryPerformance[];
   loading: boolean;
 }
-
 export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
   categoryPerformances,
   loading
@@ -20,13 +18,12 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
   // profitabilité = (CA - paie chauffeur) / CA * 100 donc paie chauffeur = CA - (profitabilité * CA / 100)
   // Pourcentage de rentabilité peut-être négatif !
   const performancesWithChauffeurPay = categoryPerformances.map(perf => {
-    const chauffeurPay = perf.totalRevenue - (perf.totalRevenue * perf.profitability / 100);
+    const chauffeurPay = perf.totalRevenue - perf.totalRevenue * perf.profitability / 100;
     return {
       ...perf,
       chauffeurPay
     };
   });
-
   const scatterData = performancesWithChauffeurPay.map(perf => ({
     x: perf.totalMissions,
     y: perf.profitability,
@@ -34,26 +31,36 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
     revenue: perf.totalRevenue,
     color: CATEGORY_COLORS[perf.category as VehicleCategory]
   }));
-
   const getRentabilityStatus = (profitability: number) => {
-    if (profitability >= 20) return { status: "Excellente", color: "bg-green-500", icon: TrendingUp };
-    if (profitability >= 10) return { status: "Bonne", color: "bg-blue-500", icon: TrendingUp };
-    if (profitability >= 0) return { status: "Correcte", color: "bg-yellow-500", icon: Minus };
-    return { status: "Faible", color: "bg-red-500", icon: TrendingDown };
+    if (profitability >= 20) return {
+      status: "Excellente",
+      color: "bg-green-500",
+      icon: TrendingUp
+    };
+    if (profitability >= 10) return {
+      status: "Bonne",
+      color: "bg-blue-500",
+      icon: TrendingUp
+    };
+    if (profitability >= 0) return {
+      status: "Correcte",
+      color: "bg-yellow-500",
+      icon: Minus
+    };
+    return {
+      status: "Faible",
+      color: "bg-red-500",
+      icon: TrendingDown
+    };
   };
-
   if (loading) {
-    return (
-      <Card className="bg-white">
+    return <Card className="bg-white">
         <CardContent className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-700"></div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Profitability Matrix */}
       <Card className="bg-white">
         <CardHeader>
@@ -64,39 +71,34 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  type="number" 
-                  dataKey="x" 
-                  name="Missions"
-                  label={{ value: 'Nombre de missions', position: 'insideBottom', offset: -10 }}
-                />
-                <YAxis 
-                  type="number" 
-                  dataKey="y" 
-                  name="Rentabilité"
-                  label={{ value: 'Rentabilité (%)', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip 
-                  cursor={{ strokeDasharray: '3 3' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-white p-2 border rounded shadow">
+                <XAxis type="number" dataKey="x" name="Missions" label={{
+                value: 'Nombre de missions',
+                position: 'insideBottom',
+                offset: -10
+              }} />
+                <YAxis type="number" dataKey="y" name="Rentabilité" label={{
+                value: 'Rentabilité (%)',
+                angle: -90,
+                position: 'insideLeft'
+              }} />
+                <Tooltip cursor={{
+                strokeDasharray: '3 3'
+              }} content={({
+                active,
+                payload
+              }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return <div className="bg-white p-2 border rounded shadow">
                           <p className="font-medium">{data.category}</p>
                           <p>Missions: {data.x}</p>
                           <p>Rentabilité: {data.y.toFixed(1)}%</p>
                           <p>CA: {formatCurrency(data.revenue)}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Scatter 
-                  data={scatterData} 
-                  fill="#3b82f6"
-                />
+                        </div>;
+                }
+                return null;
+              }} />
+                <Scatter data={scatterData} fill="#3b82f6" />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
@@ -106,7 +108,7 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
       {/* Profitability Table */}
       <Card className="bg-white">
         <CardHeader>
-          <CardTitle>Analyse détaillée de la rentabilité</CardTitle>
+          <CardTitle>Analyse détaillée de la marge chauffeur</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -121,14 +123,10 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {performancesWithChauffeurPay
-                .sort((a, b) => b.profitability - a.profitability)
-                .map(perf => {
-                  const status = getRentabilityStatus(perf.profitability);
-                  const StatusIcon = status.icon;
-                  
-                  return (
-                    <TableRow key={perf.category}>
+              {performancesWithChauffeurPay.sort((a, b) => b.profitability - a.profitability).map(perf => {
+              const status = getRentabilityStatus(perf.profitability);
+              const StatusIcon = status.icon;
+              return <TableRow key={perf.category}>
                       <TableCell className="font-medium">
                         {CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category}
                       </TableCell>
@@ -146,13 +144,11 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
                           {status.status}
                         </Badge>
                       </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    </TableRow>;
+            })}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };

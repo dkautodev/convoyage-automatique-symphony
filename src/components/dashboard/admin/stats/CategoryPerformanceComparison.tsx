@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -94,30 +93,6 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
                   </Pie>
                   <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                 </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Missions Comparison */}
-        <Card className="bg-white">
-          <CardHeader>
-            <CardTitle>Nombre de missions par catégorie</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis 
-                    dataKey="category" 
-                    type="category"
-                    width={120}
-                  />
-                  <Tooltip />
-                  <Bar dataKey="missions" name="Missions" fill="#10b981" />
-                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

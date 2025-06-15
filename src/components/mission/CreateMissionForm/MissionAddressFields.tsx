@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
@@ -32,6 +33,9 @@ export default function MissionAddressFields({
   errorDelivery,
   className = "",
 }: MissionAddressFieldsProps) {
+  // DEBUG : Vérifier la value à chaque render
+  console.log("[MissionAddressFields] pickupAddress:", pickupAddress, "deliveryAddress:", deliveryAddress);
+
   return (
     <div className={`w-full ${className}`}>
       <label className="block font-normal text-lg mb-4 mt-2 text-black">
@@ -101,3 +105,4 @@ export default function MissionAddressFields({
     </div>
   );
 }
+

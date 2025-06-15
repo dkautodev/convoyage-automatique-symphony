@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { Input } from '@/components/ui/input';
@@ -148,8 +147,9 @@ export default function AddressAutocomplete({
     if (disabled) return; // Ne pas permettre la modification si désactivé
     
     const newValue = e.target.value;
+    console.log("[AddressAutocomplete] handleInputChange:", newValue);
     onChange(newValue);
-    
+
     // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
     if (isAddressSelected) {
       setIsAddressSelected(false);

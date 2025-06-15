@@ -1,11 +1,10 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { formatCurrency } from "@/utils/statsUtils";
-import { CategoryPerformance, CATEGORY_LABELS, CATEGORY_COLORS } from "@/types/advancedStats";
+import { CategoryPerformance, CATEGORY_LABELS, CATEGORY_COLORS, VehicleCategory } from "@/types/advancedStats";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface ProfitabilityAnalysisProps {
@@ -17,12 +16,23 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
   categoryPerformances,
   loading
 }) => {
-  const scatterData = categoryPerformances.map(perf => ({
+  // Ajout: calculons la valeur "paie chauffeur" pour chaque catégorie à partir de la profitabilité et du CA
+  // profitabilité = (CA - paie chauffeur) / CA * 100 donc paie chauffeur = CA - (profitabilité * CA / 100)
+  // Pourcentage de rentabilité peut-être négatif !
+  const performancesWithChauffeurPay = categoryPerformances.map(perf => {
+    const chauffeurPay = perf.totalRevenue - (perf.totalRevenue * perf.profitability / 100);
+    return {
+      ...perf,
+      chauffeurPay
+    };
+  });
+
+  const scatterData = performancesWithChauffeurPay.map(perf => ({
     x: perf.totalMissions,
     y: perf.profitability,
-    category: CATEGORY_LABELS[perf.category as keyof typeof CATEGORY_LABELS] || perf.category,
+    category: CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category,
     revenue: perf.totalRevenue,
-    color: CATEGORY_COLORS[perf.category as keyof typeof CATEGORY_COLORS]
+    color: CATEGORY_COLORS[perf.category as VehicleCategory]
   }));
 
   const getRentabilityStatus = (profitability: number) => {
@@ -105,13 +115,13 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
                 <TableHead>Catégorie</TableHead>
                 <TableHead className="text-right">Missions</TableHead>
                 <TableHead className="text-right">CA Total</TableHead>
-                <TableHead className="text-right">CA Moyen</TableHead>
+                <TableHead className="text-right">Paie Chauffeur</TableHead>
                 <TableHead className="text-right">Rentabilité</TableHead>
                 <TableHead className="text-right">Statut</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categoryPerformances
+              {performancesWithChauffeurPay
                 .sort((a, b) => b.profitability - a.profitability)
                 .map(perf => {
                   const status = getRentabilityStatus(perf.profitability);
@@ -120,11 +130,11 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
                   return (
                     <TableRow key={perf.category}>
                       <TableCell className="font-medium">
-                        {CATEGORY_LABELS[perf.category as keyof typeof CATEGORY_LABELS] || perf.category}
+                        {CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category}
                       </TableCell>
                       <TableCell className="text-right">{perf.totalMissions}</TableCell>
                       <TableCell className="text-right">{formatCurrency(perf.totalRevenue)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(perf.averageRevenue)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(perf.chauffeurPay)}</TableCell>
                       <TableCell className="text-right">
                         <span className={perf.profitability >= 0 ? "text-green-600" : "text-red-600"}>
                           {perf.profitability.toFixed(1)}%

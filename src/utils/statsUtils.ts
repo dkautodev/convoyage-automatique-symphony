@@ -2,7 +2,8 @@
 export const formatCurrency = (n: number) =>
   n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 
+// Remplacement des mois anglais par les mois français
 export const months = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];

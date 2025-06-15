@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CategoryData, FilterState, CategoryPerformance, MonthlyBreakdown, VEHICLE_CATEGORIES, CATEGORY_LABELS } from "@/types/advancedStats";
+import { CategoryData, FilterState, CategoryPerformance, MonthlyBreakdown, VEHICLE_CATEGORIES, CATEGORY_LABELS, VehicleCategory } from "@/types/advancedStats";
 import { months } from "@/utils/statsUtils";
 
 export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) => {
@@ -28,9 +28,9 @@ export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) =
       .gte("created_at", `${selectedYear}-01-01T00:00:00.000Z`)
       .lte("created_at", `${selectedYear}-12-31T23:59:59.999Z`);
 
-    // Apply filters if provided
+    // Correction TS2345
     if (filters?.categories && filters.categories.length > 0) {
-      query = query.in('vehicle_category', filters.categories);
+      query = query.in('vehicle_category', filters.categories as VehicleCategory[]);
     }
     if (filters?.clients && filters.clients.length > 0) {
       query = query.in('client_id', filters.clients);
@@ -71,7 +71,7 @@ export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) =
     missions.forEach((mission: any) => {
       const date = new Date(mission.created_at);
       const monthName = months[date.getMonth()];
-      const category = mission.vehicle_category || 'non_specifie';
+      const category: VehicleCategory = (mission.vehicle_category || 'citadine') as VehicleCategory;
       const vat = (mission.price_ttc || 0) - (mission.price_ht || 0);
       const profitMargin = (mission.price_ht || 0) - (mission.chauffeur_price_ht || 0);
 
@@ -105,7 +105,7 @@ export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) =
     });
 
     // Calculate average prices
-    Object.values(categoryStats).forEach(stat => {
+    Object.values(categoryStats).forEach((stat) => {
       if (stat.missionsCount > 0) {
         stat.averagePrice = stat.revenue / stat.missionsCount;
       }
@@ -113,19 +113,23 @@ export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) =
 
     // Group by month for monthly breakdowns
     months.forEach(month => {
-      const monthCategories = Object.values(categoryStats).filter(stat => stat.month === month);
+      const monthCategories = Object.values(categoryStats).filter(
+        (stat) => (stat as CategoryData).month === month
+      ) as CategoryData[];
       monthlyStats[month].categories = monthCategories;
     });
 
-    setCategoryData(Object.values(categoryStats));
+    setCategoryData(Object.values(categoryStats) as CategoryData[]);
     setMonthlyBreakdowns(Object.values(monthlyStats));
 
-    // Calculate category performances
+    // Correction TS2448 et TS2339 (déclaration + typage explicite)
     const performances: CategoryPerformance[] = VEHICLE_CATEGORIES.map(category => {
-      const categoryStats = Object.values(categoryStats).filter(stat => stat.category === category);
-      const totalRevenue = categoryStats.reduce((sum, stat) => sum + stat.revenue, 0);
-      const totalMissions = categoryStats.reduce((sum, stat) => sum + stat.missionsCount, 0);
-      const totalProfitMargin = categoryStats.reduce((sum, stat) => sum + stat.profitMargin, 0);
+      const stats = Object.values(categoryStats).filter(
+        (stat) => (stat as CategoryData).category === category
+      ) as CategoryData[];
+      const totalRevenue = stats.reduce((sum, stat) => sum + stat.revenue, 0);
+      const totalMissions = stats.reduce((sum, stat) => sum + stat.missionsCount, 0);
+      const totalProfitMargin = stats.reduce((sum, stat) => sum + stat.profitMargin, 0);
 
       return {
         category,
@@ -133,7 +137,7 @@ export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) =
         totalMissions,
         averageRevenue: totalMissions > 0 ? totalRevenue / totalMissions : 0,
         profitability: totalRevenue > 0 ? (totalProfitMargin / totalRevenue) * 100 : 0,
-        growth: 0 // TODO: Calculate year-over-year growth
+        growth: 0 // TODO: Calculer la croissance annuelle si besoin
       };
     });
 
@@ -147,11 +151,11 @@ export const useAdvancedStats = (year: number, filters?: Partial<FilterState>) =
 
   const categoryTotals = useMemo(() => {
     return VEHICLE_CATEGORIES.reduce((acc, category) => {
-      const categoryStats = categoryData.filter(data => data.category === category);
+      const stats = categoryData.filter(data => data.category === category);
       acc[category] = {
-        revenue: categoryStats.reduce((sum, stat) => sum + stat.revenue, 0),
-        missions: categoryStats.reduce((sum, stat) => sum + stat.missionsCount, 0),
-        profitMargin: categoryStats.reduce((sum, stat) => sum + stat.profitMargin, 0)
+        revenue: stats.reduce((sum, stat) => sum + stat.revenue, 0),
+        missions: stats.reduce((sum, stat) => sum + stat.missionsCount, 0),
+        profitMargin: stats.reduce((sum, stat) => sum + stat.profitMargin, 0)
       };
       return acc;
     }, {} as Record<string, { revenue: number; missions: number; profitMargin: number }>);

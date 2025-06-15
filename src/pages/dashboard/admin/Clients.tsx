@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building, Plus, Search, User, Phone, Mail, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const ClientsPage = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false);
   const [clientToView, setClientToView] = useState<Client | null>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const loadClients = async () => {
     setLoading(true);
     try {
@@ -127,6 +129,15 @@ const ClientsPage = () => {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
                 <Input type="search" placeholder="Rechercher un client..." className="pl-8 w-full" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
               </div>
+            </div>
+            {/* ======== NOUVEAU BOUTON ========= */}
+            <div className={`${isMobile ? 'mt-4 w-full' : 'ml-4'}`}>
+              <Button
+                className="w-full md:w-auto bg-blue-600 text-white hover:bg-blue-700"
+                onClick={() => navigate('/admin/complet-stat')}
+              >
+                Stats complet
+              </Button>
             </div>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
@@ -37,6 +36,7 @@ import DriverInvoicesPage from './pages/dashboard/driver/DriverInvoicesPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import RevenueManagementPage from './pages/dashboard/driver/RevenueManagementPage';
+import CompletStat from "@/pages/dashboard/admin/CompletStat";
 
 function App() {
   return (
@@ -135,6 +135,7 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/complet-stat" element={<CompletStat />} />
         
         {/* Client routes */}
         <Route path="/client" element={

@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 import { useProfiles, ProfileOption } from '@/hooks/useProfiles';
 import ContactSelector from './ContactSelector';
 import { Contact } from '@/types/contact';
-import MissionAddressFields from "./CreateMissionForm/MissionAddressFields";
+import MissionAddressFields from "@/components/mission/CreateMissionForm/MissionAddressFields";
 
 // Étape 1: Type de mission
 const missionTypeSchema = z.object({
@@ -193,8 +193,8 @@ export default function CreateMissionForm({
     calculateDistance
   } = useGooglePlaces();
   const [calculatingPrice, setCalculatingPrice] = useState(false);
-  const [pickupAddressData, setPickupAddressData] = useState<any>(null);
-  const [deliveryAddressData, setDeliveryAddressData] = useState<any>(null);
+  const [pickupAddress, setPickupAddress] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [formTouched, setFormTouched] = useState(false);
   const totalSteps = profile?.role === 'admin' ? 5 : 4; // Pour les clients, pas d'étape d'attribution
@@ -266,11 +266,11 @@ export default function CreateMissionForm({
       // Invert addresses and lock them
       if (livMission.delivery_address?.formatted_address) {
         form.setValue('pickup_address', livMission.delivery_address.formatted_address);
-        setPickupAddressData(livMission.delivery_address);
+        setPickupAddress(livMission.delivery_address);
       }
       if (livMission.pickup_address?.formatted_address) {
         form.setValue('delivery_address', livMission.pickup_address.formatted_address);
-        setDeliveryAddressData(livMission.pickup_address);
+        setDeliveryAddress(livMission.pickup_address);
       }
 
       // Set vehicle category but don't copy other vehicle info (user will fill new vehicle)
@@ -453,12 +453,12 @@ export default function CreateMissionForm({
   };
   const onSelectPickupAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('pickup_address', address);
-    setPickupAddressData(addressData);
+    setPickupAddress(addressData);
     form.setValue('pickup_address_data', addressData);
   };
   const onSelectDeliveryAddress = (address: string, placeId: string, addressData?: any) => {
     form.setValue('delivery_address', address);
-    setDeliveryAddressData(addressData);
+    setDeliveryAddress(addressData);
     form.setValue('delivery_address_data', addressData);
   };
   const onSubmit = async (values: CreateMissionFormValues) => {
@@ -640,6 +640,17 @@ export default function CreateMissionForm({
     form.setValue('delivery_address_data', tempPickupData);
     toast.success('Adresses échangées avec succès');
   };
+
+  const handlePickupChange = (val: string) => {
+    console.log("[CreateMissionForm] handlePickupChange:", val);
+    setPickupAddress(val);
+  };
+
+  const handleDeliveryChange = (val: string) => {
+    console.log("[CreateMissionForm] handleDeliveryChange:", val);
+    setDeliveryAddress(val);
+  };
+
   return <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>
@@ -719,14 +730,10 @@ export default function CreateMissionForm({
 
                 {/* Bloc adresses refactorisé */}
                 <MissionAddressFields
-                  pickupAddress={form.getValues('pickup_address')}
-                  deliveryAddress={form.getValues('delivery_address')}
-                  onPickupChange={value => {
-                    form.setValue('pickup_address', value);
-                  }}
-                  onDeliveryChange={value => {
-                    form.setValue('delivery_address', value);
-                  }}
+                  pickupAddress={pickupAddress}
+                  deliveryAddress={deliveryAddress}
+                  onPickupChange={handlePickupChange}
+                  onDeliveryChange={handleDeliveryChange}
                   onSelectPickup={(address, placeId, addressData) => {
                     onSelectPickupAddress(address, placeId, addressData);
                   }}

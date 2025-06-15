@@ -122,7 +122,6 @@ const ClientsPage = () => {
             </div>
             {isMobile}
             
-            {/* Barre de recherche - pleine largeur sur mobile, inline sur desktop */}
             <div className={`${isMobile ? 'w-full max-w-md mx-auto' : 'w-64'}`}>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" />
@@ -132,57 +131,62 @@ const ClientsPage = () => {
           </div>
         </div>
 
-        <div className="p-0">
-          {loading ? <div className="text-center py-10 text-neutral-500">
-              <p>Chargement des clients...</p>
-            </div> : filteredClients.length > 0 ? <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="bg-white">Nom / Entreprise</TableHead>
-                  {!isMobile && <TableHead className="bg-white">Email</TableHead>}
-                  {!isMobile && <TableHead className="bg-white">Téléphone</TableHead>}
-                  <TableHead className="text-left bg-white">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map(client => <TableRow key={client.id} className="h-16">
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        <Building className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                        <div className="flex flex-col">
-                          <div className="font-semibold text-gray-900">
-                            {client.company_name || client.full_name || 'Sans nom'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {client.company_name && client.full_name ? client.full_name : client.email}
+        {/* Tableau centré en mobile */}
+        <div className={isMobile ? "flex justify-center" : "p-0"}>
+          <div className={isMobile ? "w-full max-w-md" : ""}>
+            {loading ? <div className="text-center py-10 text-neutral-500">
+                <p>Chargement des clients...</p>
+              </div> : filteredClients.length > 0 ? <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="bg-white">Nom / Entreprise</TableHead>
+                    {!isMobile && <TableHead className="bg-white">Email</TableHead>}
+                    {!isMobile && <TableHead className="bg-white">Téléphone</TableHead>}
+                    <TableHead className="text-left bg-white">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredClients.map(client => <TableRow key={client.id} className="h-16">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          <Building className="h-4 w-4 text-neutral-500 flex-shrink-0" />
+                          <div className="flex flex-col">
+                            <div className="font-semibold text-gray-900">
+                              {client.company_name || client.full_name || 'Sans nom'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {client.company_name && client.full_name ? client.full_name : client.email}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    {!isMobile && <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3 text-neutral-500" />
-                          <span>{client.email}</span>
+                      </TableCell>
+                      {!isMobile && <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3 w-3 text-neutral-500" />
+                            <span>{client.email}</span>
+                          </div>
+                        </TableCell>}
+                      {!isMobile && <TableCell>
+                          {client.phone1 && <div className="flex items-center gap-2">
+                              <Phone className="h-3 w-3 text-neutral-500" />
+                              <span>{client.phone1}</span>
+                            </div>}
+                        </TableCell>}
+                      <TableCell>
+                        <div className={isMobile ? "flex justify-center" : ""}>
+                          <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => handleViewClient(client)} className="flex items-center gap-1 bg-white border-gray-200 hover:bg-gray-50">
+                            <User className="h-3.5 w-3.5" />
+                            {!isMobile && "Voir le profil"}
+                          </Button>
                         </div>
-                      </TableCell>}
-                    {!isMobile && <TableCell>
-                        {client.phone1 && <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3 text-neutral-500" />
-                            <span>{client.phone1}</span>
-                          </div>}
-                      </TableCell>}
-                    <TableCell>
-                      <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={() => handleViewClient(client)} className="flex items-center gap-1 bg-white border-gray-200 hover:bg-gray-50">
-                        <User className="h-3.5 w-3.5" />
-                        {!isMobile && "Voir le profil"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table> : <div className="text-center py-10 text-neutral-500">
-              <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
-              {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
-            </div>}
+                      </TableCell>
+                    </TableRow>)}
+                </TableBody>
+              </Table> : <div className="text-center py-10 text-neutral-500">
+                <p>Aucun client à afficher{searchTerm ? ' pour cette recherche' : ''}.</p>
+                {!searchTerm && <p className="text-sm mt-1">Créez votre premier client en cliquant sur "Nouveau client"</p>}
+              </div>}
+          </div>
         </div>
       </div>
 

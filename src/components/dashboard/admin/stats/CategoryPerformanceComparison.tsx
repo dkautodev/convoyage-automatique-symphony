@@ -1,8 +1,10 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { formatCurrency } from "@/utils/statsUtils";
 import { CategoryPerformance, CATEGORY_LABELS, CATEGORY_COLORS } from "@/types/advancedStats";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CategoryPerformanceComparisonProps {
   categoryPerformances: CategoryPerformance[];
@@ -29,6 +31,8 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
       color: CATEGORY_COLORS[perf.category as keyof typeof CATEGORY_COLORS]
     }));
 
+  const isMobile = useIsMobile();
+
   if (loading) {
     return (
       <Card className="bg-white">
@@ -44,37 +48,37 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
       {/* Revenue Comparison */}
       <Card className="bg-white">
         <CardHeader>
-          <CardTitle>Comparaison des revenus par catégorie</CardTitle>
+          <CardTitle>Comparaison des revenus</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-96">
+          <div className={isMobile ? "h-60" : "h-96"}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="category" 
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
+                  angle={isMobile ? 0 : -45}
+                  textAnchor={isMobile ? "middle" : "end"}
+                  height={isMobile ? 36 : 100}
+                  tick={{fontSize: isMobile ? 10 : 12}}
                 />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                <Legend />
-                <Bar dataKey="revenue" name="Chiffre d'affaires" fill="#3b82f6" />
+                <YAxis tickFormatter={value => formatCurrency(value)} tick={{fontSize: isMobile ? 10 : 12}} />
+                <Tooltip formatter={value => formatCurrency(Number(value))} />
+                <Legend wrapperStyle={isMobile ? { fontSize: 12 } : undefined} />
+                <Bar dataKey="revenue" name="CA" fill="#3b82f6" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      {/* Market Share */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-white">
           <CardHeader>
-            <CardTitle>Répartition du chiffre d'affaires</CardTitle>
+            <CardTitle>Répartition du CA</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div className={isMobile ? "h-56" : "h-80"}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -83,7 +87,7 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                    outerRadius={80}
+                    outerRadius={isMobile ? 60 : 80}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -91,7 +95,7 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Tooltip formatter={value => formatCurrency(Number(value))} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

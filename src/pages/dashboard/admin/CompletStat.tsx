@@ -50,13 +50,13 @@ const CompletStatContent = () => {
   const handlePrint = () => {
     window.print();
   };
-  return <div className="space-y-6">
+  return <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 px-1">
-        <h2 className="font-bold text-2xl">Statistiques comptables complètes</h2>
+        <h2 className="font-bold text-lg sm:text-2xl">Statistiques comptables complètes</h2>
         <div className="flex items-center gap-4">
           <div>
-            <span className="mr-2">Année :</span>
-            <select value={year} className="border rounded px-2 py-1" onChange={e => setYear(Number(e.target.value))}>
+            <span className="mr-2 text-sm sm:text-base">Année :</span>
+            <select value={year} className="border rounded px-2 py-1 text-sm" onChange={e => setYear(Number(e.target.value))}>
               {years.map(yr => <option value={yr} key={yr}>
                   {yr}
                 </option>)}
@@ -67,37 +67,37 @@ const CompletStatContent = () => {
 
       <ExportToolbar onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} onPrint={handlePrint} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
-        <div className="lg:col-span-4 w-full">
-          <Tabs defaultValue="overview" className="space-y-6 w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="monthly">Rapport mensuel</TabsTrigger>
-              <TabsTrigger value="annual">Évolution annuelle</TabsTrigger>
-              <TabsTrigger value="analysis">Analyse comparative</TabsTrigger>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
+        <div className="lg:col-span-4 w-full space-y-2 sm:space-y-6">
+          <Tabs defaultValue="overview" className="space-y-3 sm:space-y-6 w-full">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+              <TabsTrigger value="overview">Vue globale</TabsTrigger>
+              <TabsTrigger value="monthly">Mensuel</TabsTrigger>
+              <TabsTrigger value="annual">Annuel</TabsTrigger>
+              <TabsTrigger value="analysis">Comparatif</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
               <AnnualSummaryCard year={year} totalRevenue={totalRevenue} totalVat={totalVat} totalDriverPayments={totalDriverPayments} />
 
               <RevenueChart year={year} loading={basicLoading} monthlyData={monthlyData} />
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <DriverPaymentsTable driverPayments={driverPayments} onDetailsClick={setDetailsMonth} />
 
                 <ClientPaymentsTable clientPayments={clientPayments} onDetailsClick={setDetailsClientMonth} />
               </div>
             </TabsContent>
 
-            <TabsContent value="monthly" className="space-y-6">
+            <TabsContent value="monthly" className="space-y-4 sm:space-y-6">
               <MonthlyBreakdownByCategory monthlyBreakdowns={monthlyBreakdowns} loading={advancedLoading} />
             </TabsContent>
 
-            <TabsContent value="annual" className="space-y-6">
+            <TabsContent value="annual" className="space-y-4 sm:space-y-6">
               <AnnualEvolutionByCategory categoryData={categoryData} loading={advancedLoading} />
             </TabsContent>
 
-            <TabsContent value="analysis" className="space-y-6">
+            <TabsContent value="analysis" className="space-y-4 sm:space-y-6">
               <CategoryPerformanceComparison categoryPerformances={categoryPerformances} loading={advancedLoading} />
               
               <ProfitabilityAnalysis categoryPerformances={categoryPerformances} loading={advancedLoading} />

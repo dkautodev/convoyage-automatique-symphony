@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { months } from "@/utils/statsUtils"; // Ajouté pour récupérer les mois en français
 
 interface MonthlyData {
   month: string;
@@ -27,10 +28,11 @@ interface ClientPayment {
   total_ht: number;
 }
 
-const months = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+// SUPPRESSION DE LA VARIABLE months locale
+// const months = [
+//   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+//   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+// ];
 
 export const useCompletStats = (year: number) => {
   const [loading, setLoading] = useState(true);

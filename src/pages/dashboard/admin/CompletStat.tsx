@@ -82,6 +82,9 @@ const CompletStat = () => {
   const [clientPayments, setClientPayments] = useState<ClientPayment[]>([]);
   const [years, setYears] = useState<number[]>([]);
   const [detailsMonth, setDetailsMonth] = useState<string | null>(null);
+  const [detailsClientMonth, setDetailsClientMonth] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     fetchStats(year);
@@ -238,6 +241,29 @@ const CompletStat = () => {
     }));
   }, [driverPayments]);
 
+  const monthlyClientSummary = useMemo(() => {
+    const summaryMap: Record<
+      string,
+      { total_ht: number; total_ttc: number; vat: number }
+    > = {};
+
+    clientPayments.forEach((payment) => {
+      if (!summaryMap[payment.month]) {
+        summaryMap[payment.month] = { total_ht: 0, total_ttc: 0, vat: 0 };
+      }
+      summaryMap[payment.month].total_ht += payment.total_ht;
+      summaryMap[payment.month].total_ttc += payment.total; // 'total' is TTC
+      summaryMap[payment.month].vat += payment.vat;
+    });
+
+    return months.map((month) => ({
+      month: month,
+      total_ht: summaryMap[month]?.total_ht || 0,
+      total_ttc: summaryMap[month]?.total_ttc || 0,
+      vat: summaryMap[month]?.vat || 0,
+    }));
+  }, [clientPayments]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2 px-1">
@@ -337,7 +363,7 @@ const CompletStat = () => {
         </CardContent>
       </Card>
 
-      {/* Tableau paiements clients */}
+      {/* Tableau paiements clients par mois (HT, TTC & TVA) */}
       <Card className="bg-white">
         <CardHeader>
           <CardTitle>Paiements clients par mois (HT, TTC & TVA)</CardTitle>
@@ -346,21 +372,29 @@ const CompletStat = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Client</TableHead>
                 <TableHead>Mois</TableHead>
                 <TableHead>Total HT</TableHead>
                 <TableHead>Total TTC</TableHead>
                 <TableHead>TVA collectée</TableHead>
+                <TableHead>Détail</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clientPayments.map((row) => (
-                <TableRow key={row.client + row.month}>
-                  <TableCell>{row.client}</TableCell>
+              {monthlyClientSummary.map((row) => (
+                <TableRow key={row.month}>
                   <TableCell>{row.month}</TableCell>
                   <TableCell>{formatCurrency(row.total_ht)}</TableCell>
-                  <TableCell>{formatCurrency(row.total)}</TableCell>
+                  <TableCell>{formatCurrency(row.total_ttc)}</TableCell>
                   <TableCell>{formatCurrency(row.vat)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => setDetailsClientMonth(row.month)}
+                      disabled={row.total_ttc === 0}
+                    >
+                      Voir le détail
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -399,6 +433,50 @@ const CompletStat = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={2} className="text-center">
+                    Aucun paiement pour ce mois.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!detailsClientMonth}
+        onOpenChange={(open) => !open && setDetailsClientMonth(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Détail des paiements clients pour {detailsClientMonth} {year}
+            </DialogTitle>
+          </DialogHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Client</TableHead>
+                <TableHead>Total HT</TableHead>
+                <TableHead>Total TTC</TableHead>
+                <TableHead>TVA collectée</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clientPayments.filter((p) => p.month === detailsClientMonth)
+                .length > 0 ? (
+                clientPayments
+                  .filter((p) => p.month === detailsClientMonth)
+                  .map((payment) => (
+                    <TableRow key={payment.client + payment.month}>
+                      <TableCell>{payment.client}</TableCell>
+                      <TableCell>{formatCurrency(payment.total_ht)}</TableCell>
+                      <TableCell>{formatCurrency(payment.total)}</TableCell>
+                      <TableCell>{formatCurrency(payment.vat)}</TableCell>
+                    </TableRow>
+                  ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
                     Aucun paiement pour ce mois.
                   </TableCell>
                 </TableRow>

@@ -70,7 +70,7 @@ const CreateMissionForm = ({ onSuccess, onDirtyChange, livMission }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-	const [pickupAddress, setPickupAddress] = useState('');
+  const [pickupAddress, setPickupAddress] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -312,17 +312,17 @@ const CreateMissionForm = ({ onSuccess, onDirtyChange, livMission }) => {
           />
         </div>
 
-				<div className="flex justify-center my-2">
-					{/* Bouton échange */}
-					<button
-						type="button"
-						aria-label="Échanger les adresses"
-						onClick={handleSwapAddresses}
-						className="bg-white border border-gray-200 rounded-full shadow hover:bg-gray-50 p-2 transition-colors"
-					>
-						<X className="h-5 w-5 rotate-90 text-gray-500" /> {/* À remplacer par une vraie icône swap */}
-					</button>
-				</div>
+        <div className="flex justify-center my-2">
+          {/* Bouton échange */}
+          <button
+            type="button"
+            aria-label="Échanger les adresses"
+            onClick={handleSwapAddresses}
+            className="bg-white border border-gray-200 rounded-full shadow hover:bg-gray-50 p-2 transition-colors"
+          >
+            <X className="h-5 w-5 rotate-90 text-gray-500" /> {/* À remplacer par une vraie icône swap */}
+          </button>
+        </div>
 
         <h3 className="text-lg font-medium">Informations de livraison</h3>
 

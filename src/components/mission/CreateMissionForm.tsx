@@ -695,10 +695,9 @@ export default function CreateMissionForm({
 
             {/* Étape 2: Sélection du véhicule, adresses et prix */}
             {currentStep === 2 && <div className="space-y-6">
-                {/* Sélecteur du véhicule inchangé */}
                 <FormField control={form.control} name="vehicle_category" render={({
-              field
-            }) => <FormItem>
+                  field
+                }) => <FormItem>
                       <FormLabel>Type de véhicule</FormLabel>
                       <Select onValueChange={value => field.onChange(value as VehicleCategory)} defaultValue={field.value}>
                         <FormControl>
@@ -717,85 +716,90 @@ export default function CreateMissionForm({
                       <FormMessage />
                     </FormItem>} />
 
-                {/* Nouveau bloc adresses et swap */}
-                <div className="flex w-full max-w-2xl mx-auto">
-                  {/* Colonne icônes */}
-                  <div className="flex flex-col items-center justify-center py-2 mr-3 select-none" style={{width:32}}>
-                    {/* Cercle noir (départ) */}
-                    <div className="w-4 h-4 rounded-full border-2 border-black bg-white mb-1" />
-                    {/* Pointillés verticaux */}
-                    <div className="flex flex-col items-center flex-1 my-1">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="w-1 h-1 rounded-full bg-gray-300 mb-1" />
-                      ))}
+                <div>
+                  <label className="block text-base font-medium mb-2 text-gray-800">
+                    Adresse de départ et de livraison
+                  </label>
+                  <div className="flex w-full items-stretch">
+                    {/* Colonne d'icônes à gauche */}
+                    <div className="flex flex-col items-center py-2" style={{width: '2.25rem', minWidth: '2.25rem'}}>
+                      {/* Cercle noir (départ) */}
+                      <div className="w-5 h-5 rounded-full border-4 border-black mb-1 bg-white" />
+                      {/* Les 3 points gris */}
+                      <div className="flex flex-col items-center flex-1 justify-center py-1 gap-[2px]">
+                        <div className="w-1 h-1 rounded-full bg-gray-300" />
+                        <div className="w-1 h-1 rounded-full bg-gray-300" />
+                        <div className="w-1 h-1 rounded-full bg-gray-300" />
+                      </div>
+                      {/* Pin rouge (SVG custom, adaptée) */}
+                      <svg width="22" height="22" viewBox="0 0 22 22" className="mt-1" fill="none">
+                        <circle cx="11" cy="11" r="10" stroke="#F87171" strokeWidth="2" fill="none"/>
+                        <path d="M11 6C8.24 6 6 8.22 6 10.96c0 2.67 2.18 5.29 4.07 7.12a1 1 0 0 0 1.42 0C15.82 16.25 18 13.63 18 10.96 18 8.22 15.76 6 13 6Zm0 5.13a2.13 2.13 0 1 1 0-4.26 2.13 2.13 0 0 1 0 4.26Z" stroke="#F87171" strokeWidth="1" fill="none"/>
+                        <circle cx="11" cy="9.5" r="1.2" fill="#F87171" />
+                      </svg>
                     </div>
-                    {/* Pin rouge (Lucide ou SVG) */}
-                    <svg width={20} height={20} viewBox="0 0 22 22" className="mt-1" fill="none">
-                      <circle cx="11" cy="11" r="10" stroke="#F87171" strokeWidth="1.5" fill="none"/>
-                      <path d="M11 5.5C8.24 5.5 6 7.72 6 10.46c0 2.67 2.18 5.29 4.07 7.12a1 1 0 0 0 1.42 0C15.82 15.75 18 13.13 18 10.46 18 7.72 15.76 5.5 13 5.5Zm0 5.13a2.13 2.13 0 1 1 0-4.26 2.13 2.13 0 0 1 0 4.26Z" stroke="#F87171" strokeWidth="1" fill="none"/>
-                      <circle cx="11" cy="9.5" r="1.2" fill="#F87171" />
-                    </svg>
-                  </div>
-                  {/* Colonne champs */}
-                  <div className="flex flex-col justify-center flex-grow gap-2 min-w-0">
-                    <FormField control={form.control} name="pickup_address" render={({ field }) => 
-                      <FormItem>
-                        <FormControl>
-                          <AddressAutocomplete
-                            value={field.value}
-                            onChange={value => field.onChange(value)}
-                            onSelect={(address, placeId) => {
-                              onSelectPickupAddress(address, placeId, window.selectedAddressData);
-                            }}
-                            placeholder="Saisissez l'adresse de départ"
-                            error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
-                            disabled={!!livMission}
-                            className="w-full max-w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    } />
-                    <FormField control={form.control} name="delivery_address" render={({ field }) => 
-                      <FormItem>
-                        <FormControl>
-                          <AddressAutocomplete
-                            value={field.value}
-                            onChange={value => field.onChange(value)}
-                            onSelect={(address, placeId) => {
-                              onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
-                            }}
-                            placeholder="Saisissez l'adresse de livraison"
-                            error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
-                            disabled={!!livMission}
-                            className="w-full max-w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    } />
-                  </div>
-                  {/* Colonne bouton swap */}
-                  <div className="flex flex-col items-center justify-center ml-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={swapAddresses}
-                      disabled={!!livMission}
-                      className="rounded-full border-2 border-gray-300 bg-white hover:bg-gray-50 shadow-none w-10 h-10 flex items-center justify-center"
-                      aria-label="Échanger les adresses"
-                      tabIndex={0}
-                    >
-                      <ArrowUpDown className="h-5 w-5 text-gray-600" />
-                    </Button>
+                    {/* Colonne des deux champs adresse */}
+                    <div className="flex flex-col flex-1 gap-3">
+                      <FormField control={form.control} name="pickup_address" render={({ field }) => 
+                        <FormItem>
+                          <FormControl>
+                            <AddressAutocomplete
+                              value={field.value}
+                              onChange={value => field.onChange(value)}
+                              onSelect={(address, placeId) => {
+                                onSelectPickupAddress(address, placeId, window.selectedAddressData);
+                              }}
+                              placeholder="Saisissez l'adresse de départ"
+                              error={formTouched ? getErrorMessageAsString(form.formState.errors.pickup_address) : undefined}
+                              disabled={!!livMission}
+                              className="w-full max-w-full h-12 text-lg placeholder-gray-400"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      } />
+                      <FormField control={form.control} name="delivery_address" render={({ field }) => 
+                        <FormItem>
+                          <FormControl>
+                            <AddressAutocomplete
+                              value={field.value}
+                              onChange={value => field.onChange(value)}
+                              onSelect={(address, placeId) => {
+                                onSelectDeliveryAddress(address, placeId, window.selectedAddressData);
+                              }}
+                              placeholder="Saisissez l'adresse de livraison"
+                              error={formTouched ? getErrorMessageAsString(form.formState.errors.delivery_address) : undefined}
+                              disabled={!!livMission}
+                              className="w-full max-w-full h-12 text-lg placeholder-gray-400"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      } />
+                    </div>
+                    {/* Colonne bouton swap à droite */}
+                    <div className="flex flex-col items-center justify-center ml-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={swapAddresses}
+                        disabled={!!livMission}
+                        className="rounded-full border-2 border-gray-300 bg-white hover:bg-gray-50 shadow-none w-12 h-12 flex items-center justify-center"
+                        aria-label="Échanger les adresses"
+                        tabIndex={0}
+                      >
+                        <ArrowUpDown className="h-6 w-6 text-gray-500" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
+
                 {/* Calcul et résultats prix/distance identique */}
                 <div className="flex justify-center my-4">
                   <Button type="button" variant="outline" onClick={calculatePrice} disabled={calculatingPrice} className="flex items-center gap-2">
                     {calculatingPrice ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
-                    Calculer le prix{livMission ? ' (remise 30%)' : ''}
+                    Calculer le prix{livMission ? " (remise 30%)" : ""}
                   </Button>
                 </div>
                 <div className="grid grid-cols-3 gap-4">

@@ -67,11 +67,9 @@ const CompletStatContent = () => {
 
       <ExportToolbar onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} onPrint={handlePrint} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        
-        <div className="lg:col-span-3">
-          <Tabs defaultValue="overview" className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full">
+        <div className="lg:col-span-4 w-full">
+          <Tabs defaultValue="overview" className="space-y-6 w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
               <TabsTrigger value="monthly">Rapport mensuel</TabsTrigger>

@@ -94,12 +94,19 @@ const CompletStat = () => {
   // Récupérer toutes les années présentes dans _missions_
   const fetchYears = async () => {
     const { data } = await supabase.from("missions").select("created_at");
+    const yearSet = new Set<number>();
+
     if (data) {
-      const yrs = Array.from(
-        new Set(data.map((x: any) => new Date(x.created_at).getFullYear()))
-      );
-      setYears(yrs.sort((a, b) => b - a));
+      data.forEach((mission: any) => {
+        yearSet.add(new Date(mission.created_at).getFullYear());
+      });
     }
+
+    // Add 2024 and current year if not present
+    yearSet.add(2024);
+    yearSet.add(new Date().getFullYear());
+
+    setYears(Array.from(yearSet).sort((a, b) => b - a));
   };
 
   // Calcul agrégé sur toutes les missions terminées

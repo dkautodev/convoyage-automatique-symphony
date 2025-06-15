@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useCompletStats } from "@/hooks/useCompletStats";
 import { useAdvancedStats } from "@/hooks/useAdvancedStats";
@@ -16,13 +15,13 @@ import { AnnualEvolutionByCategory } from "@/components/dashboard/admin/stats/An
 import { CategoryPerformanceComparison } from "@/components/dashboard/admin/stats/CategoryPerformanceComparison";
 import { ProfitabilityAnalysis } from "@/components/dashboard/admin/stats/ProfitabilityAnalysis";
 import { ExportToolbar } from "@/components/dashboard/admin/stats/ExportToolbar";
-
 const CompletStatContent = () => {
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [detailsMonth, setDetailsMonth] = useState<string | null>(null);
   const [detailsClientMonth, setDetailsClientMonth] = useState<string | null>(null);
-  const { filters } = useFilters();
-
+  const {
+    filters
+  } = useFilters();
   const {
     loading: basicLoading,
     monthlyData,
@@ -31,9 +30,8 @@ const CompletStatContent = () => {
     years,
     totalRevenue,
     totalVat,
-    totalDriverPayments,
+    totalDriverPayments
   } = useCompletStats(year);
-
   const {
     loading: advancedLoading,
     categoryData,
@@ -41,53 +39,36 @@ const CompletStatContent = () => {
     categoryPerformances,
     categoryTotals
   } = useAdvancedStats(year, filters);
-
   const handleExportPDF = () => {
     // TODO: Implement PDF export
     console.log("Export PDF functionality to be implemented");
   };
-
   const handleExportExcel = () => {
     // TODO: Implement Excel export
     console.log("Export Excel functionality to be implemented");
   };
-
   const handlePrint = () => {
     window.print();
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 px-1">
         <h2 className="font-bold text-2xl">Statistiques comptables complètes</h2>
         <div className="flex items-center gap-4">
           <div>
             <span className="mr-2">Année :</span>
-            <select
-              value={year}
-              className="border rounded px-2 py-1"
-              onChange={(e) => setYear(Number(e.target.value))}
-            >
-              {years.map((yr) => (
-                <option value={yr} key={yr}>
+            <select value={year} className="border rounded px-2 py-1" onChange={e => setYear(Number(e.target.value))}>
+              {years.map(yr => <option value={yr} key={yr}>
                   {yr}
-                </option>
-              ))}
+                </option>)}
             </select>
           </div>
         </div>
       </div>
 
-      <ExportToolbar
-        onExportPDF={handleExportPDF}
-        onExportExcel={handleExportExcel}
-        onPrint={handlePrint}
-      />
+      <ExportToolbar onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} onPrint={handlePrint} />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <FilterPanel />
-        </div>
+        
         
         <div className="lg:col-span-3">
           <Tabs defaultValue="overview" className="space-y-6">
@@ -99,86 +80,42 @@ const CompletStatContent = () => {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <AnnualSummaryCard
-                year={year}
-                totalRevenue={totalRevenue}
-                totalVat={totalVat}
-                totalDriverPayments={totalDriverPayments}
-              />
+              <AnnualSummaryCard year={year} totalRevenue={totalRevenue} totalVat={totalVat} totalDriverPayments={totalDriverPayments} />
 
-              <RevenueChart
-                year={year}
-                loading={basicLoading}
-                monthlyData={monthlyData}
-              />
+              <RevenueChart year={year} loading={basicLoading} monthlyData={monthlyData} />
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <DriverPaymentsTable
-                  driverPayments={driverPayments}
-                  onDetailsClick={setDetailsMonth}
-                />
+                <DriverPaymentsTable driverPayments={driverPayments} onDetailsClick={setDetailsMonth} />
 
-                <ClientPaymentsTable
-                  clientPayments={clientPayments}
-                  onDetailsClick={setDetailsClientMonth}
-                />
+                <ClientPaymentsTable clientPayments={clientPayments} onDetailsClick={setDetailsClientMonth} />
               </div>
             </TabsContent>
 
             <TabsContent value="monthly" className="space-y-6">
-              <MonthlyBreakdownByCategory
-                monthlyBreakdowns={monthlyBreakdowns}
-                loading={advancedLoading}
-              />
+              <MonthlyBreakdownByCategory monthlyBreakdowns={monthlyBreakdowns} loading={advancedLoading} />
             </TabsContent>
 
             <TabsContent value="annual" className="space-y-6">
-              <AnnualEvolutionByCategory
-                categoryData={categoryData}
-                loading={advancedLoading}
-              />
+              <AnnualEvolutionByCategory categoryData={categoryData} loading={advancedLoading} />
             </TabsContent>
 
             <TabsContent value="analysis" className="space-y-6">
-              <CategoryPerformanceComparison
-                categoryPerformances={categoryPerformances}
-                loading={advancedLoading}
-              />
+              <CategoryPerformanceComparison categoryPerformances={categoryPerformances} loading={advancedLoading} />
               
-              <ProfitabilityAnalysis
-                categoryPerformances={categoryPerformances}
-                loading={advancedLoading}
-              />
+              <ProfitabilityAnalysis categoryPerformances={categoryPerformances} loading={advancedLoading} />
             </TabsContent>
           </Tabs>
         </div>
       </div>
 
-      <DriverDetailsDialog
-        open={!!detailsMonth}
-        onOpenChange={(open) => !open && setDetailsMonth(null)}
-        month={detailsMonth}
-        year={year}
-        driverPayments={driverPayments}
-      />
+      <DriverDetailsDialog open={!!detailsMonth} onOpenChange={open => !open && setDetailsMonth(null)} month={detailsMonth} year={year} driverPayments={driverPayments} />
 
-      <ClientDetailsDialog
-        open={!!detailsClientMonth}
-        onOpenChange={(open) => !open && setDetailsClientMonth(null)}
-        month={detailsClientMonth}
-        year={year}
-        clientPayments={clientPayments}
-      />
-    </div>
-  );
+      <ClientDetailsDialog open={!!detailsClientMonth} onOpenChange={open => !open && setDetailsClientMonth(null)} month={detailsClientMonth} year={year} clientPayments={clientPayments} />
+    </div>;
 };
-
 const CompletStat = () => {
-  return (
-    <FilterProvider>
+  return <FilterProvider>
       <CompletStatContent />
-    </FilterProvider>
-  );
+    </FilterProvider>;
 };
-
 export default CompletStat;

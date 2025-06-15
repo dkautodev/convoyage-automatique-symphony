@@ -18,6 +18,8 @@ import { ExportToolbar } from "@/components/dashboard/admin/stats/ExportToolbar"
 import { StatsPDFDocument } from "@/components/dashboard/admin/stats/StatsPDFDocument";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
+import { generateCompletStatsExcel } from "@/utils/generateCompletStatsExcel";
+
 const CompletStatContent = () => {
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [detailsMonth, setDetailsMonth] = useState<string | null>(null);
@@ -67,8 +69,24 @@ const CompletStatContent = () => {
     }
   };
   const handleExportExcel = () => {
-    // TODO: Implement Excel export
-    console.log("Export Excel functionality to be implemented");
+    // Nouvel export Excel complet
+    try {
+      const blob = generateCompletStatsExcel({
+        year,
+        monthlyData,
+        totalRevenue,
+        totalVat,
+        totalDriverPayments,
+        driverPayments,
+        clientPayments,
+        categoryData,
+        categoryPerformances,
+      });
+      saveAs(blob, `statistiques_${year}_complet.xlsx`);
+    } catch (e) {
+      console.error("Erreur génération Excel complet :", e);
+      alert("Échec export Excel.");
+    }
   };
   const handlePrint = () => {
     window.print();

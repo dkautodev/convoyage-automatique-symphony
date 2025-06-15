@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -47,6 +48,7 @@ interface ClientPayment {
   year: number;
   total: number;
   vat: number;
+  total_ht: number;
 }
 
 const months = [
@@ -189,10 +191,12 @@ const CompletStat = () => {
             year: selectedYear,
             total: 0,
             vat: 0,
+            total_ht: 0,
           };
         }
         clientStats[clientKey].total += mission.price_ttc || 0;
         clientStats[clientKey].vat += vat;
+        clientStats[clientKey].total_ht += mission.price_ht || 0;
       }
     });
 
@@ -305,7 +309,7 @@ const CompletStat = () => {
       {/* Tableau paiements clients */}
       <Card className="bg-white">
         <CardHeader>
-          <CardTitle>Paiements clients par mois (TTC & TVA)</CardTitle>
+          <CardTitle>Paiements clients par mois (HT, TTC & TVA)</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -313,6 +317,7 @@ const CompletStat = () => {
               <TableRow>
                 <TableHead>Client</TableHead>
                 <TableHead>Mois</TableHead>
+                <TableHead>Total HT</TableHead>
                 <TableHead>Total TTC</TableHead>
                 <TableHead>TVA collectée</TableHead>
               </TableRow>
@@ -322,6 +327,7 @@ const CompletStat = () => {
                 <TableRow key={row.client + row.month}>
                   <TableCell>{row.client}</TableCell>
                   <TableCell>{row.month}</TableCell>
+                  <TableCell>{formatCurrency(row.total_ht)}</TableCell>
                   <TableCell>{formatCurrency(row.total)}</TableCell>
                   <TableCell>{formatCurrency(row.vat)}</TableCell>
                 </TableRow>

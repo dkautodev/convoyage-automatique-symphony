@@ -1054,7 +1054,7 @@ export default function CreateMissionForm({
                         <Textarea {...field} placeholder="Informations supplémentaires, codes d'accès, instructions particulières..." className="h-32" />
                       </FormControl>
                       <FormMessage />
-                      <p className="text-sm font-bold mt-2">Les fichiers pourront être téléchargées dans la page de la mission crée</p>
+                      <p className="text-sm font-bold mt-2">Les fichiers pourront être téléchargés dans la page de la mission créée</p>
                     </FormItem>} />
               </div>}
 

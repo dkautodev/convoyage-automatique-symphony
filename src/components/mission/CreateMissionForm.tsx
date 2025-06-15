@@ -747,7 +747,6 @@ export default function CreateMissionForm({
                       className="flex items-center gap-2"
                     >
                       <ArrowLeftRight className="h-4 w-4" />
-                      Échanger les adresses
                     </Button>
                   </div>
 

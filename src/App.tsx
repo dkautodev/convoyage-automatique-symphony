@@ -135,7 +135,13 @@ function App() {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-        <Route path="/admin/complet-stat" element={<CompletStat />} />
+        <Route path="/admin/complet-stat" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <CompletStat />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
         
         {/* Client routes */}
         <Route path="/client" element={

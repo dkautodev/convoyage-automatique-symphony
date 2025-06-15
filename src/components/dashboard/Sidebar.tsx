@@ -68,6 +68,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Factures chauffeur',
       icon: <CreditCard size={20} />
     }, {
+      path: '/admin/complet-stat',
+      label: 'Statistiques',
+      icon: <TrendingUp size={20} />
+    }, {
       path: '/admin/clients',
       label: 'Clients',
       icon: <Users size={20} />

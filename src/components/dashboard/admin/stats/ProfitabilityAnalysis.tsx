@@ -62,48 +62,7 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
   }
   return <div className="space-y-6">
       {/* Profitability Matrix */}
-      <Card className="bg-white">
-        <CardHeader>
-          <CardTitle>Matrice de rentabilité (Missions vs Profitabilité)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" dataKey="x" name="Missions" label={{
-                value: 'Nombre de missions',
-                position: 'insideBottom',
-                offset: -10
-              }} />
-                <YAxis type="number" dataKey="y" name="Rentabilité" label={{
-                value: 'Rentabilité (%)',
-                angle: -90,
-                position: 'insideLeft'
-              }} />
-                <Tooltip cursor={{
-                strokeDasharray: '3 3'
-              }} content={({
-                active,
-                payload
-              }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  return <div className="bg-white p-2 border rounded shadow">
-                          <p className="font-medium">{data.category}</p>
-                          <p>Missions: {data.x}</p>
-                          <p>Rentabilité: {data.y.toFixed(1)}%</p>
-                          <p>CA: {formatCurrency(data.revenue)}</p>
-                        </div>;
-                }
-                return null;
-              }} />
-                <Scatter data={scatterData} fill="#3b82f6" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      
 
       {/* Profitability Table */}
       <Card className="bg-white">

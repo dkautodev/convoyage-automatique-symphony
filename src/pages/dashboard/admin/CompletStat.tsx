@@ -43,7 +43,7 @@ const CompletStatContent = () => {
     categoryTotals
   } = useAdvancedStats(year, filters);
   const handleExportPDF = async () => {
-    // Génère le PDF synthèse annuelle et télécharge
+    // Génère le PDF complet : synthèse + détails + analyse
     try {
       const doc = (
         <StatsPDFDocument
@@ -52,13 +52,17 @@ const CompletStatContent = () => {
           totalRevenue={totalRevenue}
           totalVat={totalVat}
           totalDriverPayments={totalDriverPayments}
+          driverPayments={driverPayments}
+          clientPayments={clientPayments}
+          categoryData={categoryData}
+          categoryPerformances={categoryPerformances}
         />
       );
       const blob = await pdf(doc).toBlob();
-      saveAs(blob, `statistiques_${year}.pdf`);
+      saveAs(blob, `statistiques_${year}_complet.pdf`);
     } catch (e) {
       // Ajout console log pour faciliter debug si crash
-      console.error("Erreur génération PDF :", e);
+      console.error("Erreur génération PDF complet :", e);
       alert("Échec export PDF.");
     }
   };

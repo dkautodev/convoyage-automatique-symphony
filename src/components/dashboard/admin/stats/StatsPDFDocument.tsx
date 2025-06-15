@@ -6,18 +6,15 @@ import {
   View,
   Document,
   StyleSheet,
-  // Font,
 } from "@react-pdf/renderer";
-
-// Font.register({
-//   family: "Inter",
-//   src: ... // Optionally add webfont
-// });
+import { StatsPDFDriversSection } from "./pdf/StatsPDFDriversSection";
+import { StatsPDFClientsSection } from "./pdf/StatsPDFClientsSection";
+import { StatsPDFCategorySection } from "./pdf/StatsPDFCategorySection";
+import { StatsPDFProfitabilitySection } from "./pdf/StatsPDFProfitabilitySection";
 
 const styles = StyleSheet.create({
   page: { padding: 24, fontSize: 11 },
   heading: { fontSize: 16, fontWeight: "bold", marginBottom: 8 },
-  // Correction ici : on retire display: "table" et on utilise flexDirection: "column"
   table: { flexDirection: "column", width: "auto", marginTop: 16, borderStyle: "solid", borderWidth: 1, borderRightWidth: 0, borderBottomWidth: 0 },
   tableRow: { flexDirection: "row" },
   tableCell: { borderStyle: "solid", borderWidth: 1, borderLeftWidth: 0, borderTopWidth: 0, padding: 6, minWidth: 70 },
@@ -25,13 +22,20 @@ const styles = StyleSheet.create({
   section: { marginBottom: 10 },
 });
 
-// Props: synthèse annuelle (basiques, pour cette version)
 interface StatsPDFDocumentProps {
   year: number;
   monthlyData: { month: string; revenue: number; vat: number; driverPayments: number; }[];
   totalRevenue: number;
   totalVat: number;
   totalDriverPayments: number;
+  driverPayments: { driver: string; month: string; year: number; total: number; }[];
+  clientPayments: { client: string; month: string; year: number; total: number; vat: number; total_ht: number; }[];
+  categoryData: {
+    category: string; month: string; year: number; revenue: number; vat: number; driverPayments: number; missionsCount: number;
+  }[];
+  categoryPerformances: {
+    category: string; totalRevenue: number; totalMissions: number; profitability: number;
+  }[];
 }
 
 export const StatsPDFDocument: React.FC<StatsPDFDocumentProps> = ({
@@ -40,8 +44,13 @@ export const StatsPDFDocument: React.FC<StatsPDFDocumentProps> = ({
   totalRevenue,
   totalVat,
   totalDriverPayments,
+  driverPayments,
+  clientPayments,
+  categoryData,
+  categoryPerformances,
 }) => (
   <Document>
+    {/* Page 1: Synthèse annuelle */}
     <Page size="A4" style={styles.page}>
       <Text style={styles.heading}>Synthèse annuelle - {year}</Text>
       <View style={styles.section}>
@@ -72,6 +81,21 @@ export const StatsPDFDocument: React.FC<StatsPDFDocumentProps> = ({
         ))}
       </View>
     </Page>
+    {/* Page 2: Détail chauffeurs */}
+    <Page size="A4" style={styles.page}>
+      <StatsPDFDriversSection driverPayments={driverPayments} />
+    </Page>
+    {/* Page 3: Détail clients */}
+    <Page size="A4" style={styles.page}>
+      <StatsPDFClientsSection clientPayments={clientPayments} />
+    </Page>
+    {/* Page 4: Par catégorie */}
+    <Page size="A4" style={styles.page}>
+      <StatsPDFCategorySection categoryData={categoryData} />
+    </Page>
+    {/* Page 5: Par rentabilité */}
+    <Page size="A4" style={styles.page}>
+      <StatsPDFProfitabilitySection categoryPerformances={categoryPerformances} />
+    </Page>
   </Document>
 );
-

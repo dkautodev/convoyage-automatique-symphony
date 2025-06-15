@@ -51,34 +51,47 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
           <CardTitle>Comparaison des revenus</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={isMobile ? "h-60" : "h-96"}>
+          <div className={isMobile ? "h-56" : "h-96"}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenueData}>
+              <BarChart data={revenueData} margin={{
+                top: isMobile ? 10 : 20,
+                right: isMobile ? 5 : 30,
+                left: isMobile ? 0 : 20,
+                bottom: isMobile ? 10 : 20,
+              }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="category" 
+                <XAxis
+                  dataKey="category"
                   angle={isMobile ? 0 : -45}
                   textAnchor={isMobile ? "middle" : "end"}
-                  height={isMobile ? 36 : 100}
+                  height={isMobile ? 28 : 100}
                   tick={{fontSize: isMobile ? 10 : 12}}
+                  hide={isMobile && revenueData.length > 3}
                 />
-                <YAxis tickFormatter={value => formatCurrency(value)} tick={{fontSize: isMobile ? 10 : 12}} />
-                <Tooltip formatter={value => formatCurrency(Number(value))} />
-                <Legend wrapperStyle={isMobile ? { fontSize: 12 } : undefined} />
+                <YAxis 
+                  tickFormatter={value => formatCurrency(value)} 
+                  tick={{fontSize: isMobile ? 10 : 12}} 
+                  width={isMobile ? 36 : 60}
+                />
+                <Tooltip 
+                  formatter={value => formatCurrency(Number(value))}
+                  wrapperStyle={{ fontSize: isMobile ? 12 : 14, padding: isMobile ? 6 : 12 }}
+                />
+                <Legend wrapperStyle={{ fontSize: isMobile ? 11 : 13 }} />
                 <Bar dataKey="revenue" name="CA" fill="#3b82f6" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
-
+      {/* Pie chart section responsive size */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-white">
           <CardHeader>
             <CardTitle>Répartition du CA</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={isMobile ? "h-56" : "h-80"}>
+            <div className={isMobile ? "h-48" : "h-80"}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -87,7 +100,7 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                    outerRadius={isMobile ? 60 : 80}
+                    outerRadius={isMobile ? 48 : 80}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -95,7 +108,7 @@ export const CategoryPerformanceComparison: React.FC<CategoryPerformanceComparis
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={value => formatCurrency(Number(value))} />
+                  <Tooltip formatter={value => formatCurrency(Number(value))} wrapperStyle={{ fontSize: isMobile ? 12 : 14 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

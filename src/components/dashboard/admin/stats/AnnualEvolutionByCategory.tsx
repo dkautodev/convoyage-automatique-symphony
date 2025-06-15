@@ -44,14 +44,19 @@ export const AnnualEvolutionByCategory: React.FC<AnnualEvolutionByCategoryProps>
         <CardTitle>Évolution annuelle du chiffre d'affaires par catégorie</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-96">
+        <div className="h-56 sm:h-96">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <LineChart data={chartData} margin={{
+              top: 10,
+              right: 10,
+              left: 0,
+              bottom: 10,
+            }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => formatCurrency(value)} />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              <Legend />
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} tick={{ fontSize: 10 }} width={40} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value))} wrapperStyle={{ fontSize: 12, padding: 8 }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
               {Object.entries(CATEGORY_LABELS).map(([category, label]) => (
                 <Line
                   key={category}
@@ -69,4 +74,3 @@ export const AnnualEvolutionByCategory: React.FC<AnnualEvolutionByCategoryProps>
       </CardContent>
     </Card>
   );
-};

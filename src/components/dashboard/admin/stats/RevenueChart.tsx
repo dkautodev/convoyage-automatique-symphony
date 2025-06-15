@@ -50,15 +50,31 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-700"></div>
           </div>
         ) : (
-          <div className={isMobile ? "h-60" : "h-96"}>
+          <div className={isMobile ? "h-56" : "h-96"}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData}>
+              <BarChart data={monthlyData} margin={{
+                top: isMobile ? 10 : 20,
+                right: isMobile ? 5 : 30,
+                left: isMobile ? 0 : 20,
+                bottom: isMobile ? 10 : 20,
+              }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(v) => formatCurrency(Number(v))} />
-                <Legend />
-                <Bar dataKey="revenue" name="Chiffre d'affaires HT" fill="#3b82f6" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{fontSize: isMobile ? 10 : 12}}
+                  hide={isMobile && monthlyData.length > 6}
+                />
+                <YAxis 
+                  tickFormatter={(v) => formatCurrency(v)}
+                  tick={{fontSize: isMobile ? 10 : 12}} 
+                  width={isMobile ? 36 : 60}
+                />
+                <Tooltip 
+                  formatter={(v) => formatCurrency(Number(v))}
+                  wrapperStyle={{ fontSize: isMobile ? 12 : 14, padding: isMobile ? 6 : 12 }}
+                />
+                <Legend wrapperStyle={{fontSize: isMobile ? 11 : 13}} />
+                <Bar dataKey="revenue" name="CA HT" fill="#3b82f6" />
                 <Bar dataKey="vat" name="TVA" fill="#8b5cf6" />
                 <Bar dataKey="driverPayments" name="Paiements chauffeurs" fill="#f59e0b" />
               </BarChart>

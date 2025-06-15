@@ -110,14 +110,14 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
           </Table>
         </div>
         {/* Mobile: Cards */}
-        <div className="sm:hidden flex flex-col gap-3">
+        <div className="sm:hidden flex flex-col gap-2">
           {performancesWithChauffeurPay
             .sort((a, b) => b.profitability - a.profitability)
             .map(perf => {
               const status = getRentabilityStatus(perf.profitability);
               const StatusIcon = status.icon;
               return (
-                <div key={perf.category} className="rounded shadow-sm p-3 border flex flex-col gap-1 bg-white">
+                <div key={perf.category} className="rounded shadow-sm p-2 border flex flex-col gap-1 bg-white text-xs">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">
                       {CATEGORY_LABELS[perf.category as VehicleCategory] || perf.category}
@@ -127,11 +127,11 @@ export const ProfitabilityAnalysis: React.FC<ProfitabilityAnalysisProps> = ({
                       {status.status}
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap text-xs gap-x-4 gap-y-1 mt-2">
-                    <span>Missions&nbsp;: <b>{perf.totalMissions}</b></span>
-                    <span>CA&nbsp;: <b>{formatCurrency(perf.totalRevenue)}</b></span>
-                    <span>Paie&nbsp;: <b>{formatCurrency(perf.chauffeurPay)}</b></span>
-                    <span>Renta. :&nbsp;
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                    <span>Missions : <b>{perf.totalMissions}</b></span>
+                    <span>CA : <b>{formatCurrency(perf.totalRevenue)}</b></span>
+                    <span>Paie : <b>{formatCurrency(perf.chauffeurPay)}</b></span>
+                    <span>Renta.: 
                       <b className={perf.profitability >= 0 ? "text-green-600" : "text-red-600"}>
                         {perf.profitability.toFixed(1)}%
                       </b>

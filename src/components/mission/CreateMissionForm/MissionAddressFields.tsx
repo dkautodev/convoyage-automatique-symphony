@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
@@ -35,7 +34,7 @@ export default function MissionAddressFields({
 }: MissionAddressFieldsProps) {
   return (
     <div className={`w-full ${className}`}>
-      <label className="block font-semibold text-base mb-3 text-gray-800">
+      <label className="block font-normal text-lg mb-4 mt-2 text-black">
         Adresse de départ et de livraison
       </label>
       <div className="flex w-full items-stretch gap-0">

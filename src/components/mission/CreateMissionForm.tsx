@@ -747,6 +747,7 @@ export default function CreateMissionForm({
                       className="flex items-center gap-2"
                     >
                       <ArrowLeftRight className="h-4 w-4" />
+                      Lieu de départ et de livraison
                     </Button>
                   </div>
 

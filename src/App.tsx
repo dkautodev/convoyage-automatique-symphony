@@ -37,6 +37,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import RevenueManagementPage from './pages/dashboard/driver/RevenueManagementPage';
 import CompletStat from "@/pages/dashboard/admin/CompletStat";
+import AdminSettings from './pages/AdminSettings';
 
 function App() {
   return (
@@ -139,6 +140,13 @@ function App() {
           <ProtectedRoute roles={['admin']}>
             <DashboardLayout>
               <CompletStat />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <ProtectedRoute roles={['admin']}>
+            <DashboardLayout>
+              <AdminSettings />
             </DashboardLayout>
           </ProtectedRoute>
         } />

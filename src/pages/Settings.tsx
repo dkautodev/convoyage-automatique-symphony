@@ -107,7 +107,7 @@ const Settings = () => {
         console.log("Redirection planifiée pour le rôle:", profile?.role);
         setTimeout(() => {
           if (profile?.role === 'admin') {
-            navigate('/admin/dashboard');
+            navigate('/admin/settings');
           } else if (profile?.role === 'chauffeur') {
             navigate('/driver/dashboard');
           } else {
@@ -125,9 +125,7 @@ const Settings = () => {
   };
 
   const handleAdminSettings = () => {
-    // TODO: Navigate to admin settings page or open admin settings dialog
-    console.log('Navigate to admin settings');
-    toast.info('Fonctionnalité des paramètres admin à venir');
+    navigate('/admin/settings');
   };
 
   return (

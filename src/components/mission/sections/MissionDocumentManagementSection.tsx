@@ -129,11 +129,11 @@ export const MissionDocumentManagementSection: React.FC<MissionDocumentManagemen
           {/* Bouton Bon de convoyage - Pour les chauffeurs uniquement */}
           {isDriver && (
             <Button 
-              variant={convoyageExists ? "default" : "outline"} 
+              variant="outline"
               size="default"
               onClick={handleDownloadConvoyage}
               disabled={!convoyageExists || checkingConvoyage}
-              className={convoyageExists ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-400"}
+              className={!convoyageExists ? "text-gray-400" : ""}
             >
               {checkingConvoyage ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

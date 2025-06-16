@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,7 +51,7 @@ export const MissionGeneralInfoSection: React.FC<MissionGeneralInfoSectionProps>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
           <div className="flex justify-between items-start">
             <span className="text-sm text-gray-500 min-w-[120px]">Client</span>
-            <span className="font-medium text-right flex-1">{client?.company_name || client?.full_name || 'Client inconnu'}</span>
+            <span className="font-medium text-right flex-1">{client?.company_name || client?.full_name || 'Autre client'}</span>
           </div>
           
           <div className="flex justify-between items-start">

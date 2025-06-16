@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/hooks/useAuth';
 import { typedSupabase } from '@/types/database';
 import { toast } from 'sonner';
-import { Loader2, Save, Lock, CheckCircle } from 'lucide-react';
+import { Loader2, Save, Lock, CheckCircle, Settings as SettingsIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 import { useNavigate } from 'react-router-dom';
@@ -125,9 +124,29 @@ const Settings = () => {
     }
   };
 
+  const handleAdminSettings = () => {
+    // TODO: Navigate to admin settings page or open admin settings dialog
+    console.log('Navigate to admin settings');
+    toast.info('Fonctionnalité des paramètres admin à venir');
+  };
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Paramètres</h1>
+      
+      {/* Admin Settings Button - Only visible for admin users */}
+      {profile?.role === 'admin' && (
+        <div className="mb-6">
+          <Button 
+            onClick={handleAdminSettings}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <SettingsIcon className="h-4 w-4" />
+            Paramètres admin
+          </Button>
+        </div>
+      )}
       
       {showSuccess && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md text-green-700 flex items-center">

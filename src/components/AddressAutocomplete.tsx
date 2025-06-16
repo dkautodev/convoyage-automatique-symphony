@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useGooglePlaces } from '@/hooks/useGooglePlaces';
 import { Input } from '@/components/ui/input';
@@ -36,9 +37,20 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddressSelected, setIsAddressSelected] = useState(false);
+  const [previousValue, setPreviousValue] = useState(value);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Détecter les changements de valeur depuis l'extérieur (comme le swap)
+  useEffect(() => {
+    if (value !== previousValue) {
+      console.log("[AddressAutocomplete] Valeur changée depuis l'extérieur:", previousValue, "->", value);
+      // Si la valeur a changé depuis l'extérieur, réinitialiser l'état
+      setIsAddressSelected(false);
+      setPreviousValue(value);
+    }
+  }, [value, previousValue]);
+
   // Debounce search input
   useEffect(() => {
     if (isAddressSelected || disabled) return; // Ne pas rechercher si une adresse a été sélectionnée ou si désactivé
@@ -89,6 +101,7 @@ export default function AddressAutocomplete({
         window.selectedAddressData = details;
         
         onChange(details.formatted_address);
+        setPreviousValue(details.formatted_address);
         
         // Attendre un court instant pour s'assurer que l'interface se met à jour correctement
         setTimeout(() => {
@@ -109,6 +122,7 @@ export default function AddressAutocomplete({
     if (disabled) return; // Ne pas permettre de vider si désactivé
     
     onChange('');
+    setPreviousValue('');
     setShowSuggestions(false);
     setIsAddressSelected(false);
     clearPredictions();
@@ -149,6 +163,7 @@ export default function AddressAutocomplete({
     const newValue = e.target.value;
     console.log("[AddressAutocomplete] handleInputChange:", newValue);
     onChange(newValue);
+    setPreviousValue(newValue);
 
     // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
     if (isAddressSelected) {

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Eye, FileText } from 'lucide-react';
+import { Upload, Eye, FileText, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AdminSettings = () => {
@@ -59,6 +59,16 @@ const AdminSettings = () => {
     window.open(fileUrl, '_blank');
   };
 
+  const handleRemoveFile = () => {
+    setConvoyageDocument(null);
+    toast.success('Fichier supprimé');
+    // Reset l'input file
+    const fileInput = document.getElementById('convoyage-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Paramètres Admin</h1>
@@ -81,21 +91,40 @@ const AdminSettings = () => {
                 <label htmlFor="convoyage-upload" className="block text-sm font-medium mb-2">
                   Sélectionner un nouveau modèle (PDF uniquement)
                 </label>
-                <input
-                  id="convoyage-upload"
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('convoyage-upload')?.click()}
-                  className="w-full sm:w-auto"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choisir un fichier PDF
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    id="convoyage-upload"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => document.getElementById('convoyage-upload')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choisir un fichier PDF
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={handlePreview}
+                    disabled={!convoyageDocument}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Prévisualiser
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleRemoveFile}
+                    disabled={!convoyageDocument}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               
               {convoyageDocument && (
@@ -110,12 +139,11 @@ const AdminSettings = () => {
               )}
             </div>
 
-            {/* Boutons d'action */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Bouton de téléchargement */}
+            <div className="flex justify-start">
               <Button
                 onClick={handleUpload}
                 disabled={!convoyageDocument || isUploading}
-                className="w-full sm:w-auto"
               >
                 {isUploading ? (
                   <>
@@ -128,16 +156,6 @@ const AdminSettings = () => {
                     Télécharger
                   </>
                 )}
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={handlePreview}
-                disabled={!convoyageDocument}
-                className="w-full sm:w-auto"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Prévisualiser
               </Button>
             </div>
           </CardContent>

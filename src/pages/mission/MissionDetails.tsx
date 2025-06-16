@@ -23,6 +23,7 @@ import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDia
 import { RestitutionButton } from '@/components/mission/RestitutionButton';
 import { LinkedMissionSection } from '@/components/mission/LinkedMissionSection';
 import GenerateQuoteButton from '@/components/mission/GenerateQuoteButton';
+
 const MissionDetailsPage = () => {
   const {
     id
@@ -241,10 +242,10 @@ const MissionDetailsPage = () => {
       <LinkedMissionSection mission={mission} />
 
       {/* Nouvelle section de gestion des documents - EN PREMIÈRE POSITION */}
-      <MissionDocumentManagementSection mission={mission} client={isDriver ? undefined : client} adminProfile={adminProfile} driverName={driverName} documentsCount={documentsCount} isAdmin={isAdmin} isClient={isClient} isDriver={isDriver} onDocumentsClick={() => setDocumentsDialogOpen(true)} />
+      <MissionDocumentManagementSection mission={mission} client={client} adminProfile={adminProfile} driverName={driverName} documentsCount={documentsCount} isAdmin={isAdmin} isClient={isClient} isDriver={isDriver} onDocumentsClick={() => setDocumentsDialogOpen(true)} />
 
-      {/* General Information Section - Hide pricing info for drivers */}
-      <MissionGeneralInfoSection mission={mission} client={isDriver ? undefined : client} driverName={driverName} adminProfile={adminProfile} hideFinancials={isDriver} refetchMission={fetchMission} />
+      {/* General Information Section - Show client info for all roles */}
+      <MissionGeneralInfoSection mission={mission} client={client} driverName={driverName} adminProfile={adminProfile} hideFinancials={isDriver} refetchMission={fetchMission} />
       
       {/* Driver Section - Admin and Client versions */}
       {isAdmin ? <MissionDriverSection mission={mission} refetchMission={fetchMission} /> : <ClientMissionDriverSection mission={mission} />}
@@ -254,7 +255,7 @@ const MissionDetailsPage = () => {
       
       {/* Documents Section - For both Admin and Client */}
       <div id="documents-section">
-        <MissionDocumentsSection mission={mission} client={isDriver ? undefined : client} adminProfile={adminProfile} hideFinancials={isDriver} />
+        <MissionDocumentsSection mission={mission} client={client} adminProfile={adminProfile} hideFinancials={isDriver} />
       </div>
       
       {/* Status History Drawer */}
@@ -267,4 +268,5 @@ const MissionDetailsPage = () => {
       {mission && documentsDialogOpen && <MissionDocumentsDialog mission={mission} isOpen={documentsDialogOpen} onClose={() => setDocumentsDialogOpen(false)} onDocumentsUpdated={() => fetchDocumentsCount(mission.id)} />}
     </div>;
 };
+
 export default MissionDetailsPage;

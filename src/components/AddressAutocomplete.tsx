@@ -38,6 +38,7 @@ export default function AddressAutocomplete({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddressSelected, setIsAddressSelected] = useState(false);
   const [previousValue, setPreviousValue] = useState(value);
+  const [lastSelectedValue, setLastSelectedValue] = useState<string>('');
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -45,11 +46,17 @@ export default function AddressAutocomplete({
   useEffect(() => {
     if (value !== previousValue) {
       console.log("[AddressAutocomplete] Valeur changée depuis l'extérieur:", previousValue, "->", value);
-      // Si la valeur a changé depuis l'extérieur, réinitialiser l'état
-      setIsAddressSelected(false);
+      
+      // Si la nouvelle valeur est différente de celle qu'on avait sélectionnée,
+      // cela signifie que c'est un changement externe (comme un swap)
+      if (value !== lastSelectedValue) {
+        setIsAddressSelected(false);
+        window.selectedAddressData = null;
+      }
+      
       setPreviousValue(value);
     }
-  }, [value, previousValue]);
+  }, [value, previousValue, lastSelectedValue]);
 
   // Debounce search input
   useEffect(() => {
@@ -102,6 +109,7 @@ export default function AddressAutocomplete({
         
         onChange(details.formatted_address);
         setPreviousValue(details.formatted_address);
+        setLastSelectedValue(details.formatted_address);
         
         // Attendre un court instant pour s'assurer que l'interface se met à jour correctement
         setTimeout(() => {
@@ -123,6 +131,7 @@ export default function AddressAutocomplete({
     
     onChange('');
     setPreviousValue('');
+    setLastSelectedValue('');
     setShowSuggestions(false);
     setIsAddressSelected(false);
     clearPredictions();
@@ -168,6 +177,7 @@ export default function AddressAutocomplete({
     // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
     if (isAddressSelected) {
       setIsAddressSelected(false);
+      setLastSelectedValue('');
       window.selectedAddressData = null;
     }
   };

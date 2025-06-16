@@ -154,11 +154,6 @@ const AdminSettings = () => {
     }
   };
 
-  const canPreview = convoyageDocument || existingDocument;
-  const canRemove = convoyageDocument;
-  const canDelete = existingDocument && !convoyageDocument;
-  const canUpload = convoyageDocument;
-
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Paramètres Admin</h1>
@@ -212,14 +207,18 @@ const AdminSettings = () => {
                 <label htmlFor="convoyage-upload" className="block text-sm font-medium mb-2">
                   {existingDocument ? 'Remplacer le modèle (PDF uniquement)' : 'Sélectionner un nouveau modèle (PDF uniquement)'}
                 </label>
+                
+                {/* Input file caché */}
+                <input
+                  id="convoyage-upload"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                
+                {/* Boutons d'action */}
                 <div className="flex flex-wrap gap-2">
-                  <input
-                    id="convoyage-upload"
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
                   <Button
                     variant="outline"
                     onClick={() => document.getElementById('convoyage-upload')?.click()}
@@ -231,20 +230,21 @@ const AdminSettings = () => {
                   <Button
                     variant="outline"
                     onClick={handlePreview}
-                    disabled={!canPreview}
+                    disabled={!convoyageDocument && !existingDocument}
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Prévisualiser
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    onClick={handleRemoveFile}
-                    disabled={!canRemove}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {convoyageDocument && (
+                    <Button
+                      variant="outline"
+                      onClick={handleRemoveFile}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -264,24 +264,26 @@ const AdminSettings = () => {
             </div>
 
             {/* Bouton de téléchargement */}
-            <div className="flex justify-start">
-              <Button
-                onClick={handleUpload}
-                disabled={!canUpload || isUploading}
-              >
-                {isUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Téléchargement...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    {existingDocument ? 'Remplacer le document' : 'Télécharger'}
-                  </>
-                )}
-              </Button>
-            </div>
+            {convoyageDocument && (
+              <div className="flex justify-start">
+                <Button
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Téléchargement...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      {existingDocument ? 'Remplacer le document' : 'Télécharger'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -113,7 +113,7 @@ export const MissionDocumentManagementSection: React.FC<MissionDocumentManagemen
           
           {/* Bouton Ajouter des documents - Pour tous les rôles */}
           <Button variant="outline" className="relative" onClick={onDocumentsClick}>
-            {isDriver ? 'docs mission' : '+ Aj. docs'}
+            {isDriver ? 'Docs mission' : '+ Aj. docs'}
             {documentsCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
                 {documentsCount}

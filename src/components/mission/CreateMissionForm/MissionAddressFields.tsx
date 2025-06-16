@@ -33,8 +33,20 @@ export default function MissionAddressFields({
   errorDelivery,
   className = "",
 }: MissionAddressFieldsProps) {
-  // DEBUG : Vérifier la value à chaque render
   console.log("[MissionAddressFields] pickupAddress:", pickupAddress, "deliveryAddress:", deliveryAddress);
+
+  // Créer des clés uniques basées sur les valeurs pour forcer le re-render lors du swap
+  const pickupKey = `pickup-${pickupAddress}-${Date.now()}`;
+  const deliveryKey = `delivery-${deliveryAddress}-${Date.now()}`;
+
+  const handleSwap = () => {
+    console.log("[MissionAddressFields] Avant swap - pickup:", pickupAddress, "delivery:", deliveryAddress);
+    onSwap();
+    // Ajouter un petit délai pour s'assurer que les états sont bien mis à jour
+    setTimeout(() => {
+      console.log("[MissionAddressFields] Après swap - pickup:", pickupAddress, "delivery:", deliveryAddress);
+    }, 100);
+  };
 
   return (
     <div className={`w-full ${className}`}>
@@ -63,6 +75,7 @@ export default function MissionAddressFields({
         <div className="flex flex-col flex-1 gap-3 max-w-full">
           <div>
             <AddressAutocomplete
+              key={pickupKey}
               value={pickupAddress}
               onChange={onPickupChange}
               onSelect={onSelectPickup}
@@ -75,6 +88,7 @@ export default function MissionAddressFields({
           </div>
           <div>
             <AddressAutocomplete
+              key={deliveryKey}
               value={deliveryAddress}
               onChange={onDeliveryChange}
               onSelect={onSelectDelivery}
@@ -92,7 +106,7 @@ export default function MissionAddressFields({
             type="button"
             variant="outline"
             size="icon"
-            onClick={onSwap}
+            onClick={handleSwap}
             disabled={pickupDisabled}
             className="rounded-full border-2 border-gray-300 bg-white hover:bg-gray-50 shadow-none w-12 h-12 flex items-center justify-center"
             aria-label="Échanger les adresses"
@@ -105,4 +119,3 @@ export default function MissionAddressFields({
     </div>
   );
 }
-

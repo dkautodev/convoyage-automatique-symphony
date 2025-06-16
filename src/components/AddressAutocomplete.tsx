@@ -14,6 +14,7 @@ interface AddressAutocompleteProps {
   className?: string;
   error?: string;
   disabled?: boolean;
+  key?: string; // Ajouter la prop key pour forcer le re-render
 }
 
 // Déclarer une variable globale pour stocker temporairement les données d'adresse
@@ -37,33 +38,32 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddressSelected, setIsAddressSelected] = useState(false);
-  const [previousValue, setPreviousValue] = useState(value);
   const [lastSelectedValue, setLastSelectedValue] = useState<string>('');
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Détecter les changements de valeur depuis l'extérieur (comme le swap)
+  // Réinitialiser complètement l'état quand la valeur change depuis l'extérieur
   useEffect(() => {
-    if (value !== previousValue) {
-      console.log("[AddressAutocomplete] Valeur changée depuis l'extérieur:", previousValue, "->", value);
-      
-      // Si la nouvelle valeur est différente de celle qu'on avait sélectionnée,
-      // cela signifie que c'est un changement externe (comme un swap)
-      if (value !== lastSelectedValue) {
-        setIsAddressSelected(false);
-        window.selectedAddressData = null;
-      }
-      
-      setPreviousValue(value);
+    console.log("[AddressAutocomplete] Changement de valeur détecté:", value);
+    console.log("[AddressAutocomplete] Dernière valeur sélectionnée:", lastSelectedValue);
+    
+    // Si la valeur actuelle est différente de la dernière qu'on a sélectionnée,
+    // c'est un changement externe (swap)
+    if (value !== lastSelectedValue) {
+      console.log("[AddressAutocomplete] Changement externe détecté, réinitialisation de l'état");
+      setIsAddressSelected(false);
+      setShowSuggestions(false);
+      setFocused(false);
+      clearPredictions();
+      window.selectedAddressData = null;
     }
-  }, [value, previousValue, lastSelectedValue]);
+  }, [value, lastSelectedValue, clearPredictions]);
 
   // Debounce search input
   useEffect(() => {
-    if (isAddressSelected || disabled) return; // Ne pas rechercher si une adresse a été sélectionnée ou si désactivé
+    if (isAddressSelected || disabled) return;
     
     const timer = setTimeout(() => {
-      // Afficher les suggestions uniquement si l'input est en focus
       if (value && focused) {
         searchPlaces(value);
         setShowSuggestions(true);
@@ -98,23 +98,22 @@ export default function AddressAutocomplete({
   
   const handleSelect = async (prediction: any) => {
     try {
-      // Forcer la fermeture des suggestions immédiatement
+      console.log("[AddressAutocomplete] Sélection d'une adresse:", prediction);
       setShowSuggestions(false);
       setIsAddressSelected(true);
       
       const details = await getPlaceDetails(prediction.place_id);
       if (details) {
-        // Stocker temporairement les données de l'adresse pour que le composant parent puisse les récupérer
         window.selectedAddressData = details;
         
-        onChange(details.formatted_address);
-        setPreviousValue(details.formatted_address);
-        setLastSelectedValue(details.formatted_address);
+        const selectedAddress = details.formatted_address;
+        onChange(selectedAddress);
+        setLastSelectedValue(selectedAddress);
         
-        // Attendre un court instant pour s'assurer que l'interface se met à jour correctement
+        console.log("[AddressAutocomplete] Adresse sélectionnée et stockée:", selectedAddress);
+        
         setTimeout(() => {
-          onSelect(details.formatted_address, prediction.place_id, details);
-          // Enlever le focus de l'input pour éviter que les suggestions réapparaissent
+          onSelect(selectedAddress, prediction.place_id, details);
           if (inputRef.current) {
             inputRef.current.blur();
           }
@@ -127,10 +126,10 @@ export default function AddressAutocomplete({
   };
 
   const handleClear = () => {
-    if (disabled) return; // Ne pas permettre de vider si désactivé
+    if (disabled) return;
     
+    console.log("[AddressAutocomplete] Nettoyage du champ");
     onChange('');
-    setPreviousValue('');
     setLastSelectedValue('');
     setShowSuggestions(false);
     setIsAddressSelected(false);
@@ -141,12 +140,11 @@ export default function AddressAutocomplete({
     }
   };
   
-  // Gérer le focus pour mieux contrôler l'affichage des suggestions
   const handleFocus = () => {
-    if (disabled) return; // Ne pas permettre le focus si désactivé
+    if (disabled) return;
     
+    console.log("[AddressAutocomplete] Focus sur le champ");
     setFocused(true);
-    // Seulement montrer les suggestions si l'adresse n'a pas été sélectionnée et qu'il y a une valeur
     if (value && !isAddressSelected) {
       searchPlaces(value);
       setShowSuggestions(true);
@@ -154,9 +152,6 @@ export default function AddressAutocomplete({
   };
   
   const handleBlur = (e: React.FocusEvent) => {
-    // On conserve cet état pour les styles CSS mais on ne ferme pas les suggestions ici
-    // car cela pourrait empêcher de cliquer sur une suggestion
-    // La fermeture se fait via le click outside handler
     if (
       suggestionsRef.current && 
       !suggestionsRef.current.contains(e.relatedTarget as Node)
@@ -165,14 +160,12 @@ export default function AddressAutocomplete({
     }
   };
   
-  // Permettre à l'utilisateur de recommencer la saisie
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return; // Ne pas permettre la modification si désactivé
+    if (disabled) return;
     
     const newValue = e.target.value;
-    console.log("[AddressAutocomplete] handleInputChange:", newValue);
+    console.log("[AddressAutocomplete] Modification manuelle:", newValue);
     onChange(newValue);
-    setPreviousValue(newValue);
 
     // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
     if (isAddressSelected) {
@@ -212,8 +205,6 @@ export default function AddressAutocomplete({
       
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
       
-      {/* Conditionnellement afficher les suggestions seulement quand focused est true,
-          une adresse n'est pas déjà sélectionnée, et nous avons des prédictions */}
       {showSuggestions && predictions.length > 0 && !isAddressSelected && focused && !disabled && (
         <Card ref={suggestionsRef} className="absolute z-50 w-full mt-1 shadow-lg overflow-hidden">
           <ul className="py-1 max-h-60 overflow-auto">

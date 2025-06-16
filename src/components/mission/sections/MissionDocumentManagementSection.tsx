@@ -102,48 +102,73 @@ export const MissionDocumentManagementSection: React.FC<MissionDocumentManagemen
         </CardTitle>
       </CardHeader>
       <CardContent className="mx-0 px-[15px]">
-        <div className="flex flex-row gap-2 md:gap-3">
-          {/* Bouton Fiche de mission */}
-          <GenerateMissionSheetButton mission={mission} driverName={driverName} />
-          
-          {/* Bouton Devis - Pour Admin et Client uniquement */}
-          {(isAdmin || isClient) && (
-            <GenerateQuoteButton mission={mission} client={client} adminProfile={adminProfile} />
-          )}
-          
-          {/* Bouton Ajouter des documents - Pour tous les rôles */}
-          <Button variant="outline" className="relative" onClick={onDocumentsClick}>
-            {isDriver ? 'Docs mission' : '+ Aj. docs'}
-            {documentsCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
-                {documentsCount}
-              </span>
+        {isDriver ? (
+          // Layout spécial pour les chauffeurs avec responsive
+          <div className="space-y-2">
+            {/* Bouton Bon de convoyage en premier sur mobile pour les chauffeurs */}
+            <div className="w-full">
+              <Button 
+                variant="outline"
+                size="default"
+                onClick={handleDownloadConvoyage}
+                disabled={!convoyageExists || checkingConvoyage}
+                className={`w-full ${!convoyageExists ? "text-gray-400" : ""}`}
+              >
+                {checkingConvoyage ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
+                Bon de convoyage
+              </Button>
+            </div>
+            
+            {/* Rangée avec Mission et Docs mission */}
+            <div className="flex flex-row gap-2">
+              <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+              
+              <Button variant="outline" className="relative flex-1" onClick={onDocumentsClick}>
+                Docs mission
+                {documentsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                    {documentsCount}
+                  </span>
+                )}
+                {documentsCount === 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                    0
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Layout original pour Admin et Client
+          <div className="flex flex-row gap-2 md:gap-3">
+            {/* Bouton Fiche de mission */}
+            <GenerateMissionSheetButton mission={mission} driverName={driverName} />
+            
+            {/* Bouton Devis - Pour Admin et Client uniquement */}
+            {(isAdmin || isClient) && (
+              <GenerateQuoteButton mission={mission} client={client} adminProfile={adminProfile} />
             )}
-            {documentsCount === 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
-                0
-              </span>
-            )}
-          </Button>
-
-          {/* Bouton Bon de convoyage - Pour les chauffeurs uniquement */}
-          {isDriver && (
-            <Button 
-              variant="outline"
-              size="default"
-              onClick={handleDownloadConvoyage}
-              disabled={!convoyageExists || checkingConvoyage}
-              className={!convoyageExists ? "text-gray-400" : ""}
-            >
-              {checkingConvoyage ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4 mr-2" />
+            
+            {/* Bouton Ajouter des documents - Pour tous les rôles */}
+            <Button variant="outline" className="relative" onClick={onDocumentsClick}>
+              + Aj. docs
+              {documentsCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">
+                  {documentsCount}
+                </span>
               )}
-              Bon de convoyage
+              {documentsCount === 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#8E9196] text-[0.625rem] font-medium text-white">
+                  0
+                </span>
+              )}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

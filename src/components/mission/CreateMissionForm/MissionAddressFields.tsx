@@ -35,7 +35,7 @@ export default function MissionAddressFields({
 }: MissionAddressFieldsProps) {
   console.log("[MissionAddressFields] pickup:", pickupAddress, "delivery:", deliveryAddress);
   
-  // Compteur pour forcer le re-render après swap
+  // Compteur pour forcer le re-render SEULEMENT après swap
   const [swapCounter, setSwapCounter] = useState(0);
 
   const handleSwap = () => {
@@ -50,9 +50,9 @@ export default function MissionAddressFields({
     console.log("[MissionAddressFields] Swap effectué, compteur:", swapCounter + 1);
   };
 
-  // Créer des clés uniques qui incluent le compteur de swap
-  const pickupKey = `pickup-${swapCounter}-${pickupAddress.slice(0, 10)}`;
-  const deliveryKey = `delivery-${swapCounter}-${deliveryAddress.slice(0, 10)}`;
+  // Utiliser des clés stables qui ne changent QUE lors du swap
+  const pickupKey = `pickup-${swapCounter}`;
+  const deliveryKey = `delivery-${swapCounter}`;
 
   return (
     <div className={`w-full ${className}`}>

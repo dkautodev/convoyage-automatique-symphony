@@ -24,11 +24,14 @@ interface MissionDocumentsProps {
 const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
   const [documents, setDocuments] = useState<MissionDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [convoyageExists, setConvoyageExists] = useState(false);
+  const [checkingConvoyage, setCheckingConvoyage] = useState(true);
   const { user, profile } = useAuth();
   
   useEffect(() => {
     if (missionId) {
       fetchDocuments();
+      checkConvoyageDocument();
     }
   }, [missionId]);
   
@@ -42,6 +45,58 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
       toast.error('Impossible de charger les documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkConvoyageDocument = async () => {
+    try {
+      setCheckingConvoyage(true);
+      const { data, error } = await supabase.storage
+        .from('adminsettings')
+        .list('', { search: 'BON DE CONVOYAGE.pdf' });
+      
+      if (error) {
+        console.error('Erreur lors de la vérification du bon de convoyage:', error);
+        setConvoyageExists(false);
+      } else {
+        setConvoyageExists(data && data.length > 0);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification:', error);
+      setConvoyageExists(false);
+    } finally {
+      setCheckingConvoyage(false);
+    }
+  };
+
+  const handleDownloadConvoyage = async () => {
+    try {
+      console.log('Téléchargement du bon de convoyage depuis adminsettings bucket');
+      
+      const { data, error } = await supabase.storage
+        .from('adminsettings')
+        .download('BON DE CONVOYAGE.pdf');
+        
+      if (error) {
+        console.error('Erreur lors du téléchargement du bon de convoyage:', error);
+        toast.error('Impossible de télécharger le bon de convoyage');
+        return;
+      }
+      
+      // Créer une URL pour le téléchargement
+      const url = URL.createObjectURL(data);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = 'BON DE CONVOYAGE.pdf';
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Bon de convoyage téléchargé avec succès');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du bon de convoyage:', error);
+      toast.error('Impossible de télécharger le bon de convoyage');
     }
   };
 
@@ -94,7 +149,7 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Documents de la mission
+          Gestion des documents
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -104,6 +159,34 @@ const MissionDocuments: React.FC<MissionDocumentsProps> = ({ missionId }) => {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Section des onglets */}
+            <div className="flex gap-2 mb-4">
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-2" />
+                Mission
+              </Button>
+              <Button variant="outline" size="sm" className="relative">
+                + Aj. docs
+                <span className="absolute -top-1 -right-1 bg-gray-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  0
+                </span>
+              </Button>
+              <Button 
+                variant={convoyageExists ? "default" : "outline"} 
+                size="sm"
+                onClick={handleDownloadConvoyage}
+                disabled={!convoyageExists || checkingConvoyage}
+                className={convoyageExists ? "bg-green-600 hover:bg-green-700 text-white" : "text-gray-400"}
+              >
+                {checkingConvoyage ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
+                Bon de convoyage
+              </Button>
+            </div>
+
             {documents.length > 0 ? (
               <div className="space-y-2">
                 {documents.map((doc) => (

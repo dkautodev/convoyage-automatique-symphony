@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
@@ -33,20 +33,26 @@ export default function MissionAddressFields({
   errorDelivery,
   className = "",
 }: MissionAddressFieldsProps) {
-  console.log("[MissionAddressFields] pickupAddress:", pickupAddress, "deliveryAddress:", deliveryAddress);
-
-  // Créer des clés uniques basées sur les valeurs pour forcer le re-render lors du swap
-  const pickupKey = `pickup-${pickupAddress}-${Date.now()}`;
-  const deliveryKey = `delivery-${deliveryAddress}-${Date.now()}`;
+  console.log("[MissionAddressFields] pickup:", pickupAddress, "delivery:", deliveryAddress);
+  
+  // Compteur pour forcer le re-render après swap
+  const [swapCounter, setSwapCounter] = useState(0);
 
   const handleSwap = () => {
     console.log("[MissionAddressFields] Avant swap - pickup:", pickupAddress, "delivery:", deliveryAddress);
+    
+    // Incrémenter le compteur pour forcer le re-render
+    setSwapCounter(prev => prev + 1);
+    
+    // Appeler la fonction de swap du parent
     onSwap();
-    // Ajouter un petit délai pour s'assurer que les états sont bien mis à jour
-    setTimeout(() => {
-      console.log("[MissionAddressFields] Après swap - pickup:", pickupAddress, "delivery:", deliveryAddress);
-    }, 100);
+    
+    console.log("[MissionAddressFields] Swap effectué, compteur:", swapCounter + 1);
   };
+
+  // Créer des clés uniques qui incluent le compteur de swap
+  const pickupKey = `pickup-${swapCounter}-${pickupAddress.slice(0, 10)}`;
+  const deliveryKey = `delivery-${swapCounter}-${deliveryAddress.slice(0, 10)}`;
 
   return (
     <div className={`w-full ${className}`}>

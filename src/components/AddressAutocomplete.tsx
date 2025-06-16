@@ -14,14 +14,6 @@ interface AddressAutocompleteProps {
   className?: string;
   error?: string;
   disabled?: boolean;
-  key?: string; // Ajouter la prop key pour forcer le re-render
-}
-
-// Déclarer une variable globale pour stocker temporairement les données d'adresse
-declare global {
-  interface Window {
-    selectedAddressData: any;
-  }
 }
 
 export default function AddressAutocomplete({
@@ -38,33 +30,33 @@ export default function AddressAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddressSelected, setIsAddressSelected] = useState(false);
-  const [lastSelectedValue, setLastSelectedValue] = useState<string>('');
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevValueRef = useRef<string>('');
   
-  // Réinitialiser complètement l'état quand la valeur change depuis l'extérieur
+  // Détecter les changements de valeur externes (comme le swap)
   useEffect(() => {
-    console.log("[AddressAutocomplete] Changement de valeur détecté:", value);
-    console.log("[AddressAutocomplete] Dernière valeur sélectionnée:", lastSelectedValue);
-    
-    // Si la valeur actuelle est différente de la dernière qu'on a sélectionnée,
-    // c'est un changement externe (swap)
-    if (value !== lastSelectedValue) {
-      console.log("[AddressAutocomplete] Changement externe détecté, réinitialisation de l'état");
-      setIsAddressSelected(false);
-      setShowSuggestions(false);
-      setFocused(false);
-      clearPredictions();
-      window.selectedAddressData = null;
+    if (value !== prevValueRef.current) {
+      console.log("[AddressAutocomplete] Changement de valeur externe détecté:", prevValueRef.current, "->", value);
+      
+      // Si la valeur change et qu'on avait une adresse sélectionnée, réinitialiser
+      if (isAddressSelected && value !== prevValueRef.current) {
+        console.log("[AddressAutocomplete] Réinitialisation après changement externe");
+        setIsAddressSelected(false);
+        setShowSuggestions(false);
+      }
+      
+      prevValueRef.current = value;
     }
-  }, [value, lastSelectedValue, clearPredictions]);
+  }, [value, isAddressSelected]);
 
-  // Debounce search input
+  // Debounce search input - version simplifiée
   useEffect(() => {
-    if (isAddressSelected || disabled) return;
+    if (disabled || isAddressSelected) return;
     
     const timer = setTimeout(() => {
-      if (value && focused) {
+      if (value && focused && !isAddressSelected) {
+        console.log("[AddressAutocomplete] Recherche pour:", value);
         searchPlaces(value);
         setShowSuggestions(true);
       } else {
@@ -76,7 +68,7 @@ export default function AddressAutocomplete({
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [value, searchPlaces, clearPredictions, isAddressSelected, focused, disabled]);
+  }, [value, searchPlaces, clearPredictions, focused, disabled, isAddressSelected]);
 
   // Add click outside listener to close suggestions
   useEffect(() => {
@@ -104,13 +96,12 @@ export default function AddressAutocomplete({
       
       const details = await getPlaceDetails(prediction.place_id);
       if (details) {
-        window.selectedAddressData = details;
-        
         const selectedAddress = details.formatted_address;
-        onChange(selectedAddress);
-        setLastSelectedValue(selectedAddress);
+        console.log("[AddressAutocomplete] Adresse sélectionnée:", selectedAddress);
         
-        console.log("[AddressAutocomplete] Adresse sélectionnée et stockée:", selectedAddress);
+        // Mettre à jour la valeur et marquer comme sélectionnée
+        onChange(selectedAddress);
+        prevValueRef.current = selectedAddress;
         
         setTimeout(() => {
           onSelect(selectedAddress, prediction.place_id, details);
@@ -130,11 +121,10 @@ export default function AddressAutocomplete({
     
     console.log("[AddressAutocomplete] Nettoyage du champ");
     onChange('');
-    setLastSelectedValue('');
+    prevValueRef.current = '';
     setShowSuggestions(false);
     setIsAddressSelected(false);
     clearPredictions();
-    window.selectedAddressData = null;
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -165,14 +155,14 @@ export default function AddressAutocomplete({
     
     const newValue = e.target.value;
     console.log("[AddressAutocomplete] Modification manuelle:", newValue);
-    onChange(newValue);
-
+    
     // Si l'utilisateur modifie l'adresse après une sélection, réactiver la recherche
     if (isAddressSelected) {
       setIsAddressSelected(false);
-      setLastSelectedValue('');
-      window.selectedAddressData = null;
     }
+    
+    onChange(newValue);
+    prevValueRef.current = newValue;
   };
   
   return (

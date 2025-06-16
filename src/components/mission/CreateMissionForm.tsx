@@ -625,39 +625,56 @@ export default function CreateMissionForm({
     return undefined;
   };
 
-  // Fonction pour échanger les adresses
+  // Fonction pour échanger les adresses - version optimisée
   const swapAddresses = () => {
     if (livMission) {
       toast.error('Impossible d\'échanger les adresses pour une mission RES liée');
       return;
     }
-    const currentPickupAddress = form.getValues('pickup_address');
-    const currentDeliveryAddress = form.getValues('delivery_address');
 
-    // Échanger les valeurs des champs
-    form.setValue('pickup_address', currentDeliveryAddress);
-    form.setValue('delivery_address', currentPickupAddress);
-
-    // Échanger les données d'adresse
+    console.log("[CreateMissionForm] Début du swap");
+    console.log("[CreateMissionForm] Avant swap - pickup:", pickupAddress, "delivery:", deliveryAddress);
+    
+    // Sauvegarder les valeurs actuelles
+    const tempPickupAddress = pickupAddress;
     const tempPickupData = pickupAddressData;
-    setPickupAddressData(deliveryAddressData);
+    const tempDeliveryAddress = deliveryAddress;
+    const tempDeliveryData = deliveryAddressData;
+
+    // Échanger les états locaux
+    setPickupAddress(tempDeliveryAddress);
+    setPickupAddressData(tempDeliveryData);
+    setDeliveryAddress(tempPickupAddress);
     setDeliveryAddressData(tempPickupData);
 
-    // Mettre à jour les données dans le formulaire
-    form.setValue('pickup_address_data', deliveryAddressData);
+    // Échanger les valeurs du formulaire
+    form.setValue('pickup_address', tempDeliveryAddress);
+    form.setValue('delivery_address', tempPickupAddress);
+    form.setValue('pickup_address_data', tempDeliveryData);
     form.setValue('delivery_address_data', tempPickupData);
+
+    console.log("[CreateMissionForm] Après swap - pickup:", tempDeliveryAddress, "delivery:", tempPickupAddress);
     toast.success('Adresses échangées avec succès');
   };
 
   const handlePickupChange = (val: string) => {
+    console.log("[CreateMissionForm] handlePickupChange:", val);
     setPickupAddress(val);
     form.setValue('pickup_address', val);
-    if (!val) setPickupAddressData(null); // Clear data if field empty
+    if (!val) {
+      setPickupAddressData(null);
+      form.setValue('pickup_address_data', null);
+    }
   };
+
   const handleDeliveryChange = (val: string) => {
+    console.log("[CreateMissionForm] handleDeliveryChange:", val);
     setDeliveryAddress(val);
     form.setValue('delivery_address', val);
-    if (!val) setDeliveryAddressData(null);
+    if (!val) {
+      setDeliveryAddressData(null);
+      form.setValue('delivery_address_data', null);
+    }
   };
 
   return <Card className="w-full max-w-4xl mx-auto">

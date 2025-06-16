@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ export const MissionDocumentManagementSection: React.FC<MissionDocumentManagemen
             <div className="flex flex-row gap-2">
               <GenerateMissionSheetButton mission={mission} driverName={driverName} />
               
-              <Button variant="outline" className="relative flex-1" onClick={onDocumentsClick}>
+              <Button variant="outline" className={`relative ${isMobile ? 'flex-1' : ''}`} onClick={onDocumentsClick}>
                 Docs mission
                 {documentsCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#ea384c] text-[0.625rem] font-medium text-white">

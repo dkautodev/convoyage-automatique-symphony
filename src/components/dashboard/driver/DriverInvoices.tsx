@@ -427,24 +427,31 @@ const DriverInvoices: React.FC<DriverInvoicesProps> = ({
                   })}
                       </p>
                     </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <Button variant="outline" size="sm" onClick={() => handleUploadClick(mission)} disabled={!!mission.chauffeur_invoice}>
-                        <Upload size={16} className="mr-1" />
-                        Upload
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleViewClick(mission)} disabled={!mission.chauffeur_invoice}>
-                        <Eye size={16} className="mr-1" />
-                        Voir
-                      </Button>
-                      {isAdmin && <Button variant="outline" size="sm" onClick={() => handleDeleteInvoice(mission)} disabled={!mission.chauffeur_invoice} className="text-red-500 hover:bg-red-50">
-                          <Trash2 size={16} className="mr-1" />
-                          <span className="hidden sm:inline">Supprimer</span>
-                          <span className="sm:hidden">supp.</span>
-                        </Button>}
-                      {isAdmin && <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice}>
+                    <div className="flex flex-col gap-2 w-full sm:w-auto">
+                      {/* Première ligne de boutons */}
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleUploadClick(mission)} disabled={!!mission.chauffeur_invoice}>
+                          <Upload size={16} className="mr-1" />
+                          Upload
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleViewClick(mission)} disabled={!mission.chauffeur_invoice}>
+                          <Eye size={16} className="mr-1" />
+                          Voir
+                        </Button>
+                        {isAdmin && <Button variant="outline" size="sm" onClick={() => handleDeleteInvoice(mission)} disabled={!mission.chauffeur_invoice} className="text-red-500 hover:bg-red-50">
+                            <Trash2 size={16} className="mr-1" />
+                            Supprimer
+                          </Button>}
+                        {/* Bouton de paiement visible uniquement sur desktop */}
+                        {isAdmin && <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice} className="hidden sm:block">
+                            <Check size={16} className="mr-1" />
+                            {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
+                          </Button>}
+                      </div>
+                      {/* Deuxième ligne pour le bouton de paiement sur mobile uniquement */}
+                      {isAdmin && <Button variant={mission.chauffeur_paid ? "secondary" : "default"} size="sm" onClick={() => handleTogglePaidStatus(mission)} disabled={!mission.chauffeur_invoice} className="w-full sm:hidden">
                           <Check size={16} className="mr-1" />
-                          <span className="hidden sm:inline">{mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}</span>
-                          <span className="sm:hidden">{mission.chauffeur_paid ? "Annuler" : "Payé"}</span>
+                          {mission.chauffeur_paid ? "Annuler paiement" : "Marquer payé"}
                         </Button>}
                     </div>
                   </div>

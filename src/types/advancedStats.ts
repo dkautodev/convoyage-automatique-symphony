@@ -60,7 +60,7 @@ export const CATEGORY_LABELS: Record<VehicleCategory, string> = {
   'utilitaire_6_12m3': 'Utilitaire 6-12m³',
   'utilitaire_12_15m3': 'Utilitaire 12-15m³',
   'utilitaire_15_20m3': 'Utilitaire 15-20m³',
-  'utilitaire_plus_20m3': 'Utilitaire +20m³'
+  'utilitaire_plus_20m3': 'Utilitaire (>20m³) ou véhicule avec nacelle'
 };
 
 export const CATEGORY_COLORS: Record<VehicleCategory, string> = {

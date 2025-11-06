@@ -1,19 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Eye, FileText, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Upload, Eye, FileText, Trash2, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+
 const AdminSettings = () => {
   const [convoyageDocument, setConvoyageDocument] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [existingDocument, setExistingDocument] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // États pour les informations bancaires
+  const [bankInfo, setBankInfo] = useState({
+    admin_bank: '',
+    admin_iban: '',
+    admin_bic: ''
+  });
+  const [isSavingBankInfo, setIsSavingBankInfo] = useState(false);
+  const [bankInfoLoading, setBankInfoLoading] = useState(true);
 
-  // Vérifier si un document existe déjà au chargement
+  // Charger les données au montage
   useEffect(() => {
     checkExistingDocument();
+    loadBankInfo();
   }, []);
+
+  const loadBankInfo = async () => {
+    try {
+      setBankInfoLoading(true);
+      const { data, error } = await supabase
+        .from('fac_admin_config')
+        .select('admin_bank, admin_iban, admin_bic')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erreur lors du chargement des infos bancaires:', error);
+        toast.error('Erreur lors du chargement des informations bancaires');
+      } else if (data) {
+        setBankInfo({
+          admin_bank: data.admin_bank || '',
+          admin_iban: data.admin_iban || '',
+          admin_bic: data.admin_bic || ''
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement:', error);
+    } finally {
+      setBankInfoLoading(false);
+    }
+  };
   const checkExistingDocument = async () => {
     try {
       setIsLoading(true);
@@ -136,10 +174,123 @@ const AdminSettings = () => {
       toast.error('Erreur lors de la suppression');
     }
   };
+
+  const handleSaveBankInfo = async () => {
+    try {
+      setIsSavingBankInfo(true);
+      
+      // Vérifier si une entrée existe déjà
+      const { data: existing, error: checkError } = await supabase
+        .from('fac_admin_config')
+        .select('*')
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      let error;
+      if (existing) {
+        // Mise à jour
+        const result = await supabase
+          .from('fac_admin_config')
+          .update({
+            admin_bank: bankInfo.admin_bank,
+            admin_iban: bankInfo.admin_iban,
+            admin_bic: bankInfo.admin_bic
+          })
+          .eq('admin_bank', existing.admin_bank);
+        error = result.error;
+      } else {
+        // Insertion
+        const result = await supabase
+          .from('fac_admin_config')
+          .insert({
+            admin_bank: bankInfo.admin_bank,
+            admin_iban: bankInfo.admin_iban,
+            admin_bic: bankInfo.admin_bic
+          });
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Erreur lors de la sauvegarde:', error);
+        toast.error('Erreur lors de la sauvegarde des informations bancaires');
+      } else {
+        toast.success('Informations bancaires enregistrées avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setIsSavingBankInfo(false);
+    }
+  };
   return <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Paramètres Admin</h1>
       
       <div className="grid gap-6">
+        {/* Section Informations Bancaires */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Informations Bancaires
+            </CardTitle>
+            <CardDescription>
+              Configurez les informations bancaires de l'administrateur
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {bankInfoLoading ? (
+              <div className="p-4 bg-muted rounded-md">
+                <p className="text-sm text-muted-foreground">Chargement...</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="admin_bank">Banque</Label>
+                    <Input
+                      id="admin_bank"
+                      placeholder="Nom de la banque"
+                      value={bankInfo.admin_bank}
+                      onChange={(e) => setBankInfo({ ...bankInfo, admin_bank: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="admin_bic">BIC</Label>
+                    <Input
+                      id="admin_bic"
+                      placeholder="Code BIC"
+                      value={bankInfo.admin_bic}
+                      onChange={(e) => setBankInfo({ ...bankInfo, admin_bic: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="admin_iban">IBAN</Label>
+                  <Input
+                    id="admin_iban"
+                    placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
+                    value={bankInfo.admin_iban}
+                    onChange={(e) => setBankInfo({ ...bankInfo, admin_iban: e.target.value })}
+                  />
+                </div>
+
+                <div className="flex justify-start pt-2">
+                  <Button onClick={handleSaveBankInfo} disabled={isSavingBankInfo}>
+                    {isSavingBankInfo ? 'Enregistrement...' : 'Enregistrer'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Section Bon de convoyage */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

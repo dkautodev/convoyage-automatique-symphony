@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   },
   bankDetailsContainer: {
     position: 'absolute',
-    bottom: 75,
+    bottom: 130,
     left: 30,
     width: '40%',
   },

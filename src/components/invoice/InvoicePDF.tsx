@@ -176,15 +176,40 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 1.3,
   },
+  bankDetailsContainer: {
+    position: 'absolute',
+    bottom: 75,
+    left: 30,
+    width: '40%',
+  },
+  bankDetailsText: {
+    fontSize: 9,
+    textAlign: 'left',
+    color: '#000',
+    lineHeight: 1.4,
+  },
+  bankDetailsTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  bankDetailsLabel: {
+    fontWeight: 'bold',
+  },
 });
 
 interface InvoicePDFProps {
   mission: Mission;
   client?: any;
   adminProfile?: any;
+  bankInfo?: {
+    admin_bank?: string;
+    admin_iban?: string;
+    admin_bic?: string;
+  };
 }
 
-const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }) => {
+const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile, bankInfo }) => {
   // Format the invoice number
   const invoiceNumber = `FAC-${formatMissionNumber(mission)}`;
   
@@ -321,6 +346,31 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ mission, client, adminProfile }
             Tout retard de paiement entraînera une indemnité forfaitaire pour frais de recouvrement de 40€.
           </Text>
         </View>
+
+        {/* Bank Details - Bottom Left */}
+        {bankInfo && (bankInfo.admin_bank || bankInfo.admin_iban || bankInfo.admin_bic) && (
+          <View style={styles.bankDetailsContainer}>
+            <Text style={styles.bankDetailsTitle}>Détails du paiement</Text>
+            {bankInfo.admin_bank && (
+              <Text style={styles.bankDetailsText}>
+                <Text style={styles.bankDetailsLabel}>Banque : </Text>
+                {bankInfo.admin_bank}
+              </Text>
+            )}
+            {bankInfo.admin_iban && (
+              <Text style={styles.bankDetailsText}>
+                <Text style={styles.bankDetailsLabel}>Iban : </Text>
+                {bankInfo.admin_iban}
+              </Text>
+            )}
+            {bankInfo.admin_bic && (
+              <Text style={styles.bankDetailsText}>
+                <Text style={styles.bankDetailsLabel}>BIC : </Text>
+                {bankInfo.admin_bic}
+              </Text>
+            )}
+          </View>
+        )}
 
         {/* Footer avec uniquement le logo */}
         <View style={styles.footer}>

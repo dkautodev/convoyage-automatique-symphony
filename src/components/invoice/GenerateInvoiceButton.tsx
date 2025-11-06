@@ -24,6 +24,7 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
   const { profile } = useAuth();
   const [generating, setGenerating] = useState<boolean>(false);
   const [clientData, setClientData] = useState<any>(client);
+  const [bankInfo, setBankInfo] = useState<any>(null);
   
   // Fetch client data if not provided or incomplete
   useEffect(() => {
@@ -50,6 +51,28 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
       fetchClientData();
     }
   }, [mission.client_id, client]);
+
+  // Fetch bank info from fac_admin_config
+  useEffect(() => {
+    const fetchBankInfo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('fac_admin_config')
+          .select('admin_bank, admin_iban, admin_bic')
+          .limit(1)
+          .maybeSingle();
+          
+        if (error) throw error;
+        if (data) {
+          setBankInfo(data);
+        }
+      } catch (err) {
+        console.error('Error fetching bank info:', err);
+      }
+    };
+    
+    fetchBankInfo();
+  }, []);
   
   const handleGenerateInvoice = async () => {
     try {
@@ -64,6 +87,7 @@ const GenerateInvoiceButton: React.FC<GenerateInvoiceButtonProps> = ({
           mission={mission} 
           client={clientData} 
           adminProfile={profile}
+          bankInfo={bankInfo}
         />
       ).toBlob();
       

@@ -582,6 +582,50 @@ export default function CreateMissionForm({
         return;
       }
       console.log("Mission créée avec succès, données retournées:", data);
+      
+      // Envoyer l'email de confirmation si c'est un client qui crée la mission
+      if (profile?.role === 'client' && data?.id) {
+        try {
+          // Extraire les villes des adresses
+          const getCity = (address: any): string => {
+            if (address?.locality) return address.locality;
+            if (address?.city) return address.city;
+            if (address?.formatted_address) {
+              const parts = address.formatted_address.split(',');
+              return parts.length > 1 ? parts[parts.length - 2].trim() : parts[0].trim();
+            }
+            return 'Non spécifié';
+          };
+
+          const pickupCity = getCity(pickupAddressJson);
+          const deliveryCity = getCity(deliveryAddressJson);
+
+          // Récupérer le numéro de mission
+          const { data: missionWithNumber } = await typedSupabase
+            .from('missions')
+            .select('mission_number')
+            .eq('id', data.id)
+            .single();
+
+          const vehicleCategoryLabel = vehicleCategoryLabels[values.vehicle_category] || values.vehicle_category;
+
+          await typedSupabase.functions.invoke('send-mission-email', {
+            body: {
+              clientEmail: user?.email,
+              missionNumber: missionWithNumber?.mission_number || 'N/A',
+              pickupCity,
+              deliveryCity,
+              vehicleCategory: vehicleCategoryLabel
+            }
+          });
+
+          console.log("Email de confirmation envoyé");
+        } catch (emailError) {
+          console.error("Erreur lors de l'envoi de l'email:", emailError);
+          // Ne pas bloquer la création de mission si l'email échoue
+        }
+      }
+
       toast.success('Mission créée avec succès');
       if (onSuccess && data?.id) {
         onSuccess(data.id);

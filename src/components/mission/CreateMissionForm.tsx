@@ -623,7 +623,12 @@ export default function CreateMissionForm({
               deliveryContactEmail: values.contact_delivery_email,
               priceHT: values.price_ht || 0,
               priceTTC: values.price_ttc || 0,
-              vehicleCategory: vehicleCategoryLabel
+              vehicleCategory: vehicleCategoryLabel,
+              vehicleMake: values.vehicle_make,
+              vehicleModel: values.vehicle_model,
+              vehicleRegistration: values.vehicle_registration,
+              vehicleVin: values.vehicle_vin || undefined,
+              vehicleFuel: values.vehicle_fuel
             }
           });
 

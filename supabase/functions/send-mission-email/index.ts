@@ -21,6 +21,11 @@ interface MissionEmailRequest {
   priceHT: number;
   priceTTC: number;
   vehicleCategory: string;
+  vehicleMake: string;
+  vehicleModel: string;
+  vehicleRegistration: string;
+  vehicleVin?: string;
+  vehicleFuel: string;
   adminEmail?: string;
 }
 
@@ -44,6 +49,11 @@ const handler = async (req: Request): Promise<Response> => {
       priceHT,
       priceTTC,
       vehicleCategory,
+      vehicleMake,
+      vehicleModel,
+      vehicleRegistration,
+      vehicleVin,
+      vehicleFuel,
       adminEmail = "contact@dkautomotive.fr"
     }: MissionEmailRequest = await req.json();
 
@@ -180,6 +190,28 @@ const handler = async (req: Request): Promise<Response> => {
               </div>
 
               <div class="section">
+                <div class="section-title">Véhicule à convoyer</div>
+                <div class="info-box">
+                  <div class="info-row">
+                    <span class="info-label">Véhicule :</span>
+                    <span class="info-value">${vehicleMake} ${vehicleModel}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Immatriculation :</span>
+                    <span class="info-value">${vehicleRegistration}</span>
+                  </div>
+                  ${vehicleVin ? `<div class="info-row">
+                    <span class="info-label">VIN :</span>
+                    <span class="info-value">${vehicleVin}</span>
+                  </div>` : ''}
+                  <div class="info-row">
+                    <span class="info-label">Carburant :</span>
+                    <span class="info-value">${vehicleFuel}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
                 <div class="section-title">Adresse de départ</div>
                 <div class="info-box">
                   <div class="info-row">
@@ -268,7 +300,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: "contact@dkautomotive.fr"
         },
         to: [{ email: clientEmail }],
-        subject: `Demande de devis ${missionNumber}`,
+        subject: `Demande de devis ${missionNumber} - ${vehicleMake} ${vehicleModel} - ${vehicleRegistration}`,
         htmlContent: emailContent
       })
     });
@@ -293,7 +325,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: "contact@dkautomotive.fr"
         },
         to: [{ email: adminEmail }],
-        subject: `Demande de devis ${missionNumber}`,
+        subject: `Demande de devis ${missionNumber} - ${vehicleMake} ${vehicleModel} - ${vehicleRegistration}`,
         htmlContent: emailContent
       })
     });

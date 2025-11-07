@@ -613,8 +613,16 @@ export default function CreateMissionForm({
             body: {
               clientEmail: user?.email,
               missionNumber: missionWithNumber?.mission_number || 'N/A',
-              pickupCity,
-              deliveryCity,
+              pickupAddress: values.pickup_address,
+              deliveryAddress: values.delivery_address,
+              pickupContactName: values.contact_pickup_name,
+              pickupContactPhone: values.contact_pickup_phone,
+              pickupContactEmail: values.contact_pickup_email,
+              deliveryContactName: values.contact_delivery_name,
+              deliveryContactPhone: values.contact_delivery_phone,
+              deliveryContactEmail: values.contact_delivery_email,
+              priceHT: values.price_ht || 0,
+              priceTTC: values.price_ttc || 0,
               vehicleCategory: vehicleCategoryLabel
             }
           });

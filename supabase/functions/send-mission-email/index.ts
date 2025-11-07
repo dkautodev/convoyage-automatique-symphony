@@ -10,9 +10,18 @@ const corsHeaders = {
 interface MissionEmailRequest {
   clientEmail: string;
   missionNumber: string;
-  pickupCity: string;
-  deliveryCity: string;
+  pickupAddress: string;
+  deliveryAddress: string;
+  pickupContactName: string;
+  pickupContactPhone: string;
+  pickupContactEmail: string;
+  deliveryContactName: string;
+  deliveryContactPhone: string;
+  deliveryContactEmail: string;
+  priceHT: number;
+  priceTTC: number;
   vehicleCategory: string;
+  adminEmail?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,11 +30,232 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { clientEmail, missionNumber, pickupCity, deliveryCity, vehicleCategory }: MissionEmailRequest = await req.json();
+    const { 
+      clientEmail, 
+      missionNumber, 
+      pickupAddress, 
+      deliveryAddress,
+      pickupContactName,
+      pickupContactPhone,
+      pickupContactEmail,
+      deliveryContactName,
+      deliveryContactPhone,
+      deliveryContactEmail,
+      priceHT,
+      priceTTC,
+      vehicleCategory,
+      adminEmail = "contact@dkautomotive.fr"
+    }: MissionEmailRequest = await req.json();
 
-    console.log("Sending mission email:", { clientEmail, missionNumber, pickupCity, deliveryCity });
+    console.log("Sending mission email:", { clientEmail, missionNumber, pickupAddress, deliveryAddress });
 
-    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+    const emailContent = `
+      <html>
+        <head>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #1e293b; 
+              margin: 0;
+              padding: 0;
+              background-color: #f8fafc;
+            }
+            .container { 
+              max-width: 650px; 
+              margin: 0 auto; 
+              background-color: #ffffff;
+            }
+            .header { 
+              background-color: #ffffff;
+              padding: 30px 40px 20px;
+              border-bottom: 3px solid #3b82f6;
+            }
+            .logo {
+              max-width: 200px;
+              height: auto;
+            }
+            .content { 
+              padding: 40px;
+            }
+            .greeting {
+              font-size: 16px;
+              margin-bottom: 20px;
+            }
+            .section {
+              margin: 25px 0;
+            }
+            .section-title {
+              font-weight: bold;
+              color: #1e40af;
+              font-size: 15px;
+              margin-bottom: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .info-box { 
+              background-color: #f1f5f9; 
+              border-left: 4px solid #3b82f6; 
+              padding: 20px; 
+              margin: 15px 0;
+              border-radius: 0 4px 4px 0;
+            }
+            .info-row {
+              margin: 10px 0;
+              display: flex;
+              line-height: 1.8;
+            }
+            .info-label { 
+              font-weight: 600; 
+              color: #1e40af;
+              min-width: 140px;
+            }
+            .info-value {
+              color: #334155;
+            }
+            .price-box {
+              background-color: #dbeafe;
+              border-left: 4px solid #1e40af;
+              padding: 20px;
+              margin: 20px 0;
+              border-radius: 0 4px 4px 0;
+            }
+            .price-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 8px 0;
+              font-size: 15px;
+            }
+            .price-total {
+              font-weight: bold;
+              font-size: 17px;
+              color: #1e40af;
+              padding-top: 10px;
+              border-top: 2px solid #3b82f6;
+              margin-top: 10px;
+            }
+            .contact-info {
+              background-color: #fef3c7;
+              border-left: 4px solid #f59e0b;
+              padding: 15px 20px;
+              margin: 25px 0;
+              border-radius: 0 4px 4px 0;
+            }
+            .footer { 
+              background-color: #f1f5f9; 
+              padding: 25px 40px; 
+              text-align: center; 
+              font-size: 13px; 
+              color: #64748b;
+              border-top: 1px solid #e2e8f0;
+            }
+            .signature {
+              margin-top: 30px;
+              font-weight: 600;
+              color: #1e40af;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <img src="https://jaurkjcipcxkjimjlpiq.supabase.co/storage/v1/object/public/adminsettings/dk-automotive-logo.png" alt="DK Automotive" class="logo" />
+            </div>
+            <div class="content">
+              <p class="greeting">Bonjour,</p>
+              <p>Vous avez une nouvelle demande de mission en cours d'examen.</p>
+              
+              <div class="section">
+                <div class="section-title">Informations de la mission</div>
+                <div class="info-box">
+                  <div class="info-row">
+                    <span class="info-label">Numéro :</span>
+                    <span class="info-value">${missionNumber}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Type de véhicule :</span>
+                    <span class="info-value">${vehicleCategory}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Adresse de départ</div>
+                <div class="info-box">
+                  <div class="info-row">
+                    <span class="info-label">Adresse :</span>
+                    <span class="info-value">${pickupAddress}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Contact :</span>
+                    <span class="info-value">${pickupContactName}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Téléphone :</span>
+                    <span class="info-value">${pickupContactPhone}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Email :</span>
+                    <span class="info-value">${pickupContactEmail}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Adresse de livraison</div>
+                <div class="info-box">
+                  <div class="info-row">
+                    <span class="info-label">Adresse :</span>
+                    <span class="info-value">${deliveryAddress}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Contact :</span>
+                    <span class="info-value">${deliveryContactName}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Téléphone :</span>
+                    <span class="info-value">${deliveryContactPhone}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Email :</span>
+                    <span class="info-value">${deliveryContactEmail}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="section-title">Tarification</div>
+                <div class="price-box">
+                  <div class="price-row">
+                    <span>Prix HT :</span>
+                    <span>${priceHT.toFixed(2)} €</span>
+                  </div>
+                  <div class="price-row price-total">
+                    <span>Prix TTC :</span>
+                    <span>${priceTTC.toFixed(2)} €</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="contact-info">
+                <p style="margin: 0; font-size: 14px;">
+                  Pour toute demande d'information complémentaire, vous avez la possibilité de nous contacter par mail à l'adresse 
+                  <strong>contact@dkautomotive.fr</strong>
+                </p>
+              </div>
+
+              <p class="signature">Bien à vous,<br>L'équipe DKAUTOMOTIVE</p>
+            </div>
+            <div class="footer">
+              <p style="margin: 0;">DK Automotive - Convoyage de véhicules</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Envoyer l'email au client
+    const clientEmailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         "Accept": "application/json",
@@ -35,67 +265,54 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         sender: {
           name: "DK Automotive",
-          email: "no-reply@dkautomotive.fr"
+          email: "contact@dkautomotive.fr"
         },
-        to: [
-          {
-            email: clientEmail
-          }
-        ],
+        to: [{ email: clientEmail }],
         subject: `Demande de devis ${missionNumber}`,
-        htmlContent: `
-          <html>
-            <head>
-              <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background-color: #1a1a1a; color: white; padding: 20px; text-align: center; }
-                .content { background-color: #f9f9f9; padding: 30px; }
-                .footer { background-color: #e9e9e9; padding: 15px; text-align: center; font-size: 12px; color: #666; }
-                .info-box { background-color: white; border-left: 4px solid #0066cc; padding: 15px; margin: 15px 0; }
-                .info-label { font-weight: bold; color: #0066cc; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>Demande de devis reçue</h1>
-                </div>
-                <div class="content">
-                  <p>Bonjour,</p>
-                  <p>Vous avez une nouvelle demande de mission en cours d'examination.</p>
-                  
-                  <div class="info-box">
-                    <p><span class="info-label">Numéro de mission:</span> ${missionNumber}</p>
-                    <p><span class="info-label">Ville de départ:</span> ${pickupCity}</p>
-                    <p><span class="info-label">Ville d'arrivée:</span> ${deliveryCity}</p>
-                    <p><span class="info-label">Type de véhicule:</span> ${vehicleCategory}</p>
-                  </div>
-                  
-                  <p>Nous étudions votre demande et reviendrons vers vous dans les plus brefs délais.</p>
-                  
-                  <p>Cordialement,<br>L'équipe DK Automotive</p>
-                </div>
-                <div class="footer">
-                  <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `
+        htmlContent: emailContent
       })
     });
 
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("Brevo API error:", errorText);
-      throw new Error(`Brevo API error: ${errorText}`);
+    if (!clientEmailResponse.ok) {
+      const errorText = await clientEmailResponse.text();
+      console.error("Brevo API error (client):", errorText);
+      throw new Error(`Brevo API error (client): ${errorText}`);
     }
 
-    const result = await emailResponse.json();
-    console.log("Email sent successfully via Brevo:", result);
+    // Envoyer l'email à l'admin
+    const adminEmailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "api-key": BREVO_API_KEY!,
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "DK Automotive",
+          email: "contact@dkautomotive.fr"
+        },
+        to: [{ email: adminEmail }],
+        subject: `Demande de devis ${missionNumber}`,
+        htmlContent: emailContent
+      })
+    });
 
-    return new Response(JSON.stringify({ success: true, messageId: result.messageId }), {
+    if (!adminEmailResponse.ok) {
+      const errorText = await adminEmailResponse.text();
+      console.error("Brevo API error (admin):", errorText);
+      throw new Error(`Brevo API error (admin): ${errorText}`);
+    }
+
+    const clientResult = await clientEmailResponse.json();
+    const adminResult = await adminEmailResponse.json();
+    console.log("Emails sent successfully via Brevo:", { client: clientResult, admin: adminResult });
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      clientMessageId: clientResult.messageId,
+      adminMessageId: adminResult.messageId 
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",

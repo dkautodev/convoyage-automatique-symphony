@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Package, Plus, Search, Filter, FileText, Truck, ChevronDown } from 'lucide-react';
+import { Package, Plus, Search, Filter, FileText, Truck, ChevronDown, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,6 +46,12 @@ const MissionsPage = () => {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [driverSearchTerm, setDriverSearchTerm] = useState('');
+
+  // État pour la section d'envoi d'emails
+  const [sendingQuoteEmail, setSendingQuoteEmail] = useState(false);
+  const [sendingDeliveryEmail, setSendingDeliveryEmail] = useState(false);
+  const [selectedMissionForEmail, setSelectedMissionForEmail] = useState<Mission | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Utiliser les hooks pour récupérer les clients et chauffeurs
   const {
@@ -241,6 +247,95 @@ const MissionsPage = () => {
 
   // Filtrer les chauffeurs en fonction du terme de recherche
   const filteredDrivers = driversList.filter(driver => driver.label.toLowerCase().includes(driverSearchTerm.toLowerCase()));
+
+  // Fonction pour envoyer l'email de devis
+  const sendQuoteEmail = async (mission: Mission) => {
+    setSendingQuoteEmail(true);
+    try {
+      // Récupérer les informations du client
+      const { data: clientData, error: clientError } = await typedSupabase
+        .from('profiles')
+        .select('email')
+        .eq('id', mission.client_id)
+        .single();
+
+      if (clientError) throw clientError;
+
+      // Déterminer le label de la catégorie du véhicule
+      const vehicleCategoryLabels: Record<string, string> = {
+        'berline': 'Berline',
+        'SUV': 'SUV',
+        '4x4': '4x4',
+        'utilitaire': 'Utilitaire',
+        'sportive': 'Sportive',
+        'prestige': 'Prestige',
+        'collection': 'Collection'
+      };
+      const vehicleCategoryLabel = vehicleCategoryLabels[mission.vehicle_category || ''] || mission.vehicle_category || 'Non spécifié';
+
+      await typedSupabase.functions.invoke('send-mission-email', {
+        body: {
+          clientEmail: clientData.email,
+          missionNumber: mission.mission_number,
+          pickupAddress: `${mission.pickup_address?.address || ''}, ${mission.pickup_address?.postalCode || ''} ${mission.pickup_address?.city || ''}`,
+          deliveryAddress: `${mission.delivery_address?.address || ''}, ${mission.delivery_address?.postalCode || ''} ${mission.delivery_address?.city || ''}`,
+          pickupContactName: mission.contact_pickup_name || '',
+          pickupContactPhone: mission.contact_pickup_phone || '',
+          pickupContactEmail: mission.contact_pickup_email || '',
+          deliveryContactName: mission.contact_delivery_name || '',
+          deliveryContactPhone: mission.contact_delivery_phone || '',
+          deliveryContactEmail: mission.contact_delivery_email || '',
+          priceHT: mission.price_ht || 0,
+          priceTTC: mission.price_ttc || 0,
+          vehicleCategory: vehicleCategoryLabel,
+          vehicleMake: mission.vehicle_make || '',
+          vehicleModel: mission.vehicle_model || '',
+          vehicleRegistration: mission.vehicle_registration || '',
+          vehicleVin: mission.vehicle_vin || undefined,
+          vehicleFuel: mission.vehicle_fuel || ''
+        }
+      });
+
+      toast.success('Email de devis envoyé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast.error('Erreur lors de l\'envoi de l\'email de devis');
+    } finally {
+      setSendingQuoteEmail(false);
+    }
+  };
+
+  // Fonction pour envoyer l'email de livraison
+  const sendDeliveryEmail = async (mission: Mission) => {
+    setSendingDeliveryEmail(true);
+    try {
+      // Récupérer les informations du client
+      const { data: clientData, error: clientError } = await typedSupabase
+        .from('profiles')
+        .select('email')
+        .eq('id', mission.client_id)
+        .single();
+
+      if (clientError) throw clientError;
+
+      const clientDashboardUrl = `${window.location.origin}/client/invoices`;
+
+      await typedSupabase.functions.invoke('send-delivery-email', {
+        body: {
+          clientEmail: clientData.email,
+          missionNumber: mission.mission_number,
+          clientDashboardUrl: clientDashboardUrl
+        }
+      });
+
+      toast.success('Email de livraison envoyé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast.error('Erreur lors de l\'envoi de l\'email de livraison');
+    } finally {
+      setSendingDeliveryEmail(false);
+    }
+  };
 
   // Get current filter label for mobile dropdown
   const getCurrentFilterLabel = () => {
@@ -541,6 +636,85 @@ const MissionsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Section d'envoi d'emails */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Renvoyer les emails
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez une mission pour renvoyer l'email de devis ou l'email de livraison au client.
+            </p>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Sélectionner une mission</label>
+              <Select 
+                value={selectedMissionForEmail?.id || ''} 
+                onValueChange={(value) => {
+                  const mission = missions.find(m => m.id === value);
+                  setSelectedMissionForEmail(mission || null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une mission..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {missions.map(mission => (
+                    <SelectItem key={mission.id} value={mission.id}>
+                      Mission #{formatMissionNumber(mission)} - {formatClientName(mission, clientsData)} - {missionStatusLabels[mission.status]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedMissionForEmail && (
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button 
+                  onClick={() => sendQuoteEmail(selectedMissionForEmail)}
+                  disabled={sendingQuoteEmail || sendingDeliveryEmail}
+                  className="flex-1"
+                >
+                  {sendingQuoteEmail ? (
+                    <>
+                      <span className="animate-spin mr-2">●</span>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Renvoyer l'email de devis
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={() => sendDeliveryEmail(selectedMissionForEmail)}
+                  disabled={sendingQuoteEmail || sendingDeliveryEmail}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  {sendingDeliveryEmail ? (
+                    <>
+                      <span className="animate-spin mr-2">●</span>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Renvoyer l'email de livraison
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>;
 };
 export default MissionsPage;

@@ -173,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div class="content">
               <p class="greeting">Bonjour,</p>
-              <p>Vous avez une nouvelle demande de mission en cours d'examen.</p>
+              <p>Nous avons bien reçu votre demande de mission.</p>
               
               <div class="section">
                 <div class="section-title">Informations de la mission</div>

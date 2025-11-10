@@ -81,34 +81,6 @@ export const MissionStatusSection: React.FC<MissionStatusSectionProps> = ({
       console.log('Mission status updated successfully');
       toast.success(`Statut mis à jour: ${missionStatusLabels[selectedStatus]}`);
 
-      // Si le statut passe à "livré", envoyer un email au client
-      if (selectedStatus === 'livre') {
-        try {
-          // Récupérer les informations du client
-          const { data: clientData, error: clientError } = await typedSupabase
-            .from('profiles')
-            .select('email')
-            .eq('id', mission.client_id)
-            .single();
-
-          if (!clientError && clientData) {
-            const clientDashboardUrl = `${window.location.origin}/client/invoices`;
-            
-            await typedSupabase.functions.invoke('send-delivery-email', {
-              body: {
-                clientEmail: clientData.email,
-                missionNumber: mission.mission_number,
-                clientDashboardUrl: clientDashboardUrl
-              }
-            });
-            console.log('Delivery email sent to client');
-          }
-        } catch (emailError) {
-          console.error('Error sending delivery email:', emailError);
-          // Ne pas bloquer le processus si l'email échoue
-        }
-      }
-
       // Attendre un peu avant de rafraîchir pour laisser le trigger s'exécuter
       setTimeout(() => {
         refetchMission();

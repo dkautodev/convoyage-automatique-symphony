@@ -2,6 +2,3 @@ project_id = "jaurkjcipcxkjimjlpiq"
 
 [functions.send-mission-email]
 verify_jwt = false
-
-[functions.send-delivery-email]
-verify_jwt = false

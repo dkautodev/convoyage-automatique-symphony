@@ -6,7 +6,7 @@ import { Mission, MissionFromDB, convertMissionFromDB } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Package, History, Edit } from 'lucide-react';
+import { Package, History, Edit, Mail } from 'lucide-react';
 import { formatMissionNumber, missionStatusLabels, missionStatusColors } from '@/utils/missionUtils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -45,6 +45,8 @@ const MissionDetailsPage = () => {
   const [documentsCount, setDocumentsCount] = useState(0);
   const [documentsDialogOpen, setDocumentsDialogOpen] = useState(false);
   const [driverName, setDriverName] = useState<string>('Non assigné');
+  const [sendingQuoteEmail, setSendingQuoteEmail] = useState(false);
+  const [sendingDeliveryEmail, setSendingDeliveryEmail] = useState(false);
   const isAdmin = profile?.role === 'admin';
   const isClient = profile?.role === 'client';
   const isDriver = profile?.role === 'chauffeur';
@@ -166,6 +168,62 @@ const MissionDetailsPage = () => {
   const handleShowHistory = () => {
     setHistoryDrawerOpen(true);
   };
+
+  const sendQuoteEmail = async () => {
+    if (!mission || !client) {
+      toast.error('Données manquantes pour envoyer l\'email');
+      return;
+    }
+
+    try {
+      setSendingQuoteEmail(true);
+      
+      const { data, error } = await typedSupabase.functions.invoke('send-mission-email', {
+        body: {
+          clientEmail: client.email,
+          clientName: client.full_name || client.company_name || 'Client',
+          missionNumber: mission.mission_number || formatMissionNumber(mission)
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Email de devis envoyé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast.error('Erreur lors de l\'envoi de l\'email de devis');
+    } finally {
+      setSendingQuoteEmail(false);
+    }
+  };
+
+  const sendDeliveryEmail = async () => {
+    if (!mission || !client) {
+      toast.error('Données manquantes pour envoyer l\'email');
+      return;
+    }
+
+    try {
+      setSendingDeliveryEmail(true);
+      
+      const { data, error } = await typedSupabase.functions.invoke('send-delivery-email', {
+        body: {
+          clientEmail: client.email,
+          clientName: client.full_name || client.company_name || 'Client',
+          missionNumber: mission.mission_number || formatMissionNumber(mission)
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Email de livraison envoyé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      toast.error('Erreur lors de l\'envoi de l\'email de livraison');
+    } finally {
+      setSendingDeliveryEmail(false);
+    }
+  };
   if (loading) {
     return <div className="flex justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -266,6 +324,34 @@ const MissionDetailsPage = () => {
       
       {/* Documents Dialog - Pour les deux rôles */}
       {mission && documentsDialogOpen && <MissionDocumentsDialog mission={mission} isOpen={documentsDialogOpen} onClose={() => setDocumentsDialogOpen(false)} onDocumentsUpdated={() => fetchDocumentsCount(mission.id)} />}
+      
+      {/* Section de renvoi des emails (Admin uniquement) */}
+      {isAdmin && (
+        <div className="bg-card rounded-lg border p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Renvoyer les emails
+          </h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={sendQuoteEmail}
+              disabled={sendingQuoteEmail}
+              variant="outline"
+              className="flex-1"
+            >
+              {sendingQuoteEmail ? 'Envoi...' : 'Renvoyer l\'email de devis'}
+            </Button>
+            <Button
+              onClick={sendDeliveryEmail}
+              disabled={sendingDeliveryEmail}
+              variant="outline"
+              className="flex-1"
+            >
+              {sendingDeliveryEmail ? 'Envoi...' : 'Renvoyer l\'email de livraison'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>;
 };
 

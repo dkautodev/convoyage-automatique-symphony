@@ -53,14 +53,14 @@ export const VEHICLE_CATEGORIES = [
 export type VehicleCategory = typeof VEHICLE_CATEGORIES[number];
 
 export const CATEGORY_LABELS: Record<VehicleCategory, string> = {
-  citadine: 'Citadine',
-  berline: 'Berline',
-  '4x4_suv': '4x4/SUV',
-  'utilitaire_3_5m3': 'Utilitaire 3.5m³',
-  'utilitaire_6_12m3': 'Utilitaire 6-12m³',
-  'utilitaire_12_15m3': 'Utilitaire 12-15m³',
-  'utilitaire_15_20m3': 'Utilitaire 15-20m³',
-  'utilitaire_plus_20m3': 'Utilitaire (>20m³) ou véhicule avec nacelle'
+  citadine: 'Citadine (type 108)',
+  berline: 'Berline (type 308)',
+  '4x4_suv': '4x4 & SUV (type 3008)',
+  'utilitaire_3_5m3': 'Utilitaire 3-5m3 (type Partner)',
+  'utilitaire_6_12m3': 'Utilitaire 6-12m3 (type Boxer)',
+  'utilitaire_12_15m3': 'Utilitaire 12-15m3 & Benne (type Master)',
+  'utilitaire_15_20m3': 'Utilitaire 15-20m3 (type Iveco Daily)',
+  'utilitaire_plus_20m3': 'Utilitaire + de 20m3 & Nacelle'
 };
 
 export const CATEGORY_COLORS: Record<VehicleCategory, string> = {

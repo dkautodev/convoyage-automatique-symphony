@@ -25,7 +25,7 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <FileText className="h-5 w-5" />
           États des lieux et PV complétés
         </CardTitle>

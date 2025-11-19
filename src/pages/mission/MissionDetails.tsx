@@ -17,6 +17,7 @@ import { ClientMissionDriverSection } from '@/components/mission/sections/Client
 import { MissionStatusSection } from '@/components/mission/sections/MissionStatusSection';
 import { MissionDocumentsSection } from '@/components/mission/sections/MissionDocumentsSection';
 import { MissionDocumentManagementSection } from '@/components/mission/sections/MissionDocumentManagementSection';
+import { MissionInspectionSection } from '@/components/mission/sections/MissionInspectionSection';
 import { MissionStatusHistoryDrawer } from '@/components/mission/MissionStatusHistoryDrawer';
 import { MissionEditDialog } from '@/components/mission/MissionEditDialog';
 import { MissionDocumentsDialog } from '@/components/mission/MissionDocumentsDialog';
@@ -301,6 +302,9 @@ const MissionDetailsPage = () => {
 
       {/* Nouvelle section de gestion des documents - EN PREMIÈRE POSITION */}
       <MissionDocumentManagementSection mission={mission} client={client} adminProfile={adminProfile} driverName={driverName} documentsCount={documentsCount} isAdmin={isAdmin} isClient={isClient} isDriver={isDriver} onDocumentsClick={() => setDocumentsDialogOpen(true)} />
+
+      {/* Section États des lieux et PV complétés - Admin et Chauffeur uniquement */}
+      <MissionInspectionSection isAdmin={isAdmin} isDriver={isDriver} />
 
       {/* General Information Section - Show client info for all roles */}
       <MissionGeneralInfoSection mission={mission} client={client} driverName={driverName} adminProfile={adminProfile} hideFinancials={isDriver} refetchMission={fetchMission} />

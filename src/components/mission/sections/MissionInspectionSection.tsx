@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Check, Eye, RefreshCw } from 'lucide-react';
+import { FileText, Check, Eye, RefreshCw, Trash2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -31,6 +31,7 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
   onUpdate
 }) => {
   const [uploading, setUploading] = useState<DocumentType | null>(null);
+  const [deleting, setDeleting] = useState<DocumentType | null>(null);
   const [openPopover, setOpenPopover] = useState<DocumentType | null>(null);
   
   const ficheEdlRef = useRef<HTMLInputElement>(null);
@@ -41,6 +42,13 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
   if (!isAdmin && !isDriver) {
     return null;
   }
+
+  const getDocumentPath = (type: DocumentType): string | null | undefined => {
+    if (type === 'fiche_edl') return ficheEdl;
+    if (type === 'pv') return pv;
+    if (type === 'pdf_edl') return pdfEdl;
+    return null;
+  };
 
   const triggerFileInput = (type: DocumentType) => {
     setOpenPopover(null);
@@ -70,6 +78,54 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
     setOpenPopover(null);
   };
 
+  const deleteOldFile = async (filePath: string | null | undefined) => {
+    if (!filePath) return;
+    
+    try {
+      await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([filePath]);
+    } catch (error) {
+      console.error('Error deleting old file:', error);
+    }
+  };
+
+  const handleDeleteDocument = async (type: DocumentType) => {
+    const currentPath = getDocumentPath(type);
+    if (!currentPath) return;
+
+    setDeleting(type);
+    setOpenPopover(null);
+
+    try {
+      // Delete from storage
+      await deleteOldFile(currentPath);
+
+      // Update mission table to set column to null
+      const updateData: Record<string, null> = {};
+      updateData[type] = null;
+
+      const { error: updateError } = await supabase
+        .from('missions')
+        .update(updateData)
+        .eq('id', missionId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast.error('Erreur lors de la suppression');
+        return;
+      }
+
+      toast.success('Document supprimé');
+      onUpdate?.();
+    } catch (error) {
+      console.error('Exception during delete:', error);
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: DocumentType) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -89,6 +145,12 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
     setUploading(type);
 
     try {
+      // Delete old file if exists
+      const currentPath = getDocumentPath(type);
+      if (currentPath) {
+        await deleteOldFile(currentPath);
+      }
+
       // Generate unique filename
       const fileId = Date.now();
       const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
@@ -193,6 +255,16 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
                       >
                         <RefreshCw className="h-4 w-4" />
                         Remplacer
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="justify-start gap-2 text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteDocument(doc.type)}
+                        disabled={deleting === doc.type}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {deleting === doc.type ? 'Suppression...' : 'Supprimer'}
                       </Button>
                     </div>
                   </PopoverContent>

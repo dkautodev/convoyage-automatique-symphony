@@ -306,6 +306,7 @@ export type Database = {
           D2_LIV: string | null
           delivery_address: Json
           distance_km: number
+          fiche_edl: string | null
           H1_LIV: string | null
           H1_PEC: string | null
           H2_LIV: string | null
@@ -318,9 +319,11 @@ export type Database = {
           mission_number: string | null
           mission_type: string | null
           notes: string | null
+          pdf_edl: string | null
           pickup_address: Json
           price_ht: number
           price_ttc: number
+          pv: string | null
           scheduled_date: string
           status: Database["public"]["Enums"]["mission_status"]
           updated_at: string
@@ -355,6 +358,7 @@ export type Database = {
           D2_LIV?: string | null
           delivery_address: Json
           distance_km: number
+          fiche_edl?: string | null
           H1_LIV?: string | null
           H1_PEC?: string | null
           H2_LIV?: string | null
@@ -367,9 +371,11 @@ export type Database = {
           mission_number?: string | null
           mission_type?: string | null
           notes?: string | null
+          pdf_edl?: string | null
           pickup_address: Json
           price_ht: number
           price_ttc: number
+          pv?: string | null
           scheduled_date: string
           status?: Database["public"]["Enums"]["mission_status"]
           updated_at?: string
@@ -404,6 +410,7 @@ export type Database = {
           D2_LIV?: string | null
           delivery_address?: Json
           distance_km?: number
+          fiche_edl?: string | null
           H1_LIV?: string | null
           H1_PEC?: string | null
           H2_LIV?: string | null
@@ -416,9 +423,11 @@ export type Database = {
           mission_number?: string | null
           mission_type?: string | null
           notes?: string | null
+          pdf_edl?: string | null
           pickup_address?: Json
           price_ht?: number
           price_ttc?: number
+          pv?: string | null
           scheduled_date?: string
           status?: Database["public"]["Enums"]["mission_status"]
           updated_at?: string

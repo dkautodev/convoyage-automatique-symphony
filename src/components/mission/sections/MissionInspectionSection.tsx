@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Check } from 'lucide-react';
+import { FileText, Check, Eye, RefreshCw } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -18,6 +19,7 @@ interface MissionInspectionSectionProps {
 type DocumentType = 'fiche_edl' | 'pv' | 'pdf_edl';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo
+const BUCKET_NAME = 'driver-mission-upload';
 
 export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> = ({ 
   isAdmin, 
@@ -29,6 +31,7 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
   onUpdate
 }) => {
   const [uploading, setUploading] = useState<DocumentType | null>(null);
+  const [openPopover, setOpenPopover] = useState<DocumentType | null>(null);
   
   const ficheEdlRef = useRef<HTMLInputElement>(null);
   const pvRef = useRef<HTMLInputElement>(null);
@@ -39,10 +42,32 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
     return null;
   }
 
-  const handleButtonClick = (type: DocumentType) => {
+  const triggerFileInput = (type: DocumentType) => {
+    setOpenPopover(null);
     if (type === 'fiche_edl') ficheEdlRef.current?.click();
     else if (type === 'pv') pvRef.current?.click();
     else if (type === 'pdf_edl') pdfEdlRef.current?.click();
+  };
+
+  const handleButtonClick = (type: DocumentType, isUploaded: boolean) => {
+    if (isUploaded) {
+      setOpenPopover(type);
+    } else {
+      triggerFileInput(type);
+    }
+  };
+
+  const handleViewDocument = (filePath: string | null | undefined) => {
+    if (!filePath) return;
+    
+    const { data } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filePath);
+    
+    if (data?.publicUrl) {
+      window.open(data.publicUrl, '_blank');
+    }
+    setOpenPopover(null);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: DocumentType) => {
@@ -71,7 +96,7 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
 
       // Upload to driver-mission-upload bucket
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('driver-mission-upload')
+        .from(BUCKET_NAME)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
@@ -111,9 +136,9 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
   };
 
   const documents = [
-    { type: 'fiche_edl' as DocumentType, label: "Fiche d'état des lieux", ref: ficheEdlRef, uploaded: !!ficheEdl },
-    { type: 'pv' as DocumentType, label: 'PV complété', ref: pvRef, uploaded: !!pv },
-    { type: 'pdf_edl' as DocumentType, label: 'État des lieux', ref: pdfEdlRef, uploaded: !!pdfEdl },
+    { type: 'fiche_edl' as DocumentType, label: "Fiche d'état des lieux", ref: ficheEdlRef, uploaded: !!ficheEdl, path: ficheEdl },
+    { type: 'pv' as DocumentType, label: 'PV complété', ref: pvRef, uploaded: !!pv, path: pv },
+    { type: 'pdf_edl' as DocumentType, label: 'État des lieux', ref: pdfEdlRef, uploaded: !!pdfEdl, path: pdfEdl },
   ];
 
   return (
@@ -125,7 +150,7 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-wrap gap-3">
           {documents.map((doc) => (
             <div key={doc.type} className="relative">
               <input
@@ -135,19 +160,59 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
                 className="hidden"
                 onChange={(e) => handleFileChange(e, doc.type)}
               />
-              <Button 
-                variant="outline" 
-                className="w-full h-16 flex items-center justify-center"
-                onClick={() => handleButtonClick(doc.type)}
-                disabled={uploading === doc.type}
-              >
-                <span className="text-sm">
-                  {uploading === doc.type ? 'Upload en cours...' : doc.label}
-                </span>
-              </Button>
+              
+              {doc.uploaded ? (
+                <Popover open={openPopover === doc.type} onOpenChange={(open) => setOpenPopover(open ? doc.type : null)}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="h-10 px-4"
+                      disabled={uploading === doc.type}
+                    >
+                      <span className="text-sm">
+                        {uploading === doc.type ? 'Upload...' : doc.label}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-40 p-2" align="center">
+                    <div className="flex flex-col gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="justify-start gap-2"
+                        onClick={() => handleViewDocument(doc.path)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Afficher
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="justify-start gap-2"
+                        onClick={() => triggerFileInput(doc.type)}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Remplacer
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="h-10 px-4"
+                  onClick={() => handleButtonClick(doc.type, doc.uploaded)}
+                  disabled={uploading === doc.type}
+                >
+                  <span className="text-sm">
+                    {uploading === doc.type ? 'Upload...' : doc.label}
+                  </span>
+                </Button>
+              )}
+              
               {doc.uploaded && (
-                <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
-                  <Check className="h-4 w-4" />
+                <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-0.5">
+                  <Check className="h-3 w-3" />
                 </div>
               )}
             </div>

@@ -304,7 +304,15 @@ const MissionDetailsPage = () => {
       <MissionDocumentManagementSection mission={mission} client={client} adminProfile={adminProfile} driverName={driverName} documentsCount={documentsCount} isAdmin={isAdmin} isClient={isClient} isDriver={isDriver} onDocumentsClick={() => setDocumentsDialogOpen(true)} />
 
       {/* Section États des lieux et PV complétés - Admin et Chauffeur uniquement */}
-      <MissionInspectionSection isAdmin={isAdmin} isDriver={isDriver} />
+      <MissionInspectionSection 
+        isAdmin={isAdmin} 
+        isDriver={isDriver} 
+        missionId={mission.id}
+        ficheEdl={mission.fiche_edl}
+        pv={mission.pv}
+        pdfEdl={mission.pdf_edl}
+        onUpdate={fetchMission}
+      />
 
       {/* General Information Section - Show client info for all roles */}
       <MissionGeneralInfoSection mission={mission} client={client} driverName={driverName} adminProfile={adminProfile} hideFinancials={isDriver} refetchMission={fetchMission} />

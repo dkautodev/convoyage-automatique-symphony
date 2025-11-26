@@ -1,26 +1,120 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText } from 'lucide-react';
+import { FileText, Check } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MissionInspectionSectionProps {
   isAdmin: boolean;
   isDriver: boolean;
+  missionId: string;
+  ficheEdl?: string | null;
+  pv?: string | null;
+  pdfEdl?: string | null;
+  onUpdate?: () => void;
 }
+
+type DocumentType = 'fiche_edl' | 'pv' | 'pdf_edl';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 Mo
 
 export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> = ({ 
   isAdmin, 
-  isDriver 
+  isDriver,
+  missionId,
+  ficheEdl,
+  pv,
+  pdfEdl,
+  onUpdate
 }) => {
+  const [uploading, setUploading] = useState<DocumentType | null>(null);
+  
+  const ficheEdlRef = useRef<HTMLInputElement>(null);
+  const pvRef = useRef<HTMLInputElement>(null);
+  const pdfEdlRef = useRef<HTMLInputElement>(null);
+
   // Only show for admin and driver
   if (!isAdmin && !isDriver) {
     return null;
   }
 
-  const handleUpload = (documentType: string) => {
-    // TODO: Implement upload functionality later
-    console.log(`Upload ${documentType}`);
+  const handleButtonClick = (type: DocumentType) => {
+    if (type === 'fiche_edl') ficheEdlRef.current?.click();
+    else if (type === 'pv') pvRef.current?.click();
+    else if (type === 'pdf_edl') pdfEdlRef.current?.click();
   };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: DocumentType) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate PDF
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptés');
+      return;
+    }
+
+    // Validate size
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('Le fichier ne doit pas dépasser 10 Mo');
+      return;
+    }
+
+    setUploading(type);
+
+    try {
+      // Generate unique filename
+      const fileId = Date.now();
+      const sanitizedFileName = file.name.replace(/[^\w\d.-]/g, '_');
+      const filePath = `${missionId}/${type}/${fileId}_${sanitizedFileName}`;
+
+      // Upload to driver-mission-upload bucket
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('driver-mission-upload')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Erreur lors de l\'upload du fichier');
+        return;
+      }
+
+      // Update mission table with file path
+      const updateData: Record<string, string> = {};
+      updateData[type] = uploadData.path;
+
+      const { error: updateError } = await supabase
+        .from('missions')
+        .update(updateData)
+        .eq('id', missionId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast.error('Erreur lors de la mise à jour de la mission');
+        return;
+      }
+
+      toast.success('Document uploadé avec succès');
+      onUpdate?.();
+    } catch (error) {
+      console.error('Exception during upload:', error);
+      toast.error('Erreur lors de l\'upload');
+    } finally {
+      setUploading(null);
+      // Reset input
+      e.target.value = '';
+    }
+  };
+
+  const documents = [
+    { type: 'fiche_edl' as DocumentType, label: "Fiche d'état des lieux", ref: ficheEdlRef, uploaded: !!ficheEdl },
+    { type: 'pv' as DocumentType, label: 'PV complété', ref: pvRef, uploaded: !!pv },
+    { type: 'pdf_edl' as DocumentType, label: 'État des lieux', ref: pdfEdlRef, uploaded: !!pdfEdl },
+  ];
 
   return (
     <Card>
@@ -32,32 +126,32 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button 
-            variant="outline" 
-            className="w-full h-20 flex flex-col items-center justify-center gap-2"
-            onClick={() => handleUpload('fiche-etat-lieux')}
-          >
-            <Upload className="h-5 w-5" />
-            <span className="text-sm">Fiche d'état des lieux</span>
-          </Button>
-
-          <Button 
-            variant="outline" 
-            className="w-full h-20 flex flex-col items-center justify-center gap-2"
-            onClick={() => handleUpload('pv-complete')}
-          >
-            <Upload className="h-5 w-5" />
-            <span className="text-sm">PV complété</span>
-          </Button>
-
-          <Button 
-            variant="outline" 
-            className="w-full h-20 flex flex-col items-center justify-center gap-2"
-            onClick={() => handleUpload('etat-lieux')}
-          >
-            <Upload className="h-5 w-5" />
-            <span className="text-sm">État des lieux</span>
-          </Button>
+          {documents.map((doc) => (
+            <div key={doc.type} className="relative">
+              <input
+                type="file"
+                ref={doc.ref}
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => handleFileChange(e, doc.type)}
+              />
+              <Button 
+                variant="outline" 
+                className="w-full h-16 flex items-center justify-center"
+                onClick={() => handleButtonClick(doc.type)}
+                disabled={uploading === doc.type}
+              >
+                <span className="text-sm">
+                  {uploading === doc.type ? 'Upload en cours...' : doc.label}
+                </span>
+              </Button>
+              {doc.uploaded && (
+                <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
+                  <Check className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

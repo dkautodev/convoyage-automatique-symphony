@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 interface MissionInspectionSectionProps {
   isAdmin: boolean;
   isDriver: boolean;
+  isClient?: boolean;
   missionId: string;
   ficheEdl?: string | null;
   pv?: string | null;
@@ -24,6 +25,7 @@ const BUCKET_NAME = 'driver-mission-upload';
 export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> = ({ 
   isAdmin, 
   isDriver,
+  isClient = false,
   missionId,
   ficheEdl,
   pv,
@@ -38,8 +40,11 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
   const pvRef = useRef<HTMLInputElement>(null);
   const pdfEdlRef = useRef<HTMLInputElement>(null);
 
-  // Only show for admin and driver
-  if (!isAdmin && !isDriver) {
+  const canEdit = isAdmin || isDriver;
+
+  // Show for admin, driver, and client (if at least one document exists for client)
+  const hasAnyDocument = !!ficheEdl || !!pv || !!pdfEdl;
+  if (!isAdmin && !isDriver && (!isClient || !hasAnyDocument)) {
     return null;
   }
 
@@ -203,6 +208,9 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
     { type: 'pdf_edl' as DocumentType, label: 'État des lieux', ref: pdfEdlRef, uploaded: !!pdfEdl, path: pdfEdl },
   ];
 
+  // For clients, only show documents that have been uploaded
+  const visibleDocuments = isClient ? documents.filter(doc => doc.uploaded) : documents;
+
   return (
     <Card>
       <CardHeader>
@@ -213,73 +221,91 @@ export const MissionInspectionSection: React.FC<MissionInspectionSectionProps> =
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-3">
-          {documents.map((doc) => (
+          {visibleDocuments.map((doc) => (
             <div key={doc.type} className="relative">
-              <input
-                type="file"
-                ref={doc.ref}
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => handleFileChange(e, doc.type)}
-              />
+              {canEdit && (
+                <input
+                  type="file"
+                  ref={doc.ref}
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => handleFileChange(e, doc.type)}
+                />
+              )}
               
-              {doc.uploaded ? (
-                <Popover open={openPopover === doc.type} onOpenChange={(open) => setOpenPopover(open ? doc.type : null)}>
-                  <PopoverTrigger asChild>
+              {/* Client view: simple download button */}
+              {isClient && doc.uploaded && (
+                <Button 
+                  variant="outline" 
+                  className="h-10 px-4"
+                  onClick={() => handleViewDocument(doc.path)}
+                >
+                  <span className="text-sm">{doc.label}</span>
+                </Button>
+              )}
+
+              {/* Admin/Driver view with upload and popover menu */}
+              {canEdit && (
+                <>
+                  {doc.uploaded ? (
+                    <Popover open={openPopover === doc.type} onOpenChange={(open) => setOpenPopover(open ? doc.type : null)}>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="h-10 px-4"
+                          disabled={uploading === doc.type}
+                        >
+                          <span className="text-sm">
+                            {uploading === doc.type ? 'Upload...' : doc.label}
+                          </span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-40 p-2" align="center">
+                        <div className="flex flex-col gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="justify-start gap-2"
+                            onClick={() => handleViewDocument(doc.path)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            Afficher
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="justify-start gap-2"
+                            onClick={() => triggerFileInput(doc.type)}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Remplacer
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="justify-start gap-2 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteDocument(doc.type)}
+                            disabled={deleting === doc.type}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            {deleting === doc.type ? 'Suppression...' : 'Supprimer'}
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
                     <Button 
                       variant="outline" 
                       className="h-10 px-4"
+                      onClick={() => handleButtonClick(doc.type, doc.uploaded)}
                       disabled={uploading === doc.type}
                     >
                       <span className="text-sm">
                         {uploading === doc.type ? 'Upload...' : doc.label}
                       </span>
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-40 p-2" align="center">
-                    <div className="flex flex-col gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="justify-start gap-2"
-                        onClick={() => handleViewDocument(doc.path)}
-                      >
-                        <Eye className="h-4 w-4" />
-                        Afficher
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="justify-start gap-2"
-                        onClick={() => triggerFileInput(doc.type)}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                        Remplacer
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="justify-start gap-2 text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteDocument(doc.type)}
-                        disabled={deleting === doc.type}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        {deleting === doc.type ? 'Suppression...' : 'Supprimer'}
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="h-10 px-4"
-                  onClick={() => handleButtonClick(doc.type, doc.uploaded)}
-                  disabled={uploading === doc.type}
-                >
-                  <span className="text-sm">
-                    {uploading === doc.type ? 'Upload...' : doc.label}
-                  </span>
-                </Button>
+                  )}
+                </>
               )}
               
               {doc.uploaded && (

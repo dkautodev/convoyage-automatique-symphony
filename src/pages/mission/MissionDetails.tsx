@@ -303,10 +303,11 @@ const MissionDetailsPage = () => {
       {/* Nouvelle section de gestion des documents - EN PREMIÈRE POSITION */}
       <MissionDocumentManagementSection mission={mission} client={client} adminProfile={adminProfile} driverName={driverName} documentsCount={documentsCount} isAdmin={isAdmin} isClient={isClient} isDriver={isDriver} onDocumentsClick={() => setDocumentsDialogOpen(true)} />
 
-      {/* Section États des lieux et PV complétés - Admin et Chauffeur uniquement */}
+      {/* Section États des lieux et PV complétés - Admin, Chauffeur et Client */}
       <MissionInspectionSection 
         isAdmin={isAdmin} 
-        isDriver={isDriver} 
+        isDriver={isDriver}
+        isClient={isClient}
         missionId={mission.id}
         ficheEdl={mission.fiche_edl}
         pv={mission.pv}
